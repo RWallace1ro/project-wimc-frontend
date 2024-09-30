@@ -1,0 +1,17 @@
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #333;
+  color: #fff;
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+  background-size: 20px;
+}
+
+.footer__developer,
+.footer__year {
+  margin: 0;
+}

@@ -1,0 +1,182 @@
+.donate-bin {
+  position: absolute;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  top: 270px;
+  right: 1140px;
+  transform: translate(0, 0);
+  /* z-index: 9999; */
+}
+
+.donate-bin h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.donate-bin__input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.donate-bin__input input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.donate-bin__input button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #5cb85c;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.donate-bin__input button:hover {
+  background-color: #4cae4c;
+}
+
+.donate-bin__donate-button {
+  padding: 10px;
+  border: none;
+  background-color: #f0ad4e;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.donate-bin__donate-button:hover {
+  background-color: #ec971f;
+}
+
+.donate-bin__list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.donate-bin__list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.donate-bin__list li img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.donate-bin__list li button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #d9534f;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.donate-bin__list li button:hover {
+  background-color: #c9302c;
+}
+
+.donate-bin__error {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.donate-bin__view-button {
+  padding: 10px;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+.donate-bin__view-button:hover {
+  background-color: #0056b3;
+}
+
+.donate-bin__donated-items {
+  margin-top: 10px;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.donate-bin__donated-items h4 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.donate-bin__donated-items ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.donate-bin__donated-items ul li {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+}
+
+.donate-bin__donated-items ul li img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.donate-bin__donated-items ul li:last-child {
+  border-bottom: none;
+}
+
+.donate-bin__donated-items ul li span {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.donate-bin__donated-items ul li button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #d9534f;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+  margin-left: 10px;
+}
+
+.donate-bin__donated-items ul li button:hover {
+  background-color: #c9302c;
+}

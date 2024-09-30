@@ -1,0 +1,130 @@
+.wish-list {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  max-height: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.wish-list h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.wish-list__input {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.wish-list__input input,
+.wish-list__input textarea {
+  flex: 1;
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.wish-list__input textarea {
+  resize: none;
+  height: 60px;
+}
+
+.wish-list__input button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #5cb85c;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  margin-left: 10px;
+}
+
+.wish-list__input button:hover {
+  background-color: #4cae4c;
+}
+
+.wish-list__error {
+  color: red;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.wish-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.wish-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.wish-list li button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #d9534f;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.wish-list li button:hover {
+  background-color: #c9302c;
+}
+
+.wish-list__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.wish-list__share,
+.wish-list__view {
+  display: inline-block;
+  padding: 8px 15px;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.wish-list__share:hover,
+.wish-list__view:hover {
+  background-color: #0056b3;
+}
+
+.wish-list__items {
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.wish-list__items h4 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.wish-list__items ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wish-list__items ul li {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
