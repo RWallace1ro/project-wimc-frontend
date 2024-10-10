@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { fetchClosetItems } from "../../utils/CloudinaryAPI";
+import { api } from "../../utils/CloudinaryAPI";
 import "./ClosetTabs.css";
 
 function ClosetTabs({ selectedTab, onSelectTab }) {
   const tabs = [
     "Evening Wear",
-    "Shoes",
+    "Shoes/Sneakers",
     "Pants/Jeans",
     "Tops",
     "Bags",
@@ -17,7 +17,8 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
 
   useEffect(() => {
     setLoading(true);
-    fetchClosetItems(selectedTab)
+    api
+      .fetchClosetItems(selectedTab)
       .then((data) => {
         setItems(data);
         setLoading(false);

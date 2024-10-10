@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
 
 function Home() {
+  const [doorsOpen, setDoorsOpen] = useState(false);
+
+  const handleExploreClick = () => {
+    setDoorsOpen(true);
+    setTimeout(() => {
+      window.location.href = "/closet-data";
+    }, 3000);
+  };
+
   return (
     <div className="home">
       <header className="home__header">
@@ -12,19 +21,22 @@ function Home() {
           your clothing items.
         </p>
       </header>
-
       <div className="home__actions">
-        <Link to="/closet-data" className="home__link">
+        <button onClick={handleExploreClick} className="home__link">
           Explore Your Closet
-        </Link>
+        </button>
         <Link to="/wish-list" className="home__link">
           View Your Wish List
         </Link>
       </div>
-
       <footer className="home__footer">
         <p>Manage your wardrobe with ease!</p>
       </footer>
+
+      <div className={`door-container ${doorsOpen ? "active" : ""}`}>
+        <div className="door-left"></div>
+        <div className="door-right"></div>
+      </div>
     </div>
   );
 }

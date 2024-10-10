@@ -14,6 +14,52 @@
   color: #333;
 }
 
+.header__auth-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.header__user {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.header__user-name {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.header__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.header__button {
+  padding: 8px 12px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.header__about-button {
+  padding: 8px 12px;
+  background-color: #5a5a5a;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.header__about-button:hover {
+  background-color: #4d4d4d;
+}
+
 .header__navigation {
   flex: 2;
   display: flex;
@@ -40,17 +86,6 @@
   gap: 10px;
 }
 
-.header__user-name {
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.header__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
 .header__button,
 .header__logout {
   padding: 8px 12px;
@@ -70,133 +105,7 @@
   background-color: #c9302c;
 }
 
-.header__user {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+.header__logo-link {
+  text-decoration: none;
+  color: inherit;
 }
-
-/* .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: #f8f8f8;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.header__logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-}
-
-.header__user {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.header__user-name {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-}
-
-.header__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.header__button {
-  padding: 8px 12px;
-  background-color: #d9534f;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.header__button.header__logout-button {
-  background-color: #007bff;
-}
-
-.header__button.header__logout-button:hover {
-  background-color: #0056b3;
-} */
-
-/* .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 20px;
-  background-color: #f8f8f8;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.header__logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-}
-
-.header__navigation {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex: 1;
-}
-
-.header__auth-buttons {
-  display: flex;
-  gap: 20px;
-}
-
-.header__user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header__user-name {
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-}
-
-.header__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.header__button {
-  padding: 8px 12px;
-  background-color: #d9534f;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.header__button.logout-button {
-  background-color: #007bff;
-}
-
-.header__button.logout-button:hover {
-  background-color: #0056b3;
-}
-
-.header__button:hover {
-  background-color: #c9302c;
-}
-
-.header__login-button {
-  background-color: #5cb85c;
-}
-
-.header__login-button:hover {
-  background-color: #4cae4c;
-} */

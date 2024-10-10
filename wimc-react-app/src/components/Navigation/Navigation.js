@@ -38,7 +38,10 @@ function Navigation({ isLoggedIn }) {
 
         {isLoggedIn && (
           <li className="navigation__item">
-            <button className="navigation__button" onClick={() => window.location.href = "/logout"}>
+            <button
+              className="navigation__button"
+              onClick={() => (window.location.href = "/logout")}
+            >
               Logout
             </button>
           </li>

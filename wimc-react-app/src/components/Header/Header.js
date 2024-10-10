@@ -1,5 +1,6 @@
 import React from "react";
 import ClosetTabs from "../ClosetTabs/ClosetTabs";
+import { Link } from "react-router-dom";
 import "./Header.css";
 
 function Header({
@@ -9,14 +10,16 @@ function Header({
   onSignUpClick,
   onLoginClick,
   onLogoutClick,
+  onAboutClick,
 }) {
   const defaultAvatarUrl = "/assets/images/default-avatar.jpg";
-
   const displayAvatarUrl = avatarUrl || defaultAvatarUrl;
 
   return (
     <header className="header">
-      <div className="header__logo">WIMC</div>
+      <Link to="/" className="header__logo-link">
+        <div className="header__logo">WIMC</div>
+      </Link>
 
       {isLoggedIn ? (
         <>
@@ -35,6 +38,9 @@ function Header({
             <button className="header__button" onClick={onLogoutClick}>
               Logout
             </button>
+            <button className="header__about-button" onClick={onAboutClick}>
+              About
+            </button>
           </div>
         </>
       ) : (
@@ -45,6 +51,9 @@ function Header({
           <button className="header__button" onClick={onLoginClick}>
             Login
           </button>
+          <button className="header__about-button" onClick={onAboutClick}>
+            About
+          </button>
         </div>
       )}
     </header>
@@ -52,3 +61,4 @@ function Header({
 }
 
 export default Header;
+

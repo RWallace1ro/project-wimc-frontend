@@ -1,15 +1,22 @@
 .search-form {
-  margin: 20px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* margin: 20px auto; */
   text-align: center;
+  /* padding: 20px; */
+  max-width: 600px;
+  width: 100%;
+  gap: 10px;
 }
 
 .search-form__input {
   padding: 10px;
-  width: 300px;
+  width: 200px;
   font-size: 16px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  margin-right: 10px;
+  /* margin-right: 0px; */
 }
 
 .search-form__button {
@@ -20,6 +27,7 @@
   color: #fff;
   border-radius: 5px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .search-form__button:disabled {

@@ -10,10 +10,9 @@ import Footer from "../Footer/Footer";
 import Main from "../Main/Main";
 import Home from "../../components/Home/Home";
 import ClosetData from "../../Pages/ClosetData";
+import About from "../About/About";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
-import SearchForm from "../SearchForm/SearchForm";
-import { updateUser } from "../../utils/BackendAPI";
-import { uploadImage } from "../../utils/CloudinaryAPI";
+import { api } from "../../utils/BackendAPI";
 import "./App.css";
 
 function App() {
@@ -23,23 +22,47 @@ function App() {
   const [userData, setUserData] = useState({
     userName: "Rochelle",
     avatarUrl: "/assets/images/avatar.jpg",
-    email: "rochelle@example.com",
+    email: "rochelle@gmail.com",
   });
-  const [images, setImages] = useState([]);
 
   const handleImageUpload = (file) => {
-    uploadImage(file)
+    const formData = new FormData();
+    formData.append("file", file);
+
+    api
+      .uploadImage(formData)
       .then((res) => {
         const updatedUser = { ...userData, avatarUrl: res.secure_url };
         setUserData(updatedUser);
-        updateUser(userData.id, updatedUser);
+        return api.updateUser(userData.id, updatedUser);
       })
       .catch((error) => console.error("Image upload error:", error));
   };
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setIsLoginModalOpen(false);
+  const handleLogin = (userCredentials) => {
+    api
+      .login(userCredentials)
+      .then((user) => {
+        setUserData(user);
+        setIsLoggedIn(true);
+        setIsLoginModalOpen(false);
+      })
+      .catch((error) => {
+        console.error("Login error:", error);
+      });
+  };
+
+  const handleSignUp = (userCredentials) => {
+    api
+      .signUp(userCredentials)
+      .then((user) => {
+        setUserData(user);
+        setIsLoggedIn(true);
+        setIsSignUpModalOpen(false);
+      })
+      .catch((error) => {
+        console.error("Sign Up error:", error);
+      });
   };
 
   const handleLogout = () => {
@@ -53,6 +76,10 @@ function App() {
     setIsLoginModalOpen(true);
   };
 
+  const handleAboutClick = () => {
+    window.location.href = "/about";
+  };
+
   return (
     <Router>
       <div className="app">
@@ -63,6 +90,7 @@ function App() {
           onSignUpClick={() => setIsSignUpModalOpen(true)}
           onLoginClick={() => setIsLoginModalOpen(true)}
           onLogoutClick={handleLogout}
+          onAboutClick={handleAboutClick}
         />
         <div className="app__content">
           <Routes>
@@ -72,45 +100,26 @@ function App() {
               path="/closet-data"
               element={<ClosetData onLogout={handleLogout} />}
             />
+            <Route path="/about" element={<About />} />
             <Route path="*" element={<Navigate to="/home" />} />
           </Routes>
         </div>
 
-        <div className="image-gallery">
-          {images.length > 0 &&
-            images.map((image) => (
-              <img
-                key={image.public_id}
-                src={image.secure_url}
-                alt={image.public_id}
-              />
-            ))}
-        </div>
-        <SearchForm onSearchResults={(images) => setImages(images)} />
-
-        <div className="image-gallery">
-          {images.length > 0 &&
-            images.map((image) => (
-              <img
-                key={image.public_id}
-                src={image.secure_url}
-                alt={image.public_id}
-              />
-            ))}
-        </div>
         <Footer />
+
         <ModalWithForm
           isOpen={isSignUpModalOpen}
           onClose={() => setIsSignUpModalOpen(false)}
-          onLogin={handleLogin}
+          onSubmit={handleSignUp}
           isSignUp={true}
           switchToLogin={switchToLoginModal}
           onImageUpload={handleImageUpload}
         />
+
         <ModalWithForm
           isOpen={isLoginModalOpen}
           onClose={() => setIsLoginModalOpen(false)}
-          onLogin={handleLogin}
+          onSubmit={handleLogin}
           isSignUp={false}
         />
       </div>

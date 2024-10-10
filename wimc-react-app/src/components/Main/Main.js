@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchImage } from "../../utils/CloudinaryAPI";
+import { api } from "../../utils/CloudinaryAPI";
 import "./Main.css";
 
 function Main() {
   const [avatarUrl, setAvatarUrl] = useState("");
 
   useEffect(() => {
-    const publicId = "your_cloudinary_image_id";
-    fetchImage(publicId)
+    const publicId = "cloudinary_image_id";
+    api
+      .fetchImage(publicId)
       .then((response) => {
         setAvatarUrl(response.secure_url);
       })

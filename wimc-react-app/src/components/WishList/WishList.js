@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  getWishListItems,
-  addWishListItem,
-  deleteWishListItem,
-} from "../../utils/BackendAPI";
+import { api } from "../../utils/BackendAPI";
 import "./WishList.css";
 
 function WishList({ userId }) {
@@ -14,26 +10,44 @@ function WishList({ userId }) {
     description: "",
   });
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [showWishList, setShowWishList] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+  const [addAttempted, setAddAttempted] = useState(false);
 
   useEffect(() => {
-    getWishListItems(userId)
+    api
+      .getWishListItems(userId)
       .then((items) => {
         setWishListItems(items.resources);
       })
       .catch((error) => {
         console.error("Error fetching wish list items:", error);
-        setError("Failed to load wish list items. Please try again.");
+        setLoadError("Failed to load wish list items. Please try again.");
       });
   }, [userId]);
 
   const handleAddItem = () => {
-    if (!newItem.url && (!newItem.name || !newItem.description)) {
-      setError("Please enter a URL or provide a name and description.");
+    setAddAttempted(true);
+
+    if (!newItem.url && !newItem.name && !newItem.description) {
+      setError(
+        "Please fill in at least one field (URL, name, or description)."
+      );
       return;
     }
 
-    addWishListItem(userId, newItem)
+    setError("");
+
+    if (!newItem.url) {
+      const addedItem = { ...newItem, public_id: Date.now().toString() };
+      setWishListItems([...wishListItems, addedItem]);
+      setNewItem({ url: "", name: "", description: "" });
+      return;
+    }
+
+    api
+      .addWishListItem(userId, newItem)
       .then((addedItem) => {
         setWishListItems([...wishListItems, addedItem]);
         setNewItem({ url: "", name: "", description: "" });
@@ -46,7 +60,8 @@ function WishList({ userId }) {
   };
 
   const handleRemoveItem = (index, itemId) => {
-    deleteWishListItem(userId, itemId)
+    api
+      .deleteWishListItem(userId, itemId)
       .then(() => {
         const updatedItems = wishListItems.filter((_, i) => i !== index);
         setWishListItems(updatedItems);
@@ -66,9 +81,28 @@ function WishList({ userId }) {
     setShowWishList(!showWishList);
   };
 
+  const handleShareWishList = () => {
+    const wishListText = wishListItems
+      .map(
+        (item) =>
+          `Name: ${item.name}, Description: ${item.description}, URL: ${item.url}`
+      )
+      .join("\n");
+    navigator.clipboard
+      .writeText(wishListText)
+      .then(() => {
+        setShareMessage("Wish list copied to clipboard! Share it with others.");
+      })
+      .catch((error) => {
+        console.error("Error sharing wish list:", error);
+        setError("Failed to copy the wish list. Please try again.");
+      });
+  };
+
   return (
     <div className="wish-list">
       <h3>Wish List</h3>
+
       <div className="wish-list__input">
         <input
           type="text"
@@ -98,13 +132,26 @@ function WishList({ userId }) {
       <div className="wish-list__input">
         <button onClick={handleAddItem}>Add</button>
       </div>
+
+      {addAttempted && newItem.url && loadError && (
+        <p className="wish-list__error">{loadError}</p>
+      )}
+
       {error && <p className="wish-list__error">{error}</p>}
+
       <div className="wish-list__actions">
-        <button className="wish-list__share">Share Wish List</button>
+        <button className="wish-list__share" onClick={handleShareWishList}>
+          Share Wish List
+        </button>
         <button className="wish-list__view" onClick={handleToggleWishList}>
           {showWishList ? "Hide Wish List" : "View Wish List"}
         </button>
       </div>
+
+      {shareMessage && (
+        <p className="wish-list__share-message">{shareMessage}</p>
+      )}
+
       {showWishList && (
         <div className="wish-list__items">
           <h4>Items in Wish List:</h4>

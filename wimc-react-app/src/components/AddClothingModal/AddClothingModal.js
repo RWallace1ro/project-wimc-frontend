@@ -40,7 +40,7 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
       formDataImage.append("file", imageFile);
       formDataImage.append("upload_preset", "wimc_upload");
 
-      const imageResponse = await uploadImage(formDataImage);
+      const imageResponse = await api.uploadImage(formDataImage);
       const imageUrl = imageResponse.secure_url;
 
       const newClothingItem = await postData("/clothing", {

@@ -1,14 +1,17 @@
 import React, { useState } from "react";
-import { uploadImage } from "../../utils/CloudinaryAPI";
+import { api } from "../../utils/CloudinaryAPI";
 import "./DonateBin.css";
 
 function DonateBin() {
   const [donateItems, setDonateItems] = useState([]);
-  const [newItem, setNewItem] = useState({ name: "", image: null });
+  const [newItem, setNewItem] = useState({
+    url: "",
+    name: "",
+    description: "",
+  });
   const [donatedItems, setDonatedItems] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const [showDonatedItems, setShowDonatedItems] = useState(false);
 
   const handleInputChange = (e) => {
@@ -22,28 +25,37 @@ function DonateBin() {
   };
 
   const handleAddItem = () => {
-    if (!newItem.name) {
-      setError("Please enter an item name to donate.");
+    if (!newItem.name && !newItem.description) {
+      setError("Please enter an item name or description.");
       return;
     }
 
     if (!newItem.image) {
-      setError("Please upload an image for the item.");
+      const addedItem = {
+        name: newItem.name,
+        description: newItem.description,
+        url: newItem.url,
+      };
+      setDonateItems([...donateItems, addedItem]);
+      setNewItem({ name: "", description: "", image: null });
+      setError("");
       return;
     }
 
     setLoading(true);
-
     const formData = new FormData();
     formData.append("file", newItem.image);
-    uploadImage(formData)
+    api
+      .uploadImage(formData)
       .then((response) => {
         const itemWithImage = {
           name: newItem.name,
+          description: newItem.description,
           imageUrl: response.secure_url,
+          url: newItem.url,
         };
         setDonateItems([...donateItems, itemWithImage]);
-        setNewItem({ name: "", image: null });
+        setNewItem({ name: "", description: "", image: null });
         setError("");
         setLoading(false);
       })
@@ -85,6 +97,12 @@ function DonateBin() {
           value={newItem.name}
           onChange={handleInputChange}
         />
+        <textarea
+          name="description"
+          placeholder="Enter item description"
+          value={newItem.description}
+          onChange={handleInputChange}
+        />
         <input
           type="file"
           name="image"
@@ -104,11 +122,14 @@ function DonateBin() {
         {donateItems.map((item, index) => (
           <li key={index}>
             <span>{item.name}</span>
-            <img
-              src={item.imageUrl}
-              alt={item.name}
-              className="donate-bin__image"
-            />
+            <p>{item.description}</p>
+            {item.imageUrl && (
+              <img
+                src={item.imageUrl}
+                alt={item.name}
+                className="donate-bin__image"
+              />
+            )}
             <button onClick={() => handleRemoveItem(index)}>Remove</button>
           </li>
         ))}
@@ -131,11 +152,14 @@ function DonateBin() {
               {donatedItems.map((item, index) => (
                 <li key={index}>
                   <span>{item.name}</span>
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="donate-bin__image"
-                  />
+                  <p>{item.description}</p>
+                  {item.imageUrl && (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className="donate-bin__image"
+                    />
+                  )}
                 </li>
               ))}
             </ul>

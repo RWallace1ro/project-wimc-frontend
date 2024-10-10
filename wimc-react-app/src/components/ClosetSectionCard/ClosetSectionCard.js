@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { fetchImage } from "../../utils/CloudinaryAPI";
+import { api } from "../../utils/CloudinaryAPI";
 import "./ClosetSectionCard.css";
 
 function ClosetSectionCard({ sectionName, onClick }) {
   const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
-    fetchImage(sectionName)
+    api
+      .fetchImage(sectionName)
       .then((response) => {
         setImageUrl(response.secure_url);
       })

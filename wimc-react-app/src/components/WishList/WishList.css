@@ -31,7 +31,7 @@
 
 .wish-list__input textarea {
   resize: none;
-  height: 60px;
+  height: 30px;
 }
 
 .wish-list__input button {
@@ -42,7 +42,8 @@
   cursor: pointer;
   font-size: 16px;
   border-radius: 5px;
-  margin-left: 10px;
+  margin-left: 0px;
+  width: 100%;
 }
 
 .wish-list__input button:hover {
@@ -71,7 +72,7 @@
 }
 
 .wish-list li button {
-  padding: 5px 10px;
+  padding: 5px 3px;
   border: none;
   background-color: #d9534f;
   color: #fff;
@@ -100,6 +101,7 @@
   cursor: pointer;
   font-size: 14px;
   border-radius: 5px;
+  width: 200px;
 }
 
 .wish-list__share:hover,
@@ -127,4 +129,5 @@
 .wish-list__items ul li {
   padding: 8px;
   border-bottom: 1px solid #ddd;
+  font-size: 14px;
 }

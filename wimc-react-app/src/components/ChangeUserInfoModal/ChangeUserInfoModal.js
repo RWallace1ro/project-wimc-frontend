@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { updateUser } from "../../utils/BackendAPI";
 import { uploadImage } from "../../utils/CloudinaryAPI";
+import { api } from "../../utils/BackendAPI";
 import "./ChangeUserInfoModal.css";
 
 function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
@@ -23,6 +23,16 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     setImageFile(e.target.files[0]);
   };
 
+  const handleImageUpload = (file) => {
+    uploadImage(file)
+      .then((response) => {
+        console.log("Image uploaded successfully:", response);
+      })
+      .catch((error) => {
+        console.error("Error uploading image:", error);
+      });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -36,11 +46,11 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
         formDataImage.append("file", imageFile);
         formDataImage.append("upload_preset", "wimc_upload");
 
-        const imageResponse = await uploadImage(formDataImage);
+        const imageResponse = await api.uploadImage(formDataImage);
         updatedFormData.avatarUrl = imageResponse.secure_url;
       }
 
-      const updatedUser = await updateUser(userData.id, updatedFormData);
+      const updatedUser = await api.updateUser(userData.id, updatedFormData);
       onUserUpdate(updatedUser);
       onClose();
     } catch (err) {

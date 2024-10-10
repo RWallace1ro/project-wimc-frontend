@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { fetchImage } from '../../utils/CloudinaryAPI';
-import './SearchForm.css';
+import React, { useState } from "react";
+import { api } from "../../utils/CloudinaryAPI";
+import "./SearchForm.css";
 
 function SearchForm({ onSearchResults }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -13,21 +13,21 @@ function SearchForm({ onSearchResults }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     if (!searchTerm.trim()) {
-      setError('Please enter a valid search term.');
+      setError("Please enter a valid search term.");
       setIsLoading(false);
       return;
     }
 
     try {
-      const result = await fetchImage(searchTerm);
+      const result = await api.fetchImage(searchTerm);
       onSearchResults(result.resources);
     } catch (error) {
-      setError('Failed to fetch images. Please try again.');
-      console.error('Search error:', error);
+      setError("Failed to fetch images. Please try again.");
+      console.error("Search error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -44,8 +44,12 @@ function SearchForm({ onSearchResults }) {
           onChange={handleChange}
           className="search-form__input"
         />
-        <button type="submit" className="search-form__button" disabled={isLoading}>
-          {isLoading ? 'Searching...' : 'Search'}
+        <button
+          type="submit"
+          className="search-form__button"
+          disabled={isLoading}
+        >
+          {isLoading ? "Searching..." : "Search"}
         </button>
       </form>
       {error && <p className="search-form__error">{error}</p>}

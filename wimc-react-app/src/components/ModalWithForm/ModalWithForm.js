@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { signUp, login } from "../../utils/BackendAPI";
+import { api } from "../../utils/BackendAPI";
 import "./ModalWithForm.css";
 
 function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
@@ -73,17 +73,29 @@ function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
       avatarUrl: formData.avatarUrl,
     };
 
-    const apiCall = isSignUp ? signUp(userData) : login(userData);
-
-    apiCall
-      .then((data) => {
-        onLogin();
-        console.log("User data:", data);
-      })
-      .catch((err) => {
-        setError("Failed to submit the form. Please try again.");
-        console.error("Error:", err);
-      });
+    if (isSignUp) {
+      api
+        .signUp(userData)
+        .then((data) => {
+          onLogin();
+          console.log("User data:", data);
+        })
+        .catch((err) => {
+          setError("Failed to submit the form. Please try again.");
+          console.error("Error:", err);
+        });
+    } else {
+      api
+        .login(userData)
+        .then((data) => {
+          onLogin();
+          console.log("User data:", data);
+        })
+        .catch((err) => {
+          setError("Failed to submit the form. Please try again.");
+          console.error("Error:", err);
+        });
+    }
   };
 
   if (!isOpen) {
