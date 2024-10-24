@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import { postData } from "../../utils/BackendAPI";
-import { uploadImage } from "../../utils/CloudinaryAPI";
+import React, { useState, useEffect, useRef } from "react";
+import { api } from "../../utils/CloudinaryAPI";
 import "./AddClothingModal.css";
 
 function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
@@ -14,6 +13,26 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", handleKeyPress);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [onClose]);
+
+  const handleOverlayClick = (e) => {
+    if (modalRef.current && !modalRef.current.contains(e.target)) {
+      onClose();
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,31 +41,29 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
 
   const handleImageChange = (e) => {
     setImageFile(e.target.files[0]);
+    setFormData({ ...formData, imageUrl: "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!imageFile) {
-      setError("Please select an image.");
+    if (!imageFile && !formData.imageUrl) {
+      setError("Please select an image file or enter an image URL.");
       return;
     }
 
     setIsUploading(true);
 
     try {
-      const formDataImage = new FormData();
-      formDataImage.append("file", imageFile);
-      formDataImage.append("upload_preset", "wimc_upload");
+      let imageUrl = formData.imageUrl;
 
-      const imageResponse = await api.uploadImage(formDataImage);
-      const imageUrl = imageResponse.secure_url;
+      if (imageFile) {
+        const imageResponse = await api.uploadImage(imageFile);
+        imageUrl = imageResponse.secure_url;
+      }
 
-      const newClothingItem = await postData("/clothing", {
-        ...formData,
-        imageUrl,
-      });
+      const newClothingItem = { ...formData, imageUrl };
 
       onClothingAdded(newClothingItem);
       onClose();
@@ -62,8 +79,12 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
+    <div className="modal-overlay" onClick={handleOverlayClick}>
+      <div
+        className="modal"
+        ref={modalRef}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal__header">
           <h2 className="modal__title">Add New Clothing Item</h2>
           <button className="modal__close" onClick={onClose}>
@@ -102,13 +123,25 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
             className="modal__input"
           >
             <option value="">Select Category</option>
-            <option value="Evening Wear">Evening Wear</option>
-            <option value="Shoes">Shoes</option>
+            <option value="Dresses/Skirts">Dresses/Skirts</option>
+            <option value="Shoes/Sneakers">Shoes/Sneakers</option>
             <option value="Pants/Jeans">Pants/Jeans</option>
             <option value="Tops">Tops</option>
             <option value="Bags">Bags</option>
             <option value="Jackets/Coats">Jackets/Coats</option>
           </select>
+
+          <input
+            type="text"
+            name="imageUrl"
+            placeholder="Image URL"
+            value={formData.imageUrl}
+            onChange={(e) => {
+              handleChange(e);
+              setImageFile(null);
+            }}
+            className="modal__input"
+          />
 
           <input
             type="file"

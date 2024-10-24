@@ -8,6 +8,7 @@ function DonateBin() {
     url: "",
     name: "",
     description: "",
+    image: null,
   });
   const [donatedItems, setDonatedItems] = useState([]);
   const [error, setError] = useState("");
@@ -30,6 +31,8 @@ function DonateBin() {
       return;
     }
 
+    setError("");
+
     if (!newItem.image) {
       const addedItem = {
         name: newItem.name,
@@ -37,16 +40,14 @@ function DonateBin() {
         url: newItem.url,
       };
       setDonateItems([...donateItems, addedItem]);
-      setNewItem({ name: "", description: "", image: null });
-      setError("");
+      setNewItem({ name: "", description: "", url: "", image: null });
       return;
     }
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append("file", newItem.image);
+
     api
-      .uploadImage(formData)
+      .uploadImage(newItem.image)
       .then((response) => {
         const itemWithImage = {
           name: newItem.name,
@@ -55,8 +56,7 @@ function DonateBin() {
           url: newItem.url,
         };
         setDonateItems([...donateItems, itemWithImage]);
-        setNewItem({ name: "", description: "", image: null });
-        setError("");
+        setNewItem({ name: "", description: "", url: "", image: null });
         setLoading(false);
       })
       .catch((err) => {
@@ -70,10 +70,8 @@ function DonateBin() {
       setError("No items to donate.");
       return;
     }
-
     setDonatedItems([...donatedItems, ...donateItems]);
     setDonateItems([]);
-    setError("");
   };
 
   const handleRemoveItem = (index) => {

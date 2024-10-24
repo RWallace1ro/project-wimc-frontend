@@ -1,5 +1,8 @@
 // const CLOUDINARY_API_BASE_URL = "https://api.cloudinary.com/v1_1/:cloud_name";
-// const apiKey = "258382581976839";
+// const apiKey =
+
+// const CLOUDINARY_API_BASE_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}`;
+// const CLOUDINARY_API_UPLOAD_URL = `${CLOUDINARY_API_BASE_URL}/image/upload`;
 
 // console.log("API Key:", apiKey);
 // console.log("API Base URL:", CLOUDINARY_API_BASE_URL);

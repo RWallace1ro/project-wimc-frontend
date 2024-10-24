@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { api } from "../../utils/BackendAPI";
 import "./ModalWithForm.css";
 
-function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
+function ModalWithForm({
+  isOpen,
+  onClose,
+  onSubmit,
+  isSignUp,
+  switchToLogin,
+  error,
+}) {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -10,30 +16,20 @@ function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
     confirmPassword: "",
     avatarUrl: "",
   });
-  const [error, setError] = useState("");
+
   const modalRef = useRef(null);
 
   useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (modalRef.current && !modalRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    const handleEscapeKey = (event) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    document.addEventListener("mousedown", handleOutsideClick);
-    document.addEventListener("keydown", handleEscapeKey);
-
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick);
-      document.removeEventListener("keydown", handleEscapeKey);
-    };
-  }, [onClose]);
+    if (!isOpen) {
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        avatarUrl: "",
+      });
+    }
+  }, [isOpen]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -41,7 +37,7 @@ function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
   };
 
   const validateForm = () => {
-    if (formData.username.length < 2) {
+    if (isSignUp && formData.username.length < 2) {
       return "Name must contain at least 2 characters.";
     }
     if (!formData.email.includes("@") || !formData.email.includes(".")) {
@@ -58,44 +54,13 @@ function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError("");
 
     const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
       return;
     }
 
-    const userData = {
-      username: formData.username,
-      email: formData.email,
-      password: formData.password,
-      avatarUrl: formData.avatarUrl,
-    };
-
-    if (isSignUp) {
-      api
-        .signUp(userData)
-        .then((data) => {
-          onLogin();
-          console.log("User data:", data);
-        })
-        .catch((err) => {
-          setError("Failed to submit the form. Please try again.");
-          console.error("Error:", err);
-        });
-    } else {
-      api
-        .login(userData)
-        .then((data) => {
-          onLogin();
-          console.log("User data:", data);
-        })
-        .catch((err) => {
-          setError("Failed to submit the form. Please try again.");
-          console.error("Error:", err);
-        });
-    }
+    onSubmit(formData);
   };
 
   if (!isOpen) {
@@ -119,7 +84,7 @@ function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
               placeholder="Username"
               value={formData.username}
               onChange={handleChange}
-              className={`modal__input ${formData.username ? "filled" : ""}`}
+              className="modal__input"
             />
           )}
           <input
@@ -128,7 +93,7 @@ function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
-            className={`modal__input ${formData.email ? "filled" : ""}`}
+            className="modal__input"
           />
           <input
             type="password"
@@ -136,29 +101,17 @@ function ModalWithForm({ isOpen, onClose, onLogin, isSignUp, switchToLogin }) {
             placeholder="Password"
             value={formData.password}
             onChange={handleChange}
-            className={`modal__input ${formData.password ? "filled" : ""}`}
+            className="modal__input"
           />
           {isSignUp && (
-            <>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`modal__input ${
-                  formData.confirmPassword ? "filled" : ""
-                }`}
-              />
-              <input
-                type="text"
-                name="avatarUrl"
-                placeholder="Avatar URL (Optional)"
-                value={formData.avatarUrl}
-                onChange={handleChange}
-                className={`modal__input ${formData.avatarUrl ? "filled" : ""}`}
-              />
-            </>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="modal__input"
+            />
           )}
           {error && <p className="modal__error">{error}</p>}
           <div className="modal__footer">

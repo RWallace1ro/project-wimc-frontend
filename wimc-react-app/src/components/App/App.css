@@ -4,10 +4,6 @@
   min-height: 100vh;
 }
 
-/* .app > * {
-  flex: 1;
-} */
-
 .main {
   flex: 1;
   display: flex;

@@ -6,15 +6,25 @@ function ClosetSectionCard({ sectionName, onClick }) {
   const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
-    api
-      .fetchImage(sectionName)
-      .then((response) => {
-        setImageUrl(response.secure_url);
-      })
-      .catch((error) => {
+    const fetchImage = async () => {
+      try {
+        const response = await api.fetchImages(sectionName);
+        const imageResource = response.resources.find((img) =>
+          img.public_id.includes(sectionName)
+        );
+
+        if (imageResource) {
+          setImageUrl(imageResource.secure_url);
+        } else {
+          setImageUrl("/path/to/fallback-image.jpg");
+        }
+      } catch (error) {
         console.error("Error fetching image:", error);
         setImageUrl("/path/to/fallback-image.jpg");
-      });
+      }
+    };
+
+    fetchImage();
   }, [sectionName]);
 
   return (
@@ -32,3 +42,4 @@ function ClosetSectionCard({ sectionName, onClick }) {
 }
 
 export default ClosetSectionCard;
+

@@ -23,7 +23,7 @@ function SearchForm({ onSearchResults }) {
     }
 
     try {
-      const result = await api.fetchImage(searchTerm);
+      const result = await api.fetchImages(searchTerm);
       onSearchResults(result.resources);
     } catch (error) {
       setError("Failed to fetch images. Please try again.");

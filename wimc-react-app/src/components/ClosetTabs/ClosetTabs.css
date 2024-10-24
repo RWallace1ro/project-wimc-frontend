@@ -1,22 +1,28 @@
 .closet-tabs {
   display: flex;
-  gap: 10px;
-  /* justify-content: center; */
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  z-index: 3;
+}
+
+.closet-tabs__container {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
 }
 
 .closet-tabs__tab {
-  padding: 10px 15px;
-  border: none;
-  background-color: #f0f0f0;
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #f8f8f8;
   color: #333;
   cursor: pointer;
+  border: 1px solid #ddd;
   border-radius: 5px;
-  transition: background-color 0.3s;
-}
-
-.closet-tabs__tab:hover {
-  background-color: #007bff;
-  color: #fff;
+  transition: background-color 0.3s, color 0.3s;
+  border: none;
 }
 
 .closet-tabs__tab.active {
@@ -24,3 +30,7 @@
   color: #fff;
 }
 
+.closet-tabs__tab:hover {
+  background-color: #0056b3;
+  color: #fff;
+}

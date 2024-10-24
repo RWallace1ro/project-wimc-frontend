@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { api } from "../../utils/BackendAPI";
+import React, { useState } from "react";
+// import { api } from "../../utils/CloudinaryAPI";
 import "./WishList.css";
 
-function WishList({ userId }) {
+function WishList() {
   const [wishListItems, setWishListItems] = useState([]);
   const [newItem, setNewItem] = useState({
     url: "",
@@ -10,22 +10,14 @@ function WishList({ userId }) {
     description: "",
   });
   const [error, setError] = useState("");
-  const [loadError, setLoadError] = useState("");
   const [showWishList, setShowWishList] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   const [addAttempted, setAddAttempted] = useState(false);
 
-  useEffect(() => {
-    api
-      .getWishListItems(userId)
-      .then((items) => {
-        setWishListItems(items.resources);
-      })
-      .catch((error) => {
-        console.error("Error fetching wish list items:", error);
-        setLoadError("Failed to load wish list items. Please try again.");
-      });
-  }, [userId]);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewItem({ ...newItem, [name]: value });
+  };
 
   const handleAddItem = () => {
     setAddAttempted(true);
@@ -39,42 +31,17 @@ function WishList({ userId }) {
 
     setError("");
 
-    if (!newItem.url) {
-      const addedItem = { ...newItem, public_id: Date.now().toString() };
-      setWishListItems([...wishListItems, addedItem]);
-      setNewItem({ url: "", name: "", description: "" });
-      return;
-    }
+    const newWishListItem = {
+      ...newItem,
+      id: Date.now().toString(),
+    };
 
-    api
-      .addWishListItem(userId, newItem)
-      .then((addedItem) => {
-        setWishListItems([...wishListItems, addedItem]);
-        setNewItem({ url: "", name: "", description: "" });
-        setError("");
-      })
-      .catch((error) => {
-        console.error("Error adding wish list item:", error);
-        setError("Failed to add item. Please try again.");
-      });
+    setWishListItems((prevItems) => [...prevItems, newWishListItem]);
+    setNewItem({ url: "", name: "", description: "" });
   };
 
-  const handleRemoveItem = (index, itemId) => {
-    api
-      .deleteWishListItem(userId, itemId)
-      .then(() => {
-        const updatedItems = wishListItems.filter((_, i) => i !== index);
-        setWishListItems(updatedItems);
-      })
-      .catch((error) => {
-        console.error("Error removing wish list item:", error);
-        setError("Failed to remove item. Please try again.");
-      });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewItem({ ...newItem, [name]: value });
+  const handleRemoveItem = (index) => {
+    setWishListItems((prevItems) => prevItems.filter((_, i) => i !== index));
   };
 
   const handleToggleWishList = () => {
@@ -88,6 +55,7 @@ function WishList({ userId }) {
           `Name: ${item.name}, Description: ${item.description}, URL: ${item.url}`
       )
       .join("\n");
+
     navigator.clipboard
       .writeText(wishListText)
       .then(() => {
@@ -133,11 +101,7 @@ function WishList({ userId }) {
         <button onClick={handleAddItem}>Add</button>
       </div>
 
-      {addAttempted && newItem.url && loadError && (
-        <p className="wish-list__error">{loadError}</p>
-      )}
-
-      {error && <p className="wish-list__error">{error}</p>}
+      {addAttempted && error && <p className="wish-list__error">{error}</p>}
 
       <div className="wish-list__actions">
         <button className="wish-list__share" onClick={handleShareWishList}>
@@ -160,7 +124,7 @@ function WishList({ userId }) {
           ) : (
             <ul>
               {wishListItems.map((item, index) => (
-                <li key={item.public_id}>
+                <li key={item.id}>
                   {item.url ? (
                     <a
                       href={item.url}
@@ -175,9 +139,7 @@ function WishList({ userId }) {
                       <p>{item.description}</p>
                     </>
                   )}
-                  <button
-                    onClick={() => handleRemoveItem(index, item.public_id)}
-                  >
+                  <button onClick={() => handleRemoveItem(index)}>
                     Remove
                   </button>
                 </li>

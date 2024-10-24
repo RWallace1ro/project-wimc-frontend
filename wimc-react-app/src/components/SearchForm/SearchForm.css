@@ -2,9 +2,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  /* margin: 20px auto; */
   text-align: center;
-  /* padding: 20px; */
   max-width: 600px;
   width: 100%;
   gap: 10px;
@@ -16,7 +14,6 @@
   font-size: 16px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  /* margin-right: 0px; */
 }
 
 .search-form__button {
@@ -28,6 +25,10 @@
   border-radius: 5px;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.search-form_button:hover {
+  background-color: #0056b3;
 }
 
 .search-form__button:disabled {

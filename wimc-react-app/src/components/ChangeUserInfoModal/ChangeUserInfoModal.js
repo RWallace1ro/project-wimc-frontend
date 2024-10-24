@@ -1,18 +1,51 @@
-import React, { useState } from "react";
-import { uploadImage } from "../../utils/CloudinaryAPI";
-import { api } from "../../utils/BackendAPI";
+import React, { useState, useEffect, useRef } from "react";
+import { api } from "../../utils/CloudinaryAPI";
 import "./ChangeUserInfoModal.css";
 
 function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
   const [formData, setFormData] = useState({
-    username: userData.username || "",
-    email: userData.email || "",
-    avatarUrl: userData.avatarUrl || "",
+    username: userData?.username || "",
+    email: userData?.email || "",
+    avatarUrl: userData?.avatarUrl || "",
   });
-
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const modalRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    const handleClickOutside = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        username: userData?.username || "",
+        email: userData?.email || "",
+        avatarUrl: userData?.avatarUrl || "",
+      });
+      setImageFile(null);
+      setError("");
+    }
+  }, [isOpen, userData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,41 +56,27 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     setImageFile(e.target.files[0]);
   };
 
-  const handleImageUpload = (file) => {
-    uploadImage(file)
-      .then((response) => {
-        console.log("Image uploaded successfully:", response);
-      })
-      .catch((error) => {
-        console.error("Error uploading image:", error);
-      });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    let updatedFormData = { ...formData };
 
-    try {
-      let updatedFormData = { ...formData };
-
-      if (imageFile) {
-        setIsUploading(true);
-        const formDataImage = new FormData();
-        formDataImage.append("file", imageFile);
-        formDataImage.append("upload_preset", "wimc_upload");
-
-        const imageResponse = await api.uploadImage(formDataImage);
+    if (imageFile) {
+      setIsUploading(true);
+      try {
+        const imageResponse = await api.uploadImage(imageFile);
         updatedFormData.avatarUrl = imageResponse.secure_url;
+        setIsUploading(false);
+      } catch (uploadError) {
+        console.error("Error uploading image:", uploadError);
+        setError("Failed to upload image. Please try again.");
+        setIsUploading(false);
+        return;
       }
-
-      const updatedUser = await api.updateUser(userData.id, updatedFormData);
-      onUserUpdate(updatedUser);
-      onClose();
-    } catch (err) {
-      setError("Failed to update user information. Please try again.");
-    } finally {
-      setIsUploading(false);
     }
+
+    onUserUpdate(updatedFormData);
+    onClose();
   };
 
   if (!isOpen) {
@@ -66,7 +85,7 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal">
+      <div className="modal" ref={modalRef}>
         <div className="modal__header">
           <h2 className="modal__title">Update User Information</h2>
           <button className="modal__close" onClick={onClose}>
@@ -90,14 +109,20 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
             onChange={handleChange}
             className="modal__input"
           />
-
           <input
             type="file"
             accept="image/*"
             onChange={handleImageChange}
             className="modal__input"
           />
-
+          <input
+            type="url"
+            name="avatarUrl"
+            placeholder="Or enter Image URL"
+            value={formData.avatarUrl}
+            onChange={handleChange}
+            className="modal__input"
+          />
           {error && <p className="modal__error">{error}</p>}
           <button
             type="submit"

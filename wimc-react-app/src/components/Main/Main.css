@@ -4,11 +4,19 @@
   align-items: center;
   justify-content: center;
   padding: 50px 20px;
-  text-align: center;
+  min-height: 100vh;
+  background-image: url("../../assets/images/main-background.jpg");
+  background-size: cover;
+  background-position: center;
+}
+
+.main__content {
   background: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
+  padding: 50px 20px;
+  text-align: center;
   margin: 50px auto;
-  max-width: 800px;
+  max-width: 900px;
 }
 
 .main__title {
@@ -24,9 +32,56 @@
   max-width: 600px;
 }
 
+.main__avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  object-fit: cover;
+}
+
 .main__link {
-  font-size: 16px;
-  color: #007bff;
-  text-decoration: underline;
+  padding: 15px 30px;
+  background-color: #007bff;
+  color: white;
+  font-size: 1.2rem;
+  text-decoration: none;
+  border-radius: 5px;
+  margin-top: 20px;
   cursor: pointer;
+}
+
+.main__link:hover {
+  background-color: #0056b3;
+}
+
+.main__message {
+  margin-top: 20px;
+  background-color: #f8d7da;
+  padding: 15px 20px;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  text-align: center;
+}
+
+.main__message p {
+  font-size: 16px;
+  color: red;
+  margin-bottom: 15px;
+}
+
+.main__message button {
+  margin: 5px;
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.3s;
+}
+
+.main__message button:hover {
+  background-color: #2980b9;
 }
