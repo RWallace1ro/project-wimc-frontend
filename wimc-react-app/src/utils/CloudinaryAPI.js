@@ -1,14 +1,26 @@
-const CLOUD_NAME = process.env.REACT_APP_CLOUD_NAME;
-const UPLOAD_PRESET = process.env.REACT_APP_UPLOAD_PRESET;
-const CLOUDINARY_API_BASE_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}`;
-const CLOUDINARY_API_UPLOAD_URL = `${CLOUDINARY_API_BASE_URL}/image/upload`;
+import { Cloudinary } from "@cloudinary/url-gen";
+import { AdvancedImage } from "@cloudinary/react";
 
-export const uploadImage = (file) => {
+
+const CLOUD_NAME = process.env.REACT_APP_CLOUD_NAME;
+const CLOUDINARY_PRESET = process.env.REACT_APP_UPLOAD_PRESET;
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+
+export const cld = new Cloudinary({
+  cloud: {
+    cloudName: CLOUD_NAME,
+  },
+});
+
+
+const ensureCallback = (callback) => (typeof callback === "function" ? callback : () => {});
+
+export const uploadImage = (file, callback) => {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("upload_preset", UPLOAD_PRESET);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
 
-  return fetch(CLOUDINARY_API_UPLOAD_URL, {
+  fetch(CLOUDINARY_URL, {
     method: "POST",
     body: formData,
   })
@@ -18,122 +30,75 @@ export const uploadImage = (file) => {
       }
       return response.json();
     })
+    .then((data) => ensureCallback(callback)(null, data))
     .catch((error) => {
       console.error("Error uploading image:", error);
-      throw error;
+      ensureCallback(callback)(error, null);
     });
 };
 
-export const fetchImages = () => {
-  return fetch(`${CLOUDINARY_API_BASE_URL}/resources/image/list.json`)
+
+export const fetchImages = (tag, callback) => {
+  const formattedTag = tag.replace(/\s/g, "-");
+
+  fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/list/${formattedTag}.json`)
     .then((response) => {
       if (!response.ok) {
-        throw new Error(`Fetch failed: ${response.statusText}`);
+        if (response.status === 404) {
+          
+          return [{ secure_url: "/path/to/placeholder-image.jpg" }];
+        }
+        throw new Error(`Failed to fetch images: ${response.statusText}`);
       }
       return response.json();
     })
+    .then((data) => ensureCallback(callback)(null, data.resources || []))
     .catch((error) => {
       console.error("Error fetching images:", error);
-      throw error;
+      ensureCallback(callback)(error, null);
     });
 };
 
-export const fetchImage = (publicId) => {
-  return fetch(`${CLOUDINARY_API_BASE_URL}/resources/image/upload/${publicId}`)
+
+export const fetchImage = (publicId, callback) => {
+  fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}`)
     .then((response) => {
       if (!response.ok) {
+        if (response.status === 404) {
+          
+          return { secure_url: "/path/to/placeholder-image.jpg" };
+        }
         throw new Error(`Image fetch failed: ${response.statusText}`);
       }
       return response.json();
     })
+    .then((data) => ensureCallback(callback)(null, data))
     .catch((error) => {
       console.error("Error fetching image:", error);
-      throw error;
+      ensureCallback(callback)(error, null);
     });
 };
 
-export const fetchClosetItems = (tag) => {
-  return fetch(`${CLOUDINARY_API_BASE_URL}/resources/image/tags/${tag}.json`)
+export const fetchClosetItems = (tag, callback) => {
+  const formattedTag = tag.replace(/\s/g, "-");
+
+  fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/tags/${formattedTag}.json`)
     .then((response) => {
       if (!response.ok) {
+        if (response.status === 404) {
+          
+          return [];
+        }
         throw new Error(`Failed to fetch closet items: ${response.statusText}`);
       }
       return response.json();
     })
+    .then((data) => ensureCallback(callback)(null, data.resources || []))
     .catch((error) => {
       console.error("Error fetching closet items:", error);
-      throw error;
+      ensureCallback(callback)(error, null);
     });
 };
 
-export const api = { uploadImage, fetchImages, fetchImage, fetchClosetItems };
+export { AdvancedImage };
 
-// const CLOUD_NAME = process.env.REACT_APP_CLOUD_NAME;
-// const UPLOAD_PRESET = process.env.REACT_APP_UPLOAD_PRESET;
-// const CLOUDINARY_API_BASE_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}`;
-// const CLOUDINARY_API_UPLOAD_URL = `${CLOUDINARY_API_BASE_URL}/image/upload`;
-
-// const uploadImage = (file) => {
-//   const formData = new FormData();
-//   formData.append("file", file);
-//   formData.append("upload_preset", UPLOAD_PRESET);
-
-//   return fetch(CLOUDINARY_API_UPLOAD_URL, {
-//     method: "POST",
-//     body: formData,
-//   })
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error("Failed to upload image");
-//       }
-//       return response.json();
-//     })
-//     .catch((error) => {
-//       console.error("Error uploading image:", error);
-//       throw error;
-//     });
-// };
-
-// const fetchImages = () => {
-//   return fetch(`${CLOUDINARY_API_BASE_URL}/resources/image`)
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error(`Fetch failed: ${response.statusText}`);
-//       }
-//       return response.json();
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching images:", error);
-//       throw error;
-//     });
-// };
-
-// const fetchImage = (publicId) => {
-//   return fetch(`${CLOUDINARY_API_BASE_URL}/resources/image/upload/${publicId}`)
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error(`Image fetch failed: ${response.statusText}`);
-//       }
-//       return response.json();
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching image:", error);
-//       throw error;
-//     });
-// };
-
-// const fetchClosetItems = (tag) => {
-//   return fetch(`${CLOUDINARY_API_BASE_URL}/resources/image/tags/${tag}`)
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error(`Failed to fetch closet items: ${response.statusText}`);
-//       }
-//       return response.json();
-//     })
-//     .catch((error) => {
-//       console.error("Error fetching closet items:", error);
-//       throw error;
-//     });
-// };
-
-// export const api = { uploadImage, fetchImages, fetchImage, fetchClosetItems };

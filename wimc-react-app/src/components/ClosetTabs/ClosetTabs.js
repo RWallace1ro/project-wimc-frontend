@@ -7,7 +7,7 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
     "Shoes/Sneakers",
     "Pants/Jeans",
     "Tops",
-    "Bags",
+    "Bags/Accessories",
     "Jackets/Coats",
   ];
 

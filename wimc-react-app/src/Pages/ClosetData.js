@@ -6,7 +6,7 @@ import WishList from "../components/WishList/WishList";
 import ChangeUserInfoModal from "../components/ChangeUserInfoModal/ChangeUserInfoModal";
 import SearchForm from "../components/SearchForm/SearchForm";
 import AddClothingModal from "../components/AddClothingModal/AddClothingModal";
-import { api } from "../utils/CloudinaryAPI";
+import { fetchClosetItems } from "../utils/CloudinaryAPI";
 import "./ClosetData.css";
 
 const closetSections = [
@@ -17,7 +17,10 @@ const closetSections = [
   },
   { name: "Pants/Jeans", imageUrl: "../../assets/images/pants.jpg" },
   { name: "Tops", imageUrl: "../../assets/images/tops.jpg" },
-  { name: "Bags", imageUrl: "../../assets/images/bags.jpg" },
+  {
+    name: "Bags/Accessories",
+    imageUrl: "../../assets/images/bags-accessories.jpg",
+  },
   { name: "Jackets/Coats", imageUrl: "../../assets/images/jackets.jpg" },
 ];
 
@@ -37,17 +40,27 @@ function ClosetData({ selectedTab }) {
   };
 
   useEffect(() => {
-    api
-      .fetchClosetItems()
-      .then((items) => {
-        setClosetItems(items.resources);
+    fetchClosetItems("all", (err, items) => {
+      if (err) {
         setError(null);
-      })
-      .catch((error) => {
-        console.error("Error fetching closet items:", error);
-        setError(null);
-      });
+        console.error("Error fetching closet items:", err);
+      } else {
+        setClosetItems(items);
+      }
+    });
   }, []);
+
+  // useEffect(() => {
+  //   fetchClosetItems("all")
+  //     .then((items) => {
+  //       setClosetItems(items);
+  //       setError(null);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching closet items:", error);
+  //       setError("Failed to load closet items.");
+  //     });
+  // }, []);
 
   useEffect(() => {
     if (selectedTab) {
@@ -115,9 +128,7 @@ function ClosetData({ selectedTab }) {
         <SearchForm onSearchResults={handleSearchResults} />
       </div>
 
-      {error && closetItems.length === 0 && (
-        <p className="error-message">{error}</p>
-      )}
+      {error && <p className="error-message">{error}</p>}
 
       <div className="closet-data">
         <div className="closet-data__cards-container">
@@ -125,7 +136,6 @@ function ClosetData({ selectedTab }) {
             <ClosetSectionCard
               key={section.name}
               sectionName={section.name}
-              imageUrl={section.imageUrl}
               onClick={() => handleCardClick(section.name)}
             />
           ))}

@@ -1,39 +1,55 @@
 import React, { useEffect, useState } from "react";
-import { api } from "../../utils/CloudinaryAPI";
+import { Cloudinary } from "@cloudinary/url-gen";
+import { AdvancedImage } from "@cloudinary/react";
 import "./ClosetSectionCard.css";
 
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: process.env.REACT_APP_CLOUD_NAME,
+  },
+});
+
 function ClosetSectionCard({ sectionName, onClick }) {
-  const [imageUrl, setImageUrl] = useState("");
+  const [myImage, setMyImage] = useState(null);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchImage = async () => {
-      try {
-        const response = await api.fetchImages(sectionName);
-        const imageResource = response.resources.find((img) =>
-          img.public_id.includes(sectionName)
-        );
+    if (sectionName) {
+      const formattedSectionName = sectionName
+        .replace(/\s+/g, "_")
+        .toLowerCase();
+      const imagePublicId = `your_public_id_path/${formattedSectionName}`;
 
-        if (imageResource) {
-          setImageUrl(imageResource.secure_url);
-        } else {
-          setImageUrl("/path/to/fallback-image.jpg");
-        }
-      } catch (error) {
-        console.error("Error fetching image:", error);
-        setImageUrl("/path/to/fallback-image.jpg");
-      }
-    };
-
-    fetchImage();
+      const cloudinaryImage = cld.image(imagePublicId);
+      setMyImage(cloudinaryImage);
+    }
   }, [sectionName]);
+
+  const handleImageLoad = () => {
+    setIsImageLoaded(true);
+  };
+
+  const handleImageError = () => {
+    setIsImageLoaded(false);
+  };
 
   return (
     <div className="closet-section-card" onClick={onClick}>
-      <img
-        src={imageUrl}
-        alt={sectionName}
-        className="closet-section-card__image"
-      />
+      {myImage ? (
+        <AdvancedImage
+          cldImg={myImage}
+          className={`closet-section-card__image ${
+            isImageLoaded ? "loaded" : "loading"
+          }`}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+        />
+      ) : (
+        <div className="closet-section-card__placeholder">No Image</div>
+      )}
+      {!isImageLoaded && (
+        <div className="closet-section-card__placeholder">Loading...</div>
+      )}
       <div className="closet-section-card__overlay">
         <h3 className="closet-section-card__title">{sectionName}</h3>
       </div>
@@ -42,4 +58,3 @@ function ClosetSectionCard({ sectionName, onClick }) {
 }
 
 export default ClosetSectionCard;
-

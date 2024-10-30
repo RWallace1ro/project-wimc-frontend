@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { api } from "../../utils/CloudinaryAPI";
+import { uploadImage } from "../../utils/CloudinaryAPI";
 import "./ChangeUserInfoModal.css";
 
 function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
@@ -64,7 +64,7 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     if (imageFile) {
       setIsUploading(true);
       try {
-        const imageResponse = await api.uploadImage(imageFile);
+        const imageResponse = await uploadImage(imageFile);
         updatedFormData.avatarUrl = imageResponse.secure_url;
         setIsUploading(false);
       } catch (uploadError) {

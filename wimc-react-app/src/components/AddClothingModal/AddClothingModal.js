@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { api } from "../../utils/CloudinaryAPI";
+import { uploadImage } from "../../utils/CloudinaryAPI";
 import "./AddClothingModal.css";
 
 function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
@@ -59,7 +59,7 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
       let imageUrl = formData.imageUrl;
 
       if (imageFile) {
-        const imageResponse = await api.uploadImage(imageFile);
+        const imageResponse = await uploadImage(imageFile);
         imageUrl = imageResponse.secure_url;
       }
 
@@ -127,7 +127,7 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
             <option value="Shoes/Sneakers">Shoes/Sneakers</option>
             <option value="Pants/Jeans">Pants/Jeans</option>
             <option value="Tops">Tops</option>
-            <option value="Bags">Bags</option>
+            <option value="Bags/Accessories">Bags/Accessories</option>
             <option value="Jackets/Coats">Jackets/Coats</option>
           </select>
 

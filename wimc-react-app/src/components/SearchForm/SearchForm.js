@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { api } from "../../utils/CloudinaryAPI";
+import { fetchImages } from "../../utils/CloudinaryAPI";
 import "./SearchForm.css";
 
 function SearchForm({ onSearchResults }) {
@@ -11,7 +11,7 @@ function SearchForm({ onSearchResults }) {
     setSearchTerm(e.target.value);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -22,15 +22,17 @@ function SearchForm({ onSearchResults }) {
       return;
     }
 
-    try {
-      const result = await api.fetchImages(searchTerm);
-      onSearchResults(result.resources);
-    } catch (error) {
-      setError("Failed to fetch images. Please try again.");
-      console.error("Search error:", error);
-    } finally {
+    fetchImages(searchTerm, (err, result) => {
       setIsLoading(false);
-    }
+
+      if (err) {
+        setError("Failed to fetch images. Please try again.");
+        console.error("Search error:", err);
+        return;
+      }
+
+      onSearchResults(result);
+    });
   };
 
   return (

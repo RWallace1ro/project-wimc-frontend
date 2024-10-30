@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { api } from "../../utils/CloudinaryAPI";
+import { uploadImage } from "../../utils/CloudinaryAPI";
 import "./DonateBin.css";
 
 function DonateBin() {
@@ -25,7 +25,7 @@ function DonateBin() {
     setNewItem({ ...newItem, image: file });
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.name && !newItem.description) {
       setError("Please enter an item name or description.");
       return;
@@ -46,23 +46,21 @@ function DonateBin() {
 
     setLoading(true);
 
-    api
-      .uploadImage(newItem.image)
-      .then((response) => {
-        const itemWithImage = {
-          name: newItem.name,
-          description: newItem.description,
-          imageUrl: response.secure_url,
-          url: newItem.url,
-        };
-        setDonateItems([...donateItems, itemWithImage]);
-        setNewItem({ name: "", description: "", url: "", image: null });
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError("Failed to upload image. Please try again.");
-        setLoading(false);
-      });
+    try {
+      const response = await uploadImage(newItem.image);
+      const itemWithImage = {
+        name: newItem.name,
+        description: newItem.description,
+        imageUrl: response.secure_url,
+        url: newItem.url,
+      };
+      setDonateItems([...donateItems, itemWithImage]);
+      setNewItem({ name: "", description: "", url: "", image: null });
+      setLoading(false);
+    } catch (err) {
+      setError("Failed to upload image. Please try again.");
+      setLoading(false);
+    }
   };
 
   const handleDonate = () => {

@@ -90,3 +90,7 @@
   font-weight: bold;
   margin-top: 0;
 }
+
+.closet-section-modal__no-items {
+  color: red;
+}

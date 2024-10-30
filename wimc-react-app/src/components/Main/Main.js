@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../../utils/CloudinaryAPI";
+import { fetchImage } from "../../utils/CloudinaryAPI";
 import "./Main.css";
 
 function Main({ isLoggedIn }) {
@@ -9,9 +9,9 @@ function Main({ isLoggedIn }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const publicId = "cloudinary_image_id";
-    api
-      .fetchImage(publicId)
+    const publicId = "cloudinary_image_id"; //replace with id?
+
+    fetchImage(publicId)
       .then((response) => {
         setAvatarUrl(response.secure_url);
       })
