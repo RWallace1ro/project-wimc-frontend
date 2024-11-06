@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Cloudinary } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
+import { cld } from "../../utils/CloudinaryAPI";
 import "./ClosetSectionCard.css";
 
-const cld = new Cloudinary({
-  cloud: {
-    cloudName: process.env.REACT_APP_CLOUD_NAME,
-  },
-});
-
-function ClosetSectionCard({ sectionName, onClick }) {
+function ClosetSectionCard({ sectionName, placeholderUrl, onClick }) {
   const [myImage, setMyImage] = useState(null);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -18,7 +12,7 @@ function ClosetSectionCard({ sectionName, onClick }) {
       const formattedSectionName = sectionName
         .replace(/\s+/g, "_")
         .toLowerCase();
-      const imagePublicId = `your_public_id_path/${formattedSectionName}`;
+      const imagePublicId = `closet-items/${formattedSectionName}`;
 
       const cloudinaryImage = cld.image(imagePublicId);
       setMyImage(cloudinaryImage);
@@ -31,24 +25,24 @@ function ClosetSectionCard({ sectionName, onClick }) {
 
   const handleImageError = () => {
     setIsImageLoaded(false);
+    setMyImage(null);
   };
 
   return (
     <div className="closet-section-card" onClick={onClick}>
-      {myImage ? (
+      {myImage && isImageLoaded ? (
         <AdvancedImage
           cldImg={myImage}
-          className={`closet-section-card__image ${
-            isImageLoaded ? "loaded" : "loading"
-          }`}
+          className="closet-section-card__image loaded"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
       ) : (
-        <div className="closet-section-card__placeholder">No Image</div>
-      )}
-      {!isImageLoaded && (
-        <div className="closet-section-card__placeholder">Loading...</div>
+        <img
+          src={placeholderUrl}
+          alt={`${sectionName} placeholder`}
+          className="closet-section-card__image closet-section-card__placeholder"
+        />
       )}
       <div className="closet-section-card__overlay">
         <h3 className="closet-section-card__title">{sectionName}</h3>

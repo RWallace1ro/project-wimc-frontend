@@ -9,58 +9,103 @@ import AddClothingModal from "../components/AddClothingModal/AddClothingModal";
 import { fetchClosetItems } from "../utils/CloudinaryAPI";
 import "./ClosetData.css";
 
+import dressesSkirtsImg from "../assets/images/dresses-skirts.jpg";
+import shoesSneakersImg from "../assets/images/shoes-sneakers.jpg";
+import pantsJeansImg from "../assets/images/pants-jeans.jpg";
+import topsImg from "../assets/images/tops.jpg";
+import bagsAccessoriesImg from "../assets/images/bags-accessories.jpg";
+import jacketsCoatsImg from "../assets/images/jackets-coats.jpg";
+
+const displayNames = {
+  "dresses-skirts": "Dresses/Skirts",
+  "shoes-sneakers": "Shoes/Sneakers",
+  "pants-jeans": "Pants/Jeans",
+  tops: "Tops",
+  "bags-accessories": "Bags/Accessories",
+  "jackets-coats": "Jackets/Coats",
+};
+
 const closetSections = [
-  { name: "Dresses/Skirts", imageUrl: "./assets/images/dresses-skirts.jpg" },
   {
-    name: "Shoes/Sneakers",
-    imageUrl: "../../assets/images/shoes-sneakers.jpg",
+    name: "dresses-skirts",
+    publicId: "closet-items/dresses-skirts",
+    placeholderUrl: dressesSkirtsImg,
   },
-  { name: "Pants/Jeans", imageUrl: "../../assets/images/pants.jpg" },
-  { name: "Tops", imageUrl: "../../assets/images/tops.jpg" },
   {
-    name: "Bags/Accessories",
-    imageUrl: "../../assets/images/bags-accessories.jpg",
+    name: "shoes-sneakers",
+    publicId: "closet-items/shoes-sneakers",
+    placeholderUrl: shoesSneakersImg,
   },
-  { name: "Jackets/Coats", imageUrl: "../../assets/images/jackets.jpg" },
+  {
+    name: "pants-jeans",
+    publicId: "closet-items/pants-jeans",
+    placeholderUrl: pantsJeansImg,
+  },
+  { name: "tops", publicId: "closet-items/tops", placeholderUrl: topsImg },
+  {
+    name: "bags-accessories",
+    publicId: "closet-items/bags-accessories",
+    placeholderUrl: bagsAccessoriesImg,
+  },
+  {
+    name: "jackets-coats",
+    publicId: "closet-items/jackets-coats",
+    placeholderUrl: jacketsCoatsImg,
+  },
 ];
 
-function ClosetData({ selectedTab }) {
+function ClosetData({ selectedTab, isLoggedIn }) {
   const [closetItems, setClosetItems] = useState([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
-  const [images, setImages] = useState([]);
   const [selectedSection, setSelectedSection] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [error, setError] = useState(null);
+  const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const initialUserData = {
-    username: "Your Name",
-    email: "example@example.com",
-    avatarUrl: "/assets/images/default-avatar.jpg",
+    username: "",
+    email: "",
+    avatarUrl: "",
   };
 
   useEffect(() => {
-    fetchClosetItems("all", (err, items) => {
-      if (err) {
+    if (isLoggedIn) {
+      const fetchData = async () => {
+        setIsLoading(true);
         setError(null);
-        console.error("Error fetching closet items:", err);
-      } else {
-        setClosetItems(items);
-      }
-    });
-  }, []);
 
-  // useEffect(() => {
-  //   fetchClosetItems("all")
-  //     .then((items) => {
-  //       setClosetItems(items);
-  //       setError(null);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error fetching closet items:", error);
-  //       setError("Failed to load closet items.");
-  //     });
-  // }, []);
+        try {
+          fetchClosetItems(
+            [
+              "dresses-skirts",
+              "shoes-sneakers",
+              "pants-jeans",
+              "tops",
+              "bags-accessories",
+              "jackets-coats",
+            ],
+            (err, data) => {
+              if (err) {
+                console.error("Error fetching closet items:", err);
+                setError("Failed to load closet items.");
+              } else {
+                setClosetItems(data);
+              }
+            }
+          );
+        } catch (err) {
+          console.error("Error fetching closet items:", err);
+          setError("Failed to load closet items.");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (selectedTab) {
@@ -72,10 +117,8 @@ function ClosetData({ selectedTab }) {
   }, [selectedTab]);
 
   const handleCardClick = (sectionName) => {
-    if (selectedSection !== sectionName) {
-      setSelectedSection(sectionName);
-      setIsModalOpen(true);
-    }
+    setSelectedSection(sectionName);
+    setIsModalOpen(true);
   };
 
   const handleModalClose = () => {
@@ -129,13 +172,16 @@ function ClosetData({ selectedTab }) {
       </div>
 
       {error && <p className="error-message">{error}</p>}
+      {isLoading && <p className="loading-message">Loading...</p>}
 
       <div className="closet-data">
         <div className="closet-data__cards-container">
           {closetSections.map((section) => (
             <ClosetSectionCard
               key={section.name}
-              sectionName={section.name}
+              sectionName={displayNames[section.name]}
+              publicId={section.publicId}
+              placeholderUrl={section.placeholderUrl}
               onClick={() => handleCardClick(section.name)}
             />
           ))}
@@ -155,7 +201,7 @@ function ClosetData({ selectedTab }) {
 
         <ClosetSectionModal
           isOpen={isModalOpen}
-          sectionName={selectedSection}
+          sectionName={displayNames[selectedSection]}
           onClose={handleModalClose}
         />
 

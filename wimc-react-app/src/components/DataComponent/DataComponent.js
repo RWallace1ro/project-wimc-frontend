@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import Preloader from './Preloader';
-import NothingFound from './NothingFound';
+import React, { useState, useEffect } from "react";
+import Preloader from "./Preloader";
+import NothingFound from "./NothingFound";
 
 function DataComponent() {
   const [data, setData] = useState([]);
@@ -11,10 +11,10 @@ function DataComponent() {
     setIsLoading(true);
     setError(null);
 
-    fetch('https://cloudinary/data')
+    fetch("https://cloudinary/data")
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Something went wrong during the request.');
+          throw new Error("Something went wrong during the request.");
         }
         return response.json();
       })
@@ -27,7 +27,9 @@ function DataComponent() {
         setIsLoading(false);
       })
       .catch((err) => {
-        setError('Sorry, something went wrong during the request. Please try again later.');
+        setError(
+          "Something went wrong during the request. Please try again later."
+        );
         setIsLoading(false);
       });
   }, []);

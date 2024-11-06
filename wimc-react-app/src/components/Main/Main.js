@@ -1,24 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchImage } from "../../utils/CloudinaryAPI";
 import "./Main.css";
 
 function Main({ isLoggedIn }) {
-  const [avatarUrl, setAvatarUrl] = useState("");
   const [showAuthMessage, setShowAuthMessage] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const publicId = "cloudinary_image_id"; //replace with id?
-
-    fetchImage(publicId)
-      .then((response) => {
-        setAvatarUrl(response.secure_url);
-      })
-      .catch((error) => {
-        console.error("Error fetching image:", error);
-      });
-  }, []);
 
   const handleExploreClick = (e) => {
     if (!isLoggedIn) {
@@ -43,10 +29,6 @@ function Main({ isLoggedIn }) {
           wish list for items you want to add in the future. You can also share
           your closet and wishlist.
         </p>
-
-        {avatarUrl && (
-          <img src={avatarUrl} alt="User Avatar" className="main__avatar" />
-        )}
 
         <Link
           to="/closet-data"

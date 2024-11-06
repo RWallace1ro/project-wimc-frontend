@@ -10,8 +10,11 @@ import ModalWithForm from "../ModalWithForm/ModalWithForm";
 import {
   AdvancedImage,
   cld,
-  uploadImage,
+  uploadImageFromURL,
   fetchClosetItems,
+  uploadImage,
+  fetchImage,
+  fetchImages,
 } from "../../utils/CloudinaryAPI";
 import "./App.css";
 
@@ -29,13 +32,14 @@ function App() {
   const [closetItems, setClosetItems] = useState([]);
   const [loginError, setLoginError] = useState("");
   const [signUpError, setSignUpError] = useState("");
-  const [selectedTab, setSelectedTab] = useState(null);
+  const [selectedTab, setSelectedTab] = useState("Dresses/Skirts");
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchedImages, setFetchedImages] = useState([]);
+  const [singleImage, setSingleImage] = useState(null);
 
   const navigate = useNavigate();
 
-  // Load user data from local storage
   useEffect(() => {
     const storedUserData = JSON.parse(localStorage.getItem("userData"));
     const storedIsLoggedIn = localStorage.getItem("isLoggedIn") === "true";
@@ -49,13 +53,12 @@ function App() {
     }
   }, []);
 
-  // Handle image upload
-  const handleImageUpload = (file) => {
+  const handleImageUpload = (file, sectionName) => {
     setApiError("");
-    uploadImage(file, (err, res) => {
+    uploadImage(file, sectionName, (err, res) => {
       if (err) {
         console.error("Image upload error:", err);
-        setApiError("Failed to upload image.");
+        setApiError(null);
         return;
       }
       const updatedUser = { ...userData, avatarUrl: res.secure_url };
@@ -64,15 +67,23 @@ function App() {
     });
   };
 
-  // Fetch closet items
-  const fetchClosetItemsData = (tag) => {
+  const handleURLImageUpload = (url, sectionName) => {
+    setApiError("");
+    uploadImageFromURL(url, sectionName, (err) => {
+      if (err) {
+        console.error("Image upload from URL error:", err);
+      }
+    });
+  };
+
+  const fetchClosetItemsData = (sectionNames) => {
     setApiError("");
     setIsLoading(true);
 
-    fetchClosetItems(tag, (err, data) => {
+    fetchClosetItems(sectionNames, (err, data) => {
       if (err) {
         console.error("Error fetching closet items:", err);
-        setApiError(null);
+        setApiError("Failed to load closet items.");
         setIsLoading(false);
         return;
       }
@@ -81,9 +92,38 @@ function App() {
     });
   };
 
+  const handleFetchImages = (searchTerm) => {
+    fetchImages(searchTerm, (err, images) => {
+      if (err) {
+        console.error("Error fetching images:", err);
+        setApiError(null);
+        return;
+      }
+      setFetchedImages(images);
+    });
+  };
+
+  const handleFetchSingleImage = (publicId) => {
+    fetchImage(publicId, (err, image) => {
+      if (err) {
+        console.error("Error fetching image:", err);
+        setApiError("Failed to load image.");
+        return;
+      }
+      setSingleImage(image);
+    });
+  };
+
   useEffect(() => {
     if (isLoggedIn) {
-      fetchClosetItemsData("all");
+      fetchClosetItemsData([
+        "dresses-skirts",
+        "shoes-sneakers",
+        "pants-jeans",
+        "tops",
+        "bags-accessories",
+        "jackets-coats",
+      ]);
     }
   }, [isLoggedIn]);
 
@@ -103,7 +143,8 @@ function App() {
       email: userCredentials.email,
       password: userCredentials.password,
       avatarUrl:
-        userCredentials.avatarUrl || "/assets/images/default-avatar.jpg",
+        userCredentials.avatarUrl ||
+        "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg",
     };
 
     const updatedUsers = [...users, newUser];
@@ -121,15 +162,20 @@ function App() {
 
   const handleLogin = (data) => {
     setLoginError("");
-    const user = users.find((user) => user.email === data.email);
+    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
+    setUsers(storedUsers);
+
+    const user = storedUsers.find((user) => user.email === data.email);
 
     if (!user) {
       setLoginError("User does not exist.");
+      console.log("User not found:", data.email);
       return;
     }
 
     if (user.password !== data.password) {
       setLoginError("Incorrect password.");
+      console.log("Incorrect password for user:", data.email);
       return;
     }
 
@@ -141,6 +187,7 @@ function App() {
     localStorage.setItem("userData", JSON.stringify(user));
     localStorage.setItem("isLoggedIn", "true");
 
+    console.log("Login successful for user:", user.email);
     navigate("/home");
   };
 
@@ -148,7 +195,8 @@ function App() {
     setIsLoggedIn(false);
     setUserData({
       userName: "Your Closet",
-      avatarUrl: "/assets/images/default-avatar.jpg",
+      avatarUrl:
+        "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg",
       email: "",
     });
     setLoginData({ email: "", password: "" });
@@ -164,6 +212,8 @@ function App() {
 
   const handleSelectTab = (tab) => {
     setSelectedTab(tab);
+    handleFetchImages(tab);
+    handleFetchSingleImage(tab);
   };
 
   const switchToLoginModal = () => {
@@ -181,6 +231,7 @@ function App() {
         onLoginClick={() => setIsLoginModalOpen(true)}
         onLogoutClick={handleLogout}
         handleSelectTab={handleSelectTab}
+        selectedTab={selectedTab}
       />
       <div className="app__content">
         {apiError && <p className="error-message">{apiError}</p>}
@@ -193,8 +244,9 @@ function App() {
             element={
               <ClosetData
                 selectedTab={selectedTab}
-                onLogout={handleLogout}
-                items={closetItems}
+                isLoggedIn={isLoggedIn}
+                setApiError={setApiError}
+                setIsLoading={setIsLoading}
               />
             }
           />
@@ -210,7 +262,8 @@ function App() {
         isSignUp={true}
         switchToLogin={switchToLoginModal}
         error={signUpError}
-        onImageUpload={handleImageUpload}
+        onImageUpload={(file) => handleImageUpload(file, selectedTab)}
+        onImageURLUpload={(url) => handleURLImageUpload(url, selectedTab)}
       />
       <ModalWithForm
         isOpen={isLoginModalOpen}
@@ -223,12 +276,39 @@ function App() {
 
       {closetItems.length > 0 && (
         <div className="closet-items-gallery">
-          {closetItems.map((item) => (
+          {closetItems
+            .filter((item) => item.public_id)
+            .map((item, index) => (
+              <AdvancedImage
+                key={item.public_id || index}
+                cldImg={cld.image(item.public_id)}
+                alt={item.public_id ? `Closet item ${index + 1}` : ""}
+                className="gallery-image"
+              />
+            ))}
+        </div>
+      )}
+
+      {fetchedImages.length > 0 && (
+        <div className="fetched-images-gallery">
+          {fetchedImages.map((image, index) => (
             <AdvancedImage
-              key={item.public_id}
-              cldImg={cld.image(item.public_id)}
+              key={image.public_id || index}
+              cldImg={cld.image(image.public_id)}
+              alt={image.public_id ? `Fetched ${index + 1}` : "Fetched image"}
+              className="gallery-image"
             />
           ))}
+        </div>
+      )}
+
+      {singleImage && (
+        <div className="single-image">
+          <AdvancedImage
+            cldImg={cld.image(singleImage.public_id)}
+            alt={singleImage.public_id || "single image"}
+            className="gallery-image"
+          />
         </div>
       )}
     </div>

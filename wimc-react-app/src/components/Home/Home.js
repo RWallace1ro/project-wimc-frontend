@@ -27,9 +27,6 @@ function Home() {
           <button onClick={handleExploreClick} className="home__link">
             Explore Your Closet
           </button>
-          {/* <Link to="/wish-list" className="home__link">
-          View Your Wish List
-        </Link> */}
         </div>
         <footer className="home__footer">
           <p>Manage your wardrobe with ease!</p>

@@ -20,20 +20,12 @@
 
 .header__tabs-container {
   position: absolute;
-  left: 50%;
+  left: 45%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   z-index: 2;
 }
-
-/* .header__tabs-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-} */
 
 .header__user {
   display: flex;

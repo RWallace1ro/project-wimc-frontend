@@ -44,6 +44,12 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
     setFormData({ ...formData, imageUrl: "" });
   };
 
+  const formatPublicId = (fileName, category) => {
+    const formattedCategory = category.replace(/\s+/g, "-").toLowerCase();
+    const fileBaseName = fileName.replace(/\.[^/.]+$/, "");
+    return `closet-items/${formattedCategory}/${fileBaseName}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -59,12 +65,12 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
       let imageUrl = formData.imageUrl;
 
       if (imageFile) {
-        const imageResponse = await uploadImage(imageFile);
+        const publicId = formatPublicId(imageFile.name, formData.category);
+        const imageResponse = await uploadImage(imageFile, publicId);
         imageUrl = imageResponse.secure_url;
       }
 
       const newClothingItem = { ...formData, imageUrl };
-
       onClothingAdded(newClothingItem);
       onClose();
     } catch (err) {
@@ -74,9 +80,7 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
     }
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -123,12 +127,12 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
             className="modal__input"
           >
             <option value="">Select Category</option>
-            <option value="Dresses/Skirts">Dresses/Skirts</option>
-            <option value="Shoes/Sneakers">Shoes/Sneakers</option>
-            <option value="Pants/Jeans">Pants/Jeans</option>
-            <option value="Tops">Tops</option>
-            <option value="Bags/Accessories">Bags/Accessories</option>
-            <option value="Jackets/Coats">Jackets/Coats</option>
+            <option value="dresses-skirts">Dresses/Skirts</option>
+            <option value="shoes-sneakers">Shoes/Sneakers</option>
+            <option value="pants-jeans">Pants/Jeans</option>
+            <option value="tops">Tops</option>
+            <option value="bags-accessories">Bags/Accessories</option>
+            <option value="jackets-coats">Jackets/Coats</option>
           </select>
 
           <input

@@ -13,14 +13,17 @@
 
 .closet-section-modal {
   background-color: #fff;
-  width: 80%;
+  width: 90%;
+  max-width: 1100px;
   height: 80%;
+  max-height: 90vh;
   border-radius: 10px;
   position: relative;
   padding: 20px;
   display: flex;
   flex-direction: column;
   text-align: center;
+  overflow: hidden;
 }
 
 .closet-section-modal__close {
@@ -35,9 +38,11 @@
 
 .closet-section-modal__levels {
   display: flex;
-  justify-content: space-between;
-  flex-grow: 1;
+  justify-content: center;
+  align-items: flex-start;
   padding-top: 20px;
+  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .closet-section-modal__level {
@@ -49,19 +54,24 @@
 
 .closet-section-modal__scroll {
   flex-grow: 1;
-  overflow: auto;
+  overflow-y: auto;
   background-color: #444;
   border-radius: 5px;
   padding: 10px;
+  max-height: 300px;
 }
 
 .closet-section-modal__item {
   margin: 10px 0;
+  display: flex;
+  justify-content: center;
 }
 
 .closet-section-modal__item-image {
-  width: 100%;
+  max-width: 100%;
+  max-height: 150px;
   border-radius: 5px;
+  object-fit: cover;
 }
 
 .closet-section-modal__level--dark {
@@ -73,6 +83,7 @@
 
 .closet-section-modal__level h3 {
   margin-bottom: 10px;
+  color: #ccc;
 }
 
 .closet-section-modal__scroll::-webkit-scrollbar {
@@ -84,13 +95,10 @@
   border-radius: 10px;
 }
 
-.closet-section-modal__error {
+.closet-section-modal__error,
+.closet-section-modal__no-items {
   color: red;
   font-size: 16px;
   font-weight: bold;
-  margin-top: 0;
-}
-
-.closet-section-modal__no-items {
-  color: red;
+  margin-top: 10px;
 }

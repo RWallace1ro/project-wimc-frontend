@@ -1,7 +1,6 @@
 import { Cloudinary } from "@cloudinary/url-gen";
 import { AdvancedImage } from "@cloudinary/react";
 
-
 const CLOUD_NAME = process.env.REACT_APP_CLOUD_NAME;
 const CLOUDINARY_PRESET = process.env.REACT_APP_UPLOAD_PRESET;
 const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
@@ -12,15 +11,25 @@ export const cld = new Cloudinary({
   },
 });
 
+const ensureCallback = (callback) =>
+  typeof callback === "function" ? callback : () => {};
 
-const ensureCallback = (callback) => (typeof callback === "function" ? callback : () => {});
-
-export const uploadImage = (file, callback) => {
+export const uploadImageFromURL = (imageUrl, sectionName, callback) => {
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", imageUrl);
   formData.append("upload_preset", CLOUDINARY_PRESET);
 
-  fetch(CLOUDINARY_URL, {
+  const folderPath = `closet-items/${sectionName
+    .replace(/\s+/g, "-")
+    .toLowerCase()}`;
+  const publicId = `${sectionName
+    .replace(/\s+/g, "-")
+    .toLowerCase()}-${Date.now()}`;
+
+  formData.append("folder", folderPath);
+  formData.append("public_id", publicId);
+
+  return fetch(CLOUDINARY_URL, {
     method: "POST",
     body: formData,
   })
@@ -37,68 +46,131 @@ export const uploadImage = (file, callback) => {
     });
 };
 
+export const uploadImage = (file, sectionName, callback) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_PRESET);
 
-export const fetchImages = (tag, callback) => {
-  const formattedTag = tag.replace(/\s/g, "-");
+  const folderPath = `closet-items/${sectionName
+    .replace(/\s+/g, "-")
+    .toLowerCase()}`;
+  const publicId = `${sectionName
+    .replace(/\s+/g, "-")
+    .toLowerCase()}-${Date.now()}`;
 
-  fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/list/${formattedTag}.json`)
+  formData.append("folder", folderPath);
+  formData.append("public_id", publicId);
+
+  return fetch(CLOUDINARY_URL, {
+    method: "POST",
+    body: formData,
+  })
     .then((response) => {
       if (!response.ok) {
-        if (response.status === 404) {
-          
-          return [{ secure_url: "/path/to/placeholder-image.jpg" }];
-        }
-        throw new Error(`Failed to fetch images: ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .then((data) => ensureCallback(callback)(null, data.resources || []))
-    .catch((error) => {
-      console.error("Error fetching images:", error);
-      ensureCallback(callback)(error, null);
-    });
-};
-
-
-export const fetchImage = (publicId, callback) => {
-  fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}`)
-    .then((response) => {
-      if (!response.ok) {
-        if (response.status === 404) {
-          
-          return { secure_url: "/path/to/placeholder-image.jpg" };
-        }
-        throw new Error(`Image fetch failed: ${response.statusText}`);
+        throw new Error(`Failed to upload image: ${response.statusText}`);
       }
       return response.json();
     })
     .then((data) => ensureCallback(callback)(null, data))
     .catch((error) => {
-      console.error("Error fetching image:", error);
+      console.error("Error uploading image:", error);
       ensureCallback(callback)(error, null);
     });
 };
 
-export const fetchClosetItems = (tag, callback) => {
-  const formattedTag = tag.replace(/\s/g, "-");
+export const fetchImage = (publicId, callback) => {
+  const fullPublicId = `closet-items/${publicId}`;
+  const url = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${fullPublicId}`;
 
-  fetch(`https://res.cloudinary.com/${CLOUD_NAME}/image/tags/${formattedTag}.json`)
+  return fetch(url)
     .then((response) => {
       if (!response.ok) {
         if (response.status === 404) {
-          
-          return [];
+          console.warn(`Image not found for public ID: ${publicId}`);
+
+          const fallbackData = {
+            secure_url:
+              "https://res.cloudinary.com/djoh2vfhd/image/upload/v1730849371/photo-1708397016786-8916880649b8_ryvylu.jpg",
+            message: "Image not found",
+          };
+          ensureCallback(callback)(null, fallbackData);
+          return fallbackData;
         }
-        throw new Error(`Failed to fetch closet items: ${response.statusText}`);
+        throw new Error(`Fetch failed: ${response.statusText}`);
       }
       return response.json();
     })
-    .then((data) => ensureCallback(callback)(null, data.resources || []))
+    .then((data) => {
+      if (data && !data.error) {
+        ensureCallback(callback)(null, data);
+        return data;
+      } else {
+        const errorMessage = "Unknown error occurred";
+        ensureCallback(callback)({ message: errorMessage }, null);
+        console.warn(errorMessage);
+      }
+    })
     .catch((error) => {
-      console.error("Error fetching closet items:", error);
+      const errorMessage = error.message || "Unknown fetch error";
+      console.error(`Error fetching image for ${publicId}:`, errorMessage);
+      ensureCallback(callback)({ message: errorMessage }, null);
+    });
+};
+
+export const fetchImages = (searchTerm, callback) => {
+  const formattedTerm = `closet-items/${searchTerm
+    .replace(/\s+/g, "-")
+    .toLowerCase()}`;
+  const url = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${formattedTerm}.json`;
+
+  return fetch(url)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch images for ${searchTerm}`);
+      }
+      return response.json();
+    })
+    .then((data) => ensureCallback(callback)(null, data.resources))
+    .catch((error) => {
+      console.error(`Error fetching images for ${searchTerm}:`, error);
       ensureCallback(callback)(error, null);
     });
 };
 
-export { AdvancedImage };
+export const fetchClosetItems = (sectionNames, callback) => {
+  const sectionsArray = Array.isArray(sectionNames)
+    ? sectionNames
+    : [sectionNames];
+  const validSections = sectionsArray.filter((section) => section !== "all");
 
+  const requests = validSections.map((section) => {
+    const formattedSectionName = section.replace(/[\s/]+/g, "-").toLowerCase();
+    const publicId = `closet-items/${formattedSectionName}`;
+    const url = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}`;
+
+    return fetch(url)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(
+            response.status === 404
+              ? `Image not found for ${section}`
+              : `Error: ${response.statusText}`
+          );
+        }
+        return response.json();
+      })
+      .catch((error) => ({ error, section }));
+  });
+
+  Promise.all(requests)
+    .then((results) => {
+      const errors = results.filter((result) => result.error);
+      if (errors.length) {
+        console.warn("Some sections failed to load: ", errors);
+      }
+      callback(null, results);
+    })
+    .catch((error) => callback(error, null));
+};
+
+export { AdvancedImage };

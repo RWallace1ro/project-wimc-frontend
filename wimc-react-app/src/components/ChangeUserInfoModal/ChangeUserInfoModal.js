@@ -56,6 +56,11 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     setImageFile(e.target.files[0]);
   };
 
+  const formatPublicId = (fileName) => {
+    const fileBaseName = fileName.replace(/\.[^/.]+$/, "");
+    return `user-avatars/${fileBaseName}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -64,7 +69,8 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     if (imageFile) {
       setIsUploading(true);
       try {
-        const imageResponse = await uploadImage(imageFile);
+        const publicId = formatPublicId(imageFile.name);
+        const imageResponse = await uploadImage(imageFile, publicId);
         updatedFormData.avatarUrl = imageResponse.secure_url;
         setIsUploading(false);
       } catch (uploadError) {

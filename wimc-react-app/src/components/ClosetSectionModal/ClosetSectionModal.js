@@ -8,24 +8,30 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchItems = () => {
       if (isOpen && sectionName) {
         setLoading(true);
         setError(null);
 
-        try {
-          const response = await fetchImage(sectionName);
-          if (response && Array.isArray(response.resources)) {
-            setItems(response.resources);
-          } else {
-            setItems([]);
-          }
-        } catch (err) {
-          console.error("Error fetching section items:", err);
-          setError("Failed to load items. Please try again.");
-        } finally {
-          setLoading(false);
-        }
+        const formattedSectionName = sectionName
+          .replace(/\s+/g, "-")
+          .toLowerCase();
+        const publicId = `closet-items/${formattedSectionName}`;
+
+        fetchImage(publicId)
+          .then((response) => {
+            if (response && !response.error) {
+              setItems([response]);
+            } else {
+              setItems([]);
+              setError(response?.error?.message || "Unknown error");
+            }
+          })
+          .catch((err) => {
+            console.error("Error fetching section items:", err);
+            setError("Failed to load items. Please try again.");
+          })
+          .finally(() => setLoading(false));
       }
     };
 
@@ -84,17 +90,18 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
             <div className="closet-section-modal__level closet-section-modal__level--dark">
               <h3>Level 1</h3>
               <div className="closet-section-modal__scroll">
-                {items
-                  .slice(0, Math.floor(items.length / 3))
-                  .map((item, index) => (
-                    <div key={index} className="closet-section-modal__item">
-                      <img
-                        src={item.secure_url}
-                        alt={item.public_id}
-                        className="closet-section-modal__item-image"
-                      />
-                    </div>
-                  ))}
+                {items.map((item, index) => (
+                  <div key={index} className="closet-section-modal__item">
+                    <img
+                      src={
+                        item.secure_url ||
+                        "https://res.cloudinary.com/djoh2vfhd/image/upload/v1730849371/photo-1708397016786-8916880649b8_ryvylu.jpg"
+                      }
+                      alt={item.public_id || "fallback"}
+                      className="closet-section-modal__item-image"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>

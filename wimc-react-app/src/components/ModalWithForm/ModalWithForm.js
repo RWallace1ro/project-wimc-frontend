@@ -104,14 +104,24 @@ function ModalWithForm({
             className="modal__input"
           />
           {isSignUp && (
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm Password"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className="modal__input"
-            />
+            <>
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm Password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="modal__input"
+              />
+              <input
+                type="url"
+                name="avatarUrl"
+                placeholder="Profile Image URL (optional)"
+                value={formData.avatarUrl}
+                onChange={handleChange}
+                className="modal__input"
+              />
+            </>
           )}
           {error && <p className="modal__error">{error}</p>}
           <div className="modal__footer">

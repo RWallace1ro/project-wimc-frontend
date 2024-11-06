@@ -1,58 +1,67 @@
 import React, { useState, useEffect } from "react";
+import { fetchImage } from "../../utils/CloudinaryAPI";
 import "./ClosetTabs.css";
 
 function ClosetTabs({ selectedTab, onSelectTab }) {
   const tabs = [
-    "Dresses/Skirts",
-    "Shoes/Sneakers",
-    "Pants/Jeans",
-    "Tops",
-    "Bags/Accessories",
-    "Jackets/Coats",
+    "dresses-skirts",
+    "shoes-sneakers",
+    "pants-jeans",
+    "tops",
+    "bags-accessories",
+    "jackets-coats",
   ];
+
+  const displayNames = {
+    "dresses-skirts": "Dresses/Skirts",
+    "shoes-sneakers": "Shoes/Sneakers",
+    "pants-jeans": "Pants/Jeans",
+    tops: "Tops",
+    "bags-accessories": "Bags/Accessories",
+    "jackets-coats": "Jackets/Coats",
+  };
 
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchItemsByTag = async () => {
+    const fetchItemsByPublicId = async () => {
       if (!selectedTab) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(
-          `https://res.cloudinary.com/${process.env.REACT_APP_CLOUD_NAME}/image/list/${selectedTab}.json`
-        );
+        const publicId = `closet-items/${selectedTab}`;
+        const response = await fetchImage(publicId);
 
-        if (!response.ok) {
-          throw new Error(`Error fetching items for ${selectedTab}`);
+        if (response && !response.error) {
+          setItems([
+            // {
+            //   imageUrl:
+            //     response.secure_url ||
+            //     "https://res.cloudinary.com/djoh2vfhd/image/upload/v1730849371/photo-1708397016786-8916880649b8_ryvylu.jpg",
+            //   name: response.public_id || "Fallback Image",
+            // },
+          ]);
+        } else {
+          throw new Error(`Failed to fetch items for ${selectedTab}`);
         }
-
-        const data = await response.json();
-
-        const itemsList = data.resources.map((item) => ({
-          imageUrl: item.secure_url,
-          name: item.public_id,
-        }));
-
-        setItems(itemsList);
       } catch (error) {
         console.error("Error fetching closet items:", error);
-        setError(null);
+        setError("Failed to load items.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchItemsByTag();
+    fetchItemsByPublicId();
   }, [selectedTab]);
 
   return (
     <div className="closet-tabs">
-      <div className="closet-tabs__container">
+      <div className="closet-tabs__container fixed">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -61,7 +70,7 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
             }`}
             onClick={() => onSelectTab(tab)}
           >
-            {tab}
+            {displayNames[tab]}
           </button>
         ))}
       </div>
@@ -80,7 +89,7 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
                 alt={item.name}
                 className="closet-tabs__image"
               />
-              <h3>{item.name}</h3>
+              <h3>{displayNames[selectedTab] || selectedTab}</h3>
             </div>
           ))}
       </div>
@@ -89,3 +98,4 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
 }
 
 export default ClosetTabs;
+

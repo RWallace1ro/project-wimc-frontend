@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-// import { api } from "../../utils/CloudinaryAPI";
 import "./WishList.css";
 
 function WishList() {
