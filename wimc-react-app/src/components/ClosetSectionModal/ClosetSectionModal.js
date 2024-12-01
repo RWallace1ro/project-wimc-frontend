@@ -78,8 +78,8 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
                   >
                     <img
                       src={
-                        item?.secure_url ||
-                        "https://res.cloudinary.com/djoh2vfhd/image/upload/public_id:closet-items/"
+                        item?.secure_url || ""
+                        // "https://res.cloudinary.com/djoh2vfhd/image/upload/"
                       }
                       alt={`Closet item ${index + 1}`}
                       className="closetsection-modal__item-image"
