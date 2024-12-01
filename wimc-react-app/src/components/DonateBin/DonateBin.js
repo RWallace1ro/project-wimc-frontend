@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { uploadImage } from "../../utils/CloudinaryAPI";
 import "./DonateBin.css";
 
@@ -14,6 +14,15 @@ function DonateBin() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showDonatedItems, setShowDonatedItems] = useState(false);
+
+  useEffect(() => {
+    const savedDonateItems =
+      JSON.parse(localStorage.getItem("donateItems")) || [];
+    const savedDonatedItems =
+      JSON.parse(localStorage.getItem("donatedItems")) || [];
+    setDonateItems(savedDonateItems);
+    setDonatedItems(savedDonatedItems);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,7 +48,10 @@ function DonateBin() {
         description: newItem.description,
         url: newItem.url,
       };
-      setDonateItems([...donateItems, addedItem]);
+      const updatedItems = [...donateItems, addedItem];
+      setDonateItems(updatedItems);
+      localStorage.setItem("donateItems", JSON.stringify(updatedItems));
+
       setNewItem({ name: "", description: "", url: "", image: null });
       return;
     }
@@ -54,7 +66,10 @@ function DonateBin() {
         imageUrl: response.secure_url,
         url: newItem.url,
       };
-      setDonateItems([...donateItems, itemWithImage]);
+      const updatedItems = [...donateItems, itemWithImage];
+      setDonateItems(updatedItems);
+      localStorage.setItem("donateItems", JSON.stringify(updatedItems));
+
       setNewItem({ name: "", description: "", url: "", image: null });
       setLoading(false);
     } catch (err) {
@@ -68,13 +83,25 @@ function DonateBin() {
       setError("No items to donate.");
       return;
     }
-    setDonatedItems([...donatedItems, ...donateItems]);
+
+    const updatedDonatedItems = [...donatedItems, ...donateItems];
+    setDonatedItems(updatedDonatedItems);
+    localStorage.setItem("donatedItems", JSON.stringify(updatedDonatedItems));
+
     setDonateItems([]);
+    localStorage.removeItem("donateItems");
   };
 
-  const handleRemoveItem = (index) => {
-    const updatedItems = donateItems.filter((_, i) => i !== index);
-    setDonateItems(updatedItems);
+  const handleRemoveItem = (index, isDonated = false) => {
+    if (isDonated) {
+      const updatedDonatedItems = donatedItems.filter((_, i) => i !== index);
+      setDonatedItems(updatedDonatedItems);
+      localStorage.setItem("donatedItems", JSON.stringify(updatedDonatedItems));
+    } else {
+      const updatedItems = donateItems.filter((_, i) => i !== index);
+      setDonateItems(updatedItems);
+      localStorage.setItem("donateItems", JSON.stringify(updatedItems));
+    }
   };
 
   const handleToggleDonatedItems = () => {
@@ -156,6 +183,9 @@ function DonateBin() {
                       className="donate-bin__image"
                     />
                   )}
+                  <button onClick={() => handleRemoveItem(index, true)}>
+                    Remove
+                  </button>
                 </li>
               ))}
             </ul>

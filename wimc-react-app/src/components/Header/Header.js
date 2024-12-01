@@ -16,7 +16,7 @@ function Header({
   const [currentUserName, setCurrentUserName] = useState(userName);
   const defaultAvatarUrl =
     "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
-  // ("https://images.unsplash.com/photo-1631887624820-5435b375c9cf?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+
   const displayAvatarUrl = avatarUrl || defaultAvatarUrl;
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,7 +70,6 @@ function Header({
           <div className="header__user">
             <span className="header__user-name">
               {currentUserName ? `${userName}'s Closet` : "Your Closet"}
-              {/* {currentUserName || "Your Closet"} */}
             </span>
             <img
               src={displayAvatarUrl}

@@ -17,6 +17,7 @@
 }
 
 .search-form__button {
+  display: inline-block;
   padding: 10px 20px;
   font-size: 16px;
   border: none;
@@ -25,14 +26,19 @@
   border-radius: 5px;
   cursor: pointer;
   white-space: nowrap;
+  text-align: center;
+  user-select: none;
+  line-height: 1;
+  transition: background-color 0.3s ease;
 }
 
-.search-form_button:hover {
+.search-form__button:hover {
   background-color: #0056b3;
 }
 
 .search-form__button:disabled {
   background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .search-form__error {

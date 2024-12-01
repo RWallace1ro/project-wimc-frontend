@@ -7,15 +7,7 @@ import Home from "../../components/Home/Home";
 import ClosetData from "../../Pages/ClosetData";
 import About from "../About/About";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
-import {
-  AdvancedImage,
-  cld,
-  uploadImageFromURL,
-  fetchClosetItems,
-  uploadImage,
-  fetchImage,
-  fetchImages,
-} from "../../utils/CloudinaryAPI";
+import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./App.css";
 
 function App() {
@@ -32,11 +24,9 @@ function App() {
   const [closetItems, setClosetItems] = useState([]);
   const [loginError, setLoginError] = useState("");
   const [signUpError, setSignUpError] = useState("");
-  const [selectedTab, setSelectedTab] = useState("Dresses/Skirts");
+  const [selectedTab, setSelectedTab] = useState("dresses-skirts");
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [fetchedImages, setFetchedImages] = useState([]);
-  const [singleImage, setSingleImage] = useState(null);
 
   const navigate = useNavigate();
 
@@ -53,79 +43,40 @@ function App() {
     }
   }, []);
 
-  const handleImageUpload = (file, sectionName) => {
-    setApiError("");
-    uploadImage(file, sectionName, (err, res) => {
-      if (err) {
-        console.error("Image upload error:", err);
-        setApiError(null);
-        return;
+  const handleImageUpload = async (file, tag = "default") => {
+    try {
+      setApiError("");
+      const response = await uploadImage(file, tag);
+      if (response) {
+        const updatedUser = { ...userData, avatarUrl: response.secure_url };
+        setUserData(updatedUser);
+        localStorage.setItem("userData", JSON.stringify(updatedUser));
       }
-      const updatedUser = { ...userData, avatarUrl: res.secure_url };
-      setUserData(updatedUser);
-      localStorage.setItem("userData", JSON.stringify(updatedUser));
-    });
+    } catch (error) {
+      console.error("Image upload error:", error);
+      setApiError("Failed to upload image.");
+    }
   };
 
-  const handleURLImageUpload = (url, sectionName) => {
-    setApiError("");
-    uploadImageFromURL(url, sectionName, (err) => {
-      if (err) {
-        console.error("Image upload from URL error:", err);
-      }
-    });
-  };
-
-  const fetchClosetItemsData = (sectionNames) => {
-    setApiError("");
-    setIsLoading(true);
-
-    fetchClosetItems(sectionNames, (err, data) => {
-      if (err) {
-        console.error("Error fetching closet items:", err);
-        setApiError("Failed to load closet items.");
-        setIsLoading(false);
-        return;
-      }
-      setClosetItems(data);
+  const fetchClosetItemsData = async (tag) => {
+    try {
+      setApiError("");
+      setIsLoading(true);
+      const items = await fetchImagesByTag(tag);
+      setClosetItems(items || []);
+    } catch (error) {
+      console.error("Error fetching closet items:", error);
+      setApiError("Failed to load closet items.");
+    } finally {
       setIsLoading(false);
-    });
-  };
-
-  const handleFetchImages = (searchTerm) => {
-    fetchImages(searchTerm, (err, images) => {
-      if (err) {
-        console.error("Error fetching images:", err);
-        setApiError(null);
-        return;
-      }
-      setFetchedImages(images);
-    });
-  };
-
-  const handleFetchSingleImage = (publicId) => {
-    fetchImage(publicId, (err, image) => {
-      if (err) {
-        console.error("Error fetching image:", err);
-        setApiError("Failed to load image.");
-        return;
-      }
-      setSingleImage(image);
-    });
+    }
   };
 
   useEffect(() => {
     if (isLoggedIn) {
-      fetchClosetItemsData([
-        "dresses-skirts",
-        "shoes-sneakers",
-        "pants-jeans",
-        "tops",
-        "bags-accessories",
-        "jackets-coats",
-      ]);
+      fetchClosetItemsData(selectedTab);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, selectedTab]);
 
   const handleSignUp = (userCredentials) => {
     setSignUpError("");
@@ -169,13 +120,11 @@ function App() {
 
     if (!user) {
       setLoginError("User does not exist.");
-      console.log("User not found:", data.email);
       return;
     }
 
     if (user.password !== data.password) {
       setLoginError("Incorrect password.");
-      console.log("Incorrect password for user:", data.email);
       return;
     }
 
@@ -187,7 +136,6 @@ function App() {
     localStorage.setItem("userData", JSON.stringify(user));
     localStorage.setItem("isLoggedIn", "true");
 
-    console.log("Login successful for user:", user.email);
     navigate("/home");
   };
 
@@ -195,8 +143,7 @@ function App() {
     setIsLoggedIn(false);
     setUserData({
       userName: "Your Closet",
-      avatarUrl:
-        "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg",
+      avatarUrl: "/assets/images/default-avatar.jpg",
       email: "",
     });
     setLoginData({ email: "", password: "" });
@@ -212,8 +159,7 @@ function App() {
 
   const handleSelectTab = (tab) => {
     setSelectedTab(tab);
-    handleFetchImages(tab);
-    handleFetchSingleImage(tab);
+    fetchClosetItemsData(tab);
   };
 
   const switchToLoginModal = () => {
@@ -245,8 +191,7 @@ function App() {
               <ClosetData
                 selectedTab={selectedTab}
                 isLoggedIn={isLoggedIn}
-                setApiError={setApiError}
-                setIsLoading={setIsLoading}
+                closetItems={closetItems}
               />
             }
           />
@@ -263,7 +208,6 @@ function App() {
         switchToLogin={switchToLoginModal}
         error={signUpError}
         onImageUpload={(file) => handleImageUpload(file, selectedTab)}
-        onImageURLUpload={(url) => handleURLImageUpload(url, selectedTab)}
       />
       <ModalWithForm
         isOpen={isLoginModalOpen}
@@ -273,44 +217,6 @@ function App() {
         formData={loginData}
         error={loginError}
       />
-
-      {closetItems.length > 0 && (
-        <div className="closet-items-gallery">
-          {closetItems
-            .filter((item) => item.public_id)
-            .map((item, index) => (
-              <AdvancedImage
-                key={item.public_id || index}
-                cldImg={cld.image(item.public_id)}
-                alt={item.public_id ? `Closet item ${index + 1}` : ""}
-                className="gallery-image"
-              />
-            ))}
-        </div>
-      )}
-
-      {fetchedImages.length > 0 && (
-        <div className="fetched-images-gallery">
-          {fetchedImages.map((image, index) => (
-            <AdvancedImage
-              key={image.public_id || index}
-              cldImg={cld.image(image.public_id)}
-              alt={image.public_id ? `Fetched ${index + 1}` : "Fetched image"}
-              className="gallery-image"
-            />
-          ))}
-        </div>
-      )}
-
-      {singleImage && (
-        <div className="single-image">
-          <AdvancedImage
-            cldImg={cld.image(singleImage.public_id)}
-            alt={singleImage.public_id || "single image"}
-            className="gallery-image"
-          />
-        </div>
-      )}
     </div>
   );
 }

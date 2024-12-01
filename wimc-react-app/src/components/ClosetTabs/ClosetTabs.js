@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchImage } from "../../utils/CloudinaryAPI";
+import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./ClosetTabs.css";
 
 function ClosetTabs({ selectedTab, onSelectTab }) {
@@ -26,42 +26,35 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchItemsByPublicId = async () => {
+    const fetchItemsByTag = async () => {
       if (!selectedTab) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const publicId = `closet-items/${selectedTab}`;
-        const response = await fetchImage(publicId);
+        const formattedTab = selectedTab.replace(/\s+/g, "-").toLowerCase();
+        const fetchedImages = await fetchImagesByTag(formattedTab);
 
-        if (response && !response.error) {
-          setItems([
-            // {
-            //   imageUrl:
-            //     response.secure_url ||
-            //     "https://res.cloudinary.com/djoh2vfhd/image/upload/v1730849371/photo-1708397016786-8916880649b8_ryvylu.jpg",
-            //   name: response.public_id || "Fallback Image",
-            // },
-          ]);
+        if (fetchedImages && fetchedImages.length > 0) {
+          setItems(fetchedImages);
         } else {
-          throw new Error(`Failed to fetch items for ${selectedTab}`);
+          setItems([]);
         }
       } catch (error) {
         console.error("Error fetching closet items:", error);
-        setError("Failed to load items.");
+        setError("Failed to load items for this tab.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchItemsByPublicId();
+    fetchItemsByTag();
   }, [selectedTab]);
 
   return (
     <div className="closet-tabs">
-      <div className="closet-tabs__container fixed">
+      <div className="closet-tabs__container">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -75,27 +68,33 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
         ))}
       </div>
 
-      {loading && <div className="preloader">Loading...</div>}
+      <div className="closet-tabs__modal">
+        {loading && <div className="preloader">Loading...</div>}
+        {error && !loading && <p className="error-message">{error}</p>}
+        {!loading && items.length === 0 && !error && (
+          <p className="closet-tabs__no-items">
+            No items found for this section.
+          </p>
+        )}
 
-      {!loading && error && <p className="error-message">{error}</p>}
-
-      <div className="closet-tabs__items">
-        {!loading &&
-          items.length > 0 &&
-          items.map((item, index) => (
-            <div key={index} className="closet-tabs__item">
-              <img
-                src={item.imageUrl}
-                alt={item.name}
-                className="closet-tabs__image"
-              />
-              <h3>{displayNames[selectedTab] || selectedTab}</h3>
-            </div>
-          ))}
+        {!loading && items.length > 0 && (
+          <div className="closet-tabs__gallery">
+            {items.map((item, index) => (
+              <div key={item?.public_id || index} className="closet-tabs__item">
+                {item?.secure_url && (
+                  <img
+                    src={item.secure_url}
+                    alt={`Closet item ${index + 1}`}
+                    className="closet-tabs__image"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 export default ClosetTabs;
-

@@ -1,52 +1,58 @@
 import React, { useEffect, useState } from "react";
-import { AdvancedImage } from "@cloudinary/react";
-import { cld } from "../../utils/CloudinaryAPI";
+import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./ClosetSectionCard.css";
 
-function ClosetSectionCard({ sectionName, placeholderUrl, onClick }) {
-  const [myImage, setMyImage] = useState(null);
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
+function ClosetSectionCard({
+  imageUrl: propImageUrl,
+  sectionName,
+  tag,
+  placeholderUrl,
+  onClick,
+}) {
+  const [imageUrl, setImageUrl] = useState(propImageUrl || null);
 
   useEffect(() => {
-    if (sectionName) {
-      const formattedSectionName = sectionName
-        .replace(/\s+/g, "_")
-        .toLowerCase();
-      const imagePublicId = `closet-items/${formattedSectionName}`;
+    if (!propImageUrl && tag) {
+      const fetchImageForSection = async () => {
+        try {
+          console.log(`Fetching images for section with tag: ${tag}`);
 
-      const cloudinaryImage = cld.image(imagePublicId);
-      setMyImage(cloudinaryImage);
+          const images = await fetchImagesByTag(tag);
+
+          if (images && images.length > 0) {
+            console.log("Fetched images:", images);
+            setImageUrl(images[0]);
+          } else {
+            console.warn(`No images found for tag: ${tag}`);
+            setImageUrl(null);
+          }
+        } catch (error) {
+          console.error(`Error fetching image for tag ${tag}:`, error);
+          setImageUrl(null);
+        }
+      };
+
+      fetchImageForSection();
     }
-  }, [sectionName]);
+  }, [propImageUrl, tag]);
 
-  const handleImageLoad = () => {
-    setIsImageLoaded(true);
-  };
-
-  const handleImageError = () => {
-    setIsImageLoaded(false);
-    setMyImage(null);
-  };
+  console.log(`Received image URL in card for ${sectionName}:`, imageUrl);
 
   return (
     <div className="closet-section-card" onClick={onClick}>
-      {myImage && isImageLoaded ? (
-        <AdvancedImage
-          cldImg={myImage}
-          className="closet-section-card__image loaded"
-          onLoad={handleImageLoad}
-          onError={handleImageError}
+      {imageUrl ? (
+        <img
+          src={imageUrl}
+          alt={sectionName}
+          className="closet-section-card__image"
         />
       ) : (
-        <img
-          src={placeholderUrl}
-          alt={`${sectionName} placeholder`}
-          className="closet-section-card__image closet-section-card__placeholder"
+        <div
+          className="closet-section-card__placeholder"
+          style={{ backgroundImage: `url(${placeholderUrl})` }}
         />
       )}
-      <div className="closet-section-card__overlay">
-        <h3 className="closet-section-card__title">{sectionName}</h3>
-      </div>
+      <h3 className="closet-section-card__title">{sectionName}</h3>
     </div>
   );
 }

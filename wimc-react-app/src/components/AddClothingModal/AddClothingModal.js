@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { uploadImage } from "../../utils/CloudinaryAPI";
+import ImageUpload from "../ImageUpload/ImageUpload";
 import "./AddClothingModal.css";
 
 function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
@@ -10,23 +10,9 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
     category: "",
     imageUrl: "",
   });
-  const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState("");
-  const [isUploading, setIsUploading] = useState(false);
+
   const modalRef = useRef(null);
-
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-    document.addEventListener("keydown", handleKeyPress);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [onClose]);
 
   const handleOverlayClick = (e) => {
     if (modalRef.current && !modalRef.current.contains(e.target)) {
@@ -36,49 +22,51 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e) => {
-    setImageFile(e.target.files[0]);
-    setFormData({ ...formData, imageUrl: "" });
-  };
-
-  const formatPublicId = (fileName, category) => {
-    const formattedCategory = category.replace(/\s+/g, "-").toLowerCase();
-    const fileBaseName = fileName.replace(/\.[^/.]+$/, "");
-    return `closet-items/${formattedCategory}/${fileBaseName}`;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleImageUploadSuccess = (result) => {
+    setFormData((prev) => ({ ...prev, imageUrl: result.secure_url }));
     setError("");
+  };
 
-    if (!imageFile && !formData.imageUrl) {
-      setError("Please select an image file or enter an image URL.");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.imageUrl) {
+      setError("Please upload an image before submitting.");
       return;
     }
-
-    setIsUploading(true);
-
-    try {
-      let imageUrl = formData.imageUrl;
-
-      if (imageFile) {
-        const publicId = formatPublicId(imageFile.name, formData.category);
-        const imageResponse = await uploadImage(imageFile, publicId);
-        imageUrl = imageResponse.secure_url;
-      }
-
-      const newClothingItem = { ...formData, imageUrl };
-      onClothingAdded(newClothingItem);
-      onClose();
-    } catch (err) {
-      setError("Failed to add clothing item. Please try again.");
-    } finally {
-      setIsUploading(false);
-    }
+    onClothingAdded({ ...formData });
+    onClose();
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        name: "",
+        designer: "",
+        size: "",
+        category: "",
+        imageUrl: "",
+      });
+      setError("");
+    }
+
+    const handleKeyPress = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [isOpen, onClose]);
+
+  const tag = formData.category
+    ? formData.category.replace(/\s+/g, "-").toLowerCase()
+    : "uncategorized";
 
   if (!isOpen) return null;
 
@@ -124,7 +112,7 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="modal__input"
+            className="modal__select"
           >
             <option value="">Select Category</option>
             <option value="dresses-skirts">Dresses/Skirts</option>
@@ -135,33 +123,16 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
             <option value="jackets-coats">Jackets/Coats</option>
           </select>
 
-          <input
-            type="text"
-            name="imageUrl"
-            placeholder="Image URL"
-            value={formData.imageUrl}
-            onChange={(e) => {
-              handleChange(e);
-              setImageFile(null);
-            }}
-            className="modal__input"
-          />
-
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="modal__input"
+          <ImageUpload
+            folder="closet-items"
+            tag={tag}
+            onUploadSuccess={handleImageUploadSuccess}
           />
 
           {error && <p className="modal__error">{error}</p>}
 
-          <button
-            type="submit"
-            className="modal__submit"
-            disabled={isUploading}
-          >
-            {isUploading ? "Uploading..." : "Add Item"}
+          <button type="submit" className="modal__submit">
+            Add Item
           </button>
         </form>
       </div>

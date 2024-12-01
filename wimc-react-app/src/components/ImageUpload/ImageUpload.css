@@ -1,0 +1,37 @@
+.image-upload {
+  text-align: center;
+  margin: 20px;
+}
+
+.image-upload__input {
+  margin: 10px 0;
+}
+
+.image-upload__button {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.image-upload__button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.image-upload__error {
+  color: red;
+  margin-top: 10px;
+}
+
+.image-upload__preview {
+  margin-top: 15px;
+}
+
+.image-upload__image {
+  max-width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

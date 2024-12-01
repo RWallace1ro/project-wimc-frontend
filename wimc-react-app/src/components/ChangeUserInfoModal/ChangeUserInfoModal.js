@@ -20,18 +20,10 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
       }
     };
 
-    const handleClickOutside = (e) => {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
-        onClose();
-      }
-    };
-
     document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
 
@@ -56,21 +48,19 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     setImageFile(e.target.files[0]);
   };
 
-  const formatPublicId = (fileName) => {
-    const fileBaseName = fileName.replace(/\.[^/.]+$/, "");
-    return `user-avatars/${fileBaseName}`;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
     let updatedFormData = { ...formData };
 
     if (imageFile) {
       setIsUploading(true);
       try {
-        const publicId = formatPublicId(imageFile.name);
-        const imageResponse = await uploadImage(imageFile, publicId);
+        const tag = "user-avatars";
+        const imageResponse = await uploadImage(imageFile, "user-avatars", [
+          tag,
+        ]);
         updatedFormData.avatarUrl = imageResponse.secure_url;
         setIsUploading(false);
       } catch (uploadError) {
@@ -90,7 +80,12 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
   }
 
   return (
-    <div className="modal-overlay">
+    <div
+      className="modal-overlay"
+      onClick={(e) => {
+        if (!modalRef.current.contains(e.target)) onClose();
+      }}
+    >
       <div className="modal" ref={modalRef}>
         <div className="modal__header">
           <h2 className="modal__title">Update User Information</h2>

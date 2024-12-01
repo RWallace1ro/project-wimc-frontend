@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./WishList.css";
 
 function WishList() {
@@ -12,6 +12,11 @@ function WishList() {
   const [showWishList, setShowWishList] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   const [addAttempted, setAddAttempted] = useState(false);
+
+  useEffect(() => {
+    const savedItems = JSON.parse(localStorage.getItem("wishListItems")) || [];
+    setWishListItems(savedItems);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -35,12 +40,17 @@ function WishList() {
       id: Date.now().toString(),
     };
 
-    setWishListItems((prevItems) => [...prevItems, newWishListItem]);
+    const updatedItems = [...wishListItems, newWishListItem];
+    setWishListItems(updatedItems);
+    localStorage.setItem("wishListItems", JSON.stringify(updatedItems));
+
     setNewItem({ url: "", name: "", description: "" });
   };
 
   const handleRemoveItem = (index) => {
-    setWishListItems((prevItems) => prevItems.filter((_, i) => i !== index));
+    const updatedItems = wishListItems.filter((_, i) => i !== index);
+    setWishListItems(updatedItems);
+    localStorage.setItem("wishListItems", JSON.stringify(updatedItems));
   };
 
   const handleToggleWishList = () => {

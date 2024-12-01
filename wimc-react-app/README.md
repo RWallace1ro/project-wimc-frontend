@@ -1,3 +1,19 @@
+# Final Project
+
+# Project Name: What's in my Closet (WIMC)
+
+### Third-Party API: Cloudinary.com
+
+This third-party API was utilized to store uploaded images with the ability to fetch the images via the modal sections, i.e., "Tops" and Dresses/Skirts." Once the user opened the modal, they will see all uploaded images.
+
+### App's functionality
+
+The app gives the users the ability upload images of closet items and organize those items in different sections, i.e., "Tops" and "Dresses/Skirts, etc."
+
+The user will be able to create a wishlist and share that list if desired.
+
+The user will be able to add closet items they want to donate into the donate bin, giving them the ability to select the items even before entering their closet, giving them a more organized way of declutering thier closet. When the user enters their closet, they can just remove the items they have already designated for donation.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

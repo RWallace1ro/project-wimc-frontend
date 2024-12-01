@@ -21,31 +21,3 @@ body {
   background-size: cover;
   transition: background 0.3s ease, opacity 0.3s ease;
 }
-
-/* @font-face {
-  font-family: "woff";
-  src: url("../assets/fonts/roboto-slab-700.woff");
-  font-weight: normal;
-  font-style: normal;
-}
-
-body,
-html {
-  font-family: "woff", Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  height: 100%;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: "woff" Arial, sans-serif;
-  background: url("../assets/images/main-background.jpg") center;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
-  /* background: fixed; */
-/* height: 100%; */
-/* transition: background 0.3s ease, opacity 0.3s ease; */
-/* } */
