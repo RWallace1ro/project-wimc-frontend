@@ -52,9 +52,16 @@ function SearchForm({ onSearchResults }) {
           onChange={handleChange}
           className="search-form__input"
         />
-        <button type="submit" className="search-form__button">
+        <button
+          type="submit"
+          className="search-form__button"
+          disabled={isLoading}
+        >
           {isLoading ? "Searching..." : "Search"}
         </button>
+        {/* <button type="submit" className="search-form__button">
+          {isLoading ? "Searching..." : "Search"}
+        </button> */}
       </form>
       {error && <p className="search-form__error">{error}</p>}
     </div>

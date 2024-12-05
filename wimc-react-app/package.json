@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@cloudinary/react": "^1.13.0",
+    "@cloudinary/react": "^1.13.1",
     "@cloudinary/url-gen": "^1.21.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -21,9 +21,6 @@
     "eject": "react-scripts eject"
   },
   "proxy": "https://api.cloudinary.com",
-  "devDependencies": {
-    "other-dev-dependencies": "version"
-  },
   "eslintConfig": {
     "extends": [
       "react-app",

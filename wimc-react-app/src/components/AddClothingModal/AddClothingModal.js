@@ -36,6 +36,15 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
       setError("Please upload an image before submitting.");
       return;
     }
+    if (
+      !formData.name ||
+      !formData.designer ||
+      !formData.size ||
+      !formData.category
+    ) {
+      setError("Please fill in all fields.");
+      return;
+    }
     onClothingAdded({ ...formData });
     onClose();
   };

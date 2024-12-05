@@ -138,14 +138,10 @@ function ClosetData({ selectedTab, isLoggedIn }) {
       <div className="closet-data">
         <div className="closet-data__cards-container">
           {closetSections.map((section) => {
-            const matchedImages = closetItems.filter(
-              (item) =>
-                item && item.public_id && item.public_id.includes(section.tag)
-            );
-
             const imageUrl =
-              matchedImages.length > 0
-                ? matchedImages[0]?.secure_url || section.placeholderUrl
+              closetItems.length > 0
+                ? closetItems.find((item) => item.includes(section.tag)) ||
+                  section.placeholderUrl
                 : section.placeholderUrl;
 
             console.log(`Image URL for ${section.name}:`, imageUrl);
@@ -177,6 +173,7 @@ function ClosetData({ selectedTab, isLoggedIn }) {
         <ClosetSectionModal
           isOpen={isModalOpen}
           sectionName={selectedSection}
+          placeholderUrl={topsImg}
           onClose={handleModalClose}
         />
 

@@ -19,6 +19,7 @@ function App() {
     avatarUrl: "/assets/images/default-avatar.jpg",
     email: "",
   });
+
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [users, setUsers] = useState([]);
   const [closetItems, setClosetItems] = useState([]);

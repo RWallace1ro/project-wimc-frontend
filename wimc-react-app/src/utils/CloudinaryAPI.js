@@ -5,7 +5,6 @@ const CLOUDINARY_PRESET = process.env.REACT_APP_UPLOAD_PRESET;
 const CLOUDINARY_API_KEY = process.env.REACT_APP_CLOUDINARY_API_KEY;
 
 const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
-const CLOUDINARY_FETCH_URL = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/`;
 
 export const cld = new Cloudinary({
   cloud: {
@@ -43,7 +42,7 @@ export const uploadImage = async (file, sectionTag = "default") => {
 };
 
 export const fetchImagesByTag = async (tag) => {
-  const url = `${CLOUDINARY_FETCH_URL}${tag}.json`;
+  const url = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${tag}.json`;
 
   try {
     const response = await fetch(url, {

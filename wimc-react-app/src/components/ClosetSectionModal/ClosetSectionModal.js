@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./ClosetSectionModal.css";
 
-function ClosetSectionModal({ isOpen, sectionName, onClose }) {
+function ClosetSectionModal({ isOpen, sectionName, placeholderUrl, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -71,21 +71,21 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
             <div className="closet-section-modal__level closet-section-modal__level--dark">
               <h3>Level 1</h3>
               <div className="closet-section-modal__scroll">
-                {items.map((item, index) => (
-                  <div
-                    key={item?.public_id || index}
-                    className="closet-section-modal__item"
-                  >
-                    <img
-                      src={
-                        item?.secure_url || ""
-                        // "https://res.cloudinary.com/djoh2vfhd/image/upload/"
-                      }
-                      alt={`Closet item ${index + 1}`}
-                      className="closetsection-modal__item-image"
-                    />
-                  </div>
-                ))}
+                {items.map((item, index) => {
+                  const imageUrl = item?.secure_url || placeholderUrl;
+                  return (
+                    <div
+                      key={item?.public_id || index}
+                      className="closet-section-modal__item"
+                    >
+                      <img
+                        src={imageUrl}
+                        alt={item?.public_id || "item"}
+                        className="closet-section-modal__item-image"
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
