@@ -4,7 +4,6 @@ import ClosetSectionModal from "../components/ClosetSectionModal/ClosetSectionMo
 import DonateBin from "../components/DonateBin/DonateBin";
 import WishList from "../components/WishList/WishList";
 import ChangeUserInfoModal from "../components/ChangeUserInfoModal/ChangeUserInfoModal";
-import SearchForm from "../components/SearchForm/SearchForm";
 import AddClothingModal from "../components/AddClothingModal/AddClothingModal";
 import { fetchImagesByTag } from "../utils/CloudinaryAPI";
 import "./ClosetData.css";
@@ -129,7 +128,6 @@ function ClosetData({ selectedTab, isLoggedIn }) {
         >
           Change User Info
         </button>
-        <SearchForm onSearchResults={(results) => setClosetItems(results)} />
       </div>
 
       {error && <p className="error-message">{error}</p>}

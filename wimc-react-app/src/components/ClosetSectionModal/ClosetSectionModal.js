@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./ClosetSectionModal.css";
 
-function ClosetSectionModal({ isOpen, sectionName, placeholderUrl, onClose }) {
+function ClosetSectionModal({ isOpen, sectionName, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,7 +21,7 @@ function ClosetSectionModal({ isOpen, sectionName, placeholderUrl, onClose }) {
             setItems(fetchedItems);
           } else {
             setItems([]);
-            setError("No items found in this section.");
+            setError(null);
           }
         } catch (err) {
           console.error("Error fetching section items:", err);
@@ -72,7 +72,8 @@ function ClosetSectionModal({ isOpen, sectionName, placeholderUrl, onClose }) {
               <h3>Level 1</h3>
               <div className="closet-section-modal__scroll">
                 {items.map((item, index) => {
-                  const imageUrl = item?.secure_url || placeholderUrl;
+                  const imageUrl = item;
+
                   return (
                     <div
                       key={item?.public_id || index}

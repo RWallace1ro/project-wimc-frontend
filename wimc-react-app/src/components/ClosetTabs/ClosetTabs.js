@@ -69,14 +69,8 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
       </div>
 
       <div className="closet-tabs__modal">
-        {loading && <div className="preloader">Loading...</div>}
+        {loading && <div className="preloader">Loading...</div>}{" "}
         {error && !loading && <p className="error-message">{error}</p>}
-        {!loading && items.length === 0 && !error && (
-          <p className="closet-tabs__no-items">
-            No items found for this section.
-          </p>
-        )}
-
         {!loading && items.length > 0 && (
           <div className="closet-tabs__gallery">
             {items.map((item, index) => (

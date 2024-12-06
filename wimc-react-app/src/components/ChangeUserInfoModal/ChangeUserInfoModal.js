@@ -21,7 +21,6 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     };
 
     document.addEventListener("keydown", handleKeyDown);
-
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -71,13 +70,15 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
       }
     }
 
+    if (!imageFile && formData.avatarUrl) {
+      updatedFormData.avatarUrl = formData.avatarUrl;
+    }
+
     onUserUpdate(updatedFormData);
     onClose();
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
     <div
