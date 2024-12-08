@@ -14,6 +14,8 @@ The user will be able to create a wishlist and share that list if desired.
 
 The user will be able to add closet items they want to donate into the donate bin, giving them the ability to select the items even before entering their closet, giving them a more organized way of declutering thier closet. When the user enters their closet, they can just remove the items they have already designated for donation.
 
+# Frontend Application Delpoyed Site: https://rwallace1ro.github.io/project-wimc-frontend/
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
