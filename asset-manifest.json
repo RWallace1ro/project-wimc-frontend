@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/project-wimc-frontend/static/css/main.5147bdf5.css",
+    "main.js": "/project-wimc-frontend/static/js/main.38634e37.js",
+    "static/media/bags-accessories.jpg": "/project-wimc-frontend/static/media/bags-accessories.260d0f1db7382f2ee855.jpg",
+    "static/media/shoes-sneakers.jpg": "/project-wimc-frontend/static/media/shoes-sneakers.e36f69f59964a20eaa50.jpg",
+    "static/media/dresses-skirts.jpg": "/project-wimc-frontend/static/media/dresses-skirts.1feec52fcaad5cd9570b.jpg",
+    "static/media/pants-jeans.jpg": "/project-wimc-frontend/static/media/pants-jeans.1cab8751d8ebd256c82d.jpg",
+    "static/media/closet-interior-background.jpg": "/project-wimc-frontend/static/media/closet-interior-background.5dc9fe5dffb5f62f72bb.jpg",
+    "static/media/tops.jpg": "/project-wimc-frontend/static/media/tops.b860d0ca75539cdbbfaa.jpg",
+    "static/media/main-background.jpg": "/project-wimc-frontend/static/media/main-background.278af2cce4e9125ab20f.jpg",
+    "static/media/jackets-coats.jpg": "/project-wimc-frontend/static/media/jackets-coats.1f3ebfff0e3721d8c618.jpg",
+    "index.html": "/project-wimc-frontend/index.html",
+    "main.5147bdf5.css.map": "/project-wimc-frontend/static/css/main.5147bdf5.css.map",
+    "main.38634e37.js.map": "/project-wimc-frontend/static/js/main.38634e37.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5147bdf5.css",
+    "static/js/main.38634e37.js"
+  ]
+}
