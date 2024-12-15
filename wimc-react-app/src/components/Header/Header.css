@@ -1,16 +1,12 @@
 .header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   padding: 10px 20px;
   background-color: #f8f8f8;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.header__logo {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
+  position: relative;
+  z-index: 10;
 }
 
 .header__logo-link {
@@ -18,20 +14,39 @@
   color: inherit;
 }
 
-.header__tabs-container {
-  position: absolute;
-  left: 45%;
-  transform: translateX(-50%);
+.header__logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-left: 20px;
+}
+
+.header__nav {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  z-index: 2;
+  width: 100%;
+}
+
+.header__tabs-user-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.header__tabs-container {
+  display: flex;
+  justify-content: center;
+  flex-grow: 1;
+  z-index: 15;
 }
 
 .header__user {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 10px;
+  margin-right: 40px;
 }
 
 .header__user-name {
@@ -87,5 +102,76 @@
   margin-left: 10px;
   cursor: pointer;
   vertical-align: middle;
-  padding-left: 13px;
+  padding-left: 30px;
+}
+
+@media screen and (max-width: 1024px) {
+  .header__nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header__user {
+    margin-right: 0;
+    margin-top: 10px;
+    flex-direction: column;
+  }
+
+  .header__tabs-container {
+    justify-content: flex-start;
+  }
+
+  .header__user {
+    margin-right: 0;
+    margin-top: 10px;
+  }
+
+  .header__avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .header__logo {
+    font-size: 20px;
+    margin-left: 0;
+  }
+
+  .header__button,
+  .header__about-button {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .header__logo {
+    font-size: 18px;
+  }
+
+  .header__tabs-user-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  .header__tabs-container {
+    justify-content: flex-start;
+  }
+
+  .header__avatar {
+    width: 28px;
+    height: 28px;
+  }
+
+  .header__button,
+  .header__about-button {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+
+  .header__nav {
+    width: 100%;
+    justify-content: center;
+  }
 }

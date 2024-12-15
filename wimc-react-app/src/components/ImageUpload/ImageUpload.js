@@ -32,11 +32,15 @@ const ImageUpload = ({ folder, tag, onUploadSuccess }) => {
   };
 
   return (
-    <div className="image-upload">
-      <button className="image-upload__button" onClick={handleUpload}>
+    <section className="image-upload" aria-label="Image Upload Section">
+      <button
+        className="image-upload__button"
+        onClick={handleUpload}
+        aria-label="Click to upload an image"
+      >
         Upload Image
       </button>
-    </div>
+    </section>
   );
 };
 

@@ -21,7 +21,7 @@ function Main({ isLoggedIn }) {
 
   return (
     <main className="main">
-      <div className="main__content">
+      <section className="main__content">
         <h1 className="main__title">Welcome to What's In My Closet (WIMC)</h1>
         <p className="main__description">
           The WIMC app helps you organize and manage your closet effortlessly.
@@ -39,12 +39,12 @@ function Main({ isLoggedIn }) {
         </Link>
 
         {showAuthMessage && (
-          <div className="main__message">
+          <section className="main__message">
             <p>Please log in or sign up to explore your closet.</p>
             <button onClick={closeAuthMessage}>Close</button>
-          </div>
+          </section>
         )}
-      </div>
+      </section>
     </main>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ClosetTabs from "../ClosetTabs/ClosetTabs";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ReactComponent as HomeIcon } from "../../assets/images/home-icon.svg";
 import "./Header.css";
 
 function Header({
@@ -46,20 +47,15 @@ function Header({
 
   return (
     <header className="header">
-      <Link to={isLoggedIn ? "/home" : "/"} className="header__logo-link">
-        <div className="header__logo">WIMC{"\u2122"}</div>
+      <nav className="header__nav">
+        <Link to={isLoggedIn ? "/home" : "/"} className="header__logo-link">
+          <div className="header__logo">WIMC{"\u2122"}</div>
+          {location.pathname === "/home" && (
+            <HomeIcon className="header__home-icon" />
+          )}
+        </Link>
 
-        {location.pathname === "/home" && (
-          <img
-            src={require("../../assets/images/home-icon.jpg")}
-            alt="Home Icon"
-            className="header__home-icon"
-          />
-        )}
-      </Link>
-
-      {isLoggedIn ? (
-        <div className="header__content">
+        <section className="header__tabs-user-container">
           <div className="header__tabs-container">
             <ClosetTabs
               selectedTab={selectedTab}
@@ -67,39 +63,47 @@ function Header({
             />
           </div>
 
-          <div className="header__user">
-            <span className="header__user-name">
-              {currentUserName ? `${userName}'s Closet` : "Your Closet"}
-            </span>
-            <img
-              src={displayAvatarUrl}
-              alt="User Avatar"
-              className="header__avatar"
-              onError={(e) => {
-                e.target.src = defaultAvatarUrl;
-              }}
-            />
-            <button className="header__button" onClick={handleLogout}>
-              Logout
-            </button>
-            <button className="header__about-button" onClick={handleAboutClick}>
-              About
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="header__auth-buttons">
-          <button className="header__button" onClick={onSignUpClick}>
-            Sign Up
-          </button>
-          <button className="header__button" onClick={onLoginClick}>
-            Login
-          </button>
-          <button className="header__about-button" onClick={handleAboutClick}>
-            About
-          </button>
-        </div>
-      )}
+          {isLoggedIn ? (
+            <div className="header__user">
+              <span className="header__user-name">
+                {currentUserName ? `${userName}'s Closet` : "Your Closet"}
+              </span>
+              <img
+                src={displayAvatarUrl}
+                alt="User Avatar"
+                className="header__avatar"
+                onError={(e) => {
+                  e.target.src = defaultAvatarUrl;
+                }}
+              />
+              <button className="header__button" onClick={handleLogout}>
+                Logout
+              </button>
+              <button
+                className="header__about-button"
+                onClick={handleAboutClick}
+              >
+                About
+              </button>
+            </div>
+          ) : (
+            <div className="header__auth-buttons">
+              <button className="header__button" onClick={onSignUpClick}>
+                Sign Up
+              </button>
+              <button className="header__button" onClick={onLoginClick}>
+                Login
+              </button>
+              <button
+                className="header__about-button"
+                onClick={handleAboutClick}
+              >
+                About
+              </button>
+            </div>
+          )}
+        </section>
+      </nav>
     </header>
   );
 }

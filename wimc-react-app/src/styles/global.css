@@ -1,8 +1,8 @@
-@import url("../vendor/roboto-slab-700.woff");
+@import url("../vendor/fonts/roboto-slab-700.woff");
 
 @font-face {
   font-family: "RobotoWoff";
-  src: url("../vendor/roboto-slab-700.woff") format("woff");
+  src: url("../vendor/fonts/roboto-slab-700.woff") format("woff");
   font-weight: 700;
   font-style: normal;
   font-display: swap;

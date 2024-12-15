@@ -81,51 +81,70 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
   if (!isOpen) return null;
 
   return (
-    <div
+    <section
       className="modal-overlay"
       onClick={(e) => {
         if (!modalRef.current.contains(e.target)) onClose();
       }}
     >
       <div className="modal" ref={modalRef}>
-        <div className="modal__header">
+        <header className="modal__header">
           <h2 className="modal__title">Update User Information</h2>
-          <button className="modal__close" onClick={onClose}>
+          <button
+            className="modal__close"
+            onClick={onClose}
+            aria-label="Close Modal"
+          >
             &times;
           </button>
-        </div>
+        </header>
         <form className="modal__form" onSubmit={handleSubmit}>
+          <label htmlFor="username">Username</label>
           <input
             type="text"
+            id="username"
             name="username"
             placeholder="Username"
             value={formData.username}
             onChange={handleChange}
             className="modal__input"
+            required
           />
+
+          <label htmlFor="email">Email</label>
           <input
             type="email"
+            id="email"
             name="email"
             placeholder="Email"
             value={formData.email}
             onChange={handleChange}
             className="modal__input"
+            required
           />
+
+          <label htmlFor="image">Upload Image</label>
           <input
             type="file"
+            id="image"
             accept="image/*"
             onChange={handleImageChange}
             className="modal__input"
           />
+
+          <label htmlFor="avatarUrl">Or enter Image URL</label>
           <input
             type="url"
+            id="avatarUrl"
             name="avatarUrl"
-            placeholder="Or enter Image URL"
+            placeholder="Image URL"
             value={formData.avatarUrl}
             onChange={handleChange}
             className="modal__input"
           />
+
           {error && <p className="modal__error">{error}</p>}
+
           <button
             type="submit"
             className="modal__submit"
@@ -135,7 +154,7 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
           </button>
         </form>
       </div>
-    </div>
+    </section>
   );
 }
 

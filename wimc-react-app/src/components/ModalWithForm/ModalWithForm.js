@@ -70,75 +70,81 @@ function ModalWithForm({
   return (
     <div className="modal-overlay">
       <div className="modal" ref={modalRef}>
-        <div className="modal__header">
+        <header className="modal__header">
           <h2 className="modal__title">{isSignUp ? "Sign Up" : "Login"}</h2>
           <button className="modal__close" onClick={onClose}>
             &times;
           </button>
-        </div>
-        <form className="modal__form" onSubmit={handleSubmit}>
-          {isSignUp && (
+        </header>
+        <section className="modal__form-section">
+          <form className="modal__form" onSubmit={handleSubmit}>
+            {isSignUp && (
+              <input
+                type="text"
+                name="username"
+                placeholder="Username"
+                value={formData.username}
+                onChange={handleChange}
+                className="modal__input"
+                required
+              />
+            )}
             <input
-              type="text"
-              name="username"
-              placeholder="Username"
-              value={formData.username}
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
               onChange={handleChange}
               className="modal__input"
+              required
             />
-          )}
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            className="modal__input"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            className="modal__input"
-          />
-          {isSignUp && (
-            <>
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="modal__input"
-              />
-              <input
-                type="url"
-                name="avatarUrl"
-                placeholder="Profile Image URL (optional)"
-                value={formData.avatarUrl}
-                onChange={handleChange}
-                className="modal__input"
-              />
-            </>
-          )}
-          {error && <p className="modal__error">{error}</p>}
-          <div className="modal__footer">
-            <button type="submit" className="modal__submit">
-              {isSignUp ? "Sign Up" : "Login"}
-            </button>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="modal__input"
+              required
+            />
             {isSignUp && (
-              <button
-                type="button"
-                className="modal__switch"
-                onClick={switchToLogin}
-              >
-                or Login
-              </button>
+              <>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="modal__input"
+                  required
+                />
+                <input
+                  type="url"
+                  name="avatarUrl"
+                  placeholder="Profile Image URL (optional)"
+                  value={formData.avatarUrl}
+                  onChange={handleChange}
+                  className="modal__input"
+                />
+              </>
             )}
-          </div>
-        </form>
+            {error && <p className="modal__error">{error}</p>}
+            <section className="modal__footer">
+              <button type="submit" className="modal__submit">
+                {isSignUp ? "Sign Up" : "Login"}
+              </button>
+              {isSignUp && (
+                <button
+                  type="button"
+                  className="modal__switch"
+                  onClick={switchToLogin}
+                >
+                  or Login
+                </button>
+              )}
+            </section>
+          </form>
+        </section>
       </div>
     </div>
   );

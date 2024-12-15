@@ -44,15 +44,32 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="closet-section-modal__overlay" onClick={handleOverlayClick}>
+    <section
+      className="closet-section-modal__overlay"
+      onClick={handleOverlayClick}
+      role="dialog"
+      aria-labelledby="closet-section-modal-title"
+      aria-hidden={!isOpen}
+    >
       <div
         className="closet-section-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        <button className="closet-section-modal__close" onClick={onClose}>
-          &#10006;
-        </button>
-        <h2 className="closet-section-modal__title">{sectionName}</h2>
+        <header className="closet-section-modal__header">
+          <button
+            className="closet-section-modal__close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            &#10006;
+          </button>
+          <h2
+            id="closet-section-modal-title"
+            className="closet-section-modal__title"
+          >
+            {sectionName}
+          </h2>
+        </header>
 
         {loading && <div className="preloader">Loading items...</div>}
 
@@ -67,15 +84,15 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
         )}
 
         {!loading && items.length > 0 && (
-          <div className="closet-section-modal__levels">
-            <div className="closet-section-modal__level closet-section-modal__level--dark">
+          <main className="closet-section-modal__levels">
+            <section className="closet-section-modal__level closet-section-modal__level--dark">
               <h3>Level 1</h3>
               <div className="closet-section-modal__scroll">
                 {items.map((item, index) => {
                   const imageUrl = item;
 
                   return (
-                    <div
+                    <figure
                       key={item?.public_id || index}
                       className="closet-section-modal__item"
                     >
@@ -84,15 +101,15 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
                         alt={item?.public_id || "item"}
                         className="closet-section-modal__item-image"
                       />
-                    </div>
+                    </figure>
                   );
                 })}
               </div>
-            </div>
-          </div>
+            </section>
+          </main>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 

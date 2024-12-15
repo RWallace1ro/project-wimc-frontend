@@ -14,8 +14,8 @@ function Home() {
   };
 
   return (
-    <div className="home">
-      <div className="home__content">
+    <main className="home">
+      <section className="home__content">
         <header className="home__header">
           <h1 className="home__title">Welcome to What's In My Closet (WIMC)</h1>
           <p className="home__description">
@@ -31,12 +31,12 @@ function Home() {
         <footer className="home__footer">
           <p>Manage your wardrobe with ease!</p>
         </footer>
-      </div>
+      </section>
       <div className={`door-container ${doorsOpen ? "active" : ""}`}>
         <div className="door-left"></div>
         <div className="door-right"></div>
       </div>
-    </div>
+    </main>
   );
 }
 

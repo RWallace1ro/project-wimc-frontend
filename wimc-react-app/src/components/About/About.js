@@ -3,9 +3,11 @@ import "./About.css";
 
 function About() {
   return (
-    <div className="about">
-      <div className="about__overlay">
-        <h1>About WIMC</h1>
+    <main className="about">
+      <section className="about__overlay">
+        <header>
+          <h1>About WIMC</h1>
+        </header>
         <p>
           What's in My Closet (WIMC) is your personal wardrobe organizer,
           designed to help you manage your clothing items efficiently. With
@@ -16,8 +18,8 @@ function About() {
           category, and adding them to a wish list or donate bin for streamlined
           closet management.
         </p>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
 

@@ -45,7 +45,17 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
       setError("Please fill in all fields.");
       return;
     }
+
     onClothingAdded({ ...formData });
+
+    setFormData({
+      name: "",
+      designer: "",
+      size: "",
+      category: "",
+      imageUrl: "",
+    });
+    setError("");
     onClose();
   };
 
@@ -80,48 +90,67 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={handleOverlayClick}>
+    <section className="modal-overlay" onClick={handleOverlayClick}>
       <div
         className="modal"
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="modal__header">
+        <header className="modal__header">
           <h2 className="modal__title">Add New Clothing Item</h2>
-          <button className="modal__close" onClick={onClose}>
+          <button
+            className="modal__close"
+            onClick={onClose}
+            aria-label="Close Modal"
+          >
             &times;
           </button>
-        </div>
+        </header>
         <form className="modal__form" onSubmit={handleSubmit}>
+          <label htmlFor="name">Item Name</label>
           <input
+            id="name"
             type="text"
             name="name"
             placeholder="Item Name"
             value={formData.name}
             onChange={handleChange}
             className="modal__input"
+            required
           />
+
+          <label htmlFor="designer">Designer</label>
           <input
+            id="designer"
             type="text"
             name="designer"
             placeholder="Designer"
             value={formData.designer}
             onChange={handleChange}
             className="modal__input"
+            required
           />
+
+          <label htmlFor="size">Size</label>
           <input
+            id="size"
             type="text"
             name="size"
             placeholder="Size"
             value={formData.size}
             onChange={handleChange}
             className="modal__input"
+            required
           />
+
+          <label htmlFor="category">Category</label>
           <select
+            id="category"
             name="category"
             value={formData.category}
             onChange={handleChange}
             className="modal__select"
+            required
           >
             <option value="">Select Category</option>
             <option value="dresses-skirts">Dresses/Skirts</option>
@@ -145,7 +174,7 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
           </button>
         </form>
       </div>
-    </div>
+    </section>
   );
 }
 

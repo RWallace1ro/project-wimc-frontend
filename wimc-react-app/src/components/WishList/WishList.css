@@ -2,39 +2,46 @@
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 300px;
-  max-height: 400px;
-  overflow: hidden;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
+  padding: 20px;
+  bottom: 15px;
 }
 
 .wish-list h3 {
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
-.wish-list__input {
+.wish-list__form {
   display: flex;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.wish-list__input input,
-.wish-list__input textarea {
-  flex: 1;
+.wish-list__form label {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.wish-list__form input,
+.wish-list__form textarea {
   padding: 10px;
   font-size: 14px;
   border: 1px solid #ddd;
   border-radius: 5px;
 }
 
-.wish-list__input textarea {
+.wish-list__form textarea {
   resize: none;
-  height: 30px;
+  height: 20px;
 }
 
-.wish-list__input button {
+.wish-list__form button {
   padding: 10px 20px;
   border: none;
   background-color: #5cb85c;
@@ -42,11 +49,10 @@
   cursor: pointer;
   font-size: 16px;
   border-radius: 5px;
-  margin-left: 0px;
   width: 100%;
 }
 
-.wish-list__input button:hover {
+.wish-list__form button:hover {
   background-color: #4cae4c;
 }
 
@@ -56,44 +62,14 @@
   margin-bottom: 10px;
 }
 
-.wish-list ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.wish-list li {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
-}
-
-.wish-list li button {
-  padding: 5px 3px;
-  border: none;
-  background-color: #d9534f;
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 5px;
-}
-
-.wish-list li button:hover {
-  background-color: #c9302c;
-}
-
 .wish-list__actions {
   display: flex;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .wish-list__share,
 .wish-list__view {
-  display: inline-block;
   padding: 8px 15px;
   border: none;
   background-color: #007bff;
@@ -112,12 +88,13 @@
 .wish-list__items {
   flex-grow: 1;
   overflow-y: auto;
+  margin-top: 20px;
 }
 
 .wish-list__items h4 {
   margin-bottom: 10px;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .wish-list__items ul {
@@ -127,7 +104,57 @@
 }
 
 .wish-list__items ul li {
+  display: flex;
+  justify-content: space-between;
   padding: 8px;
   border-bottom: 1px solid #ddd;
   font-size: 14px;
+}
+
+.wish-list__items ul li a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.wish-list__items ul li a:hover {
+  text-decoration: underline;
+}
+
+.wish-list__items ul li button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #d9534f;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.wish-list__items ul li button:hover {
+  background-color: #c9302c;
+}
+
+@media screen and (max-width: 1024px) {
+  .wish-list {
+    width: 90%;
+    margin: 10px auto;
+  }
+
+  .wish-list h3 {
+    font-size: 16px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .wish-list {
+    width: 85%;
+    margin: 0 auto;
+    top: auto;
+    right: auto;
+    box-sizing: border-box;
+  }
+
+  .wish-list h3 {
+    font-size: 14px;
+  }
 }

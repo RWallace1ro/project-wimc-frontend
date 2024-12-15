@@ -108,8 +108,8 @@ function ClosetData({ selectedTab, isLoggedIn }) {
   };
 
   return (
-    <div className="closet-data-page">
-      <div className="closet-data__buttons">
+    <main className="closet-data-page">
+      <header className="closet-data__header-actions">
         <button
           onClick={() => {
             resetModals();
@@ -128,12 +128,12 @@ function ClosetData({ selectedTab, isLoggedIn }) {
         >
           Change User Info
         </button>
-      </div>
+      </header>
 
       {error && <p className="error-message">{error}</p>}
       {isLoading && <p className="loading-message">Loading...</p>}
 
-      <div className="closet-data">
+      <section className="closet-data">
         <div className="closet-data__cards-container">
           {closetSections.map((section) => {
             const imageUrl =
@@ -141,8 +141,6 @@ function ClosetData({ selectedTab, isLoggedIn }) {
                 ? closetItems.find((item) => item.includes(section.tag)) ||
                   section.placeholderUrl
                 : section.placeholderUrl;
-
-            console.log(`Image URL for ${section.name}:`, imageUrl);
 
             return (
               <ClosetSectionCard
@@ -156,10 +154,10 @@ function ClosetData({ selectedTab, isLoggedIn }) {
           })}
         </div>
 
-        <div className="closet-data__side-container">
+        <aside className="closet-data__side-container">
           <WishList userId="123" />
           <DonateBin clothingItems={closetItems} />
-        </div>
+        </aside>
 
         <ChangeUserInfoModal
           isOpen={isUserModalOpen}
@@ -180,8 +178,8 @@ function ClosetData({ selectedTab, isLoggedIn }) {
           onClose={resetModals}
           onClothingAdded={handleAddClothing}
         />
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
 

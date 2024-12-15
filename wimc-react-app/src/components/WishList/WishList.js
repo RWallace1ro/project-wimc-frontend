@@ -77,38 +77,43 @@ function WishList() {
   };
 
   return (
-    <div className="wish-list">
+    <section className="wish-list" aria-live="polite">
       <h3>Wish List</h3>
 
-      <div className="wish-list__input">
+      <form className="wish-list__form">
+        <label htmlFor="url">Item URL (Optional):</label>
         <input
+          id="url"
           type="text"
           name="url"
-          placeholder="Enter item URL (Optional)"
+          placeholder="Enter item URL"
           value={newItem.url}
           onChange={handleInputChange}
         />
-      </div>
-      <div className="wish-list__input">
+
+        <label htmlFor="name">Item Name (Optional):</label>
         <input
+          id="name"
           type="text"
           name="name"
-          placeholder="Enter item name (Optional)"
+          placeholder="Enter item name"
           value={newItem.name}
           onChange={handleInputChange}
         />
-      </div>
-      <div className="wish-list__input">
+
+        <label htmlFor="description">Item Description (Optional):</label>
         <textarea
+          id="description"
           name="description"
-          placeholder="Enter item description (Optional)"
+          placeholder="Enter item description"
           value={newItem.description}
           onChange={handleInputChange}
         />
-      </div>
-      <div className="wish-list__input">
-        <button onClick={handleAddItem}>Add</button>
-      </div>
+
+        <button type="button" onClick={handleAddItem}>
+          Add to Wish List
+        </button>
+      </form>
 
       {addAttempted && error && <p className="wish-list__error">{error}</p>}
 
@@ -126,7 +131,7 @@ function WishList() {
       )}
 
       {showWishList && (
-        <div className="wish-list__items">
+        <section className="wish-list__items">
           <h4>Items in Wish List:</h4>
           {wishListItems.length === 0 ? (
             <p>No items in your wish list.</p>
@@ -155,9 +160,9 @@ function WishList() {
               ))}
             </ul>
           )}
-        </div>
+        </section>
       )}
-    </div>
+    </section>
   );
 }
 

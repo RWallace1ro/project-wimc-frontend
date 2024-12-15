@@ -43,6 +43,7 @@ function ClosetSectionCard({
     <AdvancedImage
       cldImg={new CloudinaryImage(imageUrl, { cloudName: "djoh2vfhd" })}
       className="closet-section-card__image"
+      alt={sectionName}
     />
   ) : (
     <img
@@ -53,10 +54,14 @@ function ClosetSectionCard({
   );
 
   return (
-    <div className="closet-section-card" onClick={onClick}>
-      {renderImage}
-      <h3 className="closet-section-card__title">{sectionName}</h3>
-    </div>
+    <section className="closet-section-card" onClick={onClick}>
+      <figure className="closet-section-card__image-container">
+        {renderImage}
+      </figure>
+      <header>
+        <h3 className="closet-section-card__title">{sectionName}</h3>
+      </header>
+    </section>
   );
 }
 

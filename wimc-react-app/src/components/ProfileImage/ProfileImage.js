@@ -22,7 +22,7 @@ function ProfileImage({ publicId, avatarUrlFromModal }) {
   }, [publicId, avatarUrlFromModal]);
 
   return (
-    <div>
+    <section className="profile-image" aria-live="polite">
       {avatarUrl ? (
         <img
           src={avatarUrl}
@@ -36,7 +36,7 @@ function ProfileImage({ publicId, avatarUrlFromModal }) {
       ) : (
         <p>Loading...</p>
       )}
-    </div>
+    </section>
   );
 }
 

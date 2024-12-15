@@ -3,12 +3,14 @@ import "./NothingFound.css";
 
 function NothingFound() {
   return (
-    <div className="nothing-found">
-      <h2 className="nothing-found__title">Nothing Found</h2>
+    <section className="nothing-found">
+      <header>
+        <h2 className="nothing-found__title">Nothing Found</h2>
+      </header>
       <p className="nothing-found__description">
         We couldn't find any items matching your search.
       </p>
-    </div>
+    </section>
   );
 }
 

@@ -53,8 +53,8 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
   }, [selectedTab]);
 
   return (
-    <div className="closet-tabs">
-      <div className="closet-tabs__container">
+    <section className="closet-tabs">
+      <nav className="closet-tabs__container">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -62,32 +62,37 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
               selectedTab === tab ? "active" : ""
             }`}
             onClick={() => onSelectTab(tab)}
+            aria-label={`Select ${displayNames[tab]}`}
           >
             {displayNames[tab]}
           </button>
         ))}
-      </div>
+      </nav>
 
-      <div className="closet-tabs__modal">
-        {loading && <div className="preloader">Loading...</div>}{" "}
+      <section className="closet-tabs__modal">
+        {loading && <div className="preloader">Loading...</div>}
         {error && !loading && <p className="error-message">{error}</p>}
         {!loading && items.length > 0 && (
           <div className="closet-tabs__gallery">
             {items.map((item, index) => (
-              <div key={item?.public_id || index} className="closet-tabs__item">
+              <article
+                key={item?.public_id || index}
+                className="closet-tabs__item"
+              >
                 {item?.secure_url && (
                   <img
                     src={item.secure_url}
                     alt={`Closet item ${index + 1}`}
                     className="closet-tabs__image"
+                    aria-label={`Image of ${displayNames[selectedTab]}`}
                   />
                 )}
-              </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </section>
+    </section>
   );
 }
 

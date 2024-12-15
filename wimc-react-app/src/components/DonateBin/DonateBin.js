@@ -109,36 +109,49 @@ function DonateBin() {
   };
 
   return (
-    <div className="donate-bin">
-      <h3>Donate Bin</h3>
+    <section className="donate-bin">
+      <header>
+        <h3>Donate Bin</h3>
+      </header>
 
-      <div className="donate-bin__input">
+      <section className="donate-bin__input">
+        <label htmlFor="name">Item Name</label>
         <input
+          id="name"
           type="text"
           name="name"
           placeholder="Enter item name"
           value={newItem.name}
           onChange={handleInputChange}
+          required
         />
+
+        <label htmlFor="description">Description</label>
         <textarea
+          id="description"
           name="description"
           placeholder="Enter item description"
           value={newItem.description}
           onChange={handleInputChange}
+          required
         />
+
+        <label htmlFor="image">Upload Image</label>
         <input
+          id="image"
           type="file"
           name="image"
           accept="image/*"
           onChange={handleFileChange}
         />
+
         <button onClick={handleAddItem} disabled={loading}>
-          {loading ? "Uploading..." : "Add"}
+          {loading ? "Uploading..." : "Add Item"}
         </button>
-      </div>
+      </section>
 
       <button className="donate-bin__donate-button" onClick={handleDonate}>
-        Donate
+        Donate Items
       </button>
 
       <ul className="donate-bin__list">
@@ -157,6 +170,7 @@ function DonateBin() {
           </li>
         ))}
       </ul>
+
       {error && <p className="donate-bin__error">{error}</p>}
 
       <button
@@ -165,8 +179,9 @@ function DonateBin() {
       >
         {showDonatedItems ? "Hide Donated Items" : "View Donated Items"}
       </button>
+
       {showDonatedItems && (
-        <div className="donate-bin__donated-items">
+        <section className="donate-bin__donated-items">
           <h4>Donated Items:</h4>
           {donatedItems.length === 0 ? (
             <p>No items have been donated yet.</p>
@@ -190,9 +205,9 @@ function DonateBin() {
               ))}
             </ul>
           )}
-        </div>
+        </section>
       )}
-    </div>
+    </section>
   );
 }
 

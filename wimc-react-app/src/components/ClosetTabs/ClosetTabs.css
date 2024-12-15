@@ -58,3 +58,51 @@
   text-align: center;
   font-size: 16px;
 }
+
+@media screen and (max-width: 1024px) {
+  .closet-tabs__container {
+    justify-content: flex-start;
+    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: 10px;
+  }
+
+  .closet-tabs__tab {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .closet-tabs__gallery {
+    gap: 15px;
+  }
+
+  .closet-tabs__image-container {
+    width: 150px;
+    height: 120px;
+    flex-direction: column;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .closet-tabs__container {
+    flex-direction: column;
+    align-items: center;
+    display: flex;
+  }
+
+  .closet-tabs__tab {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .closet-tabs__gallery {
+    gap: 10px;
+  }
+
+  .closet-tabs__image-container {
+    width: 120px;
+    height: 100px;
+  }
+}

@@ -9,13 +9,17 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
   margin-bottom: 20px;
-  top: 210px;
-  right: 1120px;
+  top: 150px;
+  right: 1110px;
   transform: translate(0, 0);
+  padding-right: 10px;
 }
 
+.donate-bin::-webkit-scrollbar {
+  width: 12px;
+}
 .donate-bin h3 {
   font-size: 18px;
   font-weight: bold;
@@ -72,6 +76,9 @@
   flex-grow: 1;
   max-height: 200px;
   overflow-y: auto;
+  background-color: #fff;
+  border-radius: 10px;
+  box-sizing: border-box;
 }
 
 .donate-bin__list li {
@@ -103,12 +110,6 @@
   background-color: #c9302c;
 }
 
-.donate-bin__error {
-  color: red;
-  font-size: 14px;
-  margin-top: 10px;
-}
-
 .donate-bin__view-button {
   padding: 10px;
   border: none;
@@ -118,64 +119,30 @@
   font-size: 16px;
   border-radius: 5px;
   margin-top: 10px;
-}
-
-.donate-bin__view-button:hover {
-  background-color: #0056b3;
-}
-
-.donate-bin__donated-items {
-  margin-top: 10px;
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.donate-bin__donated-items h4 {
   margin-bottom: 10px;
-  font-size: 16px;
-  font-weight: bold;
 }
 
-.donate-bin__donated-items ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+@media screen and (max-width: 1024px) {
+  .donate-bin {
+    position: relative;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    margin-bottom: 20px;
+    top: auto;
+  }
 }
 
-.donate-bin__donated-items ul li {
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
-}
-
-.donate-bin__donated-items ul li img {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-}
-
-.donate-bin__donated-items ul li:last-child {
-  border-bottom: none;
-}
-
-.donate-bin__donated-items ul li span {
-  flex-grow: 1;
-  overflow-y: auto;
-}
-
-.donate-bin__donated-items ul li button {
-  padding: 5px 10px;
-  border: none;
-  background-color: #d9534f;
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-  border-radius: 5px;
-  margin-left: 10px;
-}
-
-.donate-bin__donated-items ul li button:hover {
-  background-color: #c9302c;
+@media screen and (max-width: 480px) {
+  .donate-bin {
+    position: relative;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    margin-bottom: 20px;
+    top: auto;
+    box-sizing: border-box;
+  }
 }

@@ -169,7 +169,7 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <main className="app">
       <Header
         userName={isLoggedIn ? userData.userName : "Your Closet"}
         avatarUrl={userData.avatarUrl}
@@ -180,7 +180,7 @@ function App() {
         handleSelectTab={handleSelectTab}
         selectedTab={selectedTab}
       />
-      <div className="app__content">
+      <section className="app__content">
         {apiError && <p className="error-message">{apiError}</p>}
         {isLoading && <p className="loading-message">Loading...</p>}
         <Routes>
@@ -199,7 +199,7 @@ function App() {
           <Route path="/about" element={<About />} />
           <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
-      </div>
+      </section>
       <Footer />
       <ModalWithForm
         isOpen={isSignUpModalOpen}
@@ -218,7 +218,7 @@ function App() {
         formData={loginData}
         error={loginError}
       />
-    </div>
+    </main>
   );
 }
 
