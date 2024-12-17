@@ -137,7 +137,6 @@
 @media screen and (max-width: 1024px) {
   .wish-list {
     width: 90%;
-    margin: 10px auto;
   }
 
   .wish-list h3 {
@@ -148,9 +147,6 @@
 @media screen and (max-width: 480px) {
   .wish-list {
     width: 85%;
-    margin: 0 auto;
-    top: auto;
-    right: auto;
     box-sizing: border-box;
   }
 

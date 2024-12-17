@@ -121,6 +121,7 @@
     padding: 15px;
     box-sizing: border-box;
     height: auto;
+    overflow-y: overlay;
   }
 
   .closet-data__cards-container {
@@ -134,8 +135,7 @@
     flex-direction: column;
     gap: 20px;
     right: auto;
-    /* margin-top: 50px; */
-    margin-top: 900px;
+    margin-top: 950px;
     display: flex;
     position: absolute;
   }
@@ -143,9 +143,6 @@
   .wish-list {
     position: relative;
     width: 90%;
-    margin: 20px auto;
-    top: auto;
-    right: auto;
     justify-items: center;
   }
 
@@ -166,8 +163,7 @@
   }
 
   .closet-section-modal {
-    width: 90%;
-    max-width: 500px;
+    max-width: 400px;
   }
 
   .footer {
@@ -189,9 +185,9 @@
     flex-direction: column;
     gap: 20px;
     box-sizing: border-box;
-    /* margin-top: 50px; */
-    margin-top: 1200px;
+    margin-top: 1850px;
     display: flex;
+    width: 90%;
   }
 
   .closet-data__cards-container {
@@ -202,8 +198,6 @@
   .wish-list {
     width: 85%;
     margin: 0 auto;
-    top: auto;
-    right: auto;
     box-sizing: border-box;
   }
 
@@ -224,13 +218,12 @@
   }
 
   .closet-section-modal {
-    width: 95%;
-    max-width: 400px;
+    width: 300px;
   }
 
   .footer {
+    padding: 5px;
     display: flex;
     margin-top: auto;
-    /* position: absolute; */
   }
 }
