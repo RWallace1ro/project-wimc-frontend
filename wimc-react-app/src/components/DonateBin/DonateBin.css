@@ -1,0 +1,148 @@
+.donate-bin {
+  position: absolute;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-bottom: 20px;
+  top: 150px;
+  right: 1110px;
+  transform: translate(0, 0);
+  padding-right: 10px;
+}
+
+.donate-bin::-webkit-scrollbar {
+  width: 12px;
+}
+.donate-bin h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.donate-bin__input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.donate-bin__input input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.donate-bin__input button {
+  padding: 10px 20px;
+  border: none;
+  background-color: #5cb85c;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.donate-bin__input button:hover {
+  background-color: #4cae4c;
+}
+
+.donate-bin__donate-button {
+  padding: 10px;
+  border: none;
+  background-color: #f0ad4e;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.donate-bin__donate-button:hover {
+  background-color: #ec971f;
+}
+
+.donate-bin__list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #fff;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.donate-bin__list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.donate-bin__list li img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.donate-bin__list li button {
+  padding: 5px 10px;
+  border: none;
+  background-color: #d9534f;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.donate-bin__list li button:hover {
+  background-color: #c9302c;
+}
+
+.donate-bin__view-button {
+  padding: 10px;
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+@media screen and (max-width: 1024px) {
+  .donate-bin {
+    position: relative;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    margin-bottom: 20px;
+    top: auto;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .donate-bin {
+    position: relative;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 85%;
+    margin-bottom: 20px;
+    top: auto;
+    box-sizing: border-box;
+  }
+}
