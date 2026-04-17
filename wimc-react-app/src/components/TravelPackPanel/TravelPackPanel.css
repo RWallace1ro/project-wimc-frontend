@@ -1,0 +1,266 @@
+.tp {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.tp:not(.tp--floating):not(.tp--collapsed) {
+  height: 250px;
+}
+
+.tp--collapsed {
+  height: auto;
+}
+
+.tp--floating {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1002;
+  width: min(100vw - 48px, 1200px);
+  height: min(100vh - 48px, 820px);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Backdrop */
+.tp__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1001;
+}
+
+/* Header */
+.tp__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  flex: 0 0 auto;
+}
+.tp__title {
+  margin: 0;
+  font-size: 16px;
+}
+.tp__toggle {
+  padding: 6px 10px;
+}
+.tp__collapsed-row {
+  font-size: 13px;
+  color: #444;
+  padding: 8px 12px;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+/* ==== Doors stage (fills remaining panel height) ==== */
+.tp__doors {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: url("../../assets/images/closet-interior-background.jpg")
+    center/cover no-repeat;
+  overflow: hidden;
+}
+
+/* Door leaves (full-height animation) */
+.tp__door {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  background: url("../../assets/images/main-background.jpg") center/cover
+    no-repeat;
+  transition: transform 3000ms ease;
+}
+.tp__door--left {
+  left: 0;
+  transform-origin: left;
+}
+.tp__door--right {
+  right: 0;
+  transform-origin: right;
+}
+.tp__doors--open .tp__door--left {
+  transform: translateX(-100%);
+}
+.tp__doors--open .tp__door--right {
+  transform: translateX(100%);
+}
+
+/* Body fills panel after doors end */
+.tp__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+}
+
+/* Rows / inputs */
+.tp__row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.tp__input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.tp__actions > button {
+  margin-bottom: 8px;
+}
+
+/* Selected list (grid of images/text items) */
+.tp__list {
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.tp__li {
+  position: relative;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 6px;
+  background: #fafafa;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tp__thumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.tp__text {
+  font-size: 14px;
+}
+.tp__remove {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  border: none;
+  background: #d9534f;
+  color: #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+.tp__empty {
+  color: #777;
+  text-align: center;
+}
+
+/* Inline picker inside the panel */
+.tp__picker {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 10px 0;
+  background: #fafafa;
+}
+.tp__picker-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.tp__picker-tip {
+  color: #555;
+  font-size: 12px;
+}
+.tp__loading {
+  font-size: 13px;
+}
+.tp__error {
+  color: #b00020;
+  font-size: 12px;
+}
+.tp__choices {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(6, 1fr);
+}
+.tp__choice-btn {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.tp__choice-img {
+  width: 100%;
+  height: 90px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+}
+
+/* Sync row */
+.tp__sync {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Share row */
+.tp__share {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.tp__share-link {
+  text-decoration: underline;
+}
+.tp__btn {
+  padding: 6px 10px;
+}
+
+/* Week grid (Travel Pack by day) */
+.tp__grid-week {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+.tp__day {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 8px;
+}
+.tp__daytop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.tp__badge {
+  font-size: 11px;
+  background: #007bff;
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .tp__choices {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

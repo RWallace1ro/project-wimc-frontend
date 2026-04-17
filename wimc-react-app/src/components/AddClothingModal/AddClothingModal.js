@@ -1,15 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
+import MediaUploader from "../MediaUploader/MediaUploader";
 import ImageUpload from "../ImageUpload/ImageUpload";
 import "./AddClothingModal.css";
 
-function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
+// function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
+function AddClothingModal({
+  isOpen,
+  onClose,
+  onClothingAdded,
+  initialCategory,
+}) {
   const [formData, setFormData] = useState({
     name: "",
     designer: "",
     size: "",
     category: "",
-    imageUrl: "",
+    imageUrl: "", // keep for backward-compat with anything expecting it
   });
+
+  const [source, setSource] = useState("device"); // "device" | "web"
+
+  // NEW: media state (image or video)
+  const [media, setMedia] = useState(null); // { type, url, thumb?, poster?, __raw? }
   const [error, setError] = useState("");
 
   const modalRef = useRef(null);
@@ -26,16 +38,33 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
   };
 
   const handleImageUploadSuccess = (result) => {
+    // your ImageUpload returns Cloudinary result with secure_url
     setFormData((prev) => ({ ...prev, imageUrl: result.secure_url }));
+    // clear media so we don't accidentally treat this as video
+    setMedia(null);
+    setError("");
+  };
+
+  // NEW: called by MediaUploader
+  const handleMediaUploaded = (payload) => {
+    // payload: { type: "image"|"video", url, thumb?, poster?, __raw? }
+    setMedia(payload);
+    // Preserve legacy imageUrl for any existing code that might still read it:
+    if (payload.type === "image") {
+      setFormData((prev) => ({
+        ...prev,
+        imageUrl: payload.thumb || payload.url,
+      }));
+    } else {
+      // if video, we don't set imageUrl; card/grid should use mediaType/mediaUrl
+      setFormData((prev) => ({ ...prev, imageUrl: "" }));
+    }
     setError("");
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.imageUrl) {
-      setError("Please upload an image before submitting.");
-      return;
-    }
+
     if (
       !formData.name ||
       !formData.designer ||
@@ -46,8 +75,33 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
       return;
     }
 
-    onClothingAdded({ ...formData });
+    // Validate media: accept either an uploaded image/video (preferred) or legacy imageUrl
+    const hasMedia = media?.url || formData.imageUrl;
+    if (!hasMedia) {
+      setError("Please upload an image or video before submitting.");
+      return;
+    }
 
+    // Build the item your app will use going forward (backward-compatible)
+    const newItem = {
+      name: formData.name,
+      designer: formData.designer,
+      size: formData.size,
+      category: formData.category,
+
+      // Preferred new fields:
+      mediaType: media?.type || (formData.imageUrl ? "image" : "image"),
+      mediaUrl: media?.url || formData.imageUrl || "",
+      mediaThumb: media?.thumb || "",
+      mediaPoster: media?.poster || "",
+
+      // Legacy field (kept just in case other parts of the app still read it)
+      imageUrl: formData.imageUrl || "",
+    };
+
+    onClothingAdded(newItem);
+
+    // reset
     setFormData({
       name: "",
       designer: "",
@@ -55,6 +109,7 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
       category: "",
       imageUrl: "",
     });
+    setMedia(null);
     setError("");
     onClose();
   };
@@ -68,7 +123,12 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
         category: "",
         imageUrl: "",
       });
+      setMedia(null);
       setError("");
+    }
+
+    if (isOpen && initialCategory) {
+      setFormData((p) => ({ ...p, category: initialCategory }));
     }
 
     const handleKeyPress = (e) => {
@@ -83,8 +143,8 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
     };
   }, [isOpen, onClose]);
 
-  const tag = formData.category
-    ? formData.category.replace(/\s+/g, "-").toLowerCase()
+  const tag = formData.category?.trim()
+    ? formData.category.trim().toLowerCase()
     : "uncategorized";
 
   if (!isOpen) return null;
@@ -106,7 +166,29 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
             &times;
           </button>
         </header>
+
         <form className="modal__form" onSubmit={handleSubmit}>
+          {/* Upload source toggle */}
+          <div className="modal__segmented">
+            <button
+              type="button"
+              className={`segmented__btn ${
+                source === "device" ? "is-active" : ""
+              }`}
+              onClick={() => setSource("device")}
+            >
+              From device (image/video)
+            </button>
+            <button
+              type="button"
+              className={`segmented__btn ${
+                source === "web" ? "is-active" : ""
+              }`}
+              onClick={() => setSource("web")}
+            >
+              Web search (image)
+            </button>
+          </div>
           <label htmlFor="name">Item Name</label>
           <input
             id="name"
@@ -161,12 +243,15 @@ function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
             <option value="jackets-coats">Jackets/Coats</option>
           </select>
 
-          <ImageUpload
-            folder="closet-items"
-            tag={tag}
-            onUploadSuccess={handleImageUploadSuccess}
-          />
-
+          {source === "device" ? (
+            <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
+          ) : (
+            <ImageUpload
+              folder="closet-items"
+              tag={tag}
+              onUploadSuccess={handleImageUploadSuccess}
+            />
+          )}
           {error && <p className="modal__error">{error}</p>}
 
           <button type="submit" className="modal__submit">

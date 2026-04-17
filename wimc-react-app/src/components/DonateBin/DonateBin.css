@@ -1,148 +1,435 @@
 .donate-bin {
-  position: absolute;
+  position: relative;
   background: #fff;
-  padding: 20px;
+  padding: 12px;
   border-radius: 10px;
+  top: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 300px;
-  max-height: 400px;
-  overflow-y: auto;
+  width: 275px;
+  overflow: hidden;
+}
+.donate-bin.is-collapsed .panel-body {
+  display: none;
+}
+
+.panel-header {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  margin-bottom: 20px;
-  top: 150px;
-  right: 1110px;
-  transform: translate(0, 0);
-  padding-right: 10px;
-}
-
-.donate-bin::-webkit-scrollbar {
-  width: 12px;
-}
-.donate-bin h3 {
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.donate-bin__input {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.donate-bin__input input {
-  padding: 10px;
-  font-size: 14px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.donate-bin__input button {
-  padding: 10px 20px;
-  border: none;
-  background-color: #5cb85c;
-  color: #fff;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 5px;
-}
-
-.donate-bin__input button:hover {
-  background-color: #4cae4c;
-}
-
-.donate-bin__donate-button {
-  padding: 10px;
-  border: none;
-  background-color: #f0ad4e;
-  color: #fff;
-  cursor: pointer;
-  font-size: 16px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
-
-.donate-bin__donate-button:hover {
-  background-color: #ec971f;
-}
-
-.donate-bin__list {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  flex-grow: 1;
-  max-height: 200px;
-  overflow-y: auto;
-  background-color: #fff;
-  border-radius: 10px;
-  box-sizing: border-box;
-}
-
-.donate-bin__list li {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
-}
-
-.donate-bin__list li img {
-  width: 50px;
-  height: 50px;
-  object-fit: cover;
-  border-radius: 5px;
-}
-
-.donate-bin__list li button {
-  padding: 5px 10px;
-  border: none;
-  background-color: #d9534f;
-  color: #fff;
+  justify-content: space-between;
   cursor: pointer;
-  font-size: 14px;
-  border-radius: 5px;
+  padding: 6px 0;
 }
-
-.donate-bin__list li button:hover {
-  background-color: #c9302c;
-}
-
-.donate-bin__view-button {
-  padding: 10px;
-  border: none;
-  background-color: #007bff;
-  color: #fff;
-  cursor: pointer;
+.panel-title {
+  margin: 0;
   font-size: 16px;
-  border-radius: 5px;
-  margin-top: 10px;
-  margin-bottom: 10px;
+  font-weight: 700;
+}
+.panel-caret {
+  font-size: 16px;
+  line-height: 1;
 }
 
-@media screen and (max-width: 1024px) {
-  .donate-bin {
-    position: relative;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    margin-bottom: 20px;
-    top: auto;
+.donate-bin__open-btn {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.donate-bin__open-btn:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+.donate-bin__hint {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
+/* =========================
+   Floating modal (Outfit Preview parity)
+   ========================= */
+.opp-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 400;
+}
+
+.donate-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 401;
+  width: min(100vw - 48px, 1200px);
+  height: min(100vh - 48px, 820px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: donateIn 0.18s ease both;
+}
+@keyframes donateIn {
+  from {
+    transform: translate(-50%, calc(-50% + 8px));
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
   }
 }
 
-@media screen and (max-width: 480px) {
-  .donate-bin {
-    position: relative;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 85%;
-    margin-bottom: 20px;
-    top: auto;
-    box-sizing: border-box;
+.donate-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+.donate-modal__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.donate-modal__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.donate-modal__btn {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.donate-modal__btn:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+.donate-modal__btn--primary {
+  background: #5cb85c;
+  color: #fff;
+  border-color: #4cae4c;
+}
+.donate-modal__btn--primary:hover {
+  background: #4cae4c;
+}
+
+/* Share row inside modal header (when present) */
+.donate-modal__share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+}
+.donate-modal__link {
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+.donate-modal__link:hover {
+  text-decoration: underline;
+}
+.donate-modal__err {
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+/* =========================
+   Modal body layout
+   ========================= */
+.donate-modal__body {
+  padding: 8px;
+  min-height: 0;
+}
+
+/* Left rail width + Right area grid (equal heights) */
+.donate-modal__layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 8px;
+  height: calc(100% - 64px);
+  min-height: 0;
+}
+
+/* =========================
+   Left rail (parity with Outfit Preview)
+   ========================= */
+.opp__sections {
+  flex: 0 0 220px;
+  border-right: 1px solid #eee;
+  padding: 8px 6px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  border-radius: 8px;
+}
+.opp__section-btn {
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+.opp__section-btn:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+.opp__section-btn.is-active {
+  background: #eef2ff;
+  border-color: #cbd5ff;
+  font-weight: 600;
+}
+.opp__section-btn--saved {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.donate-modal__right {
+  display: grid;
+  grid-template-rows: minmax(260px, 1fr) minmax(260px, 1fr);
+  gap: 8px;
+  min-height: 0;
+}
+
+/* Canvas */
+.donate-canvas {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+}
+.donate-canvas__hint {
+  color: #666;
+  font-size: 12px;
+  text-align: center;
+  padding: 0 8px;
+}
+.donate-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+.donate-thumb {
+  position: relative;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 4px;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.donate-thumb__img {
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 4px;
+}
+.donate-thumb__remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+/* Name toggle badge (matches Outfit Preview) */
+.opp__name-toggle {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #eee;
+  background: #fff;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.opp__name-badge {
+  position: absolute;
+  left: 4px;
+  bottom: 32px;
+  right: 30px;
+  max-height: 3.8em;
+  padding: 4px 6px;
+  font-size: 11px;
+  color: #111;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #eee;
+  border-radius: 6px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Picker (parity with Outfit Preview) */
+.donate-picker {
+  background: transparent;
+  position: relative;
+  z-index: 0;
+}
+.opp__picker-title {
+  margin: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.opp__choices {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  grid-auto-rows: 150px;
+}
+.opp__choice {
+  padding: 0;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.opp__choice-img {
+  max-width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 6px;
+}
+.opp__choice-vidwrap {
+  position: relative;
+}
+.opp__pill {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* =========================
+   Drawers: Saved Sets / Donated Items
+   Ensure headers never clip controls
+   ========================= */
+.opp-saved {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  top: 12px;
+  width: 420px; /* wider so header buttons fit */
+  max-width: calc(100vw - 24px);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  z-index: 431;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.opp-saved__head {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px; /* no clipping at right edge */
+  border-bottom: 1px solid #eee;
+}
+.opp-saved__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap; /* keep buttons visible on narrow widths */
+}
+.opp-saved__content {
+  min-height: 0;
+  overflow: auto;
+  padding: 10px;
+}
+
+/* Small shared styles (used by drawers) */
+.opp__share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.opp__share-link {
+  font-size: 12px;
+  color: #2563eb;
+  text-decoration: none;
+}
+.opp__share-link:hover {
+  text-decoration: underline;
+}
+.opp__error {
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+/* =========================
+   Responsive tweaks
+   ========================= */
+@media (max-width: 900px) {
+  .donate-modal {
+    width: min(100vw - 24px, 1000px);
+    height: min(100vh - 24px, 820px);
+  }
+  .donate-modal__layout {
+    grid-template-columns: 1fr;
+  }
+  .donate-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .opp__choices {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 140px;
   }
 }

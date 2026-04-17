@@ -1,0 +1,116 @@
+.video-bin {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  width: 275px;
+  padding: 12px;
+}
+.video-bin__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.video-bin__title {
+  margin: 0;
+  font-size: 16px;
+}
+.video-bin__btn {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  margin-left: 6px;
+}
+.video-bin__btn:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+.video-bin__empty {
+  color: #666;
+  font-size: 14px;
+  margin: 8px 0 0;
+}
+.video-bin__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  width: 300px;
+}
+.video-bin__card {
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 8px;
+  border: 1px solid #f0f0f0;
+}
+.video-bin__video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+/* Placeholder when floating so layout stays tidy */
+.video-bin--placeholder {
+  min-height: 48px;
+  padding: 8px 12px;
+}
+
+.video-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1900;
+  opacity: 0;
+  animation: vb-fade-in 120ms ease-out forwards;
+}
+@keyframes vb-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Floating overlay via portal */
+.video-float {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  width: min(92vw, 840px);
+  max-height: 80vh;
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  z-index: 2000;
+  padding: 12px;
+}
+.video-float__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.video-float__title {
+  margin: 0;
+  font-size: 16px;
+}
+.video-float__controls .video-bin__btn {
+  margin-left: 6px;
+}
+.video-float__minibar {
+  padding: 8px 6px;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Minimized floating bar */
+.video-float.video-float--minimized {
+  width: 360px;
+  max-height: none;
+  overflow: hidden;
+}
+.video-float.video-float--minimized .video-bin__grid {
+  display: none;
+}

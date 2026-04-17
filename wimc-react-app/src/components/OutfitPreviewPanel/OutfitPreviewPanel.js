@@ -1,0 +1,1663 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  fetchImagesByTag,
+  fetchVideosByTag,
+  uploadRawJSON,
+  videoPoster,
+} from "../../utils/CloudinaryAPI";
+import "./OutfitPreviewPanel.css";
+
+const SECTION_OPTIONS = [
+  { value: "dresses-skirts", label: "Dresses/Skirts" },
+  { value: "shoes-sneakers", label: "Shoes/Sneakers" },
+  { value: "pants-jeans", label: "Pants/Jeans" },
+  { value: "tops", label: "Tops" },
+  { value: "bags-accessories", label: "Bags/Accessories" },
+  { value: "jackets-coats", label: "Jackets/Coats" },
+];
+
+const DEFAULT_SECTION_FALLBACK = "Uncategorized";
+const GRID_COLS_FLOATING = 3;
+const GRID_COLS_COMPACT = 2;
+const DOOR_MS = 3000;
+const SHARE_VERSION = 1;
+
+// LocalStorage keys
+const LS = {
+  STATE_V2: "wimc_preview_state_v2",
+  LEGACY_ITEMS_V1: "wimc_preview_items",
+};
+
+// ---------- helpers ----------
+function ensureHttps(u) {
+  if (!u) return u;
+  return u.startsWith("//") ? "https:" + u : u;
+}
+function isVideoUrl(u = "") {
+  return /\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i.test(u || "");
+}
+function filenameToName(url = "") {
+  try {
+    const last = url.split("/").pop() || "";
+    const base = last.split(".")[0];
+    return decodeURIComponent(base).replace(/[_-]+/g, " ").trim();
+  } catch {
+    return "";
+  }
+}
+function safeVideoPoster(url) {
+  try {
+    const u = new URL(url);
+    if (u.pathname.includes("/video/upload/")) {
+      return url
+        .replace("/video/upload/", "/video/upload/pg_1/")
+        .replace(/\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i, ".jpg");
+    }
+  } catch {}
+  return "";
+}
+function normalizeMedia(x, sectionHint) {
+  if (!x) return null;
+  const to = (url) =>
+    url?.replace("/upload/", "/upload/f_auto,q_auto,w_600,c_limit/");
+  if (typeof x === "string") {
+    const url = ensureHttps(x);
+    const isV = isVideoUrl(url);
+    return {
+      mediaType: isV ? "video" : "image",
+      mediaUrl: url,
+      mediaPoster: isV ? videoPoster(url) || safeVideoPoster(url) : "",
+      mediaThumb: !isV ? to(url) : "",
+      name: filenameToName(url),
+      section: sectionHint || DEFAULT_SECTION_FALLBACK,
+    };
+  }
+  const url = ensureHttps(x.mediaUrl || x.url || x.imageUrl || "");
+  const isV = isVideoUrl(url);
+  return {
+    mediaType: x.mediaType || (isV ? "video" : "image"),
+    mediaUrl: url,
+    mediaPoster:
+      x.mediaPoster ||
+      x.poster ||
+      (isV ? videoPoster(url) || safeVideoPoster(url) : ""),
+    mediaThumb: x.mediaThumb || x.thumb || (!isV ? to(url) : ""),
+    name: x.name || filenameToName(url),
+    section: x.section || sectionHint || DEFAULT_SECTION_FALLBACK,
+  };
+}
+function uid() {
+  return (
+    Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e9).toString(36)
+  );
+}
+
+// --- SVG Icons (compact, inline) ---
+const IconSave = (props) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" {...props}>
+    <path
+      d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M17 3v6H7V3"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+    />
+    <rect
+      x="7"
+      y="13"
+      width="10"
+      height="6"
+      rx="1"
+      stroke="currentColor"
+      fill="none"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+const IconPrint = (props) => (
+  <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" {...props}>
+    <path
+      d="M6 9V3h12v6"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinejoin="round"
+    />
+    <rect
+      x="6"
+      y="13"
+      width="12"
+      height="8"
+      rx="1"
+      stroke="currentColor"
+      fill="none"
+      strokeWidth="2"
+    />
+    <rect x="6" y="3" width="12" height="4" rx="1" fill="currentColor" />
+    <path
+      d="M6 17h12M4 9h16a2 2 0 0 1 2 2v2H2v-2a2 2 0 0 1 2-2z"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    />
+  </svg>
+);
+
+export default function OutfitPreviewPanel({ onSelectionChange }) {
+  // layout & doors
+  const [isOpen, setIsOpen] = useState(false);
+  const [opening, setOpening] = useState(false);
+  const [doorsArmed, setDoorsArmed] = useState(false);
+  const [isFloating, setIsFloating] = useState(false);
+
+  // data
+  const [selected, setSelected] = useState([]);
+  const [section, setSection] = useState(SECTION_OPTIONS[0].value);
+  const [choices, setChoices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // meta
+  const [note, setNote] = useState("");
+
+  // DnD grid
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [draggingToTrash, setDraggingToTrash] = useState(false);
+  const gridRef = useRef(null);
+
+  // share/import (current outfit)
+  const [sharing, setSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [shareError, setShareError] = useState("");
+  const [shareIsBlob, setShareIsBlob] = useState(false);
+  const [loadUrl, setLoadUrl] = useState("");
+  const [loadingImport, setLoadingImport] = useState(false);
+  const [importError, setImportError] = useState("");
+  const shareRowRef = useRef(null);
+
+  // favorites (drawer)
+  const [favorites, setFavorites] = useState([]);
+  const [favsOpen, setFavsOpen] = useState(false);
+
+  // saved looks (drawer)
+  const [looks, setLooks] = useState([]);
+  const [newLookName, setNewLookName] = useState("");
+  const [looksOpen, setLooksOpen] = useState(false);
+  const [looksStatus, setLooksStatus] = useState(""); // "saved" flash
+
+  // per-item name visibility (hidden by default)
+  const [nameVisibleKeys, setNameVisibleKeys] = useState(() => new Set());
+
+  // history
+  const undoStackRef = useRef([]); // [{selected, note}]
+  const redoStackRef = useRef([]);
+  const historyLockRef = useRef(false);
+  const HISTORY_MAX = 50;
+
+  const pushHistory = useCallback((snap) => {
+    const stack = undoStackRef.current;
+    stack.push({
+      selected: (snap.selected || []).map((it) => ({ ...it })),
+      note: snap.note || "",
+    });
+    if (stack.length > HISTORY_MAX) stack.shift();
+    redoStackRef.current = [];
+  }, []);
+
+  const commitHistory = useCallback(
+    (nextSel = selected, nextNote = note) => {
+      if (historyLockRef.current) return;
+      pushHistory({ selected: nextSel, note: nextNote });
+    },
+    [selected, note, pushHistory],
+  );
+
+  const doUndo = useCallback(() => {
+    const undoStack = undoStackRef.current;
+    if (undoStack.length <= 1) return;
+    const current = undoStack.pop();
+    redoStackRef.current.push(current);
+    const prev = undoStack[undoStack.length - 1];
+    historyLockRef.current = true;
+    setSelected(prev.selected.map((it) => normalizeMedia(it)));
+    setNote(prev.note);
+    historyLockRef.current = false;
+  }, []);
+
+  const doRedo = useCallback(() => {
+    const redoStack = redoStackRef.current;
+    if (redoStack.length === 0) return;
+    const next = redoStack.pop();
+    undoStackRef.current.push(next);
+    historyLockRef.current = true;
+    setSelected(next.selected.map((it) => normalizeMedia(it)));
+    setNote(next.note);
+    historyLockRef.current = false;
+  }, []);
+
+  // live sync (optional)
+  const chanRef = useRef(null);
+  const instanceIdRef = useRef(uid());
+
+  // LS hydrate/persist (Planner-style)
+  const hydratedRef = useRef(false);
+
+  // ----- HYDRATE -----
+  useEffect(() => {
+    if (hydratedRef.current) return;
+
+    try {
+      const raw = localStorage.getItem(LS.STATE_V2);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data && data.version === 2) {
+          setSelected(
+            (data.selected || []).map((s) => normalizeMedia(s)).filter(Boolean),
+          );
+          setNote(data.note || "");
+          setFavorites(
+            (data.favorites || [])
+              .map((f) => normalizeMedia(f))
+              .filter(Boolean),
+          );
+          setLooks(
+            Array.isArray(data.looks)
+              ? data.looks.map((l) => ({
+                  ...l,
+                  items: (l.items || [])
+                    .map((it) => normalizeMedia(it))
+                    .filter(Boolean),
+                }))
+              : [],
+          );
+        }
+      } else {
+        // legacy migration
+        const legacy = localStorage.getItem(LS.LEGACY_ITEMS_V1);
+        if (legacy) {
+          const saved = JSON.parse(legacy || "[]");
+          const norm = (saved || [])
+            .map((s) => normalizeMedia(s))
+            .filter(Boolean);
+          setSelected(norm);
+          const v2 = {
+            version: 2,
+            selected: norm,
+            note: "",
+            favorites: [],
+            looks: [],
+          };
+          try {
+            localStorage.setItem(LS.STATE_V2, JSON.stringify(v2));
+          } catch {}
+        }
+      }
+    } catch {
+      // ignore bad data
+    } finally {
+      hydratedRef.current = true;
+      // baseline history after hydration
+      pushHistory({ selected: [], note: "" });
+    }
+  }, [pushHistory]);
+
+  // ----- PERSIST + notify parent -----
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    const payload = { version: 2, selected, note, favorites, looks };
+    try {
+      localStorage.setItem(LS.STATE_V2, JSON.stringify(payload));
+    } catch {}
+    onSelectionChange?.(selected);
+
+    // broadcast
+    if (!historyLockRef.current) {
+      try {
+        chanRef.current?.postMessage({
+          type: "preview:update",
+          from: instanceIdRef.current,
+          selected,
+          note,
+          ts: Date.now(),
+        });
+      } catch {}
+    }
+  }, [selected, note, favorites, looks, onSelectionChange]);
+
+  // ----- BroadcastChannel wiring -----
+  useEffect(() => {
+    let chan;
+    try {
+      chan = new BroadcastChannel("wimc-sync");
+      chanRef.current = chan;
+      chan.onmessage = (ev) => {
+        const msg = ev?.data || {};
+        if (msg.from && msg.from === instanceIdRef.current) return;
+
+        if (msg.type === "planner:update" || msg.type === "travel:update") {
+          if (Array.isArray(msg.selected)) {
+            const norm = msg.selected
+              .map((it) => normalizeMedia(it))
+              .filter(Boolean);
+            historyLockRef.current = true;
+            setSelected(norm);
+            setNote(msg.note || "");
+            historyLockRef.current = false;
+            commitHistory(norm, msg.note || "");
+          }
+        }
+        if (msg.type === "preview:request") {
+          try {
+            chanRef.current?.postMessage({
+              type: "preview:update",
+              from: instanceIdRef.current,
+              selected,
+              note,
+              ts: Date.now(),
+            });
+          } catch {}
+        }
+      };
+      chan.postMessage({
+        type: "preview:hello",
+        from: instanceIdRef.current,
+        ts: Date.now(),
+      });
+      chan.postMessage({
+        type: "preview:request",
+        from: instanceIdRef.current,
+        ts: Date.now(),
+      });
+    } catch {}
+    return () => {
+      try {
+        chan?.close();
+      } catch {}
+    };
+  }, [commitHistory, note, selected]);
+
+  // keyboard shortcuts
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === "Escape" && isFloating) closePanel();
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) doRedo();
+        else doUndo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        doRedo();
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isFloating, doUndo, doRedo]);
+
+  // choices pool (when open)
+  useEffect(() => {
+    let ignore = false;
+    async function run() {
+      if (!isOpen || !section) return;
+      setLoading(true);
+      setError("");
+      try {
+        const imgs = await fetchImagesByTag(section);
+        const vids = await fetchVideosByTag(section);
+        const norm = [
+          ...(imgs || []).map((u) => normalizeMedia(u, section)),
+          ...(vids || []).map((u) =>
+            normalizeMedia(
+              { mediaType: "video", mediaUrl: u, mediaPoster: videoPoster(u) },
+              section,
+            ),
+          ),
+        ].filter(Boolean);
+        if (!ignore) setChoices(norm);
+      } catch {
+        if (!ignore) {
+          setError("Couldn’t load this section. Try another one.");
+          setChoices([]);
+        }
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    }
+    run();
+    return () => {
+      ignore = true;
+    };
+  }, [isOpen, section]);
+
+  // share row auto-scroll
+  useEffect(() => {
+    if (shareRowRef.current && (shareUrl || shareError)) {
+      shareRowRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [shareUrl, shareError]);
+
+  // actions
+  const existsIn = useCallback((arr, item) => {
+    const key = item?.mediaUrl || item?.imageUrl || item?.name;
+    return arr?.some((p) => (p.mediaUrl || p.imageUrl || p.name) === key);
+  }, []);
+
+  const addItem = useCallback(
+    (item) => {
+      const norm = normalizeMedia(item);
+      if (!norm) return;
+      setSelected((prev) => {
+        if (existsIn(prev, norm)) return prev;
+        const next = [...prev, norm];
+        commitHistory(next, note);
+        return next;
+      });
+    },
+    [commitHistory, existsIn, note],
+  );
+
+  const removeItem = useCallback(
+    (i) =>
+      setSelected((prev) => {
+        const next = prev.filter((_, idx) => idx !== i);
+        commitHistory(next, note);
+        return next;
+      }),
+    [commitHistory, note],
+  );
+
+  const clearAll = useCallback(
+    () =>
+      setSelected((prev) => {
+        if (prev.length === 0) return prev;
+        const next = [];
+        commitHistory(next, note);
+        return next;
+      }),
+    [commitHistory, note],
+  );
+
+  const addMany = useCallback(
+    (items = [], mode = "merge") => {
+      const incoming = items.map((it) => normalizeMedia(it)).filter(Boolean);
+      setSelected((prev) => {
+        const base = mode === "replace" ? [] : prev.slice();
+        const seen = new Set(
+          base.map((p) => p.mediaUrl || p.imageUrl || p.name),
+        );
+        const merged = [...base];
+        for (const it of incoming) {
+          const k = it.mediaUrl || it.imageUrl || it.name;
+          if (!seen.has(k)) {
+            seen.add(k);
+            merged.push(it);
+          }
+        }
+        commitHistory(merged, note);
+        return merged;
+      });
+    },
+    [commitHistory, note],
+  );
+
+  // doors
+  const startOpen = useCallback(() => {
+    setIsFloating(true);
+    setOpening(true);
+    setIsOpen(false);
+    requestAnimationFrame(() => setDoorsArmed(true));
+    setTimeout(() => {
+      setOpening(false);
+      setDoorsArmed(false);
+      setIsOpen(true);
+    }, DOOR_MS);
+  }, []);
+  const closePanel = useCallback(() => {
+    setIsOpen(false);
+    setOpening(false);
+    setDoorsArmed(false);
+    setIsFloating(false);
+  }, []);
+
+  // DnD handlers
+  const handleDragStart = (i) => (e) => {
+    setDragIndex(i);
+    e.dataTransfer.effectAllowed = "move";
+    try {
+      e.dataTransfer.setData("text/plain", String(i));
+    } catch {}
+  };
+  const handleDragOver = (i) => (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverIndex !== i) setDragOverIndex(i);
+  };
+  const handleDragLeave = () => setDragOverIndex(null);
+  const handleDrop = (i) => (e) => {
+    e.preventDefault();
+    setDragOverIndex(null);
+    if (dragIndex === null || dragIndex === i) return;
+    setSelected((prev) => {
+      const next = prev.slice();
+      const [moved] = next.splice(dragIndex, 1);
+      next.splice(i, 0, moved);
+      commitHistory(next, note);
+      return next;
+    });
+  };
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+    setDraggingToTrash(false);
+  };
+
+  const gridCols = isFloating ? GRID_COLS_FLOATING : GRID_COLS_COMPACT;
+  const gridStyle = { "--opp-cols": gridCols };
+
+  const onTileKeyDown = (i) => (e) => {
+    const cols = isFloating ? GRID_COLS_FLOATING : GRID_COLS_COMPACT;
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key))
+      e.preventDefault();
+    const moveItem = (from, to) => {
+      if (to < 0 || to >= selected.length) return;
+      setSelected((prev) => {
+        const arr = prev.slice();
+        const [m] = arr.splice(from, 1);
+        arr.splice(to, 0, m);
+        commitHistory(arr, note);
+        return arr;
+      });
+      setTimeout(() => {
+        const el = gridRef.current?.querySelector(`[data-idx="${to}"]`);
+        el?.focus();
+      }, 0);
+    };
+    if (e.key === "ArrowLeft") moveItem(i, i - 1);
+    if (e.key === "ArrowRight") moveItem(i, i + 1);
+    if (e.key === "ArrowUp") moveItem(i, i - cols);
+    if (e.key === "ArrowDown") moveItem(i, i + cols);
+    if (e.key === "Delete" || e.key === "Backspace") removeItem(i);
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
+      navigator.clipboard?.writeText(selected[i]?.mediaUrl || "");
+    }
+  };
+
+  // favorites
+  const toggleFavorite = (item) => {
+    const norm = normalizeMedia(item);
+    const key = norm.mediaUrl || norm.imageUrl || norm.name;
+    setFavorites((prev) => {
+      const idx = prev.findIndex(
+        (p) => (p.mediaUrl || p.imageUrl || p.name) === key,
+      );
+      if (idx >= 0) {
+        const next = prev.slice();
+        next.splice(idx, 1);
+        return next;
+      }
+      return [...prev, norm];
+    });
+  };
+
+  // name visibility
+  const keyOf = (it) => it.mediaUrl || it.imageUrl || it.name || "";
+  const toggleNameFor = (it) => {
+    const k = keyOf(it);
+    setNameVisibleKeys((prev) => {
+      const next = new Set(prev);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  };
+
+  // Saved looks helpers
+  const saveCurrentAsLook = () => {
+    if (!selected.length) return;
+    const name =
+      (newLookName || "").trim() ||
+      `Look ${String(looks.length + 1).padStart(2, "0")}`;
+    const now = new Date().toISOString();
+    const look = {
+      id: uid(),
+      name,
+      items: selected.map((it) => ({ ...it })),
+      note,
+      createdAt: now,
+      updatedAt: now,
+    };
+    setLooks((prev) => [...prev, look]);
+    setNewLookName("");
+    setLooksOpen(true);
+    setLooksStatus("saved");
+    setTimeout(() => setLooksStatus(""), 1200);
+  };
+  const loadLook = (lookId, mode = "replace") => {
+    const look = looks.find((l) => l.id === lookId);
+    if (!look) return;
+    addMany(look.items, mode);
+    if (mode === "replace") setNote(look.note || "");
+  };
+  const renameLook = (lookId, newName) => {
+    setLooks((prev) =>
+      prev.map((l) =>
+        l.id === lookId
+          ? { ...l, name: newName, updatedAt: new Date().toISOString() }
+          : l,
+      ),
+    );
+  };
+  const deleteLook = (lookId) => {
+    setLooks((prev) => prev.filter((l) => l.id !== lookId));
+  };
+
+  // share/export payloads
+  const buildSharePayload = () => ({
+    kind: "wimc.outfit",
+    version: SHARE_VERSION,
+    createdAt: new Date().toISOString(),
+    note,
+    itemCount: selected.length,
+    items: selected.map((it) => ({
+      mediaType: it.mediaType,
+      mediaUrl: it.mediaUrl,
+      mediaThumb: it.mediaThumb || "",
+      mediaPoster: it.mediaPoster || "",
+      name: it.name || "",
+      section: it.section || DEFAULT_SECTION_FALLBACK,
+    })),
+    meta: { source: "WIMC Outfit Preview" },
+  });
+
+  const buildFavoritesPayload = (favoritesList) => ({
+    kind: "wimc.favorites",
+    version: SHARE_VERSION,
+    createdAt: new Date().toISOString(),
+    itemCount: favoritesList.length,
+    items: favoritesList.map((it) => ({
+      mediaType: it.mediaType,
+      mediaUrl: it.mediaUrl,
+      mediaThumb: it.mediaThumb || "",
+      mediaPoster: it.mediaPoster || "",
+      name: it.name || "",
+      section: it.section || DEFAULT_SECTION_FALLBACK,
+    })),
+    meta: { source: "WIMC Favorites" },
+  });
+
+  const buildLooksPayload = (looksList) => ({
+    kind: "wimc.savedLooks",
+    version: SHARE_VERSION,
+    createdAt: new Date().toISOString(),
+    count: looksList.length,
+    looks: looksList.map((l) => ({
+      id: l.id,
+      name: l.name,
+      note: l.note || "",
+      createdAt: l.createdAt,
+      updatedAt: l.updatedAt,
+      items: (l.items || []).map((it) => ({
+        mediaType: it.mediaType,
+        mediaUrl: it.mediaUrl,
+        mediaThumb: it.mediaThumb || "",
+        mediaPoster: it.mediaPoster || "",
+        name: it.name || "",
+        section: it.section || DEFAULT_SECTION_FALLBACK,
+      })),
+    })),
+    meta: { source: "WIMC Saved Looks" },
+  });
+
+  async function handleShare() {
+    setSharing(true);
+    setShareError("");
+    if (shareIsBlob && shareUrl?.startsWith("blob:")) {
+      try {
+        URL.revokeObjectURL(shareUrl);
+      } catch {}
+    }
+    setShareIsBlob(false);
+    setShareUrl("");
+
+    const payload = buildSharePayload();
+    try {
+      const res = await uploadRawJSON(payload);
+      const remoteUrl =
+        res?.secure_url ||
+        res?.url ||
+        res?.data?.secure_url ||
+        res?.data?.url ||
+        "";
+      if (remoteUrl) {
+        setShareUrl(remoteUrl);
+        setShareIsBlob(false);
+      } else {
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json",
+        });
+        const localUrl = URL.createObjectURL(blob);
+        setShareUrl(localUrl);
+        setShareIsBlob(true);
+        setShareError("Using a temporary local link. Keep this tab open.");
+      }
+    } catch (err) {
+      try {
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json",
+        });
+        const localUrl = URL.createObjectURL(blob);
+        setShareUrl(localUrl);
+        setShareIsBlob(true);
+        setShareError(
+          "Upload failed — using a temporary local link. Keep this tab open.",
+        );
+      } catch {
+        setShareError("Share failed. Please try again.");
+      }
+    } finally {
+      setSharing(false);
+    }
+  }
+  async function copyShareUrl() {
+    try {
+      if (shareUrl) await navigator.clipboard.writeText(shareUrl);
+    } catch {}
+  }
+  function downloadShareJson() {
+    const payload = buildSharePayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    a.href = url;
+    a.download = `wimc-outfit-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Favorites share/download
+  async function shareFavorites() {
+    try {
+      const payload = buildFavoritesPayload(favorites);
+      const res = await uploadRawJSON(payload, "wimc/favorites");
+      const url =
+        res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
+      if (url) {
+        await navigator.clipboard.writeText(url);
+        alert("Favorites share link copied to clipboard.");
+      } else {
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json",
+        });
+        const local = URL.createObjectURL(blob);
+        await navigator.clipboard.writeText(local);
+        alert("Upload failed; a temporary local link was copied.");
+      }
+    } catch {
+      alert("Share failed. Please try again.");
+    }
+  }
+  function downloadFavoritesJson() {
+    const payload = buildFavoritesPayload(favorites);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    a.href = url;
+    a.download = `wimc-favorites-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Looks share/download (entire looks collection)
+  async function shareLooks() {
+    try {
+      const payload = buildLooksPayload(looks);
+      const res = await uploadRawJSON(payload, "wimc/saved-looks");
+      const url =
+        res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
+      if (url) {
+        await navigator.clipboard.writeText(url);
+        alert("Saved Looks link copied to clipboard.");
+      } else {
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json",
+        });
+        const local = URL.createObjectURL(blob);
+        await navigator.clipboard.writeText(local);
+        alert("Upload failed; a temporary local link was copied.");
+      }
+    } catch {
+      alert("Share failed. Please try again.");
+    }
+  }
+  function downloadLooksJson() {
+    const payload = buildLooksPayload(looks);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    a.href = url;
+    a.download = `wimc-saved-looks-${ts}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Print helpers (compact)
+  function buildPrintableHtml(sel, noteStr) {
+    const now = new Date().toLocaleString();
+    const groups = sel.reduce((acc, it) => {
+      const key = it.section || DEFAULT_SECTION_FALLBACK;
+      (acc[key] ||= []).push(it);
+      return acc;
+    }, {});
+    const sectionsHtml = Object.entries(groups)
+      .map(
+        ([
+          sec,
+          items,
+        ]) => `<section style="page-break-inside:avoid;margin:0 0 16px">
+      <h2 style="font:600 16px system-ui;margin:0 0 6px">${sec}</h2>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${items
+          .map((it) => {
+            const src =
+              it.mediaType === "video"
+                ? it.mediaPoster || ""
+                : it.mediaThumb || it.mediaUrl;
+            const alt = it.name || "item";
+            return `<figure style="margin:0;padding:6px;border:1px solid #eee;border-radius:8px;background:#fff">
+            <img src="${src}" alt="${alt}" style="width:100%;height:160px;object-fit:contain;display:block"/>
+            <figcaption style="font:12px system-ui;color:#444;text-align:center;margin-top:6px">${alt}</figcaption>
+          </figure>`;
+          })
+          .join("")}
+      </div>
+    </section>`,
+      )
+      .join("");
+    return `<!doctype html><html><head><meta charset="utf-8"><title>Outfit – WIMC</title></head>
+    <body style="margin:0;font:13px system-ui">
+      <div style="padding:20px">
+        <h1 style="margin:0 0 6px;font:700 20px system-ui">Outfit</h1>
+        <div style="color:#555;margin-bottom:10px">Created: ${now} • Items: ${
+          sel.length
+        }</div>
+        ${
+          noteStr
+            ? `<div style="white-space:pre-wrap;background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px;margin:6px 0 12px">${(
+                noteStr || ""
+              ).replaceAll("<", "&lt;")}</div>`
+            : ""
+        }
+        ${sectionsHtml}
+      </div>
+      <script>window.addEventListener('load',()=>setTimeout(()=>print(),50));</script>
+    </body></html>`;
+  }
+  function handlePrintCard() {
+    if (!selected?.length) return;
+    const html = buildPrintableHtml(selected, note);
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank", "noopener");
+    if (!w) {
+      alert("Pop-up blocked. Allow pop-ups and try again.");
+      URL.revokeObjectURL(url);
+      return;
+    }
+    w.addEventListener("load", () => URL.revokeObjectURL(url));
+  }
+
+  // ----- NEW: Import from URL (fixes no-undef) -----
+  const importFromUrl = useCallback(
+    async (mode /* 'replace' | 'merge' */) => {
+      if (!loadUrl) return;
+      setLoadingImport(true);
+      setImportError("");
+      try {
+        const res = await fetch(loadUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data?.items || !Array.isArray(data.items)) {
+          throw new Error("Malformed outfit JSON.");
+        }
+        addMany(data.items, mode === "replace" ? "replace" : "merge");
+      } catch (e) {
+        setImportError(
+          "Couldn’t load that link. Make sure it’s a valid outfit URL.",
+        );
+      } finally {
+        setLoadingImport(false);
+      }
+    },
+    [loadUrl, addMany],
+  );
+
+  // img fallback
+  const onImgError = (e, it) => {
+    const el = e.currentTarget;
+    if (it.mediaUrl && el.src !== it.mediaUrl) el.src = it.mediaUrl;
+  };
+
+  // trash drop zone
+  const onTrashDragOver = (e) => {
+    e.preventDefault();
+    setDraggingToTrash(true);
+  };
+  const onTrashDragLeave = () => setDraggingToTrash(false);
+  const onTrashDrop = (e) => {
+    e.preventDefault();
+    setDraggingToTrash(false);
+    try {
+      const idxStr = e.dataTransfer.getData("text/plain");
+      const idx = Number(idxStr);
+      if (!Number.isNaN(idx)) removeItem(idx);
+    } catch {}
+  };
+
+  return (
+    <>
+      {isFloating && <div className="opp-backdrop" onClick={closePanel} />}
+
+      {/* Favorites Drawer */}
+      {favsOpen && (
+        <>
+          <div
+            className="opp-favs__backdrop"
+            onClick={() => setFavsOpen(false)}
+          />
+          <aside
+            className="opp-favs"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Favorites"
+          >
+            <header className="opp-favs__head">
+              <h4>Favorites</h4>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  className="opp__mini"
+                  onClick={() => setFavorites([])}
+                  disabled={!favorites.length}
+                >
+                  Clear
+                </button>
+                <button
+                  className="opp__mini"
+                  onClick={shareFavorites}
+                  disabled={!favorites.length}
+                  title="Share Favorites"
+                >
+                  Share
+                </button>
+                <button
+                  className="opp__mini"
+                  onClick={downloadFavoritesJson}
+                  disabled={!favorites.length}
+                  title="Download Favorites JSON"
+                >
+                  JSON
+                </button>
+                <button
+                  className="opp__mini"
+                  onClick={() => setFavsOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </header>
+            {favorites.length === 0 ? (
+              <div className="opp__empty" style={{ padding: 12 }}>
+                No favorites yet
+              </div>
+            ) : (
+              <div className="opp-favs__grid">
+                {favorites.map((f, i) => (
+                  <button
+                    key={(f.mediaUrl || "fav") + i}
+                    className="opp-favs__thumb"
+                    title="Add to preview"
+                    onClick={() => addItem(f)}
+                  >
+                    {f.mediaType === "video" ? (
+                      <img
+                        className="opp-favs__img"
+                        src={f.mediaPoster || ""}
+                        alt="video"
+                      />
+                    ) : (
+                      <img
+                        className="opp-favs__img"
+                        src={f.mediaThumb || f.mediaUrl}
+                        alt={f.name || "favorite"}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </aside>
+        </>
+      )}
+
+      {/* Saved Looks Drawer */}
+      {looksOpen && (
+        <>
+          <div
+            className="opp-saved__backdrop"
+            onClick={() => setLooksOpen(false)}
+            aria-label="Close Saved Looks"
+          />
+          <aside
+            className="opp-saved"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Saved Looks"
+          >
+            <header
+              className="opp-saved__head"
+              style={{
+                position: "sticky",
+                top: 0,
+                background: "#fff",
+                zIndex: 2,
+              }}
+            >
+              <h4 className="opp-saved__title">Saved Looks</h4>
+              <div
+                className="opp-saved__actions"
+                style={{ display: "flex", gap: 8 }}
+              >
+                <input
+                  className="opp__input"
+                  type="text"
+                  placeholder="New look name…"
+                  value={newLookName}
+                  onChange={(e) => setNewLookName(e.target.value)}
+                  style={{ minWidth: 160 }}
+                />
+                <button
+                  className="opp__btn"
+                  onClick={saveCurrentAsLook}
+                  disabled={selected.length === 0}
+                  title="Save current selection as a look"
+                >
+                  Save Current
+                </button>
+                {looksStatus === "saved" && (
+                  <span className="opp__badge">Saved!</span>
+                )}
+                <button
+                  className="opp__btn"
+                  onClick={shareLooks}
+                  disabled={!looks.length}
+                  title="Share all Saved Looks"
+                >
+                  Share
+                </button>
+                <button
+                  className="opp__btn"
+                  onClick={downloadLooksJson}
+                  disabled={!looks.length}
+                  title="Download all Saved Looks JSON"
+                >
+                  JSON
+                </button>
+                <button
+                  className="opp__btn"
+                  onClick={() => setLooksOpen(false)}
+                >
+                  Close
+                </button>
+              </div>
+            </header>
+
+            <div className="opp-saved__content">
+              {looks.length === 0 ? (
+                <div className="opp__empty" style={{ padding: 12 }}>
+                  No saved looks yet
+                </div>
+              ) : (
+                <div className="opp__looks-list">
+                  {looks.map((l) => (
+                    <div key={l.id} className="opp__look">
+                      <div className="opp__look-head">
+                        <input
+                          className="opp__look-name"
+                          value={l.name}
+                          onChange={(e) => renameLook(l.id, e.target.value)}
+                          title="Rename look"
+                        />
+                        <div className="opp__look-actions">
+                          <button
+                            className="opp__mini"
+                            onClick={() => loadLook(l.id, "replace")}
+                            title="Replace current selection with this look"
+                          >
+                            Load
+                          </button>
+                          <button
+                            className="opp__mini"
+                            onClick={() => loadLook(l.id, "merge")}
+                            title="Merge this look into current selection"
+                          >
+                            Merge
+                          </button>
+                          <button
+                            className="opp__mini opp__danger"
+                            onClick={() => deleteLook(l.id)}
+                            title="Delete look"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                      <div className="opp__look-strip">
+                        {(l.items || []).slice(0, 10).map((it, i) => (
+                          <img
+                            key={(it.mediaUrl || "thumb") + i}
+                            className="opp__look-thumb"
+                            src={
+                              it.mediaType === "video"
+                                ? it.mediaPoster || ""
+                                : it.mediaThumb || it.mediaUrl
+                            }
+                            alt={it.name || "item"}
+                            onError={(e) => {
+                              if (
+                                it.mediaUrl &&
+                                e.currentTarget.src !== it.mediaUrl
+                              ) {
+                                e.currentTarget.src = it.mediaUrl;
+                              }
+                            }}
+                            title={it.name || ""}
+                          />
+                        ))}
+                        {(l.items || []).length > 10 && (
+                          <span className="opp__look-more">
+                            +{(l.items || []).length - 10}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </aside>
+        </>
+      )}
+
+      <section
+        className={
+          "outfit-preview-panel" + (isFloating ? " opp--floating" : "")
+        }
+        aria-label="Outfit Preview"
+      >
+        <header className="opp__header">
+          <h3 className="opp__title">Outfit Preview</h3>
+          <div className="opp__header-actions">
+            <button
+              className="opp__toggle"
+              onClick={() => (isOpen ? closePanel() : startOpen())}
+            >
+              {isOpen ? "Minimize" : "Open"}
+            </button>
+          </div>
+        </header>
+
+        {!isOpen ? (
+          <div
+            className={
+              "opp__closed" + (opening ? " opp__closed--animating" : "")
+            }
+          >
+            <div
+              className={"opp__doors" + (doorsArmed ? " opp__doors--open" : "")}
+            >
+              <div className="opp__door opp__door--left" />
+              <div className="opp__door opp__door--right" />
+            </div>
+            {!opening && (
+              <button className="opp__cta" onClick={startOpen}>
+                Pick Clothing
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="opp__body">
+            {/* Left column: sections + import + Saved Looks launcher */}
+            <nav className="opp__sections" aria-label="Sections">
+              {SECTION_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  className={
+                    "opp__section-btn" +
+                    (section === opt.value ? " is-active" : "")
+                  }
+                  onClick={() => setSection(opt.value)}
+                  title={opt.label}
+                >
+                  {opt.label}
+                </button>
+              ))}
+
+              {/* Favorites launcher (floating) */}
+              <button
+                className="opp__section-btn"
+                type="button"
+                onClick={() => setFavsOpen(true)}
+                title="Open Favorites"
+              >
+                Favorites
+              </button>
+
+              {/* Saved Looks launcher (left rail) — per request */}
+              <button
+                className="opp__section-btn opp__section-btn--saved"
+                type="button"
+                onClick={() => setLooksOpen(true)}
+                title="Open Saved Looks"
+              >
+                Saved Looks
+              </button>
+
+              {/* Import/Merge current outfit from URL */}
+              <div className="opp__import">
+                <input
+                  className="opp__input"
+                  type="url"
+                  placeholder="Load from link…"
+                  value={loadUrl}
+                  onChange={(e) => setLoadUrl(e.target.value)}
+                />
+                <div className="opp__import-actions">
+                  <button
+                    className="opp__btn"
+                    disabled={!loadUrl || loadingImport}
+                    onClick={() => importFromUrl("replace")}
+                    title="Replace current selection"
+                  >
+                    {loadingImport ? "Loading…" : "Load"}
+                  </button>
+                  <button
+                    className="opp__btn"
+                    disabled={!loadUrl || loadingImport}
+                    onClick={() => importFromUrl("merge")}
+                    title="Merge with current selection"
+                  >
+                    Merge
+                  </button>
+                </div>
+                {importError && <div className="opp__error">{importError}</div>}
+              </div>
+            </nav>
+
+            {/* Right column */}
+            <div className="opp__right">
+              <div className="opp__toolbar">
+                <button
+                  className="opp__btn"
+                  onClick={doUndo}
+                  title="Undo (Ctrl/Cmd+Z)"
+                >
+                  Undo
+                </button>
+                <button
+                  className="opp__btn"
+                  onClick={doRedo}
+                  title="Redo (Ctrl/Cmd+Y or Shift+Ctrl/Cmd+Z)"
+                >
+                  Redo
+                </button>
+
+                <button
+                  className="opp__btn"
+                  onClick={clearAll}
+                  disabled={selected.length === 0}
+                >
+                  Clear
+                </button>
+
+                {/* NEW: compact Save Current (SVG) */}
+                <button
+                  className="opp__btn"
+                  onClick={saveCurrentAsLook}
+                  disabled={selected.length === 0}
+                  title="Save Current to Saved Looks"
+                  aria-label="Save Current"
+                  style={{
+                    padding: "4px 8px",
+                    height: 28,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <IconSave />
+                  <span style={{ fontSize: 12 }}>Save</span>
+                </button>
+
+                {/* Share current outfit */}
+                <button
+                  className="opp__btn"
+                  onClick={handleShare}
+                  disabled={selected.length === 0 || sharing}
+                  title="Export / Share this outfit"
+                >
+                  {sharing ? "Sharing…" : "Share Outfit"}
+                </button>
+
+                {/* NEW: compact Print (SVG) */}
+                <button
+                  className="opp__btn"
+                  onClick={handlePrintCard}
+                  disabled={selected.length === 0}
+                  title="Print Outfit"
+                  aria-label="Print Outfit"
+                  style={{
+                    padding: "4px 8px",
+                    height: 28,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <IconPrint />
+                  <span style={{ fontSize: 12 }}>Print</span>
+                </button>
+
+                <div
+                  className="opp__note opp__note--inline"
+                  role="group"
+                  aria-label="Outfit note"
+                >
+                  <label className="opp__note-label" htmlFor="oppNoteInput">
+                    Note
+                  </label>
+                  <input
+                    id="oppNoteInput"
+                    className="opp__note-input opp__note-input--inline"
+                    type="text"
+                    placeholder="Add a note…"
+                    value={note}
+                    onChange={(e) => {
+                      setNote(e.target.value);
+                      commitHistory(selected, e.target.value);
+                    }}
+                  />
+                </div>
+
+                <div className="opp__spacer" />
+
+                {/* Toolbar favorites toggle (optional shortcut) */}
+                <button
+                  className="opp__btn"
+                  onClick={() => setFavsOpen(true)}
+                  title="Open Favorites"
+                >
+                  Favorites
+                </button>
+
+                {/* Keep "Saved Looks" placement unchanged on right of toolbar */}
+                <button
+                  className="opp__btn"
+                  onClick={() => setLooksOpen((v) => !v)}
+                  aria-expanded={looksOpen}
+                  title="Manage Saved Looks"
+                >
+                  {looksOpen ? "Hide Looks" : "Saved Looks"}
+                </button>
+
+                <button className="opp__btn" onClick={closePanel}>
+                  Close
+                </button>
+              </div>
+
+              {(shareUrl || shareError) && (
+                <div
+                  ref={shareRowRef}
+                  className="opp__share"
+                  aria-live="polite"
+                >
+                  {shareUrl ? (
+                    <>
+                      <a
+                        className="opp__share-link"
+                        href={shareUrl}
+                        target={shareIsBlob ? "_self" : "_blank"}
+                        rel={shareIsBlob ? undefined : "noopener noreferrer"}
+                      >
+                        {shareIsBlob
+                          ? "Open local share URL"
+                          : "Open shared outfit"}
+                      </a>
+                      <button className="opp__btn" onClick={copyShareUrl}>
+                        Copy link
+                      </button>
+                      <button className="opp__btn" onClick={downloadShareJson}>
+                        Download JSON
+                      </button>
+                    </>
+                  ) : (
+                    <span className="opp__error">{shareError}</span>
+                  )}
+                  {shareError && shareUrl && (
+                    <span className="opp__error" style={{ marginLeft: 8 }}>
+                      {shareError}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Canvas */}
+              <div className="opp__canvas">
+                {selected.length === 0 ? (
+                  <div className="opp__hint">
+                    No items yet — choose from below.
+                  </div>
+                ) : (
+                  <>
+                    <div
+                      className="opp__selected-grid"
+                      ref={gridRef}
+                      style={gridStyle}
+                      role="list"
+                      aria-label="Selected items"
+                    >
+                      {selected.map((it, i) => {
+                        const key = keyOf(it);
+                        const nameShown = nameVisibleKeys.has(key);
+                        return (
+                          <figure
+                            key={`${it.mediaUrl}-${i}`}
+                            data-idx={i}
+                            className={
+                              "opp__thumb" +
+                              (dragOverIndex === i ? " is-drag-over" : "") +
+                              (dragIndex === i ? " is-dragging" : "")
+                            }
+                            tabIndex={0}
+                            onKeyDown={onTileKeyDown(i)}
+                            draggable
+                            onDragStart={handleDragStart(i)}
+                            onDragOver={handleDragOver(i)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={handleDrop(i)}
+                            onDragEnd={handleDragEnd}
+                            aria-grabbed={dragIndex === i}
+                            role="listitem"
+                          >
+                            {it.mediaType === "video" ? (
+                              <video
+                                className="opp__thumb-vid"
+                                controls
+                                preload="metadata"
+                                poster={it.mediaPoster || ""}
+                              >
+                                <source src={it.mediaUrl} />
+                              </video>
+                            ) : (
+                              <img
+                                className="opp__thumb-img"
+                                src={it.mediaThumb || it.mediaUrl}
+                                onError={(e) => onImgError(e, it)}
+                                alt={it.name || "Selected"}
+                              />
+                            )}
+
+                            {/* remove (top-right) */}
+                            <button
+                              className="opp__remove"
+                              onClick={() => removeItem(i)}
+                              aria-label="Remove"
+                              type="button"
+                            >
+                              ×
+                            </button>
+
+                            {/* favorite (bottom-right) */}
+                            <button
+                              type="button"
+                              className={
+                                "opp__fav-btn" +
+                                (existsIn(favorites, it) ? " is-faved" : "")
+                              }
+                              title={
+                                existsIn(favorites, it)
+                                  ? "Unfavorite"
+                                  : "Add to favorites"
+                              }
+                              onClick={() => toggleFavorite(it)}
+                            >
+                              ★
+                            </button>
+
+                            {/* name toggle (bottom-left) */}
+                            <button
+                              type="button"
+                              className="opp__name-toggle"
+                              title={nameShown ? "Hide name" : "Show name"}
+                              onClick={() => toggleNameFor(it)}
+                            >
+                              i
+                            </button>
+
+                            {/* name badge (clamped) */}
+                            {nameShown && (
+                              <div
+                                className="opp__name-badge"
+                                title={it.name || ""}
+                              >
+                                {it.name || " "}
+                              </div>
+                            )}
+
+                            {/* drag handle */}
+                            <span
+                              className="opp__drag-handle"
+                              title="Drag to reorder"
+                            >
+                              ⋮⋮
+                            </span>
+                          </figure>
+                        );
+                      })}
+                    </div>
+
+                    {/* Drag-to-trash */}
+                    <div
+                      className={
+                        "opp__trash" +
+                        (draggingToTrash ? " opp__trash--active" : "")
+                      }
+                      onDragOver={onTrashDragOver}
+                      onDragLeave={onTrashDragLeave}
+                      onDrop={onTrashDrop}
+                      title="Drag items here to remove"
+                    >
+                      🗑 Drag here to remove
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Picker */}
+              <div className="opp__picker">
+                <h4 className="opp__picker-title">
+                  {SECTION_OPTIONS.find((o) => o.value === section)?.label}
+                </h4>
+                {loading ? (
+                  <div className="opp__loading">Loading…</div>
+                ) : error ? (
+                  <div className="opp__error">{error}</div>
+                ) : choices.length === 0 ? (
+                  <div className="opp__empty">No items found.</div>
+                ) : (
+                  <div className="opp__choices">
+                    {choices.map((it, i) => (
+                      <button
+                        key={`${it.mediaUrl}-${i}`}
+                        className="opp__choice"
+                        onClick={() => addItem(it)}
+                        title="Add to preview"
+                        type="button"
+                      >
+                        {it.mediaType === "video" ? (
+                          <div className="opp__choice-vidwrap">
+                            <img
+                              className="opp__choice-img"
+                              src={it.mediaPoster || ""}
+                              alt="video poster"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                            <span className="opp__pill">Video</span>
+                          </div>
+                        ) : (
+                          <img
+                            className="opp__choice-img"
+                            src={it.mediaThumb || it.mediaUrl}
+                            alt="item"
+                            onError={(e) => (e.currentTarget.src = it.mediaUrl)}
+                          />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+    </>
+  );
+}

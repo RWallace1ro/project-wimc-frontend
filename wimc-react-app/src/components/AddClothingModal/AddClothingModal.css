@@ -50,3 +50,23 @@
   border-radius: 5px;
   cursor: pointer;
 }
+
+.modal__segmented {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+
+.segmented__btn {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.segmented__btn.is-active {
+  background: #f5f7fb;
+  border-color: #c9d3f5;
+}

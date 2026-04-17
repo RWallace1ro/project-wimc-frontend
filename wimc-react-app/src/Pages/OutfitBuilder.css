@@ -1,0 +1,49 @@
+.outfit-builder {
+  padding: 16px;
+}
+
+.outfit-builder__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.outfit-builder__card {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.outfit-builder__card_selected {
+  outline: 3px solid #3b82f6;
+}
+
+.outfit-builder__label {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.outfit-builder__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.outfit-builder__share {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 720px;
+}
+
+.outfit-builder__share-input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}

@@ -1,0 +1,18 @@
+.media-uploader {
+  display: grid;
+  gap: 12px;
+}
+
+.media-uploader__input {
+  cursor: pointer;
+}
+
+.media-uploader__preview {
+  min-height: 10px;
+}
+
+.media-uploader__image,
+.media-uploader__video {
+  border-radius: 12px;
+  max-width: 100%;
+}

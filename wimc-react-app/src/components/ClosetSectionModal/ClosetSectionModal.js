@@ -1,28 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  fetchImagesByTag,
+  fetchVideosByTag,
+  videoPoster,
+} from "../../utils/CloudinaryAPI";
 import "./ClosetSectionModal.css";
 
-function ClosetSectionModal({ isOpen, sectionName, onClose }) {
+function ClosetSectionModal({ isOpen, sectionName, onClose, onAddItem }) {
   const [items, setItems] = useState([]);
+  const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState("images"); // "images" | "videos"
+
+  const tag = useMemo(() => {
+    if (!sectionName) return "";
+
+    const s = String(sectionName);
+    return s.includes(" ")
+      ? s.replace(/\s+/g, "-").toLowerCase()
+      : s.toLowerCase();
+  }, [sectionName]);
 
   useEffect(() => {
     const fetchItems = async () => {
       if (isOpen && sectionName) {
-        setLoading(true);
-        setError(null);
-
+        if (isOpen && tag) {
+          setLoading(true);
+          setError(null);
+        }
         try {
-          const formattedTag = sectionName.replace(/\s+/g, "-").toLowerCase();
-          const fetchedItems = await fetchImagesByTag(formattedTag);
-
-          if (fetchedItems && fetchedItems.length > 0) {
-            setItems(fetchedItems);
-          } else {
-            setItems([]);
-            setError(null);
-          }
+          const fetchedImages = await fetchImagesByTag(tag);
+          setItems(fetchedImages || []);
+          const fetchedVideos = await fetchVideosByTag(tag);
+          setVideos(fetchedVideos || []);
         } catch (err) {
           console.error("Error fetching section items:", err);
           setError("Failed to load items. Please try again.");
@@ -33,7 +44,7 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
     };
 
     fetchItems();
-  }, [isOpen, sectionName]);
+  }, [isOpen, tag]);
 
   const handleOverlayClick = (e) => {
     if (e.target.classList.contains("closet-section-modal__overlay")) {
@@ -69,8 +80,42 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
           >
             {sectionName}
           </h2>
+          {onAddItem && (
+            <button
+              type="button"
+              className="closet-section-modal__add"
+              onClick={() => onAddItem(tag)}
+              title={`Add item to ${sectionName}`}
+              aria-label={`Add item to ${sectionName}`}
+            >
+              + Add
+            </button>
+          )}
         </header>
 
+        {/* Tabs */}
+        <nav
+          className="closet-section-modal__tabs"
+          role="tablist"
+          aria-label="Media"
+        >
+          <button
+            role="tab"
+            aria-selected={tab === "images"}
+            className={`tab ${tab === "images" ? "is-active" : ""}`}
+            onClick={() => setTab("images")}
+          >
+            Images
+          </button>
+          <button
+            role="tab"
+            aria-selected={tab === "videos"}
+            className={`tab ${tab === "videos" ? "is-active" : ""}`}
+            onClick={() => setTab("videos")}
+          >
+            Videos
+          </button>
+        </nav>
         {loading && <div className="preloader">Loading items...</div>}
 
         {!loading && error && (
@@ -83,31 +128,65 @@ function ClosetSectionModal({ isOpen, sectionName, onClose }) {
           </p>
         )}
 
-        {!loading && items.length > 0 && (
-          <main className="closet-section-modal__levels">
-            <section className="closet-section-modal__level closet-section-modal__level--dark">
-              <h3>Level 1</h3>
-              <div className="closet-section-modal__scroll">
-                {items.map((item, index) => {
-                  const imageUrl = item;
-
-                  return (
+        {!loading &&
+          !error &&
+          tab === "images" &&
+          (items.length === 0 ? (
+            <p className="closet-section-modal__no-items">
+              No images in this section yet.
+            </p>
+          ) : (
+            <main className="closet-section-modal__levels">
+              <section className="closet-section-modal__level closet-section-modal__level--dark">
+                <div className="closet-section-modal__grid">
+                  {items.map((url, i) => (
                     <figure
-                      key={item?.public_id || index}
+                      key={`img-${i}`}
                       className="closet-section-modal__item"
                     >
                       <img
-                        src={imageUrl}
-                        alt={item?.public_id || "item"}
+                        src={url}
+                        alt={`image-${i}`}
                         className="closet-section-modal__item-image"
+                        loading="lazy"
                       />
                     </figure>
-                  );
-                })}
-              </div>
-            </section>
-          </main>
-        )}
+                  ))}
+                </div>
+              </section>
+            </main>
+          ))}
+
+        {!loading &&
+          !error &&
+          tab === "videos" &&
+          (videos.length === 0 ? (
+            <p className="closet-section-modal__no-items">
+              No videos in this section yet.
+            </p>
+          ) : (
+            <main className="closet-section-modal__levels">
+              <section className="closet-section-modal__level closet-section-modal__level--dark">
+                <div className="closet-section-modal__grid">
+                  {videos.map((vurl, i) => (
+                    <figure
+                      key={`vid-${i}`}
+                      className="closet-section-modal__item"
+                    >
+                      <video
+                        className="closet-section-modal__item-video"
+                        controls
+                        preload="metadata"
+                        poster={videoPoster(vurl)}
+                      >
+                        <source src={vurl} />
+                      </video>
+                    </figure>
+                  ))}
+                </div>
+              </section>
+            </main>
+          ))}
       </div>
     </section>
   );

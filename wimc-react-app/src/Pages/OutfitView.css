@@ -1,0 +1,22 @@
+.outfit-view {
+  padding: 16px;
+}
+
+.outfit-view__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.outfit-view__card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #eee;
+}
+
+.outfit-view__caption {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #333;
+}

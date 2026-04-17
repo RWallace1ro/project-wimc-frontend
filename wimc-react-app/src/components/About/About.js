@@ -15,8 +15,8 @@ function About() {
           outfits for different occasions, and even create a seasonal capsule
           wardrobe for the different seasons of the year. The app provides
           features for searching through your closet, organizing items by
-          category, and adding them to a wish list or donate bin for streamlined
-          closet management.
+          category, adding items to a wish list, and an option to donate items
+          from your closet for streamlined closet management.
         </p>
       </section>
     </main>

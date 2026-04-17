@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
+
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import Main from "../Main/Main";
@@ -8,9 +15,11 @@ import ClosetData from "../../Pages/ClosetData";
 import About from "../About/About";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
 import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import { ClosetProvider } from "../../context/ClosetContext";
+import OutfitCardViewer from "../../Pages/OutfitCardViewer";
 import "./App.css";
 
-function App() {
+export default function App() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -82,7 +91,7 @@ function App() {
   const handleSignUp = (userCredentials) => {
     setSignUpError("");
     const existingUser = users.find(
-      (user) => user.email === userCredentials.email
+      (user) => user.email === userCredentials.email,
     );
 
     if (existingUser) {
@@ -169,57 +178,58 @@ function App() {
   };
 
   return (
-    <main className="app">
-      <Header
-        userName={isLoggedIn ? userData.userName : "Your Closet"}
-        avatarUrl={userData.avatarUrl}
-        isLoggedIn={isLoggedIn}
-        onSignUpClick={() => setIsSignUpModalOpen(true)}
-        onLoginClick={() => setIsLoginModalOpen(true)}
-        onLogoutClick={handleLogout}
-        handleSelectTab={handleSelectTab}
-        selectedTab={selectedTab}
-      />
-      <section className="app__content">
-        {apiError && <p className="error-message">{apiError}</p>}
-        {isLoading && <p className="loading-message">Loading...</p>}
-        <Routes>
-          <Route path="/" element={<Main isLoggedIn={isLoggedIn} />} />
-          <Route path="/home" element={<Home />} />
-          <Route
-            path="/closet-data"
-            element={
-              <ClosetData
-                selectedTab={selectedTab}
-                isLoggedIn={isLoggedIn}
-                closetItems={closetItems}
-              />
-            }
-          />
-          <Route path="/about" element={<About />} />
-          <Route path="*" element={<Navigate to="/home" />} />
-        </Routes>
-      </section>
-      <Footer />
-      <ModalWithForm
-        isOpen={isSignUpModalOpen}
-        onClose={() => setIsSignUpModalOpen(false)}
-        onSubmit={handleSignUp}
-        isSignUp={true}
-        switchToLogin={switchToLoginModal}
-        error={signUpError}
-        onImageUpload={(file) => handleImageUpload(file, selectedTab)}
-      />
-      <ModalWithForm
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onSubmit={handleLogin}
-        isSignUp={false}
-        formData={loginData}
-        error={loginError}
-      />
-    </main>
+    <ClosetProvider>
+      <main className="app">
+        <Header
+          userName={isLoggedIn ? userData.userName : "Your Closet"}
+          avatarUrl={userData.avatarUrl}
+          isLoggedIn={isLoggedIn}
+          onSignUpClick={() => setIsSignUpModalOpen(true)}
+          onLoginClick={() => setIsLoginModalOpen(true)}
+          onLogoutClick={handleLogout}
+          handleSelectTab={handleSelectTab}
+          selectedTab={selectedTab}
+        />
+        <section className="app__content">
+          {apiError && <p className="error-message">{apiError}</p>}
+          {isLoading && <p className="loading-message">Loading...</p>}
+          <Routes>
+            <Route path="/" element={<Main isLoggedIn={isLoggedIn} />} />
+            <Route path="/home" element={<Home />} />
+            <Route
+              path="/closet-data"
+              element={
+                <ClosetData
+                  selectedTab={selectedTab}
+                  isLoggedIn={isLoggedIn}
+                  closetItems={closetItems}
+                />
+              }
+            />
+            <Route path="/about" element={<About />} />
+            <Route path="*" element={<Navigate to="/home" />} />
+            <Route path="/outfit-card" element={<OutfitCardViewer />} />
+          </Routes>
+        </section>
+        <Footer />
+        <ModalWithForm
+          isOpen={isSignUpModalOpen}
+          onClose={() => setIsSignUpModalOpen(false)}
+          onSubmit={handleSignUp}
+          isSignUp={true}
+          switchToLogin={switchToLoginModal}
+          error={signUpError}
+          onImageUpload={(file) => handleImageUpload(file, selectedTab)}
+        />
+        <ModalWithForm
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+          onSubmit={handleLogin}
+          isSignUp={false}
+          formData={loginData}
+          error={loginError}
+        />
+      </main>
+    </ClosetProvider>
   );
 }
-
-export default App;

@@ -47,3 +47,54 @@
   font-weight: bold;
   margin-top: 10px;
 }
+
+.closet-section-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  overflow: hidden;
+}
+
+.closet-section-card__media {
+  aspect-ratio: 4/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+}
+
+.closet-section-card__image,
+.closet-section-card__video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+.closet-section-card__info {
+  padding: 8px 10px;
+}
+.closet-section-card__title {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.closet-section-card__meta {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.closet-section-card__add-btn {
+  margin-left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 700;
+  line-height: 26px;
+  text-align: center;
+  display: inline-block;
+}
+.closet-section-card__add-btn:hover {
+  background: #f8f8f8;
+}
