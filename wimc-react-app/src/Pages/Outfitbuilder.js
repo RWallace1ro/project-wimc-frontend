@@ -1,6 +1,8 @@
 import React from "react";
-import { uploadRawJSON } from "../utils/cloudinary";
-import { baseUrl } from "./utils/constants";
+import { uploadRawJSON } from "../../utils/CloudinaryAPI"; // ✅ correct path & filename
+import { CLOUD_NAME } from "../../utils/constants"; // ✅ correct path
+
+const baseUrl = window.location.origin; // ✅ replaces missing constants import
 
 export default function OutfitBuilder({ items = [], onShared }) {
   const [selected, setSelected] = React.useState([]);
@@ -34,15 +36,13 @@ export default function OutfitBuilder({ items = [], onShared }) {
         })),
       };
 
-      const res = await uploadRawJSON(outfit); // -> { secure_url }
+      const res = await uploadRawJSON(outfit);
       const publicSrc = res.secure_url;
-      // Public route: /outfit?src=<encoded-secure-url>
-      const link = `${baseUrl}/outfit?src=${encodeURIComponent(publicSrc)}`;
+      const link = `${baseUrl}/outfit-card?src=${encodeURIComponent(publicSrc)}`;
       setShareUrl(link);
       onShared?.(link);
       setStatus("done");
 
-      // Web Share API fallback
       if (navigator.share) {
         try {
           await navigator.share({
@@ -51,7 +51,7 @@ export default function OutfitBuilder({ items = [], onShared }) {
             url: link,
           });
         } catch {
-          /* user cancelled share - ignore */
+          /* user cancelled */
         }
       } else {
         await navigator.clipboard.writeText(link);
@@ -73,9 +73,7 @@ export default function OutfitBuilder({ items = [], onShared }) {
           return (
             <button
               key={item.id}
-              className={`outfit-builder__card ${
-                isSelected ? "outfit-builder__card_selected" : ""
-              }`}
+              className={`outfit-builder__card ${isSelected ? "outfit-builder__card_selected" : ""}`}
               onClick={() => toggle(item)}
             >
               {item.mediaType === "video" ? (
@@ -118,9 +116,7 @@ export default function OutfitBuilder({ items = [], onShared }) {
             />
             <a
               className="outfit-builder__share-btn"
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                shareUrl,
-              )}`}
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
               target="_blank"
               rel="noreferrer"
             >
@@ -128,9 +124,7 @@ export default function OutfitBuilder({ items = [], onShared }) {
             </a>
             <a
               className="outfit-builder__share-btn"
-              href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                shareUrl,
-              )}&text=${encodeURIComponent("My WIMC outfit")}`}
+              href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent("My WIMC outfit")}`}
               target="_blank"
               rel="noreferrer"
             >
@@ -138,9 +132,7 @@ export default function OutfitBuilder({ items = [], onShared }) {
             </a>
             <a
               className="outfit-builder__share-btn"
-              href={`mailto:?subject=${encodeURIComponent(
-                "My WIMC outfit",
-              )}&body=${encodeURIComponent(shareUrl)}`}
+              href={`mailto:?subject=${encodeURIComponent("My WIMC outfit")}&body=${encodeURIComponent(shareUrl)}`}
             >
               Email
             </a>

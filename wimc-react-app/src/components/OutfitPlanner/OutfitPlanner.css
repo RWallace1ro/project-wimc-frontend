@@ -57,6 +57,7 @@
 .planner__export,
 .planner__btn {
   padding: 6px 10px;
+  border-radius: 8px;
 }
 
 /* ==== Doors stage (fills remaining panel height) ==== */

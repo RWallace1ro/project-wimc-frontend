@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import ClosetSectionCard from "../components/ClosetSectionCard/ClosetSectionCard";
 import ClosetSectionModal from "../components/ClosetSectionModal/ClosetSectionModal";
 import DonateBin from "../components/DonateBin/DonateBin";
 import WishList from "../components/WishList/WishList";
 import ChangeUserInfoModal from "../components/ChangeUserInfoModal/ChangeUserInfoModal";
 import AddClothingModal from "../components/AddClothingModal/AddClothingModal";
-import { fetchImagesByTag } from "../utils/CloudinaryAPI";
-import { fetchVideosByTag } from "../utils/CloudinaryAPI";
+import { fetchImagesByTag, fetchVideosByTag } from "../utils/CloudinaryAPI";
 import VideoBin from "../components/VideoBin/VideoBin";
 import OutfitPreviewPanel from "../components/OutfitPreviewPanel/OutfitPreviewPanel";
 import OutfitPlanner from "../components/OutfitPlanner/OutfitPlanner";
 import TravelPackPanel from "../components/TravelPackPanel/TravelPackPanel";
+import TryOnStudio from "../components/TryOnStudio/TryOnStudio";
 import "./ClosetData.css";
 
 import dressesSkirtsImg from "../assets/images/dresses-skirts.jpg";
@@ -54,26 +54,26 @@ const closetSections = [
   },
 ];
 
-const defaultWeekPlan = {
-  Monday: [],
-  Tuesday: [],
-  Wednesday: [],
-  Thursday: [],
-  Friday: [],
-  Saturday: [],
-  Sunday: [],
-};
-
-function ClosetData({ selectedTab, isLoggedIn }) {
+function ClosetData({
+  selectedTab,
+  isLoggedIn,
+  userData,
+  onUserUpdate,
+  onRegisterOpenSection,
+  onClearTab,
+}) {
   const [previewSelection, setPreviewSelection] = useState([]);
   const [closetItems, setClosetItems] = useState([]);
   const [sectionVideos, setSectionVideos] = useState([]);
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedSection, setSelectedSection] = useState(selectedTab || null);
+  const [selectedSection, setSelectedSection] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTryOnOpen, setIsTryOnOpen] = useState(false);
+  const [tryOnImageUrl, setTryOnImageUrl] = useState(null);
+  const [tryOnSection, setTryOnSection] = useState(null);
   const [weekPlan, setWeekPlan] = useState({
     Monday: [],
     Tuesday: [],
@@ -84,7 +84,45 @@ function ClosetData({ selectedTab, isLoggedIn }) {
     Sunday: [],
   });
 
-  // Small merge util (dedupe by mediaUrl/imageUrl/name blob)
+  // ── Fetch helpers ────────────────────────────────────────────────────────
+  const fetchSectionItems = async (tag) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [imgs, vids] = await Promise.all([
+        fetchImagesByTag(tag),
+        fetchVideosByTag(tag),
+      ]);
+      setClosetItems(imgs || []);
+      setSectionVideos(vids || []);
+    } catch {
+      setError("Failed to load closet items.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ── Register openSection with App so tab clicks open the modal ───────────
+  const openSection = useCallback((tag) => {
+    setSelectedSection(tag);
+    setIsModalOpen(true);
+    fetchSectionItems(tag);
+  }, []);
+
+  useEffect(() => {
+    if (typeof onRegisterOpenSection === "function") {
+      onRegisterOpenSection(openSection);
+    }
+  }, [onRegisterOpenSection, openSection]);
+
+  // ── Initial load ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (isLoggedIn && selectedTab) {
+      fetchSectionItems(selectedTab);
+    }
+  }, [isLoggedIn, selectedTab]);
+
+  // ── Merge helper (dedupes by key) ────────────────────────────────────────
   const mergeDayItems = (existing = [], incoming = []) => {
     const out = [...existing];
     const seen = new Set(
@@ -102,55 +140,23 @@ function ClosetData({ selectedTab, isLoggedIn }) {
     return out;
   };
 
-  const handleSyncToPlanner = (day, items) => {
-    setWeekPlan((prev) => ({
-      ...prev,
-      [day]: mergeDayItems(prev[day], items || []),
-    }));
-  };
-
+  // ── Modal handlers ───────────────────────────────────────────────────────
   const openAddForSection = (tag) => {
     setIsModalOpen(false);
-
     setSelectedSection(tag);
-
     setIsAddModalOpen(true);
   };
-
-  const fetchSectionItems = async (tag) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const fetchedImages = await fetchImagesByTag(tag);
-      console.log("Fetched Images:", fetchedImages);
-      setClosetItems(fetchedImages || []);
-
-      const fetchedVideos = await fetchVideosByTag(tag);
-      console.log("Fetched Videos:", fetchedVideos);
-      setSectionVideos(fetchedVideos || []);
-    } catch (err) {
-      console.error("Error fetching closet items:", err);
-      setError("Failed to load closet items.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isLoggedIn && selectedTab) {
-      setSelectedSection(selectedTab);
-      fetchSectionItems(selectedTab);
-    }
-  }, [isLoggedIn, selectedTab]);
 
   const handleCardClick = (section) => {
     setSelectedSection(section);
     setIsModalOpen(true);
   };
 
+  // ✅ Clear active tab highlight when modal closes
   const handleModalClose = () => {
     setIsModalOpen(false);
-    setSelectedSection("");
+    setSelectedSection(null);
+    onClearTab?.();
   };
 
   const resetModals = () => {
@@ -160,29 +166,29 @@ function ClosetData({ selectedTab, isLoggedIn }) {
     setSelectedSection(null);
   };
 
-  const handleAddClothing = (newClothingItem) => {
-    if (newClothingItem?.mediaType === "video") {
-      setSectionVideos((prev) => [...prev, newClothingItem]);
+  const handleAddClothing = (item) => {
+    if (item?.mediaType === "video") {
+      setSectionVideos((prev) => [...prev, item]);
     } else {
-      if (typeof newClothingItem === "string") {
-        setClosetItems((prev) => [...prev, newClothingItem]);
-      } else {
-        const url =
-          newClothingItem.mediaThumb ||
-          newClothingItem.mediaUrl ||
-          newClothingItem.imageUrl ||
-          "";
-        if (url) setClosetItems((prev) => [...prev, url]);
-      }
+      const url = item?.mediaThumb || item?.mediaUrl || item?.imageUrl || item;
+      if (url) setClosetItems((prev) => [...prev, url]);
     }
     setIsAddModalOpen(false);
   };
 
-  const updateUser = (updatedUser) => {
-    console.log("User updated:", updatedUser);
+  const handleUserUpdate = (updatedUser) => {
+    onUserUpdate?.(updatedUser);
     setIsUserModalOpen(false);
   };
 
+  const handleTryOnFromCard = (section) => {
+    const firstImg = closetItems.find((url) => url.includes(section)) || null;
+    setTryOnImageUrl(firstImg);
+    setTryOnSection(section);
+    setIsTryOnOpen(true);
+  };
+
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <main className="closet-data-page">
       <header className="closet-data__header-actions">
@@ -205,41 +211,37 @@ function ClosetData({ selectedTab, isLoggedIn }) {
           Change User Info
         </button>
       </header>
+
       {error && <p className="error-message">{error}</p>}
       {isLoading && <p className="loading-message">Loading...</p>}
 
       <section className="closet-data">
+        {/* Left sidebar */}
         <aside className="closet-data__side-left">
           <OutfitPreviewPanel onSelectionChange={setPreviewSelection} />
-
           <aside className="closet-data__side-container">
             <OutfitPlanner
               weekPlan={weekPlan}
               onChange={setWeekPlan}
               currentPreview={previewSelection}
             />
-
             <TravelPackPanel
               currentPreview={previewSelection}
-              onSyncToPlanner={(day, items, handleSyncToPlanner) => {
+              onSyncToPlanner={(day, items) => {
                 setWeekPlan((prev) => {
-                  const uniq = (arr) => {
-                    const seen = new Set();
-                    return arr.filter((it) => {
-                      const key =
-                        it.mediaUrl || it.imageUrl || JSON.stringify(it);
-                      if (seen.has(key)) return false;
-                      seen.add(key);
-                      return true;
-                    });
-                  };
-                  const nextDayItems = uniq([...(prev[day] || []), ...items]);
-                  return { ...prev, [day]: nextDayItems };
+                  const seen = new Set();
+                  const uniq = [...(prev[day] || []), ...items].filter((it) => {
+                    const key =
+                      it.mediaUrl || it.imageUrl || JSON.stringify(it);
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                  });
+                  return { ...prev, [day]: uniq };
                 });
               }}
             />
           </aside>
-
           <DonateBin clothingItems={closetItems} />
         </aside>
 
@@ -251,7 +253,6 @@ function ClosetData({ selectedTab, isLoggedIn }) {
                 ? closetItems.find((item) => item.includes(section.tag)) ||
                   section.placeholderUrl
                 : section.placeholderUrl;
-
             return (
               <ClosetSectionCard
                 key={section.name}
@@ -264,23 +265,25 @@ function ClosetData({ selectedTab, isLoggedIn }) {
                   setSelectedSection(section.tag);
                   setIsAddModalOpen(true);
                 }}
+                onTryOn={() => handleTryOnFromCard(section.tag)}
               />
             );
           })}
         </div>
 
-        {/* Right sidebar (unchanged) */}
+        {/* Right sidebar */}
         <aside className="closet-data__side-right">
           <WishList userId="123" />
           <VideoBin videos={sectionVideos} />
         </aside>
+
+        {/* Modals */}
         <ChangeUserInfoModal
           isOpen={isUserModalOpen}
           onClose={resetModals}
-          userData={{ username: "", email: "", avatarUrl: "" }}
-          onUserUpdate={updateUser}
+          userData={userData}
+          onUserUpdate={handleUserUpdate}
         />
-
         <ClosetSectionModal
           isOpen={isModalOpen}
           sectionName={selectedSection}
@@ -288,7 +291,6 @@ function ClosetData({ selectedTab, isLoggedIn }) {
           onClose={handleModalClose}
           onAddItem={openAddForSection}
         />
-
         <AddClothingModal
           isOpen={isAddModalOpen}
           onClose={resetModals}
@@ -296,6 +298,14 @@ function ClosetData({ selectedTab, isLoggedIn }) {
           initialCategory={selectedSection}
         />
       </section>
+
+      {/* Try-On Studio */}
+      <TryOnStudio
+        isOpen={isTryOnOpen}
+        onClose={() => setIsTryOnOpen(false)}
+        initialImageUrl={tryOnImageUrl}
+        initialSection={tryOnSection}
+      />
     </main>
   );
 }

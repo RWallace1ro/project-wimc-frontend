@@ -17,6 +17,8 @@ function ModalWithForm({
     avatarUrl: "",
   });
 
+  // ✅ Validation error shown to the user (was silently returning before)
+  const [validationError, setValidationError] = useState("");
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -28,54 +30,69 @@ function ModalWithForm({
         confirmPassword: "",
         avatarUrl: "",
       });
+      setValidationError("");
     }
   }, [isOpen]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  // ✅ Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
+
+  // ✅ Close on overlay click
+  const handleOverlayClick = (e) => {
+    if (modalRef.current && !modalRef.current.contains(e.target)) onClose();
   };
 
-  const validateForm = () => {
-    if (isSignUp && formData.username.length < 2) {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validate = () => {
+    if (isSignUp && formData.username.trim().length < 2)
       return "Name must contain at least 2 characters.";
-    }
-    if (!formData.email.includes("@") || !formData.email.includes(".")) {
+    if (!formData.email.includes("@") || !formData.email.includes("."))
       return "Please enter a valid email address.";
-    }
-    if (formData.password.length < 8) {
+    if (formData.password.length < 8)
       return "Password must be at least 8 characters long.";
-    }
-    if (isSignUp && formData.password !== formData.confirmPassword) {
+    if (isSignUp && formData.password !== formData.confirmPassword)
       return "Passwords do not match.";
-    }
     return "";
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const validationError = validateForm();
-    if (validationError) {
+    const msg = validate();
+    if (msg) {
+      setValidationError(msg); // ✅ display it instead of silently returning
       return;
     }
-
+    setValidationError("");
     onSubmit(formData);
   };
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal" ref={modalRef}>
         <header className="modal__header">
           <h2 className="modal__title">{isSignUp ? "Sign Up" : "Login"}</h2>
-          <button className="modal__close" onClick={onClose}>
+          <button
+            className="modal__close"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
             &times;
           </button>
         </header>
+
         <section className="modal__form-section">
           <form className="modal__form" onSubmit={handleSubmit}>
             {isSignUp && (
@@ -128,7 +145,13 @@ function ModalWithForm({
                 />
               </>
             )}
+
+            {/* ✅ Show validation errors AND server-side errors */}
+            {validationError && (
+              <p className="modal__error">{validationError}</p>
+            )}
             {error && <p className="modal__error">{error}</p>}
+
             <section className="modal__footer">
               <button type="submit" className="modal__submit">
                 {isSignUp ? "Sign Up" : "Login"}

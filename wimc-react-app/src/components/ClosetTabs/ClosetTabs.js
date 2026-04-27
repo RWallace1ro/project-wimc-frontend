@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./ClosetTabs.css";
 
 function ClosetTabs({ selectedTab, onSelectTab }) {
@@ -21,36 +21,32 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
     "jackets-coats": "Jackets/Coats",
   };
 
-  const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState([]);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    const fetchItemsByTag = async () => {
-      if (!selectedTab) return;
+  const handleTabClick = (tab) => {
+    console.log("[ClosetTabs] Tab clicked:", tab);
+    console.log("[ClosetTabs] onSelectTab is:", typeof onSelectTab);
+    console.log("[ClosetTabs] Current path:", location.pathname);
 
-      setLoading(true);
-      setError(null);
+    if (typeof onSelectTab === "function") {
+      onSelectTab(tab);
+      console.log("[ClosetTabs] onSelectTab called with:", tab);
+    } else {
+      console.warn(
+        "[ClosetTabs] onSelectTab is NOT a function — prop not passed correctly",
+      );
+    }
 
-      try {
-        const formattedTab = selectedTab.replace(/\s+/g, "-").toLowerCase();
-        const fetchedImages = await fetchImagesByTag(formattedTab);
-
-        if (fetchedImages && fetchedImages.length > 0) {
-          setItems(fetchedImages);
-        } else {
-          setItems([]);
-        }
-      } catch (error) {
-        console.error("Error fetching closet items:", error);
-        setError("Failed to load items for this tab.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchItemsByTag();
-  }, [selectedTab]);
+    if (location.pathname !== "/closet-data") {
+      console.log("[ClosetTabs] Navigating to /closet-data");
+      navigate("/closet-data");
+    } else {
+      console.log(
+        "[ClosetTabs] Already on /closet-data — no navigation needed",
+      );
+    }
+  };
 
   return (
     <section className="closet-tabs">
@@ -58,40 +54,14 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
         {tabs.map((tab) => (
           <button
             key={tab}
-            className={`closet-tabs__tab ${
-              selectedTab === tab ? "active" : ""
-            }`}
-            onClick={() => onSelectTab(tab)}
+            className={`closet-tabs__tab ${selectedTab === tab ? "active" : ""}`}
+            onClick={() => handleTabClick(tab)}
             aria-label={`Select ${displayNames[tab]}`}
           >
             {displayNames[tab]}
           </button>
         ))}
       </nav>
-
-      <section className="closet-tabs__modal">
-        {loading && <div className="preloader">Loading...</div>}
-        {error && !loading && <p className="error-message">{error}</p>}
-        {!loading && items.length > 0 && (
-          <div className="closet-tabs__gallery">
-            {items.map((item, index) => (
-              <article
-                key={item?.public_id || index}
-                className="closet-tabs__item"
-              >
-                {item?.secure_url && (
-                  <img
-                    src={item.secure_url}
-                    alt={`Closet item ${index + 1}`}
-                    className="closet-tabs__image"
-                    aria-label={`Image of ${displayNames[selectedTab]}`}
-                  />
-                )}
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
     </section>
   );
 }

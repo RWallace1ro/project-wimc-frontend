@@ -4,7 +4,8 @@ import "./ChangeUserInfoModal.css";
 
 function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
   const [formData, setFormData] = useState({
-    username: userData?.username || "",
+    // ✅ read userData.userName (capital N) with fallback to userData.username
+    username: userData?.userName || userData?.username || "",
     email: userData?.email || "",
     avatarUrl: userData?.avatarUrl || "",
   });
@@ -15,21 +16,17 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
+      if (e.key === "Escape") onClose();
     };
-
     document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
       setFormData({
-        username: userData?.username || "",
+        // ✅ same dual-read on re-open so modal always reflects latest userData
+        username: userData?.userName || userData?.username || "",
         email: userData?.email || "",
         avatarUrl: userData?.avatarUrl || "",
       });
@@ -56,25 +53,24 @@ function ChangeUserInfoModal({ isOpen, onClose, userData, onUserUpdate }) {
     if (imageFile) {
       setIsUploading(true);
       try {
-        const tag = "user-avatars";
-        const imageResponse = await uploadImage(imageFile, "user-avatars", [
-          tag,
-        ]);
+        const imageResponse = await uploadImage(imageFile, "user-avatars");
         updatedFormData.avatarUrl = imageResponse.secure_url;
-        setIsUploading(false);
       } catch (uploadError) {
         console.error("Error uploading image:", uploadError);
         setError("Failed to upload image. Please try again.");
         setIsUploading(false);
         return;
+      } finally {
+        setIsUploading(false);
       }
     }
 
-    if (!imageFile && formData.avatarUrl) {
-      updatedFormData.avatarUrl = formData.avatarUrl;
-    }
-
-    onUserUpdate(updatedFormData);
+    // ✅ Pass back as userName to match App.js userData shape
+    onUserUpdate({
+      userName: updatedFormData.username,
+      email: updatedFormData.email,
+      avatarUrl: updatedFormData.avatarUrl,
+    });
     onClose();
   };
 

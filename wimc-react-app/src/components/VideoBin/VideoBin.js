@@ -1,191 +1,411 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from "react";
 import { createPortal } from "react-dom";
-import { videoPoster } from "../../utils/CloudinaryAPI";
+import { fetchVideosByTag, videoPoster } from "../../utils/CloudinaryAPI";
 import "./VideoBin.css";
 
-function normalize(v) {
-  if (!v) return null;
-  if (typeof v === "string") return { url: v, poster: videoPoster(v) };
-  if (typeof v === "object") {
-    return {
-      url: v.mediaUrl || v.url || "",
-      poster:
-        v.mediaPoster || v.poster || videoPoster(v.mediaUrl || v.url || ""),
-    };
+const SECTIONS = [
+  "dresses-skirts",
+  "shoes-sneakers",
+  "pants-jeans",
+  "tops",
+  "bags-accessories",
+  "jackets-coats",
+];
+
+const SECTION_LABELS = {
+  "dresses-skirts": "Dresses/Skirts",
+  "shoes-sneakers": "Shoes/Sneakers",
+  "pants-jeans": "Pants/Jeans",
+  tops: "Tops",
+  "bags-accessories": "Bags/Accessories",
+  "jackets-coats": "Jackets/Coats",
+};
+
+const LS_META_KEY = "wimc_video_meta"; // { [url]: { title, addedAt } }
+
+function fmtDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
+
+function loadMeta() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_META_KEY) || "{}");
+  } catch {
+    return {};
   }
-  return null;
+}
+function saveMeta(meta) {
+  try {
+    localStorage.setItem(LS_META_KEY, JSON.stringify(meta));
+  } catch {}
 }
 
-function VideoGrid({ list, onPlay, onEnded }) {
-  // Keep refs to pause other videos when one starts
-  const refs = useRef([]);
+function normalize(url, section) {
+  if (!url) return null;
+  const poster = videoPoster(url);
+  const meta = loadMeta();
+  const stored = meta[url] || {};
+  return {
+    url,
+    poster,
+    section,
+    title: stored.title || "",
+    addedAt: stored.addedAt || new Date().toISOString(),
+  };
+}
 
-  useEffect(() => {
-    refs.current = refs.current.slice(0, list.length);
-  }, [list.length]);
+export default function VideoBin({ videos: propVideos = [] }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const [allVideos, setAllVideos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [playingUrl, setPlayingUrl] = useState(null); // full-screen player
+  const [editingUrl, setEditingUrl] = useState(null); // which video title is being edited
+  const [editValue, setEditValue] = useState("");
+  const [meta, setMeta] = useState(loadMeta);
 
-  const handlePlay = (idx) => {
-    // pause all others
-    refs.current.forEach((el, i) => {
-      if (i !== idx && el && !el.paused) el.pause();
+  // Merge prop videos (from try-on / current section) with tag-fetched videos
+  const mergedVideos = useMemo(() => {
+    const seen = new Set();
+    const out = [];
+    const add = (url, section) => {
+      if (!url || seen.has(url)) return;
+      seen.add(url);
+      const m = meta[url] || {};
+      out.push({
+        url,
+        poster: videoPoster(url),
+        section: section || "uncategorized",
+        title: m.title || "",
+        addedAt: m.addedAt || new Date().toISOString(),
+      });
+    };
+    // prop videos first (most recent try-ons)
+    propVideos.forEach((v) => {
+      const url = typeof v === "string" ? v : v?.mediaUrl || v?.url || "";
+      add(url, v?.section || "");
     });
-    onPlay?.(idx);
-  };
+    // fetched videos
+    allVideos.forEach((v) => add(v.url, v.section));
+    return out;
+  }, [propVideos, allVideos, meta]);
 
-  return (
-    <div className="video-bin__grid">
-      {list.map((v, i) => (
-        <figure className="video-bin__card" key={`${v.url}-${i}`}>
-          <video
-            ref={(el) => (refs.current[i] = el)}
-            className="video-bin__video"
-            preload="metadata"
-            controls
-            poster={v.poster || ""}
-            onPlay={() => handlePlay(i)}
-            onEnded={() => onEnded?.(i)}
-          >
-            <source src={v.url} />
-          </video>
-        </figure>
-      ))}
-    </div>
-  );
-}
-
-export default function VideoBin({ videos = [] }) {
-  const list = useMemo(() => videos.map(normalize).filter(Boolean), [videos]);
-
-  // Layout state
-  const [isFloating, setIsFloating] = useState(false); // overlay via portal
-  const [isMinimized, setIsMinimized] = useState(false); // compact bar while floating
-  const [activeIndex, setActiveIndex] = useState(null); // which video triggered floating
-
-  // When a video starts, float & expand
-  const handlePlay = (idx) => {
-    setActiveIndex(idx);
-    setIsFloating(true);
-    setIsMinimized(false);
-  };
-
-  // When the active video ends, undock & reset
-  const handleEnded = (idx) => {
-    if (idx === activeIndex) {
-      setIsFloating(false);
-      setIsMinimized(false);
-      setActiveIndex(null);
-    }
-  };
-
-  // Keyboard: Escape undocks when floating
+  // Fetch all sections when modal opens
   useEffect(() => {
-    if (!isFloating) return;
+    if (!isOpen) return;
+    setLoading(true);
+    Promise.all(
+      SECTIONS.map((sec) =>
+        fetchVideosByTag(sec)
+          .then((urls) => (urls || []).map((url) => ({ url, section: sec })))
+          .catch(() => []),
+      ),
+    )
+      .then((results) => setAllVideos(results.flat()))
+      .finally(() => setLoading(false));
+  }, [isOpen]);
+
+  // Persist meta (titles + timestamps) whenever it changes
+  useEffect(() => {
+    saveMeta(meta);
+  }, [meta]);
+
+  // Ensure addedAt exists for any video that doesn't have it
+  useEffect(() => {
+    if (!mergedVideos.length) return;
+    setMeta((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      mergedVideos.forEach(({ url }) => {
+        if (!next[url]?.addedAt) {
+          next[url] = {
+            ...(next[url] || {}),
+            addedAt: new Date().toISOString(),
+          };
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [mergedVideos]);
+
+  // Escape closes player or modal
+  useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
-        setIsFloating(false);
-        setIsMinimized(false);
-        setActiveIndex(null);
+        if (playingUrl) setPlayingUrl(null);
+        else if (isOpen) setIsOpen(false);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isFloating]);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, playingUrl]);
 
-  // Docked (in the page flow). When floating, render a tiny placeholder so height stays tidy.
-  const dockedClass =
-    "video-bin" + (isFloating ? " video-bin--placeholder" : "");
-
-  const docked = (
-    <section className={dockedClass} aria-label="Videos">
-      <header className="video-bin__header">
-        <h3 className="video-bin__title">Videos</h3>
-        {!isFloating && (
-          <button
-            className="video-bin__btn"
-            onClick={() => setIsFloating(true)}
-          >
-            Float
-          </button>
-        )}
-      </header>
-
-      {list.length === 0 ? (
-        <p className="video-bin__empty">No videos in this section yet.</p>
-      ) : (
-        // In docked mode, normal grid; playing will promote to floating overlay
-        <VideoGrid list={list} onPlay={handlePlay} onEnded={handleEnded} />
-      )}
-    </section>
+  // Title editing
+  const startEdit = (url, currentTitle) => {
+    setEditingUrl(url);
+    setEditValue(currentTitle || "");
+  };
+  const commitEdit = useCallback(
+    (url) => {
+      setMeta((prev) => ({
+        ...prev,
+        [url]: { ...(prev[url] || {}), title: editValue.trim() },
+      }));
+      setEditingUrl(null);
+      setEditValue("");
+    },
+    [editValue],
   );
 
-  // Backdrop (only when floating & expanded)
-  const backdrop =
-    isFloating && !isMinimized
-      ? createPortal(
-          <div
-            className="video-backdrop"
-            aria-hidden="true"
-            onClick={() => {
-              setIsFloating(false);
-              setIsMinimized(false);
-              setActiveIndex(null);
-            }}
-          />,
-          document.body,
-        )
-      : null;
+  const playingVideo = useMemo(
+    () => mergedVideos.find((v) => v.url === playingUrl),
+    [mergedVideos, playingUrl],
+  );
 
-  // Floating overlay rendered via portal — won’t push Donate/Wishlist or cards
-  const floating = isFloating
-    ? createPortal(
-        <section
-          className={
-            "video-float" + (isMinimized ? " video-float--minimized" : "")
-          }
-          role="dialog"
-          aria-label="Video player"
-        >
-          <header className="video-float__header">
-            <h3 className="video-float__title">Videos</h3>
-            <div className="video-float__controls">
-              <button
-                className="video-bin__btn"
-                onClick={() => setIsMinimized((v) => !v)}
-              >
-                {isMinimized ? "Expand" : "Minimize"}
-              </button>
-              {!isMinimized && (
-                <button
-                  className="video-bin__btn"
-                  onClick={() => {
-                    setIsFloating(false);
-                    setIsMinimized(false);
-                    setActiveIndex(null);
-                  }}
-                >
-                  Undock
-                </button>
-              )}
-            </div>
-          </header>
-
-          {!isMinimized ? (
-            <VideoGrid list={list} onPlay={handlePlay} onEnded={handleEnded} />
+  // ── Card (grid) ───────────────────────────────────────────────────────────
+  const GridCard = ({ v }) => (
+    <div className="vb-card">
+      <button
+        className="vb-card__thumb-btn"
+        onClick={() => setPlayingUrl(v.url)}
+      >
+        {v.poster ? (
+          <img
+            className="vb-card__thumb"
+            src={v.poster}
+            alt={v.title || "video"}
+          />
+        ) : (
+          <div className="vb-card__thumb vb-card__thumb--blank">▶</div>
+        )}
+        <div className="vb-card__play">▶</div>
+      </button>
+      <div className="vb-card__info">
+        <div className="vb-card__title-row">
+          {editingUrl === v.url ? (
+            <input
+              className="vb-card__title-input"
+              autoFocus
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={() => commitEdit(v.url)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitEdit(v.url);
+              }}
+            />
           ) : (
-            <div className="video-float__minibar">
-              <span>Floating…</span>
-            </div>
+            <span className="vb-card__title">{v.title || "Untitled"}</span>
           )}
-        </section>,
-        document.body,
-      )
-    : null;
+          <button
+            className="vb-card__edit-btn"
+            title="Rename video"
+            onClick={() => startEdit(v.url, v.title)}
+          >
+            ✏️
+          </button>
+        </div>
+        <div className="vb-card__meta">
+          <span className="vb-card__section">
+            {SECTION_LABELS[v.section] || v.section}
+          </span>
+          <span className="vb-card__date">{fmtDate(v.addedAt)}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── Row (list) ────────────────────────────────────────────────────────────
+  const ListRow = ({ v }) => (
+    <div className="vb-row">
+      <button
+        className="vb-row__thumb-btn"
+        onClick={() => setPlayingUrl(v.url)}
+      >
+        {v.poster ? (
+          <img
+            className="vb-row__thumb"
+            src={v.poster}
+            alt={v.title || "video"}
+          />
+        ) : (
+          <div className="vb-row__thumb vb-row__thumb--blank">▶</div>
+        )}
+      </button>
+      <div className="vb-row__info">
+        <div className="vb-row__title-row">
+          {editingUrl === v.url ? (
+            <input
+              className="vb-card__title-input"
+              autoFocus
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={() => commitEdit(v.url)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitEdit(v.url);
+              }}
+            />
+          ) : (
+            <span className="vb-row__title">{v.title || "Untitled"}</span>
+          )}
+          <button
+            className="vb-card__edit-btn"
+            title="Rename video"
+            onClick={() => startEdit(v.url, v.title)}
+          >
+            ✏️
+          </button>
+        </div>
+        <div className="vb-card__meta">
+          <span className="vb-card__section">
+            {SECTION_LABELS[v.section] || v.section}
+          </span>
+          <span className="vb-card__date">{fmtDate(v.addedAt)}</span>
+        </div>
+      </div>
+      <button className="vb-row__play-btn" onClick={() => setPlayingUrl(v.url)}>
+        ▶ Play
+      </button>
+    </div>
+  );
 
   return (
     <>
-      {docked}
-      {backdrop}
-      {floating}
+      {/* ── Docked stub ── */}
+      <section className="video-bin" aria-label="Videos">
+        <header className="video-bin__header">
+          <h3 className="video-bin__title">
+            Videos{" "}
+            {mergedVideos.length > 0 && (
+              <span className="vb-count">{mergedVideos.length}</span>
+            )}
+          </h3>
+          <button className="video-bin__btn" onClick={() => setIsOpen(true)}>
+            Open
+          </button>
+        </header>
+        <p className="video-bin__empty">
+          {mergedVideos.length === 0
+            ? "No videos yet. Record a try-on or upload a video."
+            : `${mergedVideos.length} video${mergedVideos.length !== 1 ? "s" : ""} saved.`}
+        </p>
+      </section>
+
+      {/* ── Main modal ── */}
+      {isOpen &&
+        createPortal(
+          <>
+            <div className="vb-overlay" onClick={() => setIsOpen(false)} />
+            <div className="vb-modal" role="dialog" aria-label="Video Bin">
+              <header className="vb-modal__head">
+                <h2 className="vb-modal__title">🎬 Video Bin</h2>
+                <div className="vb-modal__controls">
+                  {/* Grid / List toggle */}
+                  <div className="vb-toggle">
+                    <button
+                      className={`vb-toggle__btn ${viewMode === "grid" ? "is-active" : ""}`}
+                      onClick={() => setViewMode("grid")}
+                      title="Grid view"
+                    >
+                      ⊞
+                    </button>
+                    <button
+                      className={`vb-toggle__btn ${viewMode === "list" ? "is-active" : ""}`}
+                      onClick={() => setViewMode("list")}
+                      title="List view"
+                    >
+                      ☰
+                    </button>
+                  </div>
+                  <button
+                    className="vb-modal__close"
+                    onClick={() => setIsOpen(false)}
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                </div>
+              </header>
+
+              <div className="vb-modal__body">
+                {loading && <p className="vb-loading">Loading videos…</p>}
+
+                {!loading && mergedVideos.length === 0 && (
+                  <div className="vb-empty">
+                    <p>No videos yet.</p>
+                    <p>
+                      Record a try-on using the 🎬 Try On button, or upload a
+                      video when adding a clothing item.
+                    </p>
+                  </div>
+                )}
+
+                {!loading &&
+                  mergedVideos.length > 0 &&
+                  (viewMode === "grid" ? (
+                    <div className="vb-grid">
+                      {mergedVideos.map((v) => (
+                        <GridCard key={v.url} v={v} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="vb-list">
+                      {mergedVideos.map((v) => (
+                        <ListRow key={v.url} v={v} />
+                      ))}
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* ── Full-screen video player ── */}
+            {playingUrl && (
+              <>
+                <div
+                  className="vb-player-overlay"
+                  onClick={() => setPlayingUrl(null)}
+                />
+                <div className="vb-player">
+                  <button
+                    className="vb-player__close"
+                    onClick={() => setPlayingUrl(null)}
+                    aria-label="Close player"
+                  >
+                    ×
+                  </button>
+                  <video
+                    className="vb-player__video"
+                    src={playingUrl}
+                    controls
+                    autoPlay
+                    poster={playingVideo?.poster || ""}
+                  />
+                  <div className="vb-player__info">
+                    <span className="vb-player__title">
+                      {playingVideo?.title || "Untitled"}
+                    </span>
+                    <span className="vb-player__date">
+                      {fmtDate(playingVideo?.addedAt)}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+          </>,
+          document.body,
+        )}
     </>
   );
 }

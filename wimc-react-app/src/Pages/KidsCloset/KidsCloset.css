@@ -1,0 +1,231 @@
+/* ========================================
+   KidsCloset.css
+   ======================================== */
+.kids-closet {
+  min-height: 100vh;
+  background-image: url("../assets/images/closet-interior-background.jpg");
+  background-size: cover;
+  background-position: center;
+  padding: 30px 24px;
+  box-sizing: border-box;
+}
+
+.kids-closet__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 14px;
+  padding: 20px 24px;
+}
+.kids-closet__title {
+  margin: 0 0 4px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+.kids-closet__sub {
+  margin: 0;
+  font-size: 15px;
+  color: #475569;
+}
+.kids-closet__add-btn {
+  padding: 11px 22px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.kids-closet__add-btn:hover {
+  background: #6d28d9;
+}
+
+.kids-closet__empty {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 14px;
+  padding: 60px 20px;
+  color: #64748b;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* Profile cards grid */
+.kids-closet__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Individual child card */
+.kids-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: transform 0.15s;
+}
+.kids-card:hover {
+  transform: translateY(-2px);
+}
+
+.kids-card__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.kids-card__icon {
+  font-size: 40px;
+}
+.kids-card__name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.kids-card__age-badge {
+  display: inline-block;
+  margin-top: 3px;
+  font-size: 12px;
+  background: #ede9fe;
+  color: #6d28d9;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* Sizes */
+.kids-card__sizes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.kids-card__size-block {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kids-card__size-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.kids-card__size-row {
+  display: flex;
+  gap: 10px;
+}
+.kids-card__size-val {
+  font-size: 13px;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Favorites */
+.kids-card__favorites {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.kids-card__fav {
+  font-size: 12px;
+  background: #fef9c3;
+  color: #713f12;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #fde68a;
+}
+
+/* Notes */
+.kids-card__notes {
+  font-size: 13px;
+  color: #64748b;
+  background: #f8fafc;
+  border-left: 3px solid #c7d2fe;
+  padding: 8px 12px;
+  border-radius: 0 8px 8px 0;
+  margin: 0;
+}
+
+/* Actions */
+.kids-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.kids-card__btn {
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.kids-card__btn:hover {
+  background: #f1f5f9;
+}
+.kids-card__btn--closet {
+  background: #7c3aed;
+  color: #fff;
+  border-color: #7c3aed;
+}
+.kids-card__btn--closet:hover {
+  background: #6d28d9;
+}
+.kids-card__btn--share {
+  background: #0ea5e9;
+  color: #fff;
+  border-color: #0ea5e9;
+}
+.kids-card__btn--share:hover {
+  background: #0284c7;
+}
+.kids-card__btn--edit {
+  background: #f8fafc;
+}
+.kids-card__btn--delete {
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+.kids-card__btn--delete:hover {
+  background: #fef2f2;
+}
+
+.kids-card__share-url {
+  display: flex;
+}
+.kids-card__url-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  font-size: 12px;
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+@media (max-width: 600px) {
+  .kids-closet__header {
+    flex-direction: column;
+  }
+  .kids-closet__grid {
+    grid-template-columns: 1fr;
+  }
+}

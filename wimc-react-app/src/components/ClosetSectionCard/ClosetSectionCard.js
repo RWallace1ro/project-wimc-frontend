@@ -11,6 +11,7 @@ function ClosetSectionCard({
   placeholderUrl,
   onClick,
   onAdd,
+  onTryOn, // ✅ new prop
 }) {
   const [media, setMedia] = useState(null);
 
@@ -22,31 +23,27 @@ function ClosetSectionCard({
 
   const normalizedFromProp = useMemo(() => {
     if (!propImageUrl) return null;
-
     if (typeof propImageUrl === "object") {
       const it = propImageUrl;
       const type =
         it.mediaType || (isVideoUrl(it.mediaUrl) ? "video" : "image");
-
-      const url =
-        it.mediaUrl ||
-        it.imageUrl || // legacy fallback
-        "";
-
-      const thumb = it.mediaThumb || (!isVideoUrl(url) ? toThumb(url) : "");
-      const poster = it.mediaPoster || (isVideoUrl(url) ? toPoster(url) : "");
-
-      return { type, url, thumb, poster };
+      const url = it.mediaUrl || it.imageUrl || "";
+      return {
+        type,
+        url,
+        thumb: it.mediaThumb || (!isVideoUrl(url) ? toThumb(url) : ""),
+        poster: it.mediaPoster || (isVideoUrl(url) ? toPoster(url) : ""),
+      };
     }
-
     if (typeof propImageUrl === "string") {
       const type = isVideoUrl(propImageUrl) ? "video" : "image";
-      const url = propImageUrl;
-      const thumb = !isVideoUrl(url) ? toThumb(url) : "";
-      const poster = isVideoUrl(url) ? toPoster(url) : "";
-      return { type, url, thumb, poster };
+      return {
+        type,
+        url: propImageUrl,
+        thumb: !isVideoUrl(propImageUrl) ? toThumb(propImageUrl) : "",
+        poster: isVideoUrl(propImageUrl) ? toPoster(propImageUrl) : "",
+      };
     }
-
     return null;
   }, [propImageUrl]);
 
@@ -54,16 +51,13 @@ function ClosetSectionCard({
     let ignore = false;
     async function fetchImageForSection() {
       if (propImageUrl || !tag) return;
-
       try {
         const images = await fetchImagesByTag(tag);
-        const first = images && images.length > 0 ? images[0] : null;
+        const first = images?.[0] ?? null;
         if (ignore) return;
-
         if (first) {
-          const type = isVideoUrl(first) ? "video" : "image";
           setMedia({
-            type,
+            type: isVideoUrl(first) ? "video" : "image",
             url: first,
             thumb: !isVideoUrl(first) ? toThumb(first) : "",
             poster: isVideoUrl(first) ? toPoster(first) : "",
@@ -71,8 +65,7 @@ function ClosetSectionCard({
         } else {
           setMedia(null);
         }
-      } catch (err) {
-        console.error(`Error fetching image for tag ${tag}:`, err);
+      } catch {
         setMedia(null);
       }
     }
@@ -83,13 +76,10 @@ function ClosetSectionCard({
   }, [propImageUrl, tag]);
 
   const display = normalizedFromProp || media;
-
-  const isCloudinary =
-    display?.url && display.url.includes("res.cloudinary.com");
+  const isCloudinary = display?.url?.includes("res.cloudinary.com");
 
   const renderMedia = () => {
     if (!display?.url) {
-      // nothing available -> placeholder
       return (
         <img
           src={placeholderUrl}
@@ -98,7 +88,6 @@ function ClosetSectionCard({
         />
       );
     }
-
     if (display.type === "video") {
       return (
         <video
@@ -112,8 +101,6 @@ function ClosetSectionCard({
         </video>
       );
     }
-
-    // image
     if (isCloudinary) {
       try {
         return (
@@ -127,20 +114,8 @@ function ClosetSectionCard({
             alt={sectionName}
           />
         );
-      } catch {
-        // Fallback to <img> if constructor complains
-        return (
-          <img
-            src={display.thumb || display.url}
-            alt={sectionName}
-            className="closet-section-card__image"
-            loading="lazy"
-          />
-        );
-      }
+      } catch {}
     }
-
-    // Non-cloudinary image
     return (
       <img
         src={display.thumb || display.url}
@@ -152,25 +127,43 @@ function ClosetSectionCard({
   };
 
   return (
-    // <section className="closet-section-card" onClick={onClick}>
     <section className="closet-section-card" onClick={onClick}>
       <figure className="closet-section-card__image-container">
         {renderMedia()}
       </figure>
-      <header>
+      <header className="closet-section-card__footer">
         <h3 className="closet-section-card__title">{sectionName}</h3>
-        {onAdd && (
-          <button
-            type="button"
-            className="closet-section-card__add-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              onAdd();
-            }}
-            aria-label={`Add item to ${sectionName}`}
-            title={`Add item to ${sectionName}`}
-          ></button>
-        )}
+        <div className="closet-section-card__actions">
+          {onAdd && (
+            <button
+              type="button"
+              className="closet-section-card__add-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd();
+              }}
+              aria-label={`Add item to ${sectionName}`}
+              title={`Add item to ${sectionName}`}
+            >
+              +
+            </button>
+          )}
+          {/* ✅ Try-On button */}
+          {onTryOn && (
+            <button
+              type="button"
+              className="closet-section-card__tryon-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTryOn();
+              }}
+              aria-label={`Try on ${sectionName}`}
+              title={`Try on ${sectionName}`}
+            >
+              🎬
+            </button>
+          )}
+        </div>
       </header>
     </section>
   );

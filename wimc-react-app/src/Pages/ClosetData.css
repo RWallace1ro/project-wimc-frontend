@@ -18,7 +18,7 @@
 
 .closet-data {
   display: grid;
-  grid-template-columns: 320px 1fr 320px; /* left | center | right */
+  grid-template-columns: 320px 1fr 320px;
   gap: 20px;
   align-items: start;
   width: 100%;
@@ -50,13 +50,12 @@
   box-sizing: border-box;
 }
 
+/* ✅ Replaced position:absolute + hardcoded margin-top with normal flow */
 .closet-data__side-container {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  position: relative;
   margin-top: 20px;
-  right: 0;
 }
 
 .wish-list {
@@ -119,7 +118,6 @@
   margin-top: auto;
   position: relative;
   z-index: 1;
-  margin-bottom: auto;
 }
 
 .footer__developer,
@@ -127,44 +125,44 @@
   margin: 0;
 }
 
+/* ===== Tablet (≤1024px) ===== */
 @media screen and (max-width: 1024px) {
   .closet-data-page {
     padding: 15px;
     box-sizing: border-box;
-    height: auto;
-    overflow-y: overlay;
   }
 
+  /* ✅ Stack all three columns vertically */
   .closet-data {
     grid-template-columns: 1fr;
   }
 
-  .closet-data__side-left,
-  .closet-data__side-right {
-    order: -1;
+  /* ✅ Left sidebar first, then cards, then right sidebar */
+  .closet-data__side-left {
+    order: 0;
   }
 
   .closet-data__cards-container {
     grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(3, auto);
     gap: 20px;
-    margin-right: auto;
     order: 1;
   }
 
+  .closet-data__side-right {
+    order: 2;
+  }
+
+  /* ✅ Normal flow — no absolute positioning or magic margin */
   .closet-data__side-container {
     flex-direction: column;
     gap: 20px;
-    right: auto;
-    margin-top: 950px;
-    display: flex;
-    position: absolute;
+    position: static;
+    margin-top: 20px;
   }
 
   .wish-list {
     position: relative;
     width: 90%;
-    justify-items: center;
   }
 
   .add-clothing-button,
@@ -186,35 +184,29 @@
   .closet-section-modal {
     max-width: 400px;
   }
-
-  .footer {
-    display: flex;
-    margin-top: auto;
-  }
 }
 
+/* ===== Mobile (≤480px) ===== */
 @media screen and (max-width: 480px) {
   .closet-data-page {
     padding: 10px;
-    margin-top: auto;
     box-sizing: border-box;
-    height: auto;
   }
 
-  .closet-data__side-container {
-    grid-template-columns: 1fr;
-    top: 5px;
-    flex-direction: column;
-    gap: 20px;
-    box-sizing: border-box;
-    margin-top: 1850px;
-    display: flex;
-    width: 90%;
-  }
-
+  /* ✅ Single column cards */
   .closet-data__cards-container {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 15px;
+  }
+
+  /* ✅ Normal flow — no absolute positioning or magic margin */
+  .closet-data__side-container {
+    position: static;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .wish-list {
@@ -245,7 +237,5 @@
 
   .footer {
     padding: 5px;
-    display: flex;
-    margin-top: auto;
   }
 }

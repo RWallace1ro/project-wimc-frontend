@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
   useNavigate,
+  useLocation,
 } from "react-router-dom";
 
 import Header from "../Header/Header";
@@ -17,9 +17,19 @@ import ModalWithForm from "../ModalWithForm/ModalWithForm";
 import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { ClosetProvider } from "../../context/ClosetContext";
 import OutfitCardViewer from "../../Pages/OutfitCardViewer";
+import KidsCloset from "../../Pages/KidsCloset";
 import "./App.css";
 
-export default function App() {
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function AppInner() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,25 +38,27 @@ export default function App() {
     avatarUrl: "/assets/images/default-avatar.jpg",
     email: "",
   });
-
   const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [users, setUsers] = useState([]);
   const [closetItems, setClosetItems] = useState([]);
   const [loginError, setLoginError] = useState("");
   const [signUpError, setSignUpError] = useState("");
-  const [selectedTab, setSelectedTab] = useState("dresses-skirts");
+  // ✅ Empty string so no tab appears active on first load / refresh
+  const [selectedTab, setSelectedTab] = useState("");
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // ✅ Callback ref so ClosetData can register its openSection function
+  const [openSectionFn, setOpenSectionFn] = useState(null);
+
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const storedUserData = JSON.parse(localStorage.getItem("userData"));
     const storedIsLoggedIn = localStorage.getItem("isLoggedIn") === "true";
     const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-
     setUsers(storedUsers);
-
     if (storedUserData && storedIsLoggedIn) {
       setUserData(storedUserData);
       setIsLoggedIn(true);
@@ -62,8 +74,7 @@ export default function App() {
         setUserData(updatedUser);
         localStorage.setItem("userData", JSON.stringify(updatedUser));
       }
-    } catch (error) {
-      console.error("Image upload error:", error);
+    } catch {
       setApiError("Failed to upload image.");
     }
   };
@@ -74,78 +85,63 @@ export default function App() {
       setIsLoading(true);
       const items = await fetchImagesByTag(tag);
       setClosetItems(items || []);
-    } catch (error) {
-      console.error("Error fetching closet items:", error);
+    } catch {
       setApiError("Failed to load closet items.");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ✅ Only fetch items when a tab is explicitly clicked
   useEffect(() => {
-    if (isLoggedIn) {
-      fetchClosetItemsData(selectedTab);
-    }
+    if (isLoggedIn && selectedTab) fetchClosetItemsData(selectedTab);
   }, [isLoggedIn, selectedTab]);
 
-  const handleSignUp = (userCredentials) => {
+  const handleSignUp = async (userCredentials) => {
     setSignUpError("");
-    const existingUser = users.find(
-      (user) => user.email === userCredentials.email,
-    );
-
-    if (existingUser) {
+    if (users.find((u) => u.email === userCredentials.email)) {
       setSignUpError("User already exists with this email.");
       return;
     }
-
+    const hashedPassword = await hashPassword(userCredentials.password);
     const newUser = {
       userName: userCredentials.username,
       email: userCredentials.email,
-      password: userCredentials.password,
+      password: hashedPassword,
       avatarUrl:
         userCredentials.avatarUrl ||
         "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg",
     };
-
     const updatedUsers = [...users, newUser];
     setUsers(updatedUsers);
     setUserData(newUser);
     setIsLoggedIn(true);
     setIsSignUpModalOpen(false);
-
     localStorage.setItem("users", JSON.stringify(updatedUsers));
     localStorage.setItem("userData", JSON.stringify(newUser));
     localStorage.setItem("isLoggedIn", "true");
-
     navigate("/home");
   };
 
-  const handleLogin = (data) => {
+  const handleLogin = async (data) => {
     setLoginError("");
     const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-    setUsers(storedUsers);
-
-    const user = storedUsers.find((user) => user.email === data.email);
-
+    const user = storedUsers.find((u) => u.email === data.email);
     if (!user) {
       setLoginError("User does not exist.");
       return;
     }
-
-    if (user.password !== data.password) {
+    const hashedInput = await hashPassword(data.password);
+    if (user.password !== hashedInput) {
       setLoginError("Incorrect password.");
       return;
     }
-
     setUserData(user);
     setIsLoggedIn(true);
     setLoginData({ email: "", password: "" });
     setIsLoginModalOpen(false);
-
     localStorage.setItem("userData", JSON.stringify(user));
     localStorage.setItem("isLoggedIn", "true");
-
     navigate("/home");
   };
 
@@ -161,20 +157,33 @@ export default function App() {
     setSignUpError("");
     localStorage.removeItem("userData");
     localStorage.removeItem("isLoggedIn");
-
     setIsLoginModalOpen(false);
     setIsSignUpModalOpen(false);
     navigate("/");
   };
 
-  const handleSelectTab = (tab) => {
-    setSelectedTab(tab);
-    fetchClosetItemsData(tab);
-  };
+  // ✅ When a tab is clicked: update state, fetch items, navigate,
+  //    then directly call ClosetData's openSection if registered
+  const handleSelectTab = useCallback(
+    (tab) => {
+      setSelectedTab(tab);
+      fetchClosetItemsData(tab);
+      if (location.pathname !== "/closet-data") {
+        // ✅ now uses React Router's location, not window.location
+        navigate("/closet-data");
+      }
+      // ✅ Directly open the section modal — bypasses the stale useEffect problem
+      if (typeof openSectionFn === "function") {
+        openSectionFn(tab);
+      }
+    },
+    [navigate, openSectionFn],
+  );
 
-  const switchToLoginModal = () => {
-    setIsSignUpModalOpen(false);
-    setIsLoginModalOpen(true);
+  const handleUserUpdate = (updatedUser) => {
+    const merged = { ...userData, ...updatedUser };
+    setUserData(merged);
+    localStorage.setItem("userData", JSON.stringify(merged));
   };
 
   return (
@@ -203,12 +212,17 @@ export default function App() {
                   selectedTab={selectedTab}
                   isLoggedIn={isLoggedIn}
                   closetItems={closetItems}
+                  userData={userData}
+                  onUserUpdate={handleUserUpdate}
+                  onRegisterOpenSection={(fn) => setOpenSectionFn(() => fn)}
+                  onClearTab={() => setSelectedTab("")} // ✅ resets active tab highlight
                 />
               }
             />
             <Route path="/about" element={<About />} />
-            <Route path="*" element={<Navigate to="/home" />} />
+            <Route path="/kids-closet" element={<KidsCloset />} />
             <Route path="/outfit-card" element={<OutfitCardViewer />} />
+            <Route path="*" element={<Navigate to="/home" />} />
           </Routes>
         </section>
         <Footer />
@@ -217,7 +231,10 @@ export default function App() {
           onClose={() => setIsSignUpModalOpen(false)}
           onSubmit={handleSignUp}
           isSignUp={true}
-          switchToLogin={switchToLoginModal}
+          switchToLogin={() => {
+            setIsSignUpModalOpen(false);
+            setIsLoginModalOpen(true);
+          }}
           error={signUpError}
           onImageUpload={(file) => handleImageUpload(file, selectedTab)}
         />
@@ -232,4 +249,8 @@ export default function App() {
       </main>
     </ClosetProvider>
   );
+}
+
+export default function App() {
+  return <AppInner />;
 }

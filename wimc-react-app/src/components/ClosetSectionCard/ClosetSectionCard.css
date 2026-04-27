@@ -98,3 +98,30 @@
 .closet-section-card__add-btn:hover {
   background: #f8f8f8;
 }
+
+.closet-section-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 4px 0;
+}
+.closet-section-card__actions {
+  display: flex;
+  gap: 6px;
+}
+.closet-section-card__tryon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+}
+.closet-section-card__tryon-btn:hover {
+  background: #f3e8ff;
+  border-color: #c4b5fd;
+}

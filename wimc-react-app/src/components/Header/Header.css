@@ -1,179 +1,253 @@
 .header {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px 20px;
+  flex-direction: column; /* ✅ stack top + bottom layers */
   background-color: #f8f8f8;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   position: relative;
   z-index: 10;
 }
 
+/* ── TOP LAYER ── */
+.header__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  border-bottom: 1px solid #e9e9e9;
+}
+
+/* ── BOTTOM LAYER (tabs) ── */
+.header__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  background-color: #f0f0f0;
+  min-height: 44px;
+  overflow-x: auto;
+}
+
+/* Logo */
 .header__logo-link {
   text-decoration: none;
   color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
-
 .header__logo {
   font-size: 24px;
   font-weight: bold;
   color: #333;
-  margin-left: 20px;
+  white-space: nowrap;
+}
+.header__home-icon {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  vertical-align: middle;
 }
 
-.header__nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.header__tabs-user-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-}
-
-.header__tabs-container {
-  display: flex;
-  justify-content: center;
-  flex-grow: 1;
-  z-index: 15;
-}
-
-.header__user {
+/* User section */
+.header__user,
+.header__auth-buttons {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-right: 40px;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 .header__user-name {
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #333;
 }
 
 .header__avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
+/* Divider */
+.header__divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* Shared button base */
+.header__button,
+.header__about-button {
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+  flex-shrink: 0;
+}
+.header__button:hover,
+.header__about-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Button colours */
 .header__button {
-  padding: 8px 12px;
   background-color: #007bff;
   color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+}
+.header__button:hover {
+  background-color: #0056b3;
 }
 
 .header__about-button {
-  padding: 8px 12px;
   background-color: #5a5a5a;
   color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
 }
-
 .header__about-button:hover {
   background-color: #4d4d4d;
 }
 
-.header__auth-buttons {
-  display: flex;
-  gap: 20px;
-}
-
-.header__button.logout-button {
+.header__button--logout {
   background-color: #d9534f;
 }
-
-.header__button.logout-button:hover,
-.header__logout:hover {
+.header__button--logout:hover {
   background-color: #c9302c;
 }
 
-.header__home-icon {
-  width: 24px;
-  height: 24px;
-  margin-left: 10px;
-  cursor: pointer;
-  vertical-align: middle;
-  padding-left: 30px;
+.header__button--weather {
+  background-color: #0ea5e9;
+}
+.header__button--weather:hover {
+  background-color: #0284c7;
 }
 
+.header__button--tryon {
+  background-color: #e11d48;
+}
+.header__button--tryon:hover {
+  background-color: #be123c;
+}
+
+.header__button--stylist {
+  background-color: #7c3aed;
+}
+.header__button--stylist:hover {
+  background-color: #6d28d9;
+}
+
+/* ── Tabs layer overrides ── */
+.header__bottom .closet-tabs {
+  width: 100%;
+}
+.header__bottom .closet-tabs__container {
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 0;
+}
+.header__bottom .closet-tabs__tab {
+  font-size: 14px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #444;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+  white-space: nowrap;
+}
+.header__bottom .closet-tabs__tab:hover {
+  background-color: #e2e8f0;
+  color: #111;
+}
+.header__bottom .closet-tabs__tab.active {
+  background-color: #007bff;
+  color: #fff;
+  font-weight: 600;
+}
+
+.header__button--kids {
+  background-color: #f59e0b;
+}
+.header__button--kids:hover {
+  background-color: #d97706;
+}
+
+/* ── Tablet (≤1024px) ── */
 @media screen and (max-width: 1024px) {
-  .header__tabs-user-container {
-    width: 95%;
+  .header__top {
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
-
-  .header__nav {
-    flex-direction: column;
-    align-items: flex-start;
+  .header__user,
+  .header__auth-buttons {
+    gap: 6px;
+    flex-wrap: wrap;
   }
-
-  .header__user {
-    margin-top: 10px;
-    flex-direction: column;
+  .header__logo {
+    font-size: 20px;
   }
-
-  .header__tabs-container {
-    justify-content: flex-start;
+  .header__button,
+  .header__about-button {
+    padding: 6px 11px;
+    font-size: 12px;
   }
-
   .header__avatar {
     width: 30px;
     height: 30px;
   }
 
-  .header__logo {
-    font-size: 20px;
-    margin-left: 0;
+  .header__bottom {
+    justify-content: flex-start;
+    padding: 0 14px;
   }
-
-  .header__button,
-  .header__about-button {
-    padding: 6px 10px;
-    font-size: 14px;
+  .header__bottom .closet-tabs__container {
+    justify-content: flex-start;
   }
 }
 
+/* ── Mobile (≤480px) ── */
 @media screen and (max-width: 480px) {
-  .header__tabs-user-container {
-    width: 90%;
+  .header__top {
+    padding: 8px 10px;
   }
-
   .header__logo {
     font-size: 18px;
   }
-
-  .header__tabs-user-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-sizing: border-box;
+  .header__user,
+  .header__auth-buttons {
+    gap: 5px;
   }
-
-  .header__tabs-container {
-    justify-content: flex-start;
+  .header__button,
+  .header__about-button {
+    padding: 5px 9px;
+    font-size: 11px;
   }
-
   .header__avatar {
     width: 28px;
     height: 28px;
   }
-
-  .header__button,
-  .header__about-button {
-    padding: 5px 8px;
+  .header__user-name {
     font-size: 12px;
   }
-
-  .header__nav {
-    width: 100%;
-    justify-content: center;
+  .header__bottom .closet-tabs__tab {
+    font-size: 12px;
+    padding: 6px 10px;
   }
 }
