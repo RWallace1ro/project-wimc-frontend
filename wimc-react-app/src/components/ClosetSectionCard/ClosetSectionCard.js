@@ -11,7 +11,9 @@ function ClosetSectionCard({
   placeholderUrl,
   onClick,
   onAdd,
-  onTryOn, // ✅ new prop
+  onTryOn,
+  onCustomizeBg,
+  sectionBackground, // ✅ passed directly from parent — guarantees re-render
 }) {
   const [media, setMedia] = useState(null);
 
@@ -79,6 +81,9 @@ function ClosetSectionCard({
   const isCloudinary = display?.url?.includes("res.cloudinary.com");
 
   const renderMedia = () => {
+    // ✅ If a custom background is set, don't render the clothing image on top
+    if (sectionBackground) return null;
+
     if (!display?.url) {
       return (
         <img
@@ -127,7 +132,19 @@ function ClosetSectionCard({
   };
 
   return (
-    <section className="closet-section-card" onClick={onClick}>
+    <section
+      className="closet-section-card"
+      onClick={onClick}
+      style={
+        sectionBackground
+          ? {
+              backgroundImage: `url(${sectionBackground})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : {}
+      }
+    >
       <figure className="closet-section-card__image-container">
         {renderMedia()}
       </figure>
@@ -148,7 +165,6 @@ function ClosetSectionCard({
               +
             </button>
           )}
-          {/* ✅ Try-On button */}
           {onTryOn && (
             <button
               type="button"
@@ -161,6 +177,20 @@ function ClosetSectionCard({
               title={`Try on ${sectionName}`}
             >
               🎬
+            </button>
+          )}
+          {onCustomizeBg && (
+            <button
+              type="button"
+              className="closet-section-card__bg-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                onCustomizeBg();
+              }}
+              aria-label={`Customize background for ${sectionName}`}
+              title="Customize background"
+            >
+              🎨
             </button>
           )}
         </div>

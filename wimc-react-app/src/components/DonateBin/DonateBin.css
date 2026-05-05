@@ -47,16 +47,13 @@
   margin: 6px 0 0;
 }
 
-/* =========================
-   Floating modal (Outfit Preview parity)
-   ========================= */
+/* Floating modal */
 .opp-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
   z-index: 400;
 }
-
 .donate-modal {
   position: fixed;
   top: 50%;
@@ -82,6 +79,68 @@
   to {
     transform: translate(-50%, -50%);
     opacity: 1;
+  }
+}
+
+/* ✅ "Donating" fade-out overlay */
+.donate-word-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(100vw - 48px, 1200px);
+  height: min(100vh - 48px, 820px);
+  z-index: 1600;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  animation: donatingFadeOut 2200ms ease forwards;
+  pointer-events: none;
+}
+.donate-word-overlay__text {
+  font-size: 56px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.08em;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  animation: donatingTextFade 2200ms ease forwards;
+  text-align: center;
+}
+/* ✅ Smaller size for longer phrase */
+.donate-word-overlay__text--sm {
+  font-size: 36px;
+  letter-spacing: 0.04em;
+}
+
+@keyframes donatingFadeOut {
+  0% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes donatingTextFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.05);
   }
 }
 
@@ -125,7 +184,6 @@
   background: #4cae4c;
 }
 
-/* Share row inside modal header (when present) */
 .donate-modal__share {
   display: flex;
   align-items: center;
@@ -145,15 +203,10 @@
   color: #b91c1c;
 }
 
-/* =========================
-   Modal body layout
-   ========================= */
 .donate-modal__body {
   padding: 8px;
   min-height: 0;
 }
-
-/* Left rail width + Right area grid (equal heights) */
 .donate-modal__layout {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -162,9 +215,6 @@
   min-height: 0;
 }
 
-/* =========================
-   Left rail (parity with Outfit Preview)
-   ========================= */
 .opp__sections {
   flex: 0 0 220px;
   border-right: 1px solid #eee;
@@ -207,7 +257,6 @@
   min-height: 0;
 }
 
-/* Canvas */
 .donate-canvas {
   background: #fafafa;
   border: 1px solid #eee;
@@ -264,7 +313,6 @@
   cursor: pointer;
 }
 
-/* Name toggle badge (matches Outfit Preview) */
 .opp__name-toggle {
   position: absolute;
   left: 4px;
@@ -299,7 +347,6 @@
   -webkit-box-orient: vertical;
 }
 
-/* Picker (parity with Outfit Preview) */
 .donate-picker {
   background: transparent;
   position: relative;
@@ -351,16 +398,12 @@
   border-radius: 4px;
 }
 
-/* =========================
-   Drawers: Saved Sets / Donated Items
-   Ensure headers never clip controls
-   ========================= */
 .opp-saved {
   position: fixed;
   right: 12px;
   bottom: 12px;
   top: 12px;
-  width: 420px; /* wider so header buttons fit */
+  width: 420px;
   max-width: calc(100vw - 24px);
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -379,14 +422,14 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px; /* no clipping at right edge */
+  padding: 10px;
   border-bottom: 1px solid #eee;
 }
 .opp-saved__actions {
   display: flex;
   gap: 8px;
   align-items: center;
-  flex-wrap: wrap; /* keep buttons visible on narrow widths */
+  flex-wrap: wrap;
 }
 .opp-saved__content {
   min-height: 0;
@@ -394,7 +437,6 @@
   padding: 10px;
 }
 
-/* Small shared styles (used by drawers) */
 .opp__share {
   display: flex;
   align-items: center;
@@ -414,9 +456,6 @@
   color: #b91c1c;
 }
 
-/* =========================
-   Responsive tweaks
-   ========================= */
 @media (max-width: 900px) {
   .donate-modal {
     width: min(100vw - 24px, 1000px);

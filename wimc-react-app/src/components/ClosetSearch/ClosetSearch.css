@@ -1,0 +1,246 @@
+.cs-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cs-modal {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: min(100vw - 32px, 580px);
+  max-height: min(100vh - 32px, 700px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: csIn 0.18s ease both;
+}
+@keyframes csIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.cs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  color: #fff;
+  flex-shrink: 0;
+}
+.cs-header__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cs-header__icon {
+  font-size: 26px;
+}
+.cs-header__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+.cs-header__sub {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.8;
+}
+.cs-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.cs-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.cs-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Search row */
+.cs-search-row {
+  display: flex;
+  gap: 8px;
+}
+.cs-input {
+  flex: 1;
+  padding: 11px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cs-input:focus {
+  border-color: #0f172a;
+}
+.cs-search-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.cs-search-btn:hover {
+  background: #1e293b;
+}
+.cs-search-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Quick searches */
+.cs-quick__label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+}
+.cs-quick__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cs-chip {
+  padding: 7px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s;
+}
+.cs-chip:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* Thinking */
+.cs-thinking {
+  font-size: 14px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cs-cursor {
+  display: inline-block;
+  animation: blink 0.8s infinite;
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Result */
+.cs-result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cs-result__text {
+  margin: 0;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+  background: #f8fafc;
+  border-left: 3px solid #0f172a;
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
+}
+.cs-result__heading {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.cs-result__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cs-section-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+.cs-section-btn:hover {
+  background: #f8fafc;
+  border-color: #0f172a;
+  transform: translateX(4px);
+}
+.cs-section-btn__emoji {
+  font-size: 22px;
+}
+.cs-section-btn__label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.cs-section-btn__arrow {
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+.cs-btn {
+  padding: 9px 18px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.cs-btn:hover {
+  background: #f1f5f9;
+}
+.cs-error {
+  font-size: 13px;
+  color: #b91c1c;
+}

@@ -5,12 +5,15 @@ import { ReactComponent as HomeIcon } from "../../assets/images/home-icon.svg";
 import WeatherModal from "../WeatherModal/WeatherModal";
 import TryOnStudio from "../TryOnStudio/TryOnStudio";
 import AIStylist from "../AIStylist/AIStylist";
+import UserSettingsModal from "../UserSettingsModal/UserSettingsModal";
 import "./Header.css";
 
 function Header({
   userName,
   avatarUrl,
   isLoggedIn,
+  userData,
+  onUserUpdate, // ✅ new — bubbles updates to App.js
   onSignUpClick,
   onLoginClick,
   onLogoutClick,
@@ -18,22 +21,26 @@ function Header({
   selectedTab,
 }) {
   const [currentUserName, setCurrentUserName] = useState(userName);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
   const [isStylistOpen, setIsStylistOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const defaultAvatarUrl =
     "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
-  const displayAvatarUrl = avatarUrl || defaultAvatarUrl;
 
   const navigate = useNavigate();
   const location = useLocation();
 
+  // ✅ Sync local state whenever App.js userData changes (e.g. on refresh)
   useEffect(() => {
     setCurrentUserName(userName);
   }, [userName]);
+  useEffect(() => {
+    setCurrentAvatarUrl(avatarUrl);
+  }, [avatarUrl]);
 
-  // ✅ Guard: only allow tab navigation if logged in
   const handleTabChange = (tab) => {
     if (!isLoggedIn) {
       onLoginClick();
@@ -48,16 +55,21 @@ function Header({
     navigate("/");
   };
 
-  // ✅ On mount and route change, if we're not on /closet-data clear any
-  //    persisted "dresses-skirts" default so no tab stays highlighted on refresh
+  // ✅ When settings saves, update local display AND persist via App.js
+  const handleSettingsUpdate = (updated) => {
+    setCurrentUserName(updated.userName);
+    setCurrentAvatarUrl(updated.avatarUrl || currentAvatarUrl);
+    onUserUpdate?.(updated); // persists to localStorage via App.js
+  };
+
   const activeTab = location.pathname === "/closet-data" ? selectedTab : "";
+  const displayAvatarUrl = currentAvatarUrl || defaultAvatarUrl;
 
   return (
     <>
       <header className="header">
         {/* ── TOP LAYER ── */}
         <div className="header__top">
-          {/* Logo */}
           <Link to={isLoggedIn ? "/home" : "/"} className="header__logo-link">
             <div className="header__logo">WIMC™</div>
             {location.pathname === "/home" && (
@@ -65,7 +77,6 @@ function Header({
             )}
           </Link>
 
-          {/* Right side controls */}
           {isLoggedIn ? (
             <div className="header__user">
               <span className="header__user-name">
@@ -73,6 +84,7 @@ function Header({
                   ? `${currentUserName}'s Closet`
                   : "Your Closet"}
               </span>
+              {/* ✅ Avatar now reflects live updates */}
               <img
                 src={displayAvatarUrl}
                 alt="User Avatar"
@@ -106,18 +118,30 @@ function Header({
               >
                 ✨ AI Stylist
               </button>
+              <button
+                className="header__button header__button--kids"
+                onClick={() => navigate("/kids-closet")}
+              >
+                👶 Kids
+              </button>
+              <button
+                className="header__button header__button--receipts"
+                onClick={() => navigate("/receipts")}
+              >
+                🧾 Receipts
+              </button>
               <div className="header__divider" />
               <button
                 className="header__about-button"
                 onClick={() => navigate("/about")}
               >
-                <button
-                  className="header__button header__button--kids"
-                  onClick={() => navigate("/kids-closet")}
-                >
-                  👶 Kids
-                </button>
                 About
+              </button>
+              <button
+                className="header__button header__button--settings"
+                onClick={() => setIsSettingsOpen(true)}
+              >
+                ⚙️ Settings
               </button>
             </div>
           ) : (
@@ -148,14 +172,10 @@ function Header({
 
         {/* ── BOTTOM LAYER — tabs only ── */}
         <div className="header__bottom">
-          <ClosetTabs
-            selectedTab={activeTab} // ✅ empty string when not on /closet-data
-            onSelectTab={handleTabChange}
-          />
+          <ClosetTabs selectedTab={activeTab} onSelectTab={handleTabChange} />
         </div>
       </header>
 
-      {/* Modals rendered outside header */}
       <WeatherModal
         isOpen={isWeatherOpen}
         onClose={() => setIsWeatherOpen(false)}
@@ -170,12 +190,18 @@ function Header({
         isOpen={isStylistOpen}
         onClose={() => setIsStylistOpen(false)}
       />
-      <button
-        className="header__button header__button--kids"
-        onClick={() => navigate("/kids-closet")}
-      >
-        👶 Kids
-      </button>
+      <UserSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        userData={
+          userData || {
+            userName: currentUserName,
+            email: "",
+            avatarUrl: currentAvatarUrl,
+          }
+        }
+        onUserUpdate={handleSettingsUpdate}
+      />
     </>
   );
 }

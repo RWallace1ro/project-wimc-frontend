@@ -25,8 +25,8 @@
 }
 .opp__toggle {
   padding: 6px 10px;
-  border: 1px solid #ddd;
   background: #fff;
+  border: 1px solid #ddd;
   border-radius: 8px;
   cursor: pointer;
 }

@@ -304,6 +304,15 @@
   margin: 0;
 }
 
+.tryon-btn--feedback {
+  background: #ec4899;
+  color: #fff;
+  border-color: #ec4899;
+}
+.tryon-btn--feedback:hover {
+  background: #db2777;
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .tryon-modal__body {

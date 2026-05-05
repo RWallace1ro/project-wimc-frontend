@@ -11,6 +11,9 @@ import OutfitPreviewPanel from "../components/OutfitPreviewPanel/OutfitPreviewPa
 import OutfitPlanner from "../components/OutfitPlanner/OutfitPlanner";
 import TravelPackPanel from "../components/TravelPackPanel/TravelPackPanel";
 import TryOnStudio from "../components/TryOnStudio/TryOnStudio";
+import BackgroundPicker from "../components/BackgroundPicker/BackgroundPicker";
+import ClosetSearch from "../components/ClosetSearch/ClosetSearch";
+import { useBackground } from "../context/BackgroundContext";
 import "./ClosetData.css";
 
 import dressesSkirtsImg from "../assets/images/dresses-skirts.jpg";
@@ -54,6 +57,9 @@ const closetSections = [
   },
 ];
 
+// Special key for the overall closet page background
+const PAGE_BG_KEY = "closet-page";
+
 function ClosetData({
   selectedTab,
   isLoggedIn,
@@ -62,6 +68,12 @@ function ClosetData({
   onRegisterOpenSection,
   onClearTab,
 }) {
+  // ✅ Read ALL backgrounds from context so component re-renders on any change
+  const { getBackground, backgrounds } = useBackground();
+
+  // Page background
+  const pageBg = backgrounds[PAGE_BG_KEY] || null;
+
   const [previewSelection, setPreviewSelection] = useState([]);
   const [closetItems, setClosetItems] = useState([]);
   const [sectionVideos, setSectionVideos] = useState([]);
@@ -74,6 +86,9 @@ function ClosetData({
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
   const [tryOnImageUrl, setTryOnImageUrl] = useState(null);
   const [tryOnSection, setTryOnSection] = useState(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isBgPickerOpen, setIsBgPickerOpen] = useState(false);
+  const [bgPickerSection, setBgPickerSection] = useState(null);
   const [weekPlan, setWeekPlan] = useState({
     Monday: [],
     Tuesday: [],
@@ -84,7 +99,6 @@ function ClosetData({
     Sunday: [],
   });
 
-  // ── Fetch helpers ────────────────────────────────────────────────────────
   const fetchSectionItems = async (tag) => {
     setIsLoading(true);
     setError(null);
@@ -102,7 +116,6 @@ function ClosetData({
     }
   };
 
-  // ── Register openSection with App so tab clicks open the modal ───────────
   const openSection = useCallback((tag) => {
     setSelectedSection(tag);
     setIsModalOpen(true);
@@ -110,55 +123,28 @@ function ClosetData({
   }, []);
 
   useEffect(() => {
-    if (typeof onRegisterOpenSection === "function") {
+    if (typeof onRegisterOpenSection === "function")
       onRegisterOpenSection(openSection);
-    }
   }, [onRegisterOpenSection, openSection]);
 
-  // ── Initial load ─────────────────────────────────────────────────────────
   useEffect(() => {
-    if (isLoggedIn && selectedTab) {
-      fetchSectionItems(selectedTab);
-    }
+    if (isLoggedIn && selectedTab) fetchSectionItems(selectedTab);
   }, [isLoggedIn, selectedTab]);
 
-  // ── Merge helper (dedupes by key) ────────────────────────────────────────
-  const mergeDayItems = (existing = [], incoming = []) => {
-    const out = [...existing];
-    const seen = new Set(
-      existing.map(
-        (it) => it.mediaUrl || it.imageUrl || it.name || JSON.stringify(it),
-      ),
-    );
-    for (const it of incoming) {
-      const key = it.mediaUrl || it.imageUrl || it.name || JSON.stringify(it);
-      if (!seen.has(key)) {
-        seen.add(key);
-        out.push(it);
-      }
-    }
-    return out;
-  };
-
-  // ── Modal handlers ───────────────────────────────────────────────────────
   const openAddForSection = (tag) => {
     setIsModalOpen(false);
     setSelectedSection(tag);
     setIsAddModalOpen(true);
   };
-
   const handleCardClick = (section) => {
     setSelectedSection(section);
     setIsModalOpen(true);
   };
-
-  // ✅ Clear active tab highlight when modal closes
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedSection(null);
     onClearTab?.();
   };
-
   const resetModals = () => {
     setIsModalOpen(false);
     setIsUserModalOpen(false);
@@ -180,18 +166,32 @@ function ClosetData({
     onUserUpdate?.(updatedUser);
     setIsUserModalOpen(false);
   };
-
   const handleTryOnFromCard = (section) => {
-    const firstImg = closetItems.find((url) => url.includes(section)) || null;
-    setTryOnImageUrl(firstImg);
+    setTryOnImageUrl(closetItems.find((url) => url.includes(section)) || null);
     setTryOnSection(section);
     setIsTryOnOpen(true);
   };
 
-  // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <main className="closet-data-page">
+    <main
+      className="closet-data-page"
+      style={
+        pageBg
+          ? {
+              backgroundImage: `url(${pageBg})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }
+          : {}
+      }
+    >
       <header className="closet-data__header-actions">
+        <button
+          className="add-clothing-button"
+          onClick={() => setIsSearchOpen(true)}
+        >
+          🔍 Search My Closet
+        </button>
         <button
           onClick={() => {
             resetModals();
@@ -216,7 +216,6 @@ function ClosetData({
       {isLoading && <p className="loading-message">Loading...</p>}
 
       <section className="closet-data">
-        {/* Left sidebar */}
         <aside className="closet-data__side-left">
           <OutfitPreviewPanel onSelectionChange={setPreviewSelection} />
           <aside className="closet-data__side-container">
@@ -245,7 +244,7 @@ function ClosetData({
           <DonateBin clothingItems={closetItems} />
         </aside>
 
-        {/* Center cards */}
+        {/* Center cards — ✅ sectionBackground passed as prop */}
         <div className="closet-data__cards-container">
           {closetSections.map((section) => {
             const imageUrl =
@@ -266,18 +265,21 @@ function ClosetData({
                   setIsAddModalOpen(true);
                 }}
                 onTryOn={() => handleTryOnFromCard(section.tag)}
+                onCustomizeBg={() => {
+                  setBgPickerSection(section.tag);
+                  setIsBgPickerOpen(true);
+                }}
+                sectionBackground={backgrounds[section.tag] || null}
               />
             );
           })}
         </div>
 
-        {/* Right sidebar */}
         <aside className="closet-data__side-right">
           <WishList userId="123" />
           <VideoBin videos={sectionVideos} />
         </aside>
 
-        {/* Modals */}
         <ChangeUserInfoModal
           isOpen={isUserModalOpen}
           onClose={resetModals}
@@ -299,12 +301,26 @@ function ClosetData({
         />
       </section>
 
-      {/* Try-On Studio */}
       <TryOnStudio
         isOpen={isTryOnOpen}
         onClose={() => setIsTryOnOpen(false)}
         initialImageUrl={tryOnImageUrl}
         initialSection={tryOnSection}
+      />
+
+      <BackgroundPicker
+        isOpen={isBgPickerOpen}
+        onClose={() => {
+          setIsBgPickerOpen(false);
+          setBgPickerSection(null);
+        }}
+        section={bgPickerSection}
+      />
+
+      <ClosetSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSectionSelect={(tag) => openSection(tag)}
       />
     </main>
   );

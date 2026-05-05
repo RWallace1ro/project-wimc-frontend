@@ -27,7 +27,7 @@ const SECTION_LABELS = {
   "jackets-coats": "Jackets/Coats",
 };
 
-const LS_META_KEY = "wimc_video_meta"; // { [url]: { title, addedAt } }
+const LS_META_KEY = "wimc_video_meta";
 
 function fmtDate(iso) {
   if (!iso) return "";
@@ -52,31 +52,18 @@ function saveMeta(meta) {
   } catch {}
 }
 
-function normalize(url, section) {
-  if (!url) return null;
-  const poster = videoPoster(url);
-  const meta = loadMeta();
-  const stored = meta[url] || {};
-  return {
-    url,
-    poster,
-    section,
-    title: stored.title || "",
-    addedAt: stored.addedAt || new Date().toISOString(),
-  };
-}
-
 export default function VideoBin({ videos: propVideos = [] }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const [viewMode, setViewMode] = useState("grid");
   const [allVideos, setAllVideos] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [playingUrl, setPlayingUrl] = useState(null); // full-screen player
-  const [editingUrl, setEditingUrl] = useState(null); // which video title is being edited
+  const [playingUrl, setPlayingUrl] = useState(null);
+  const [editingUrl, setEditingUrl] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [meta, setMeta] = useState(loadMeta);
+  const [shareStatus, setShareStatus] = useState({}); // { [url]: "copying"|"copied"|"error" }
+  const [dlStatus, setDlStatus] = useState({}); // { [url]: "downloading"|"done"|"error" }
 
-  // Merge prop videos (from try-on / current section) with tag-fetched videos
   const mergedVideos = useMemo(() => {
     const seen = new Set();
     const out = [];
@@ -92,17 +79,14 @@ export default function VideoBin({ videos: propVideos = [] }) {
         addedAt: m.addedAt || new Date().toISOString(),
       });
     };
-    // prop videos first (most recent try-ons)
     propVideos.forEach((v) => {
       const url = typeof v === "string" ? v : v?.mediaUrl || v?.url || "";
       add(url, v?.section || "");
     });
-    // fetched videos
     allVideos.forEach((v) => add(v.url, v.section));
     return out;
   }, [propVideos, allVideos, meta]);
 
-  // Fetch all sections when modal opens
   useEffect(() => {
     if (!isOpen) return;
     setLoading(true);
@@ -117,12 +101,10 @@ export default function VideoBin({ videos: propVideos = [] }) {
       .finally(() => setLoading(false));
   }, [isOpen]);
 
-  // Persist meta (titles + timestamps) whenever it changes
   useEffect(() => {
     saveMeta(meta);
   }, [meta]);
 
-  // Ensure addedAt exists for any video that doesn't have it
   useEffect(() => {
     if (!mergedVideos.length) return;
     setMeta((prev) => {
@@ -141,7 +123,6 @@ export default function VideoBin({ videos: propVideos = [] }) {
     });
   }, [mergedVideos]);
 
-  // Escape closes player or modal
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
@@ -153,7 +134,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [isOpen, playingUrl]);
 
-  // Title editing
+  // ── Title editing ─────────────────────────────────────────────────────────
   const startEdit = (url, currentTitle) => {
     setEditingUrl(url);
     setEditValue(currentTitle || "");
@@ -170,12 +151,105 @@ export default function VideoBin({ videos: propVideos = [] }) {
     [editValue],
   );
 
+  // ── Share a video (copy link + native share sheet) ────────────────────────
+  const handleShare = async (v) => {
+    setShareStatus((prev) => ({ ...prev, [v.url]: "copying" }));
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: v.title || "My WIMC Video",
+          text: "Check out this video from my closet!",
+          url: v.url,
+        });
+        setShareStatus((prev) => ({ ...prev, [v.url]: "copied" }));
+      } else {
+        await navigator.clipboard.writeText(v.url);
+        setShareStatus((prev) => ({ ...prev, [v.url]: "copied" }));
+      }
+    } catch {
+      // User cancelled share or clipboard failed — try clipboard as fallback
+      try {
+        await navigator.clipboard.writeText(v.url);
+        setShareStatus((prev) => ({ ...prev, [v.url]: "copied" }));
+      } catch {
+        setShareStatus((prev) => ({ ...prev, [v.url]: "error" }));
+      }
+    }
+    setTimeout(
+      () => setShareStatus((prev) => ({ ...prev, [v.url]: null })),
+      2000,
+    );
+  };
+
+  // ── Download a video ──────────────────────────────────────────────────────
+  const handleDownload = async (v) => {
+    setDlStatus((prev) => ({ ...prev, [v.url]: "downloading" }));
+    try {
+      const res = await fetch(v.url, { mode: "cors" });
+      if (!res.ok) throw new Error("Fetch failed");
+      const blob = await res.blob();
+      const burl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const ext = v.url.split(".").pop().split("?")[0] || "mp4";
+      a.href = burl;
+      a.download = `${(v.title || "wimc-video").replace(/\s+/g, "-")}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(burl);
+      setDlStatus((prev) => ({ ...prev, [v.url]: "done" }));
+    } catch {
+      // CORS fallback — open in new tab so user can save manually
+      window.open(v.url, "_blank", "noopener");
+      setDlStatus((prev) => ({ ...prev, [v.url]: "done" }));
+    }
+    setTimeout(() => setDlStatus((prev) => ({ ...prev, [v.url]: null })), 2500);
+  };
+
   const playingVideo = useMemo(
     () => mergedVideos.find((v) => v.url === playingUrl),
     [mergedVideos, playingUrl],
   );
 
-  // ── Card (grid) ───────────────────────────────────────────────────────────
+  // ── Action buttons shared between grid + list ─────────────────────────────
+  const VideoActions = ({ v }) => (
+    <div className="vb-actions">
+      <button
+        className="vb-action-btn vb-action-btn--play"
+        onClick={() => setPlayingUrl(v.url)}
+        title="Play"
+      >
+        ▶ Play
+      </button>
+      <button
+        className="vb-action-btn vb-action-btn--share"
+        onClick={() => handleShare(v)}
+        title="Share video link"
+      >
+        {shareStatus[v.url] === "copying"
+          ? "…"
+          : shareStatus[v.url] === "copied"
+            ? "✅"
+            : shareStatus[v.url] === "error"
+              ? "❌"
+              : "🔗 Share"}
+      </button>
+      <button
+        className="vb-action-btn vb-action-btn--download"
+        onClick={() => handleDownload(v)}
+        title="Download video"
+        disabled={dlStatus[v.url] === "downloading"}
+      >
+        {dlStatus[v.url] === "downloading"
+          ? "…"
+          : dlStatus[v.url] === "done"
+            ? "✅"
+            : "⬇ Save"}
+      </button>
+    </div>
+  );
+
+  // ── Grid card ─────────────────────────────────────────────────────────────
   const GridCard = ({ v }) => (
     <div className="vb-card">
       <button
@@ -211,7 +285,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
           )}
           <button
             className="vb-card__edit-btn"
-            title="Rename video"
+            title="Rename"
             onClick={() => startEdit(v.url, v.title)}
           >
             ✏️
@@ -223,11 +297,12 @@ export default function VideoBin({ videos: propVideos = [] }) {
           </span>
           <span className="vb-card__date">{fmtDate(v.addedAt)}</span>
         </div>
+        <VideoActions v={v} />
       </div>
     </div>
   );
 
-  // ── Row (list) ────────────────────────────────────────────────────────────
+  // ── List row ──────────────────────────────────────────────────────────────
   const ListRow = ({ v }) => (
     <div className="vb-row">
       <button
@@ -262,7 +337,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
           )}
           <button
             className="vb-card__edit-btn"
-            title="Rename video"
+            title="Rename"
             onClick={() => startEdit(v.url, v.title)}
           >
             ✏️
@@ -274,16 +349,14 @@ export default function VideoBin({ videos: propVideos = [] }) {
           </span>
           <span className="vb-card__date">{fmtDate(v.addedAt)}</span>
         </div>
+        <VideoActions v={v} />
       </div>
-      <button className="vb-row__play-btn" onClick={() => setPlayingUrl(v.url)}>
-        ▶ Play
-      </button>
     </div>
   );
 
   return (
     <>
-      {/* ── Docked stub ── */}
+      {/* Docked stub */}
       <section className="video-bin" aria-label="Videos">
         <header className="video-bin__header">
           <h3 className="video-bin__title">
@@ -303,7 +376,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
         </p>
       </section>
 
-      {/* ── Main modal ── */}
+      {/* Main modal */}
       {isOpen &&
         createPortal(
           <>
@@ -312,7 +385,6 @@ export default function VideoBin({ videos: propVideos = [] }) {
               <header className="vb-modal__head">
                 <h2 className="vb-modal__title">🎬 Video Bin</h2>
                 <div className="vb-modal__controls">
-                  {/* Grid / List toggle */}
                   <div className="vb-toggle">
                     <button
                       className={`vb-toggle__btn ${viewMode === "grid" ? "is-active" : ""}`}
@@ -341,7 +413,6 @@ export default function VideoBin({ videos: propVideos = [] }) {
 
               <div className="vb-modal__body">
                 {loading && <p className="vb-loading">Loading videos…</p>}
-
                 {!loading && mergedVideos.length === 0 && (
                   <div className="vb-empty">
                     <p>No videos yet.</p>
@@ -351,7 +422,6 @@ export default function VideoBin({ videos: propVideos = [] }) {
                     </p>
                   </div>
                 )}
-
                 {!loading &&
                   mergedVideos.length > 0 &&
                   (viewMode === "grid" ? (
@@ -370,7 +440,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
               </div>
             </div>
 
-            {/* ── Full-screen video player ── */}
+            {/* Full-screen player */}
             {playingUrl && (
               <>
                 <div
@@ -378,13 +448,37 @@ export default function VideoBin({ videos: propVideos = [] }) {
                   onClick={() => setPlayingUrl(null)}
                 />
                 <div className="vb-player">
-                  <button
-                    className="vb-player__close"
-                    onClick={() => setPlayingUrl(null)}
-                    aria-label="Close player"
-                  >
-                    ×
-                  </button>
+                  <div className="vb-player__toolbar">
+                    <button
+                      className="vb-player__close"
+                      onClick={() => setPlayingUrl(null)}
+                      aria-label="Close player"
+                    >
+                      ×
+                    </button>
+                    <div className="vb-player__toolbar-actions">
+                      <button
+                        className="vb-player__action"
+                        onClick={() => handleShare(playingVideo)}
+                        title="Share"
+                      >
+                        {shareStatus[playingUrl] === "copied"
+                          ? "✅ Copied!"
+                          : "🔗 Share"}
+                      </button>
+                      <button
+                        className="vb-player__action"
+                        onClick={() => handleDownload(playingVideo)}
+                        title="Download"
+                      >
+                        {dlStatus[playingUrl] === "downloading"
+                          ? "Downloading…"
+                          : dlStatus[playingUrl] === "done"
+                            ? "✅ Saved!"
+                            : "⬇ Download"}
+                      </button>
+                    </div>
+                  </div>
                   <video
                     className="vb-player__video"
                     src={playingUrl}

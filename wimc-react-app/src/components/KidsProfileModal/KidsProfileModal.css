@@ -190,3 +190,199 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ── Door animation (KidsClosetModal) ── */
+.kcm-doors {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  pointer-events: none;
+  background-image: url("../../assets/images/closet-interior-background.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.kcm-door {
+  width: 50%;
+  height: 100%;
+  background: url("../../assets/images/main-background.jpg") center/cover
+    no-repeat;
+  transition: transform 3000ms ease;
+}
+.kcm-door--left {
+  transform-origin: left;
+}
+.kcm-door--right {
+  transform-origin: right;
+}
+.kcm-door--left.is-open {
+  transform: translateX(-100%);
+}
+.kcm-door--right.is-open {
+  transform: translateX(100%);
+}
+
+/* ── Soft delete styles (KidsCloset) ── */
+.kids-card--deleted {
+  opacity: 0.75;
+  border: 2px dashed #fca5a5;
+  background: #fff7f7;
+}
+.kids-card__deleted-banner {
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  text-align: center;
+}
+.kids-card__btn--restore {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+}
+.kids-card__btn--restore:hover {
+  background: #16a34a;
+}
+
+.kids-closet__deleted-section {
+  margin-top: 36px;
+}
+.kids-closet__deleted-toggle {
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 8px;
+}
+.kids-closet__deleted-toggle:hover {
+  color: #334155;
+}
+.kids-closet__deleted-hint {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0 0 16px;
+}
+
+.kcm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.kcm-modal {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  width: min(100vw - 24px, 1060px);
+  height: min(100vh - 24px, 820px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: kcmIn 0.18s ease both;
+}
+@keyframes kcmIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.kcm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: #0f172a;
+  color: #fff;
+  flex-shrink: 0;
+  gap: 12px;
+}
+.kcm-header__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.kcm-header__icon {
+  font-size: 36px;
+}
+.kcm-header__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.kcm-header__sub {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-top: 3px;
+}
+.kcm-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.kcm-header__add-btn {
+  padding: 8px 16px;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.kcm-header__add-btn:hover {
+  background: #6d28d9;
+}
+.kcm-header__close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.kcm-header__close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.kcm-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 20px;
+  background: #f8fafc;
+}
+.kcm-loading {
+  text-align: center;
+  color: #94a3b8;
+  padding: 20px;
+}
+.kcm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .kcm-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .kcm-header {
+    flex-wrap: wrap;
+  }
+}

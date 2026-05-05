@@ -58,6 +58,8 @@
 .planner__btn {
   padding: 6px 10px;
   border-radius: 8px;
+  background: #fff;
+  border: 1px solid #ddd;
 }
 
 /* ==== Doors stage (fills remaining panel height) ==== */

@@ -51,6 +51,9 @@
 }
 .tp__toggle {
   padding: 6px 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
 }
 .tp__collapsed-row {
   font-size: 13px;

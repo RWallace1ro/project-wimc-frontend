@@ -1,0 +1,181 @@
+.aida-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aida-modal {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: min(100vw - 32px, 620px);
+  max-height: min(100vh - 32px, 780px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: aidaIn 0.18s ease both;
+}
+@keyframes aidaIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.aida-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  flex-shrink: 0;
+}
+.aida-header__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aida-header__icon {
+  font-size: 28px;
+}
+.aida-header__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+.aida-header__sub {
+  margin: 0;
+  font-size: 11px;
+  opacity: 0.85;
+}
+.aida-close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.aida-close:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.aida-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.aida-intro {
+  margin: 0;
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+.aida-question {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.aida-question__label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.aida-question__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.aida-option {
+  padding: 7px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s;
+}
+.aida-option:hover {
+  background: #f0fdf4;
+  border-color: #22c55e;
+}
+.aida-option.is-active {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+  font-weight: 600;
+}
+
+.aida-btn {
+  padding: 10px 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.aida-btn:hover {
+  background: #f1f5f9;
+}
+.aida-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.aida-btn--generate {
+  background: #22c55e;
+  color: #fff;
+  border-color: #22c55e;
+}
+.aida-btn--generate:hover {
+  background: #16a34a;
+}
+
+.aida-result {
+  margin: 0;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #1e293b;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+}
+.aida-cursor {
+  display: inline-block;
+  animation: blink 0.8s infinite;
+}
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.aida-error {
+  font-size: 13px;
+  color: #b91c1c;
+  margin: 0;
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchImagesByTag, fetchVideosByTag } from "../../utils/CloudinaryAPI";
+import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import ClosetSectionCard from "../ClosetSectionCard/ClosetSectionCard";
 import ClosetSectionModal from "../ClosetSectionModal/ClosetSectionModal";
 import AddClothingModal from "../AddClothingModal/AddClothingModal";
@@ -14,19 +14,38 @@ const SECTIONS = [
   { tag: "jackets-coats", label: "Jackets/Coats" },
 ];
 
-// Tag items per child so they don't mix with the adult closet
+const GROUP_ICONS = { baby: "👶", toddler: "🧒", kids: "🧑", teen: "🧑‍🎓" };
+
 function childTag(childId, section) {
   return `kid-${childId}-${section}`;
 }
 
+const DOOR_MS = 3000;
+
 export default function KidsClosetModal({ child, onClose }) {
+  // ── Door animation ────────────────────────────────────────────────────────
+  const [doorsOpen, setDoorsOpen] = useState(false); // armed = slide open
+  const [doorsGone, setDoorsGone] = useState(false); // fully hidden after anim
+
+  // ── Closet state ──────────────────────────────────────────────────────────
   const [closetItems, setClosetItems] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Load images for the first section on open
+  // Start door animation on mount
+  useEffect(() => {
+    // Small delay so CSS transition fires after paint
+    const arm = setTimeout(() => setDoorsOpen(true), 50);
+    const clear = setTimeout(() => setDoorsGone(true), DOOR_MS + 50);
+    return () => {
+      clearTimeout(arm);
+      clearTimeout(clear);
+    };
+  }, []);
+
+  // Escape key
   useEffect(() => {
     if (!child) return;
     const onKey = (e) => {
@@ -64,8 +83,6 @@ export default function KidsClosetModal({ child, onClose }) {
 
   if (!child) return null;
 
-  const GROUP_ICONS = { baby: "👶", toddler: "🧒", kids: "🧑", teen: "🧑‍🎓" };
-
   return (
     <div
       className="kcm-overlay"
@@ -78,7 +95,19 @@ export default function KidsClosetModal({ child, onClose }) {
         role="dialog"
         aria-label={`${child.name}'s Closet`}
       >
-        {/* Header */}
+        {/* ── Door animation (sits on top until gone) ── */}
+        {!doorsGone && (
+          <div className="kcm-doors">
+            <div
+              className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`}
+            />
+            <div
+              className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`}
+            />
+          </div>
+        )}
+
+        {/* ── Header ── */}
         <header className="kcm-header">
           <div className="kcm-header__left">
             <span className="kcm-header__icon">
@@ -114,7 +143,7 @@ export default function KidsClosetModal({ child, onClose }) {
           </div>
         </header>
 
-        {/* Section cards */}
+        {/* ── Section cards ── */}
         <div className="kcm-body">
           {loading && <p className="kcm-loading">Loading…</p>}
           <div className="kcm-grid">
@@ -134,7 +163,7 @@ export default function KidsClosetModal({ child, onClose }) {
           </div>
         </div>
 
-        {/* Section viewer */}
+        {/* ── Section viewer ── */}
         <ClosetSectionModal
           isOpen={isModalOpen}
           sectionName={
@@ -153,7 +182,7 @@ export default function KidsClosetModal({ child, onClose }) {
           }}
         />
 
-        {/* Add clothing */}
+        {/* ── Add clothing ── */}
         <AddClothingModal
           isOpen={isAddOpen}
           onClose={() => setIsAddOpen(false)}

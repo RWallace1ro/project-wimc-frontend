@@ -368,7 +368,86 @@
   background: #1e293b;
 }
 
-/* ── Full-screen player ── */
+/* ── Video action buttons (share + download + play) ── */
+.vb-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.vb-action-btn {
+  padding: 5px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  white-space: nowrap;
+}
+.vb-action-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+.vb-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.vb-action-btn--play {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+.vb-action-btn--play:hover {
+  background: #1e293b;
+}
+.vb-action-btn--share {
+  background: #6366f1;
+  color: #fff;
+  border-color: #6366f1;
+}
+.vb-action-btn--share:hover {
+  background: #4f46e5;
+}
+.vb-action-btn--download {
+  background: #0ea5e9;
+  color: #fff;
+  border-color: #0ea5e9;
+}
+.vb-action-btn--download:hover {
+  background: #0284c7;
+}
+
+/* ── Player toolbar (share + download in fullscreen) ── */
+.vb-player__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.vb-player__toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+.vb-player__action {
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.vb-player__action:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
 .vb-player-overlay {
   position: fixed;
   inset: 0;

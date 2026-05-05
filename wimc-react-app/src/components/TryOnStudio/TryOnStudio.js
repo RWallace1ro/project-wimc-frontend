@@ -4,6 +4,7 @@ import {
   uploadRawJSON,
   fetchImagesByTag,
 } from "../../utils/CloudinaryAPI";
+import AIStyleFeedback from "../AIStyleFeedback/AIStyleFeedback";
 import "./TryOnStudio.css";
 
 const SECTION_OPTIONS = [
@@ -28,6 +29,7 @@ export default function TryOnStudio({
   const [sectionItems, setSectionItems] = useState([]);
   const [sectionLoading, setSectionLoading] = useState(false);
   const [refImage, setRefImage] = useState(initialImageUrl);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Camera
   const [mode, setMode] = useState("record"); // "record" | "upload"
@@ -449,6 +451,14 @@ export default function TryOnStudio({
                       >
                         📤 Share
                       </button>
+                      {uploadedUrl && (
+                        <button
+                          className="tryon-btn tryon-btn--feedback"
+                          onClick={() => setIsFeedbackOpen(true)}
+                        >
+                          ✨ Style Feedback
+                        </button>
+                      )}
                     </>
                   )}
                 </>
@@ -472,6 +482,12 @@ export default function TryOnStudio({
           </div>
         </div>
       </div>
+      <AIStyleFeedback
+        isOpen={isFeedbackOpen}
+        onClose={() => setIsFeedbackOpen(false)}
+        previewUrl={previewUrl}
+      />
+      ;
     </div>
   );
 }

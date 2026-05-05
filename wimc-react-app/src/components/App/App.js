@@ -16,8 +16,10 @@ import About from "../About/About";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
 import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { ClosetProvider } from "../../context/ClosetContext";
+import { BackgroundProvider } from "../../context/BackgroundContext";
 import OutfitCardViewer from "../../Pages/OutfitCardViewer";
 import KidsCloset from "../../Pages/KidsCloset";
+import Receipts from "../../Pages/Receipts";
 import "./App.css";
 
 async function hashPassword(password) {
@@ -188,65 +190,70 @@ function AppInner() {
 
   return (
     <ClosetProvider>
-      <main className="app">
-        <Header
-          userName={isLoggedIn ? userData.userName : "Your Closet"}
-          avatarUrl={userData.avatarUrl}
-          isLoggedIn={isLoggedIn}
-          onSignUpClick={() => setIsSignUpModalOpen(true)}
-          onLoginClick={() => setIsLoginModalOpen(true)}
-          onLogoutClick={handleLogout}
-          handleSelectTab={handleSelectTab}
-          selectedTab={selectedTab}
-        />
-        <section className="app__content">
-          {apiError && <p className="error-message">{apiError}</p>}
-          {isLoading && <p className="loading-message">Loading...</p>}
-          <Routes>
-            <Route path="/" element={<Main isLoggedIn={isLoggedIn} />} />
-            <Route path="/home" element={<Home />} />
-            <Route
-              path="/closet-data"
-              element={
-                <ClosetData
-                  selectedTab={selectedTab}
-                  isLoggedIn={isLoggedIn}
-                  closetItems={closetItems}
-                  userData={userData}
-                  onUserUpdate={handleUserUpdate}
-                  onRegisterOpenSection={(fn) => setOpenSectionFn(() => fn)}
-                  onClearTab={() => setSelectedTab("")} // ✅ resets active tab highlight
-                />
-              }
-            />
-            <Route path="/about" element={<About />} />
-            <Route path="/kids-closet" element={<KidsCloset />} />
-            <Route path="/outfit-card" element={<OutfitCardViewer />} />
-            <Route path="*" element={<Navigate to="/home" />} />
-          </Routes>
-        </section>
-        <Footer />
-        <ModalWithForm
-          isOpen={isSignUpModalOpen}
-          onClose={() => setIsSignUpModalOpen(false)}
-          onSubmit={handleSignUp}
-          isSignUp={true}
-          switchToLogin={() => {
-            setIsSignUpModalOpen(false);
-            setIsLoginModalOpen(true);
-          }}
-          error={signUpError}
-          onImageUpload={(file) => handleImageUpload(file, selectedTab)}
-        />
-        <ModalWithForm
-          isOpen={isLoginModalOpen}
-          onClose={() => setIsLoginModalOpen(false)}
-          onSubmit={handleLogin}
-          isSignUp={false}
-          formData={loginData}
-          error={loginError}
-        />
-      </main>
+      <BackgroundProvider>
+        <main className="app">
+          <Header
+            userName={isLoggedIn ? userData.userName : "Your Closet"}
+            avatarUrl={userData.avatarUrl}
+            isLoggedIn={isLoggedIn}
+            userData={userData}
+            onUserUpdate={handleUserUpdate}
+            onSignUpClick={() => setIsSignUpModalOpen(true)}
+            onLoginClick={() => setIsLoginModalOpen(true)}
+            onLogoutClick={handleLogout}
+            handleSelectTab={handleSelectTab}
+            selectedTab={selectedTab}
+          />
+          <section className="app__content">
+            {apiError && <p className="error-message">{apiError}</p>}
+            {isLoading && <p className="loading-message">Loading...</p>}
+            <Routes>
+              <Route path="/" element={<Main isLoggedIn={isLoggedIn} />} />
+              <Route path="/home" element={<Home />} />
+              <Route
+                path="/closet-data"
+                element={
+                  <ClosetData
+                    selectedTab={selectedTab}
+                    isLoggedIn={isLoggedIn}
+                    closetItems={closetItems}
+                    userData={userData}
+                    onUserUpdate={handleUserUpdate}
+                    onRegisterOpenSection={(fn) => setOpenSectionFn(() => fn)}
+                    onClearTab={() => setSelectedTab("")} // ✅ resets active tab highlight
+                  />
+                }
+              />
+              <Route path="/about" element={<About />} />
+              <Route path="/kids-closet" element={<KidsCloset />} />
+              <Route path="/receipts" element={<Receipts />} />
+              <Route path="/outfit-card" element={<OutfitCardViewer />} />
+              <Route path="*" element={<Navigate to="/home" />} />
+            </Routes>
+          </section>
+          <Footer />
+          <ModalWithForm
+            isOpen={isSignUpModalOpen}
+            onClose={() => setIsSignUpModalOpen(false)}
+            onSubmit={handleSignUp}
+            isSignUp={true}
+            switchToLogin={() => {
+              setIsSignUpModalOpen(false);
+              setIsLoginModalOpen(true);
+            }}
+            error={signUpError}
+            onImageUpload={(file) => handleImageUpload(file, selectedTab)}
+          />
+          <ModalWithForm
+            isOpen={isLoginModalOpen}
+            onClose={() => setIsLoginModalOpen(false)}
+            onSubmit={handleLogin}
+            isSignUp={false}
+            formData={loginData}
+            error={loginError}
+          />
+        </main>
+      </BackgroundProvider>
     </ClosetProvider>
   );
 }
