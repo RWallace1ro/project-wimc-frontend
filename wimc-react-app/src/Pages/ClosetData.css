@@ -50,7 +50,6 @@
   box-sizing: border-box;
 }
 
-/* ✅ Replaced position:absolute + hardcoded margin-top with normal flow */
 .closet-data__side-container {
   display: flex;
   flex-direction: column;
@@ -68,28 +67,36 @@
   position: relative;
 }
 
+/* ── Header action buttons — centered, two buttons only ── */
 .closet-data__header-actions {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 15px;
   margin-bottom: 20px;
+  width: 100%;
 }
 
-.add-clothing-button,
-.change-user-info-button {
-  padding: 10px 20px;
+.add-clothing-button {
+  padding: 10px 24px;
   background-color: #007bff;
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
 }
 
-.add-clothing-button:hover,
-.change-user-info-button:hover {
+.add-clothing-button:hover {
   background-color: #0056b3;
+}
+
+/* Remove old change-user-info-button (kept for safety if referenced elsewhere) */
+.change-user-info-button {
+  display: none;
 }
 
 .closet-data__buttons {
@@ -132,12 +139,10 @@
     box-sizing: border-box;
   }
 
-  /* ✅ Stack all three columns vertically */
   .closet-data {
     grid-template-columns: 1fr;
   }
 
-  /* ✅ Left sidebar first, then cards, then right sidebar */
   .closet-data__side-left {
     order: 0;
   }
@@ -152,7 +157,6 @@
     order: 2;
   }
 
-  /* ✅ Normal flow — no absolute positioning or magic margin */
   .closet-data__side-container {
     flex-direction: column;
     gap: 20px;
@@ -165,14 +169,12 @@
     width: 90%;
   }
 
-  .add-clothing-button,
-  .change-user-info-button {
-    padding: 8px 15px;
+  .add-clothing-button {
+    padding: 8px 18px;
     font-size: 14px;
   }
 
   .closet-data__header-actions {
-    flex-direction: column;
     gap: 10px;
   }
 
@@ -193,13 +195,11 @@
     box-sizing: border-box;
   }
 
-  /* ✅ Single column cards */
   .closet-data__cards-container {
     grid-template-columns: 1fr;
     gap: 15px;
   }
 
-  /* ✅ Normal flow — no absolute positioning or magic margin */
   .closet-data__side-container {
     position: static;
     flex-direction: column;
@@ -215,15 +215,14 @@
     box-sizing: border-box;
   }
 
-  .add-clothing-button,
-  .change-user-info-button {
-    padding: 6px 12px;
-    font-size: 12px;
+  .add-clothing-button {
+    padding: 8px 14px;
+    font-size: 13px;
   }
 
   .closet-data__header-actions {
-    flex-direction: column;
-    gap: 5px;
+    gap: 10px;
+    flex-wrap: wrap;
   }
 
   .closet-data__buttons {

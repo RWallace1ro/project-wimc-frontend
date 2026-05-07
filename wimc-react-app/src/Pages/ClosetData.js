@@ -3,7 +3,6 @@ import ClosetSectionCard from "../components/ClosetSectionCard/ClosetSectionCard
 import ClosetSectionModal from "../components/ClosetSectionModal/ClosetSectionModal";
 import DonateBin from "../components/DonateBin/DonateBin";
 import WishList from "../components/WishList/WishList";
-import ChangeUserInfoModal from "../components/ChangeUserInfoModal/ChangeUserInfoModal";
 import AddClothingModal from "../components/AddClothingModal/AddClothingModal";
 import { fetchImagesByTag, fetchVideosByTag } from "../utils/CloudinaryAPI";
 import VideoBin from "../components/VideoBin/VideoBin";
@@ -57,7 +56,23 @@ const closetSections = [
   },
 ];
 
-// Special key for the overall closet page background
+const COLOR_PREFIX = "color:";
+
+function getPageBgStyle(bgValue) {
+  if (!bgValue) return {};
+  if (bgValue.startsWith(COLOR_PREFIX)) {
+    return {
+      backgroundColor: bgValue.replace(COLOR_PREFIX, ""),
+      backgroundImage: "none",
+    };
+  }
+  return {
+    backgroundImage: `url(${bgValue})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
+}
+
 const PAGE_BG_KEY = "closet-page";
 
 function ClosetData({
@@ -68,16 +83,13 @@ function ClosetData({
   onRegisterOpenSection,
   onClearTab,
 }) {
-  // ✅ Read ALL backgrounds from context so component re-renders on any change
   const { getBackground, backgrounds } = useBackground();
 
-  // Page background
   const pageBg = backgrounds[PAGE_BG_KEY] || null;
 
   const [previewSelection, setPreviewSelection] = useState([]);
   const [closetItems, setClosetItems] = useState([]);
   const [sectionVideos, setSectionVideos] = useState([]);
-  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -147,7 +159,6 @@ function ClosetData({
   };
   const resetModals = () => {
     setIsModalOpen(false);
-    setIsUserModalOpen(false);
     setIsAddModalOpen(false);
     setSelectedSection(null);
   };
@@ -162,10 +173,6 @@ function ClosetData({
     setIsAddModalOpen(false);
   };
 
-  const handleUserUpdate = (updatedUser) => {
-    onUserUpdate?.(updatedUser);
-    setIsUserModalOpen(false);
-  };
   const handleTryOnFromCard = (section) => {
     setTryOnImageUrl(closetItems.find((url) => url.includes(section)) || null);
     setTryOnSection(section);
@@ -175,15 +182,7 @@ function ClosetData({
   return (
     <main
       className="closet-data-page"
-      style={
-        pageBg
-          ? {
-              backgroundImage: `url(${pageBg})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : {}
-      }
+      style={getPageBgStyle(backgrounds[PAGE_BG_KEY])}
     >
       <header className="closet-data__header-actions">
         <button
@@ -200,15 +199,6 @@ function ClosetData({
           className="add-clothing-button"
         >
           Add New Clothing Item
-        </button>
-        <button
-          onClick={() => {
-            resetModals();
-            setIsUserModalOpen(true);
-          }}
-          className="change-user-info-button"
-        >
-          Change User Info
         </button>
       </header>
 
@@ -244,7 +234,6 @@ function ClosetData({
           <DonateBin clothingItems={closetItems} />
         </aside>
 
-        {/* Center cards — ✅ sectionBackground passed as prop */}
         <div className="closet-data__cards-container">
           {closetSections.map((section) => {
             const imageUrl =
@@ -280,12 +269,6 @@ function ClosetData({
           <VideoBin videos={sectionVideos} />
         </aside>
 
-        <ChangeUserInfoModal
-          isOpen={isUserModalOpen}
-          onClose={resetModals}
-          userData={userData}
-          onUserUpdate={handleUserUpdate}
-        />
         <ClosetSectionModal
           isOpen={isModalOpen}
           sectionName={selectedSection}
