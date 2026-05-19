@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "WIMC",
+  "name": "What's in My Closet",
+  "description": "Organize your wardrobe, build outfits, and manage your closet with AI.",
   "icons": [
     {
       "src": "favicon.ico",
