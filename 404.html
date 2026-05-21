@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>WIMC</title>
+    <script>
+      // GitHub Pages SPA redirect trick.
+      // GH Pages serves this file whenever it can't find a file at the requested path.
+      // We save the full URL to sessionStorage, then redirect to the app root.
+      // index.html reads sessionStorage and uses history.replaceState so React Router
+      // sees the original URL instead of the root.
+      sessionStorage.redirect = location.href;
+      location.replace(
+        location.origin + "/project-wimc-frontend/"
+      );
+    </script>
+  </head>
+  <body></body>
+</html>
