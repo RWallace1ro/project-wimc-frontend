@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/project-wimc-frontend/static/css/main.d0537321.css",
-    "main.js": "/project-wimc-frontend/static/js/main.9f7ab869.js",
+    "main.js": "/project-wimc-frontend/static/js/main.2f3367d7.js",
     "static/css/136.fca825fa.chunk.css": "/project-wimc-frontend/static/css/136.fca825fa.chunk.css",
     "static/js/136.04046bdf.chunk.js": "/project-wimc-frontend/static/js/136.04046bdf.chunk.js",
     "static/css/527.54e9ef7b.chunk.css": "/project-wimc-frontend/static/css/527.54e9ef7b.chunk.css",
@@ -11,8 +11,8 @@
     "static/js/248.d4204662.chunk.js": "/project-wimc-frontend/static/js/248.d4204662.chunk.js",
     "static/css/739.bff13bbe.chunk.css": "/project-wimc-frontend/static/css/739.bff13bbe.chunk.css",
     "static/js/739.eceeda7b.chunk.js": "/project-wimc-frontend/static/js/739.eceeda7b.chunk.js",
-    "static/css/126.0f386e62.chunk.css": "/project-wimc-frontend/static/css/126.0f386e62.chunk.css",
-    "static/js/126.8bd77b34.chunk.js": "/project-wimc-frontend/static/js/126.8bd77b34.chunk.js",
+    "static/css/126.ecaa8339.chunk.css": "/project-wimc-frontend/static/css/126.ecaa8339.chunk.css",
+    "static/js/126.08faf484.chunk.js": "/project-wimc-frontend/static/js/126.08faf484.chunk.js",
     "static/css/505.076dd599.chunk.css": "/project-wimc-frontend/static/css/505.076dd599.chunk.css",
     "static/js/505.7dedc2e2.chunk.js": "/project-wimc-frontend/static/js/505.7dedc2e2.chunk.js",
     "static/css/18.076dd599.chunk.css": "/project-wimc-frontend/static/css/18.076dd599.chunk.css",
@@ -36,7 +36,7 @@
     "index.html": "/project-wimc-frontend/index.html",
     "static/media/home-icon.svg": "/project-wimc-frontend/static/media/home-icon.590a91c51c7e28b5b3cc4d453f1e11ef.svg",
     "main.d0537321.css.map": "/project-wimc-frontend/static/css/main.d0537321.css.map",
-    "main.9f7ab869.js.map": "/project-wimc-frontend/static/js/main.9f7ab869.js.map",
+    "main.2f3367d7.js.map": "/project-wimc-frontend/static/js/main.2f3367d7.js.map",
     "136.fca825fa.chunk.css.map": "/project-wimc-frontend/static/css/136.fca825fa.chunk.css.map",
     "136.04046bdf.chunk.js.map": "/project-wimc-frontend/static/js/136.04046bdf.chunk.js.map",
     "527.54e9ef7b.chunk.css.map": "/project-wimc-frontend/static/css/527.54e9ef7b.chunk.css.map",
@@ -46,8 +46,8 @@
     "248.d4204662.chunk.js.map": "/project-wimc-frontend/static/js/248.d4204662.chunk.js.map",
     "739.bff13bbe.chunk.css.map": "/project-wimc-frontend/static/css/739.bff13bbe.chunk.css.map",
     "739.eceeda7b.chunk.js.map": "/project-wimc-frontend/static/js/739.eceeda7b.chunk.js.map",
-    "126.0f386e62.chunk.css.map": "/project-wimc-frontend/static/css/126.0f386e62.chunk.css.map",
-    "126.8bd77b34.chunk.js.map": "/project-wimc-frontend/static/js/126.8bd77b34.chunk.js.map",
+    "126.ecaa8339.chunk.css.map": "/project-wimc-frontend/static/css/126.ecaa8339.chunk.css.map",
+    "126.08faf484.chunk.js.map": "/project-wimc-frontend/static/js/126.08faf484.chunk.js.map",
     "505.076dd599.chunk.css.map": "/project-wimc-frontend/static/css/505.076dd599.chunk.css.map",
     "505.7dedc2e2.chunk.js.map": "/project-wimc-frontend/static/js/505.7dedc2e2.chunk.js.map",
     "18.076dd599.chunk.css.map": "/project-wimc-frontend/static/css/18.076dd599.chunk.css.map",
@@ -63,6 +63,6 @@
   },
   "entrypoints": [
     "static/css/main.d0537321.css",
-    "static/js/main.9f7ab869.js"
+    "static/js/main.2f3367d7.js"
   ]
 }
