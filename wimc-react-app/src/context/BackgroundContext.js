@@ -1,3 +1,4 @@
+import { syncSetItem } from '../utils/syncStore';
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 const LS_KEY = "wimc_section_backgrounds";
@@ -26,7 +27,7 @@ export function BackgroundProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(backgrounds));
+      syncSetItem(LS_KEY, JSON.stringify(backgrounds));
     } catch {}
   }, [backgrounds]);
 

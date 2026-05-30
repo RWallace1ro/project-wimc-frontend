@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { syncSetItem } from '../../utils/syncStore';
+﻿import React, { useEffect, useState, useMemo } from "react";
 import AIDonationAdvisor from "../AIDonationAdvisor/AIDonationAdvisor";
 import {
   uploadRawJSON,
@@ -6,6 +7,7 @@ import {
   fetchVideosByTag,
   videoPoster,
 } from "../../utils/CloudinaryAPI";
+import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import "./DonateBin.css";
 
 const SECTION_OPTIONS = [
@@ -80,7 +82,12 @@ function normalizeChoice(x, sectionHint) {
 }
 const keyOf = (it) => it.imageUrl || it.url || it.mediaUrl || it.name || "";
 
-export default function DonateBin() {
+export default function DonateBin({ tagPrefix = "" }) {
+  // Child-specific localStorage keys so each child has their own donate bin data
+  const lsDonateKey  = tagPrefix ? `wimc_donateItems_${tagPrefix}`  : "donateItems";
+  const lsDonatedKey = tagPrefix ? `wimc_donatedItems_${tagPrefix}` : "donatedItems";
+  const lsSetsKey    = tagPrefix ? `wimc_donation_sets_${tagPrefix}` : "wimc_donation_sets";
+
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
   const [showDonating, setShowDonating] = useState(false);
   const [showOpening, setShowOpening] = useState(false);
@@ -96,11 +103,12 @@ export default function DonateBin() {
   const [sharing, setSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [shareErr, setShareErr] = useState("");
-  const [shareIsBlob, setShareIsBlob] = useState(false);
+  const [smsHref, setSmsHref] = useState(""); // eslint-disable-line no-unused-vars
+  const [shareNote, setShareNote] = useState("");
   const [nameVisibleKeys, setNameVisibleKeys] = useState(() => new Set());
   const [sets, setSets] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("wimc_donation_sets") || "[]");
+      return JSON.parse(localStorage.getItem(lsSetsKey) || "[]");
     } catch {
       return [];
     }
@@ -111,12 +119,12 @@ export default function DonateBin() {
   const [setsSharing, setSetsSharing] = useState(false);
   const [setsShareUrl, setSetsShareUrl] = useState("");
   const [setsShareErr, setSetsShareErr] = useState("");
-  const [setsShareIsBlob, setSetsShareIsBlob] = useState(false);
+  const [setsShareIsBlob, setSetsShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
   const [donatedOpen, setDonatedOpen] = useState(false);
   const [donatedSharing, setDonatedSharing] = useState(false);
   const [donatedShareUrl, setDonatedShareUrl] = useState("");
   const [donatedShareErr, setDonatedShareErr] = useState("");
-  const [donatedShareIsBlob, setDonatedShareIsBlob] = useState(false);
+  const [donatedShareIsBlob, setDonatedShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
 
   const toggleNameFor = (it) => {
     const k = keyOf(it);
@@ -131,20 +139,22 @@ export default function DonateBin() {
   useEffect(() => {
     try {
       const savedDonate = JSON.parse(
-        localStorage.getItem("donateItems") || "[]",
+        localStorage.getItem(lsDonateKey) || "[]",
       );
       const savedDonated = JSON.parse(
-        localStorage.getItem("donatedItems") || "[]",
+        localStorage.getItem(lsDonatedKey) || "[]",
       );
       setDonateItems(savedDonate);
       setDonatedItems(savedDonated);
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     try {
-      localStorage.setItem("donateItems", JSON.stringify(donateItems));
+      syncSetItem(lsDonateKey, JSON.stringify(donateItems));
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [donateItems]);
 
   useEffect(() => {
@@ -154,8 +164,9 @@ export default function DonateBin() {
       setChoicesLoading(true);
       setChoicesError("");
       try {
-        const imgs = await fetchImagesByTag(section);
-        const vids = await fetchVideosByTag(section);
+        const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
+        const imgs = await fetchImagesByTag(effectiveSection);
+        const vids = await fetchVideosByTag(effectiveSection);
         const norm = [
           ...(imgs || []).map((u) => normalizeChoice(u, section)),
           ...(vids || []).map((u) =>
@@ -179,6 +190,7 @@ export default function DonateBin() {
     return () => {
       ignore = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, section]);
 
   // ✅ Open modal with "Select items to donate" fade-in/out
@@ -215,11 +227,11 @@ export default function DonateBin() {
       const updated = [...donatedItems, ...donateItems];
       setDonatedItems(updated);
       try {
-        localStorage.setItem("donatedItems", JSON.stringify(updated));
+        syncSetItem(lsDonatedKey, JSON.stringify(updated));
       } catch {}
       setDonateItems([]);
       try {
-        localStorage.removeItem("donateItems");
+        syncRemoveItem(lsDonateKey);
       } catch {}
     }, 2000);
   };
@@ -228,6 +240,7 @@ export default function DonateBin() {
     kind: "wimc.donateBin",
     version: 2,
     createdAt: new Date().toISOString(),
+    note: shareNote,
     pendingCount: donateItems.length,
     donatedCount: donatedItems.length,
     pending: donateItems.map((it) => ({
@@ -245,62 +258,33 @@ export default function DonateBin() {
     meta: { source: "WIMC Donate Bin" },
   });
 
-  async function shareDonateBin() {
+  async function shareDonateBin(withEdit = false) {
     setSharing(true);
     setShareErr("");
     setShareUrl("");
-    setShareIsBlob(false);
     try {
-      const res = await uploadRawJSON(buildDonatePayload(), "wimc/donate-bin");
-      const url =
-        res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
-      if (url) {
-        setShareUrl(url);
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {}
+      let url;
+      if (withEdit) {
+        url = await createCollabDoc("donatebin", buildDonatePayload());
       } else {
-        const blob = new Blob([JSON.stringify(buildDonatePayload(), null, 2)], {
-          type: "application/json",
-        });
-        const local = URL.createObjectURL(blob);
-        setShareUrl(local);
-        setShareIsBlob(true);
-        setShareErr(
-          "Upload failed — temporary local link. Keep this tab open.",
-        );
+        const res = await uploadRawJSON(buildDonatePayload(), "wimc/donate-bin");
+        const cloudUrl = res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
+        if (!cloudUrl) throw new Error("Upload failed");
+        url = appShareUrl(cloudUrl, "donatebin");
       }
+      const result = await shareAppLink({ title: "My Donate Bin ♻️", text: shareNote ? `Items I'm donating via WIMC\n\n📝 ${shareNote}` : "Items I'm donating via WIMC", url });
+      setShareUrl(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setShareUrl(""), 3500);
     } catch {
-      const blob = new Blob([JSON.stringify(buildDonatePayload(), null, 2)], {
-        type: "application/json",
-      });
-      const local = URL.createObjectURL(blob);
-      setShareUrl(local);
-      setShareIsBlob(true);
-      setShareErr("Share failed — temporary local link. Keep this tab open.");
-    } finally {
-      setSharing(false);
-    }
+      setShareUrl("❌ Share failed.");
+      setTimeout(() => setShareUrl(""), 3000);
+    } finally { setSharing(false); }
   }
-
-  const downloadDonateJson = () => {
-    const blob = new Blob([JSON.stringify(buildDonatePayload(), null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `wimc-donate-bin-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
   const persistSets = (next) => {
     setSets(next);
     try {
-      localStorage.setItem("wimc_donation_sets", JSON.stringify(next));
+      syncSetItem(lsSetsKey, JSON.stringify(next));
     } catch {}
   };
   const saveCurrentSet = () => {
@@ -375,57 +359,25 @@ export default function DonateBin() {
     setSetsSharing(true);
     setSetsShareErr("");
     setSetsShareUrl("");
-    setSetsShareIsBlob(false);
     try {
       const res = await uploadRawJSON(
         buildDonationSetsPayload(),
         "wimc/donation-sets",
       );
-      const url =
+      const cloudUrl =
         res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
-      if (url) {
-        setSetsShareUrl(url);
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {}
-      } else {
-        const blob = new Blob(
-          [JSON.stringify(buildDonationSetsPayload(), null, 2)],
-          { type: "application/json" },
-        );
-        const local = URL.createObjectURL(blob);
-        setSetsShareUrl(local);
-        setSetsShareIsBlob(true);
-        setSetsShareErr("Upload failed — temporary local link.");
-      }
+      if (!cloudUrl) throw new Error("Upload failed");
+      const url = appShareUrl(cloudUrl, "donatesets");
+      const result = await shareAppLink({ title: "My Donation Sets ♻️", text: shareNote ? `My saved donation sets via WIMC\n\n📝 ${shareNote}` : "My saved donation sets via WIMC", url });
+      setSetsShareUrl(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setSetsShareUrl(""), 3500);
     } catch {
-      const blob = new Blob(
-        [JSON.stringify(buildDonationSetsPayload(), null, 2)],
-        { type: "application/json" },
-      );
-      const local = URL.createObjectURL(blob);
-      setSetsShareUrl(local);
-      setSetsShareIsBlob(true);
-      setSetsShareErr("Share failed — temporary local link.");
+      setSetsShareErr("Share failed. Please try again.");
+      setTimeout(() => setSetsShareErr(""), 3000);
     } finally {
       setSetsSharing(false);
     }
   }
-
-  const downloadDonationSetsJson = () => {
-    const blob = new Blob(
-      [JSON.stringify(buildDonationSetsPayload(), null, 2)],
-      { type: "application/json" },
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `wimc-donation-sets-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
   const buildDonatedItemsPayload = () => ({
     kind: "wimc.donatedItems",
@@ -445,57 +397,25 @@ export default function DonateBin() {
     setDonatedSharing(true);
     setDonatedShareErr("");
     setDonatedShareUrl("");
-    setDonatedShareIsBlob(false);
     try {
       const res = await uploadRawJSON(
         buildDonatedItemsPayload(),
         "wimc/donated-items",
       );
-      const url =
+      const cloudUrl =
         res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
-      if (url) {
-        setDonatedShareUrl(url);
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {}
-      } else {
-        const blob = new Blob(
-          [JSON.stringify(buildDonatedItemsPayload(), null, 2)],
-          { type: "application/json" },
-        );
-        const local = URL.createObjectURL(blob);
-        setDonatedShareUrl(local);
-        setDonatedShareIsBlob(true);
-        setDonatedShareErr("Upload failed — temporary local link.");
-      }
+      if (!cloudUrl) throw new Error("Upload failed");
+      const url = appShareUrl(cloudUrl, "donatedbins");
+      const result = await shareAppLink({ title: "My Donated Items ♻️", text: shareNote ? `Items I've donated via WIMC\n\n📝 ${shareNote}` : "Items I've donated via WIMC", url });
+      setDonatedShareUrl(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setDonatedShareUrl(""), 3500);
     } catch {
-      const blob = new Blob(
-        [JSON.stringify(buildDonatedItemsPayload(), null, 2)],
-        { type: "application/json" },
-      );
-      const local = URL.createObjectURL(blob);
-      setDonatedShareUrl(local);
-      setDonatedShareIsBlob(true);
-      setDonatedShareErr("Share failed — temporary local link.");
+      setDonatedShareErr("Share failed. Please try again.");
+      setTimeout(() => setDonatedShareErr(""), 3000);
     } finally {
       setDonatedSharing(false);
     }
   }
-
-  const downloadDonatedItemsJson = () => {
-    const blob = new Blob(
-      [JSON.stringify(buildDonatedItemsPayload(), null, 2)],
-      { type: "application/json" },
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `wimc-donated-items-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
   const sectionLabel = useMemo(
     () => SECTION_OPTIONS.find((o) => o.value === section)?.label || "",
@@ -586,51 +506,53 @@ export default function DonateBin() {
                   <IconSave />
                 </button>
                 <button
-                  className="donate-modal__btn"
-                  onClick={() => setSetsOpen(true)}
-                  title="Open Saved Donation Sets"
-                >
-                  Saved Sets
-                </button>
-                <button
-                  className="donate-modal__btn"
-                  onClick={shareDonateBin}
-                  disabled={sharing}
-                  title="Share current Donate Bin"
-                >
-                  {sharing ? "Sharing…" : "Share"}
-                </button>
-                <button
-                  className="donate-modal__btn"
-                  onClick={downloadDonateJson}
-                  title="Download current Donate Bin JSON"
-                >
-                  JSON
-                </button>
-                <button
-                  className="donate-modal__btn"
+                  className="donate-modal__btn donate-modal__close"
                   onClick={() => setIsOpen(false)}
+                  aria-label="Close"
                 >
-                  Close
+                  ✕
                 </button>
               </div>
             </header>
 
-            {(shareUrl || shareErr) && (
+            {/* Share bar — share buttons left, note right */}
+            <div className="donate-modal__share-bar">
+              <div className="donate-modal__share-btns">
+                <button
+                  className="donate-modal__share-btn"
+                  onClick={() => shareDonateBin(false)}
+                  disabled={sharing}
+                  title="Share current Donate Bin (view only)"
+                >
+                  {sharing ? "Sharing…" : "Share (View Only)"}
+                </button>
+                <button
+                  className="donate-modal__share-btn donate-modal__share-btn--edit"
+                  onClick={() => shareDonateBin(true)}
+                  disabled={sharing}
+                  title="Share Donate Bin with edit access"
+                >
+                  ✏️ Share + Edit
+                </button>
+              </div>
+              <textarea
+                className="donate-modal__share-note"
+                placeholder="Add a note for the recipient, when sharing (optional)…"
+                value={shareNote}
+                onChange={(e) => setShareNote(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            {(shareUrl || shareErr || smsHref) && (
               <div className="donate-modal__share" aria-live="polite">
-                {shareUrl && (
-                  <a
-                    className="donate-modal__link"
-                    href={shareUrl}
-                    target={shareIsBlob ? "_self" : "_blank"}
-                    rel={shareIsBlob ? undefined : "noopener noreferrer"}
-                  >
-                    {shareIsBlob ? "Open local share URL" : "Open shared list"}
+                {shareUrl && <span className="donate-modal__link">{shareUrl}</span>}
+                {smsHref && (
+                  <a href={smsHref} className="donate-modal__btn" style={{ textDecoration: "none" }}>
+                    📱 Text
                   </a>
                 )}
-                {shareErr && (
-                  <span className="donate-modal__err">{shareErr}</span>
-                )}
+                {shareErr && <span className="donate-modal__err">{shareErr}</span>}
               </div>
             )}
 
@@ -660,7 +582,7 @@ export default function DonateBin() {
                   Saved Sets
                 </button>
                 <button
-                  className="donate-modal__btn"
+                  className="donate-modal__btn donate-modal__btn--ai"
                   onClick={() => setIsAdvisorOpen(true)}
                 >
                   🤖 AI Advisor
@@ -695,13 +617,14 @@ export default function DonateBin() {
                               className="donate-thumb__img"
                               src={it.imageUrl || it.url}
                               alt={it.name || "Selected"}
+                              loading="lazy"
                             />
                             <button
                               className="donate-thumb__remove"
                               onClick={() => removeFromCanvas(i)}
                               aria-label="Remove"
                             >
-                              ×
+                              🗑️
                             </button>
                             <button
                               type="button"
@@ -750,6 +673,7 @@ export default function DonateBin() {
                                 className="opp__choice-img"
                                 src={it.mediaPoster || ""}
                                 alt="video poster"
+                                loading="lazy"
                                 onError={(e) =>
                                   (e.currentTarget.style.display = "none")
                                 }
@@ -761,6 +685,7 @@ export default function DonateBin() {
                               className="opp__choice-img"
                               src={it.mediaThumb || it.mediaUrl}
                               alt={it.name || "item"}
+                              loading="lazy"
                               onError={(e) =>
                                 (e.currentTarget.src = it.mediaUrl)
                               }
@@ -820,17 +745,10 @@ export default function DonateBin() {
                     </button>
                     <button
                       className="opp__btn"
-                      onClick={downloadDonationSetsJson}
-                      disabled={!sets.length}
-                      title="Download all sets JSON"
-                    >
-                      JSON
-                    </button>
-                    <button
-                      className="opp__btn"
                       onClick={() => setSetsOpen(false)}
+                      aria-label="Close"
                     >
-                      Close
+                      ✕
                     </button>
                   </div>
                 </header>
@@ -841,18 +759,7 @@ export default function DonateBin() {
                     style={{ padding: "0 10px" }}
                   >
                     {setsShareUrl && (
-                      <a
-                        className="opp__share-link"
-                        href={setsShareUrl}
-                        target={setsShareIsBlob ? "_self" : "_blank"}
-                        rel={
-                          setsShareIsBlob ? undefined : "noopener noreferrer"
-                        }
-                      >
-                        {setsShareIsBlob
-                          ? "Open local share URL"
-                          : "Open shared Saved Donation Sets"}
-                      </a>
+                      <span className="opp__badge">{setsShareUrl}</span>
                     )}
                     {setsShareErr && (
                       <span className="opp__error">{setsShareErr}</span>
@@ -950,17 +857,10 @@ export default function DonateBin() {
                     </button>
                     <button
                       className="opp__btn"
-                      onClick={downloadDonatedItemsJson}
-                      disabled={!donatedItems.length}
-                      title="Download donated items JSON"
-                    >
-                      JSON
-                    </button>
-                    <button
-                      className="opp__btn"
                       onClick={() => setDonatedOpen(false)}
+                      aria-label="Close"
                     >
-                      Close
+                      ✕
                     </button>
                   </div>
                 </header>
@@ -971,18 +871,7 @@ export default function DonateBin() {
                     style={{ padding: "0 10px" }}
                   >
                     {donatedShareUrl && (
-                      <a
-                        className="opp__share-link"
-                        href={donatedShareUrl}
-                        target={donatedShareIsBlob ? "_self" : "_blank"}
-                        rel={
-                          donatedShareIsBlob ? undefined : "noopener noreferrer"
-                        }
-                      >
-                        {donatedShareIsBlob
-                          ? "Open local share URL"
-                          : "Open shared Donated Items"}
-                      </a>
+                      <span className="opp__badge">{donatedShareUrl}</span>
                     )}
                     {donatedShareErr && (
                       <span className="opp__error">{donatedShareErr}</span>

@@ -1,10 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import { syncSetItem } from '../../utils/syncStore';
+﻿import React, { useEffect, useRef, useState } from "react";
 import {
   fetchImagesByTag,
   fetchVideosByTag,
   uploadRawJSON,
   videoPoster,
 } from "../../utils/CloudinaryAPI";
+import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import AIPackingAssistant from "../AIPackingAssistant/AIPackingAssistant";
 import "./TravelPackPanel.css";
 
@@ -30,6 +32,7 @@ const SECTION_OPTIONS = [
 ];
 
 function emptyPlan() {
+  // eslint-disable-next-line no-sequences
   return DAYS.reduce((acc, d) => ((acc[d] = []), acc), {});
 }
 
@@ -70,7 +73,13 @@ function normalizeMedia(x, section) {
 export default function TravelPackPanel({
   currentPreview = [],
   onSyncToPlanner,
+  // tagPrefix — e.g. "kid-abc123". When set, section items are fetched from
+  // "kid-abc123-tops" etc. and plan state is stored under a child-specific key.
+  tagPrefix = "",
 }) {
+  // Child-specific localStorage key so each child has their own travel pack
+  const lsKey = tagPrefix ? `wimc_travel_pack_${tagPrefix}_v2` : LS_KEY;
+
   const [collapsed, setCollapsed] = useState(true);
   const [floating, setFloating] = useState(false);
   const [doors, setDoors] = useState({ opening: false, armed: false });
@@ -85,9 +94,25 @@ export default function TravelPackPanel({
   const [sharing, setSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [shareError, setShareError] = useState("");
+  const [smsHref, setSmsHref] = useState("");
   const [daySharing, setDaySharing] = useState(false);
   const [dayShareUrl, setDayShareUrl] = useState("");
   const [dayShareError, setDayShareError] = useState("");
+  const [shareNote, setShareNote] = useState("");
+
+  // per-day expand/collapse
+  const [expandedDays, setExpandedDays] = useState(() => new Set(DAYS));
+  const toggleDay = (d) =>
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(d)) next.delete(d);
+      else next.add(d);
+      return next;
+    });
+
+  // per-day undo after Clear
+  const [packUndo, setPackUndo] = useState(null); // { day, items }
+  const packUndoTimerRef = useRef(null);
 
   const hydratedRef = useRef(false);
 
@@ -96,7 +121,7 @@ export default function TravelPackPanel({
     if (hydratedRef.current) return;
     hydratedRef.current = true;
     try {
-      const v2 = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+      const v2 = JSON.parse(localStorage.getItem(lsKey) || "null");
       if (v2 && typeof v2 === "object") {
         const norm = emptyPlan();
         for (const d of DAYS) {
@@ -115,13 +140,15 @@ export default function TravelPackPanel({
         }));
       }
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDay]);
 
   // Persist on change
   useEffect(() => {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(packPlan));
+      syncSetItem(lsKey, JSON.stringify(packPlan));
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [packPlan]);
 
   function open() {
@@ -198,63 +225,47 @@ export default function TravelPackPanel({
     onSyncToPlanner(selectedDay, packPlan[selectedDay]);
   }
 
-  async function exportPack() {
+  async function exportPack(withEdit = false) {
     setSharing(true);
     setShareUrl("");
     setShareError("");
+    const payload = { kind: "wimc.travelPack", version: 1, createdAt: new Date().toISOString(), note: shareNote, days: packPlan };
     try {
-      const res = await uploadRawJSON(
-        {
-          kind: "wimc.travelPack",
-          version: 1,
-          createdAt: new Date().toISOString(),
-          days: packPlan,
-        },
-        "wimc/travel-packs",
-      );
-      if (res?.secure_url) setShareUrl(res.secure_url);
-      else setShareError("Export failed (no URL returned).");
-    } catch {
-      setShareError("Export failed. Please try again.");
-    } finally {
-      setSharing(false);
-    }
-  }
-
-  async function copyPackUrl() {
-    try {
-      if (shareUrl) await navigator.clipboard.writeText(shareUrl);
-    } catch {}
+      let url;
+      if (withEdit) {
+        url = await createCollabDoc("travelpack", payload);
+      } else {
+        const res = await uploadRawJSON(payload, "wimc/travel-packs");
+        const cloudUrl = res?.secure_url;
+        if (!cloudUrl) throw new Error("no url");
+        url = appShareUrl(cloudUrl, "travelpack");
+      }
+      const result = await shareAppLink({ title: "My Travel Pack 🧳", text: shareNote ? `Check out my packing list!\n\n📝 ${shareNote}` : "Check out my packing list!", url });
+      if (result === "clipboard" || result === "unsupported") {
+        setSmsHref(smsShareUrl(url, "Check out my packing list!"));
+        setTimeout(() => setSmsHref(""), 5000);
+      }
+      setShareUrl(result === "aborted" ? "" : result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setShareUrl(""), 3500);
+    } catch { setShareError("Export failed. Please try again."); }
+    finally { setSharing(false); }
   }
 
   async function exportPackDay(day) {
     setDaySharing(true);
     setDayShareError("");
     setDayShareUrl("");
+    const payload = { kind: "wimc.travelPackDay", version: 1, createdAt: new Date().toISOString(), note: shareNote, day, items: packPlan[day] };
     try {
-      const res = await uploadRawJSON(
-        {
-          kind: "wimc.travelPackDay",
-          version: 1,
-          createdAt: new Date().toISOString(),
-          day,
-          items: packPlan[day],
-        },
-        "wimc/travel-pack-days",
-      );
-      if (res?.secure_url) setDayShareUrl(res.secure_url);
-      else setDayShareError("Day export failed (no URL returned).");
-    } catch {
-      setDayShareError("Day export failed. Please try again.");
-    } finally {
-      setDaySharing(false);
-    }
-  }
-
-  async function copyPackDayUrl() {
-    try {
-      if (dayShareUrl) await navigator.clipboard.writeText(dayShareUrl);
-    } catch {}
+      const res = await uploadRawJSON(payload, "wimc/travel-pack-days");
+      const cloudUrl = res?.secure_url;
+      if (!cloudUrl) throw new Error("no url");
+      const url = appShareUrl(cloudUrl, "travelpack");
+      const result = await shareAppLink({ title: `Travel Pack - Day ${Number(day)+1}`, text: shareNote ? `Packing list for today!\n\n📝 ${shareNote}` : "Packing list for today", url });
+      setDayShareUrl(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setDayShareUrl(""), 3500);
+    } catch { setDayShareError("Day export failed. Please try again."); }
+    finally { setDaySharing(false); }
   }
 
   // Load inline picker choices
@@ -265,8 +276,11 @@ export default function TravelPackPanel({
       setChoicesLoading(true);
       setChoicesError("");
       try {
-        const imgs = await fetchImagesByTag(pickerSection);
-        const vids = await fetchVideosByTag(pickerSection);
+        const effectiveSection = tagPrefix
+          ? `${tagPrefix}-${pickerSection}`
+          : pickerSection;
+        const imgs = await fetchImagesByTag(effectiveSection);
+        const vids = await fetchVideosByTag(effectiveSection);
         const norm = [
           ...(imgs || []).map((u) => normalizeMedia(u, pickerSection)),
           ...(vids || []).map((u) =>
@@ -290,6 +304,7 @@ export default function TravelPackPanel({
     return () => {
       ignore = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [floating, doors.opening, pickerSection]);
 
   const totalCount = DAYS.reduce((n, d) => n + (packPlan[d]?.length || 0), 0);
@@ -307,8 +322,8 @@ export default function TravelPackPanel({
       >
         <header className="tp__header">
           <h3 className="tp__title">Travel Pack</h3>
-          <button className="tp__toggle" onClick={collapsed ? open : close}>
-            {collapsed ? "Open" : "Minimize"}
+          <button className="tp__toggle tp__close-toggle" onClick={collapsed ? open : close} aria-label={collapsed ? "Open" : "Close"}>
+            {collapsed ? "Open" : "✕"}
           </button>
         </header>
 
@@ -323,102 +338,82 @@ export default function TravelPackPanel({
           </div>
         ) : (
           <div className="tp__body">
-            {/* Export + AI bar */}
-            <div className="tp__exportbar">
-              <button
-                className="tp__toggle"
-                onClick={exportPack}
-                disabled={sharing}
-              >
-                {sharing ? "Exporting…" : "Export Pack"}
-              </button>
-              <button
-                className="tp__toggle"
-                onClick={() => setIsAIPackOpen(true)}
-              >
-                ✨ AI Pack
-              </button>
-              <label style={{ marginLeft: 8 }}>
-                Day:{" "}
-                <select
-                  value={selectedDay}
-                  onChange={(e) => setSelectedDay(e.target.value)}
+            {/* Share bar — buttons left, note right */}
+            <div className="tp__share-bar">
+              <div className="tp__share-btns">
+                <label>
+                  Pack for the Day:{" "}
+                  <select
+                    value={selectedDay}
+                    onChange={(e) => setSelectedDay(e.target.value)}
+                  >
+                    {DAYS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="tp__toggle"
+                  onClick={() => exportPackDay(selectedDay)}
+                  disabled={
+                    daySharing || (packPlan[selectedDay]?.length || 0) === 0
+                  }
                 >
-                  {DAYS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                className="tp__toggle"
-                onClick={() => exportPackDay(selectedDay)}
-                disabled={
-                  daySharing || (packPlan[selectedDay]?.length || 0) === 0
-                }
-              >
-                {daySharing ? "Exporting…" : `Export ${selectedDay}`}
-              </button>
+                  {daySharing ? "Exporting…" : `Export ${selectedDay}`}
+                </button>
+                <button
+                  className="tp__toggle"
+                  onClick={() => exportPack(false)}
+                  disabled={sharing}
+                >
+                  {sharing ? "Sharing…" : "Share Pack (View Only)"}
+                </button>
+                <button
+                  className="tp__toggle tp__toggle--edit"
+                  onClick={() => exportPack(true)}
+                  disabled={sharing}
+                >
+                  ✏️ Share + Edit
+                </button>
+                <button
+                  className="tp__toggle tp__toggle--ai"
+                  onClick={() => setIsAIPackOpen(true)}
+                >
+                  ✨ AI Pack
+                </button>
+              </div>
+              <textarea
+                className="tp__share-note"
+                placeholder="Add a note for the recipient, when sharing (optional)…"
+                value={shareNote}
+                onChange={(e) => setShareNote(e.target.value)}
+                rows={2}
+              />
             </div>
 
-            {(shareUrl || shareError) && (
+            {(shareUrl || shareError || smsHref) && (
               <div className="tp__share">
-                {shareUrl ? (
-                  <>
-                    <a
-                      className="tp__share-link"
-                      href={shareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View travel pack
-                    </a>
-                    <button className="tp__btn" onClick={copyPackUrl}>
-                      Copy link
-                    </button>
-                  </>
-                ) : (
-                  <span className="tp__error">{shareError}</span>
+                {shareUrl && <span className="tp__share-link">{shareUrl}</span>}
+                {smsHref && (
+                  <a href={smsHref} className="tp__toggle" style={{ textDecoration: "none" }}>
+                    📱 Text
+                  </a>
                 )}
+                {shareError && <span className="tp__error">{shareError}</span>}
               </div>
             )}
             {(dayShareUrl || dayShareError) && (
               <div className="tp__share">
-                {dayShareUrl ? (
-                  <>
-                    <a
-                      className="tp__share-link"
-                      href={dayShareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View {selectedDay}
-                    </a>
-                    <button className="tp__btn" onClick={copyPackDayUrl}>
-                      Copy link
-                    </button>
-                  </>
-                ) : (
-                  <span className="tp__error">{dayShareError}</span>
-                )}
+                {dayShareUrl
+                  ? <span className="tp__share-link">{dayShareUrl}</span>
+                  : <span className="tp__error">{dayShareError}</span>
+                }
               </div>
             )}
 
             <div className="tp__row" style={{ alignItems: "center" }}>
-              <label>
-                Pack for day:{" "}
-                <select
-                  value={selectedDay}
-                  onChange={(e) => setSelectedDay(e.target.value)}
-                >
-                  {DAYS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </label>
               <button
                 onClick={addFromPreview}
                 disabled={!currentPreview?.length}
@@ -487,18 +482,52 @@ export default function TravelPackPanel({
             {/* Week grid */}
             <div className="tp__grid-week">
               {DAYS.map((d) => (
-                <section key={d} className="tp__day">
+                <section
+                  key={d}
+                  className={
+                    "tp__day" +
+                    (expandedDays.has(d) ? "" : " tp__day--collapsed")
+                  }
+                >
                   <header className="tp__daytop">
+                    <button
+                      className="tp__day-caret"
+                      onClick={() => toggleDay(d)}
+                      title={expandedDays.has(d) ? "Collapse" : "Expand"}
+                      aria-label={expandedDays.has(d) ? "Collapse" : "Expand"}
+                    >
+                      {expandedDays.has(d) ? "▾" : "▸"}
+                    </button>
                     <h4>{d}</h4>
                     <div style={{ display: "flex", gap: 6 }}>
-                      {d === selectedDay && (
-                        <span className="tp__badge">Selected</span>
+                      {packUndo?.day === d && (
+                        <button
+                          className="tp__mini"
+                          onClick={() => {
+                            clearTimeout(packUndoTimerRef.current);
+                            setPackPlan((prev) => ({
+                              ...prev,
+                              [packUndo.day]: packUndo.items,
+                            }));
+                            setPackUndo(null);
+                          }}
+                        >
+                          Undo
+                        </button>
                       )}
                       <button
-                        className="tp__mini"
-                        onClick={() =>
-                          setPackPlan((prev) => ({ ...prev, [d]: [] }))
-                        }
+                        className="tp__mini tp__mini--danger"
+                        onClick={() => {
+                          const items = packPlan[d] || [];
+                          if (packUndoTimerRef.current)
+                            clearTimeout(packUndoTimerRef.current);
+                          setPackUndo({ day: d, items });
+                          setPackPlan((prev) => ({ ...prev, [d]: [] }));
+                          packUndoTimerRef.current = setTimeout(
+                            () => setPackUndo(null),
+                            5000
+                          );
+                        }}
                         disabled={(packPlan[d]?.length || 0) === 0}
                       >
                         Clear
@@ -527,7 +556,7 @@ export default function TravelPackPanel({
                             className="tp__remove"
                             onClick={() => removeAt(d, i)}
                           >
-                            ×
+                            🗑️
                           </button>
                         </li>
                       ))

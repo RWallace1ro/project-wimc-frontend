@@ -1,3 +1,4 @@
+import { syncSetItem } from '../../utils/syncStore';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchImagesByTag,
@@ -6,14 +7,24 @@ import {
   videoPoster,
 } from "../../utils/CloudinaryAPI";
 import "./OutfitPreviewPanel.css";
+import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 
-const SECTION_OPTIONS = [
-  { value: "dresses-skirts", label: "Dresses/Skirts" },
-  { value: "shoes-sneakers", label: "Shoes/Sneakers" },
-  { value: "pants-jeans", label: "Pants/Jeans" },
-  { value: "tops", label: "Tops" },
+const SECTION_OPTIONS_FEMALE = [
+  { value: "dresses-skirts",   label: "Dresses/Skirts" },
+  { value: "shoes-sneakers",   label: "Shoes/Sneakers" },
+  { value: "pants-jeans",      label: "Pants/Jeans" },
+  { value: "tops",             label: "Tops" },
   { value: "bags-accessories", label: "Bags/Accessories" },
-  { value: "jackets-coats", label: "Jackets/Coats" },
+  { value: "jackets-coats",    label: "Jackets/Coats" },
+];
+
+const SECTION_OPTIONS_MALE = [
+  { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
+  { value: "shoes-sneakers",     label: "Shoes/Sneakers" },
+  { value: "pants-jeans",        label: "Pants/Jeans" },
+  { value: "tops",               label: "Tops" },
+  { value: "bags-accessories",   label: "Bags/Accessories" },
+  { value: "jackets-coats",      label: "Jackets/Coats" },
 ];
 
 const DEFAULT_SECTION_FALLBACK = "Uncategorized";
@@ -151,7 +162,8 @@ const IconPrint = (props) => (
   </svg>
 );
 
-export default function OutfitPreviewPanel({ onSelectionChange }) {
+export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", gender = "female" }) {
+  const SECTION_OPTIONS = gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE;
   // layout & doors
   const [isOpen, setIsOpen] = useState(false);
   const [opening, setOpening] = useState(false);
@@ -171,14 +183,13 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
   // DnD grid
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
-  const [draggingToTrash, setDraggingToTrash] = useState(false);
   const gridRef = useRef(null);
 
   // share/import (current outfit)
   const [sharing, setSharing] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
+  const [shareStatus, setShareStatus] = useState("");
   const [shareError, setShareError] = useState("");
-  const [shareIsBlob, setShareIsBlob] = useState(false);
+  const [shareSmsHref, setShareSmsHref] = useState("");
   const [loadUrl, setLoadUrl] = useState("");
   const [loadingImport, setLoadingImport] = useState(false);
   const [importError, setImportError] = useState("");
@@ -196,6 +207,10 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
 
   // per-item name visibility (hidden by default)
   const [nameVisibleKeys, setNameVisibleKeys] = useState(() => new Set());
+
+  // clear-all toast
+  const [clearToast, setClearToast] = useState(false);
+  const clearToastTimerRef = useRef(null);
 
   // history
   const undoStackRef = useRef([]); // [{selected, note}]
@@ -297,7 +312,7 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
             looks: [],
           };
           try {
-            localStorage.setItem(LS.STATE_V2, JSON.stringify(v2));
+            syncSetItem(LS.STATE_V2, JSON.stringify(v2));
           } catch {}
         }
       }
@@ -315,7 +330,7 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
     if (!hydratedRef.current) return;
     const payload = { version: 2, selected, note, favorites, looks };
     try {
-      localStorage.setItem(LS.STATE_V2, JSON.stringify(payload));
+      syncSetItem(LS.STATE_V2, JSON.stringify(payload));
     } catch {}
     onSelectionChange?.(selected);
 
@@ -401,6 +416,7 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isFloating, doUndo, doRedo]);
 
   // choices pool (when open)
@@ -411,8 +427,9 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
       setLoading(true);
       setError("");
       try {
-        const imgs = await fetchImagesByTag(section);
-        const vids = await fetchVideosByTag(section);
+        const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
+        const imgs = await fetchImagesByTag(effectiveSection);
+        const vids = await fetchVideosByTag(effectiveSection);
         const norm = [
           ...(imgs || []).map((u) => normalizeMedia(u, section)),
           ...(vids || []).map((u) =>
@@ -436,17 +453,18 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
     return () => {
       ignore = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, section]);
 
   // share row auto-scroll
   useEffect(() => {
-    if (shareRowRef.current && (shareUrl || shareError)) {
+    if (shareRowRef.current && (shareStatus || shareError)) {
       shareRowRef.current.scrollIntoView({
         behavior: "smooth",
         block: "nearest",
       });
     }
-  }, [shareUrl, shareError]);
+  }, [shareStatus, shareError]);
 
   // actions
   const existsIn = useCallback((arr, item) => {
@@ -560,7 +578,6 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
   const handleDragEnd = () => {
     setDragIndex(null);
     setDragOverIndex(null);
-    setDraggingToTrash(false);
   };
 
   const gridCols = isFloating ? GRID_COLS_FLOATING : GRID_COLS_COMPACT;
@@ -720,153 +737,69 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
     meta: { source: "WIMC Saved Looks" },
   });
 
-  async function handleShare() {
+  // ── Share current outfit ────────────────────────────────────────────────
+  async function handleShare(withEdit = false) {
     setSharing(true);
     setShareError("");
-    if (shareIsBlob && shareUrl?.startsWith("blob:")) {
-      try {
-        URL.revokeObjectURL(shareUrl);
-      } catch {}
-    }
-    setShareIsBlob(false);
-    setShareUrl("");
-
+    setShareStatus("");
+    setShareSmsHref("");
     const payload = buildSharePayload();
     try {
-      const res = await uploadRawJSON(payload);
-      const remoteUrl =
-        res?.secure_url ||
-        res?.url ||
-        res?.data?.secure_url ||
-        res?.data?.url ||
-        "";
-      if (remoteUrl) {
-        setShareUrl(remoteUrl);
-        setShareIsBlob(false);
+      let url;
+      if (withEdit) {
+        url = await createCollabDoc("outfit", payload);
       } else {
-        const blob = new Blob([JSON.stringify(payload, null, 2)], {
-          type: "application/json",
-        });
-        const localUrl = URL.createObjectURL(blob);
-        setShareUrl(localUrl);
-        setShareIsBlob(true);
-        setShareError("Using a temporary local link. Keep this tab open.");
+        const res = await uploadRawJSON(payload, "wimc/outfits");
+        const cloudUrl =
+          res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
+        if (!cloudUrl) throw new Error("Upload failed");
+        url = appShareUrl(cloudUrl, "outfit");
       }
-    } catch (err) {
-      try {
-        const blob = new Blob([JSON.stringify(payload, null, 2)], {
-          type: "application/json",
-        });
-        const localUrl = URL.createObjectURL(blob);
-        setShareUrl(localUrl);
-        setShareIsBlob(true);
-        setShareError(
-          "Upload failed — using a temporary local link. Keep this tab open.",
-        );
-      } catch {
-        setShareError("Share failed. Please try again.");
+      const result = await shareAppLink({
+        title: "My Outfit 👗",
+        text: "Check out my outfit on WIMC!",
+        url,
+      });
+      if (result === "clipboard" || result === "unsupported") {
+        setShareSmsHref(smsShareUrl(url, "Check out my outfit on WIMC!"));
+        setTimeout(() => setShareSmsHref(""), 5000);
       }
+      setShareStatus(
+        result === "aborted" ? "" : result === "clipboard" ? "📋 Link copied!" : "✅ Shared!"
+      );
+      setTimeout(() => setShareStatus(""), 5000);
+    } catch {
+      setShareError("Share failed. Please try again.");
     } finally {
       setSharing(false);
     }
   }
-  async function copyShareUrl() {
-    try {
-      if (shareUrl) await navigator.clipboard.writeText(shareUrl);
-    } catch {}
-  }
-  function downloadShareJson() {
-    const payload = buildSharePayload();
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    a.href = url;
-    a.download = `wimc-outfit-${ts}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // Favorites share/download
+  // ── Share Favorites ───────────────────────────────────────────────────────
   async function shareFavorites() {
     try {
       const payload = buildFavoritesPayload(favorites);
       const res = await uploadRawJSON(payload, "wimc/favorites");
-      const url =
-        res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
-      if (url) {
-        await navigator.clipboard.writeText(url);
-        alert("Favorites share link copied to clipboard.");
-      } else {
-        const blob = new Blob([JSON.stringify(payload, null, 2)], {
-          type: "application/json",
-        });
-        const local = URL.createObjectURL(blob);
-        await navigator.clipboard.writeText(local);
-        alert("Upload failed; a temporary local link was copied.");
-      }
+      const cloudUrl = res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
+      if (!cloudUrl) throw new Error("no url");
+      const url = appShareUrl(cloudUrl, "outfit");
+      await shareAppLink({ title: "My WIMC Favorites 💜", text: "My favorite outfits on WIMC!", url });
     } catch {
-      alert("Share failed. Please try again.");
+      setShareError("Favorites share failed.");
     }
   }
-  function downloadFavoritesJson() {
-    const payload = buildFavoritesPayload(favorites);
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    a.href = url;
-    a.download = `wimc-favorites-${ts}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  // Looks share/download (entire looks collection)
+  // ── Share Saved Looks ─────────────────────────────────────────────────────
   async function shareLooks() {
     try {
       const payload = buildLooksPayload(looks);
       const res = await uploadRawJSON(payload, "wimc/saved-looks");
-      const url =
-        res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
-      if (url) {
-        await navigator.clipboard.writeText(url);
-        alert("Saved Looks link copied to clipboard.");
-      } else {
-        const blob = new Blob([JSON.stringify(payload, null, 2)], {
-          type: "application/json",
-        });
-        const local = URL.createObjectURL(blob);
-        await navigator.clipboard.writeText(local);
-        alert("Upload failed; a temporary local link was copied.");
-      }
+      const cloudUrl = res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
+      if (!cloudUrl) throw new Error("no url");
+      const url = appShareUrl(cloudUrl, "outfit");
+      await shareAppLink({ title: "My Saved Looks 👗", text: "Check out my saved looks on WIMC!", url });
     } catch {
-      alert("Share failed. Please try again.");
+      setShareError("Looks share failed.");
     }
   }
-  function downloadLooksJson() {
-    const payload = buildLooksPayload(looks);
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    a.href = url;
-    a.download = `wimc-saved-looks-${ts}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
   // Print helpers (compact)
   function buildPrintableHtml(sel, noteStr) {
     const now = new Date().toLocaleString();
@@ -964,21 +897,6 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
     if (it.mediaUrl && el.src !== it.mediaUrl) el.src = it.mediaUrl;
   };
 
-  // trash drop zone
-  const onTrashDragOver = (e) => {
-    e.preventDefault();
-    setDraggingToTrash(true);
-  };
-  const onTrashDragLeave = () => setDraggingToTrash(false);
-  const onTrashDrop = (e) => {
-    e.preventDefault();
-    setDraggingToTrash(false);
-    try {
-      const idxStr = e.dataTransfer.getData("text/plain");
-      const idx = Number(idxStr);
-      if (!Number.isNaN(idx)) removeItem(idx);
-    } catch {}
-  };
 
   return (
     <>
@@ -1017,17 +935,10 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                 </button>
                 <button
                   className="opp__mini"
-                  onClick={downloadFavoritesJson}
-                  disabled={!favorites.length}
-                  title="Download Favorites JSON"
-                >
-                  JSON
-                </button>
-                <button
-                  className="opp__mini"
                   onClick={() => setFavsOpen(false)}
+                  aria-label="Close"
                 >
-                  Close
+                  ✕
                 </button>
               </div>
             </header>
@@ -1122,17 +1033,10 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                 </button>
                 <button
                   className="opp__btn"
-                  onClick={downloadLooksJson}
-                  disabled={!looks.length}
-                  title="Download all Saved Looks JSON"
-                >
-                  JSON
-                </button>
-                <button
-                  className="opp__btn"
                   onClick={() => setLooksOpen(false)}
+                  aria-label="Close"
                 >
-                  Close
+                  ✕
                 </button>
               </div>
             </header>
@@ -1226,8 +1130,9 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
             <button
               className="opp__toggle"
               onClick={() => (isOpen ? closePanel() : startOpen())}
+              aria-label={isOpen ? "Close" : "Open"}
             >
-              {isOpen ? "Minimize" : "Open"}
+              {isOpen ? "✕" : "Open"}
             </button>
           </div>
         </header>
@@ -1339,10 +1244,19 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
 
                 <button
                   className="opp__btn"
-                  onClick={clearAll}
+                  onClick={() => {
+                    clearAll();
+                    if (clearToastTimerRef.current)
+                      clearTimeout(clearToastTimerRef.current);
+                    setClearToast(true);
+                    clearToastTimerRef.current = setTimeout(
+                      () => setClearToast(false),
+                      5000
+                    );
+                  }}
                   disabled={selected.length === 0}
                 >
-                  Clear
+                  Clear All
                 </button>
 
                 {/* NEW: compact Save Current (SVG) */}
@@ -1364,16 +1278,6 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                   <span style={{ fontSize: 12 }}>Save</span>
                 </button>
 
-                {/* Share current outfit */}
-                <button
-                  className="opp__btn"
-                  onClick={handleShare}
-                  disabled={selected.length === 0 || sharing}
-                  title="Export / Share this outfit"
-                >
-                  {sharing ? "Sharing…" : "Share Outfit"}
-                </button>
-
                 {/* NEW: compact Print (SVG) */}
                 <button
                   className="opp__btn"
@@ -1393,86 +1297,75 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                   <span style={{ fontSize: 12 }}>Print</span>
                 </button>
 
-                <div
-                  className="opp__note opp__note--inline"
-                  role="group"
-                  aria-label="Outfit note"
-                >
-                  <label className="opp__note-label" htmlFor="oppNoteInput">
-                    Note
-                  </label>
-                  <input
-                    id="oppNoteInput"
-                    className="opp__note-input opp__note-input--inline"
-                    type="text"
-                    placeholder="Add a note…"
+                {/* Share bar — share buttons left, note right */}
+                <div className="opp__share-bar">
+                  <div className="opp__share-btns">
+                    <button
+                      className="opp__btn"
+                      onClick={() => handleShare(false)}
+                      disabled={selected.length === 0 || sharing}
+                      title="Share outfit (view only)"
+                    >
+                      {sharing ? "Sharing…" : "Share Outfit (View Only)"}
+                    </button>
+                    <button
+                      className="opp__btn opp__btn--edit"
+                      onClick={() => handleShare(true)}
+                      disabled={selected.length === 0 || sharing}
+                      title="Share outfit with edit access (for WIMC users)"
+                    >
+                      ✏️ Share + Edit
+                    </button>
+                  </div>
+                  <textarea
+                    className="opp__share-note"
+                    placeholder="Add a note for the recipient, when sharing (optional)…"
                     value={note}
+                    rows={2}
                     onChange={(e) => {
                       setNote(e.target.value);
                       commitHistory(selected, e.target.value);
                     }}
                   />
                 </div>
-
-                <div className="opp__spacer" />
-
-                {/* Toolbar favorites toggle (optional shortcut) */}
-                <button
-                  className="opp__btn"
-                  onClick={() => setFavsOpen(true)}
-                  title="Open Favorites"
-                >
-                  Favorites
-                </button>
-
-                {/* Keep "Saved Looks" placement unchanged on right of toolbar */}
-                <button
-                  className="opp__btn"
-                  onClick={() => setLooksOpen((v) => !v)}
-                  aria-expanded={looksOpen}
-                  title="Manage Saved Looks"
-                >
-                  {looksOpen ? "Hide Looks" : "Saved Looks"}
-                </button>
-
-                <button className="opp__btn" onClick={closePanel}>
-                  Close
-                </button>
               </div>
 
-              {(shareUrl || shareError) && (
+              {(shareStatus || shareError || shareSmsHref) && (
                 <div
                   ref={shareRowRef}
                   className="opp__share"
                   aria-live="polite"
                 >
-                  {shareUrl ? (
-                    <>
-                      <a
-                        className="opp__share-link"
-                        href={shareUrl}
-                        target={shareIsBlob ? "_self" : "_blank"}
-                        rel={shareIsBlob ? undefined : "noopener noreferrer"}
-                      >
-                        {shareIsBlob
-                          ? "Open local share URL"
-                          : "Open shared outfit"}
-                      </a>
-                      <button className="opp__btn" onClick={copyShareUrl}>
-                        Copy link
-                      </button>
-                      <button className="opp__btn" onClick={downloadShareJson}>
-                        Download JSON
-                      </button>
-                    </>
-                  ) : (
-                    <span className="opp__error">{shareError}</span>
+                  {shareStatus && <span className="opp__share-status">{shareStatus}</span>}
+                  {shareSmsHref && (
+                    <a href={shareSmsHref} className="opp__btn" style={{ textDecoration: "none" }}>
+                      📱 Text
+                    </a>
                   )}
-                  {shareError && shareUrl && (
-                    <span className="opp__error" style={{ marginLeft: 8 }}>
-                      {shareError}
-                    </span>
-                  )}
+                  {shareError && <span className="opp__error">{shareError}</span>}
+                </div>
+              )}
+
+              {/* Clear-all undo toast */}
+              {clearToast && (
+                <div className="opp__clear-toast" role="alert">
+                  <span>Canvas cleared.</span>
+                  <button
+                    className="opp__btn"
+                    onClick={() => {
+                      doUndo();
+                      setClearToast(false);
+                    }}
+                  >
+                    Undo
+                  </button>
+                  <button
+                    className="opp__btn opp__clear-toast__dismiss"
+                    onClick={() => setClearToast(false)}
+                    aria-label="Dismiss"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
 
@@ -1539,7 +1432,7 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                               aria-label="Remove"
                               type="button"
                             >
-                              ×
+                              🗑️
                             </button>
 
                             {/* favorite (bottom-right) */}
@@ -1591,19 +1484,6 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                       })}
                     </div>
 
-                    {/* Drag-to-trash */}
-                    <div
-                      className={
-                        "opp__trash" +
-                        (draggingToTrash ? " opp__trash--active" : "")
-                      }
-                      onDragOver={onTrashDragOver}
-                      onDragLeave={onTrashDragLeave}
-                      onDrop={onTrashDrop}
-                      title="Drag items here to remove"
-                    >
-                      🗑 Drag here to remove
-                    </div>
                   </>
                 )}
               </div>
@@ -1622,12 +1502,19 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                 ) : (
                   <div className="opp__choices">
                     {choices.map((it, i) => (
-                      <button
+                      <div
                         key={`${it.mediaUrl}-${i}`}
                         className="opp__choice"
                         onClick={() => addItem(it)}
                         title="Add to preview"
-                        type="button"
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            addItem(it);
+                          }
+                        }}
                       >
                         {it.mediaType === "video" ? (
                           <div className="opp__choice-vidwrap">
@@ -1649,7 +1536,7 @@ export default function OutfitPreviewPanel({ onSelectionChange }) {
                             onError={(e) => (e.currentTarget.src = it.mediaUrl)}
                           />
                         )}
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}

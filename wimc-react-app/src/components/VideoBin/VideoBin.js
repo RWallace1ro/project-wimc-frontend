@@ -1,6 +1,6 @@
+import { syncSetItem } from '../../utils/syncStore';
 import React, {
   useEffect,
-  useRef,
   useState,
   useMemo,
   useCallback,
@@ -48,7 +48,7 @@ function loadMeta() {
 }
 function saveMeta(meta) {
   try {
-    localStorage.setItem(LS_META_KEY, JSON.stringify(meta));
+    syncSetItem(LS_META_KEY, JSON.stringify(meta));
   } catch {}
 }
 

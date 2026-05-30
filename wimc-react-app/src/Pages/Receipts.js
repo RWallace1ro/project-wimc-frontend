@@ -1,4 +1,4 @@
-import { syncSetItem, syncRemoveItem } from '../utils/syncStore';
+import { syncSetItem } from '../utils/syncStore';
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { uploadReceipt, uploadRawJSON } from "../utils/CloudinaryAPI";
@@ -347,8 +347,6 @@ export default function Receipts() {
       }
       // Merge: keep existing receipts not in backup, add all from backup
       setReceipts((prev) => {
-        const existingIds = new Set(prev.map((r) => r.id));
-        const newOnes = data.receipts.filter((r) => !existingIds.has(r.id));
         return [...data.receipts, ...prev.filter((r) =>
           !data.receipts.find((br) => br.id === r.id)
         )];

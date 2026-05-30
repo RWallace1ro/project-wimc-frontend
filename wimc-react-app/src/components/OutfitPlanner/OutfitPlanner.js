@@ -1,10 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import { syncSetItem } from '../../utils/syncStore';
+﻿import React, { useEffect, useRef, useState } from "react";
 import {
   fetchImagesByTag,
   fetchVideosByTag,
   uploadRawJSON,
   videoPoster,
 } from "../../utils/CloudinaryAPI";
+import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import "./OutfitPlanner.css";
 
 const DAYS = [
@@ -61,6 +63,7 @@ function normalizeMedia(x, section) {
   };
 }
 function emptyWeek() {
+  // eslint-disable-next-line no-sequences
   return DAYS.reduce((acc, d) => ((acc[d] = []), acc), {});
 }
 
@@ -88,12 +91,27 @@ export default function OutfitPlanner({
   const [daySharing, setDaySharing] = useState(false);
   const [dayShareUrl, setDayShareUrl] = useState("");
   const [dayShareError, setDayShareError] = useState("");
+  const [shareNote, setShareNote] = useState("");
 
   // inline picker
   const [pickerSection, setPickerSection] = useState(SECTION_OPTIONS[0].value);
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
+
+  // per-day expand/collapse
+  const [expandedDays, setExpandedDays] = useState(() => new Set(DAYS));
+  const toggleDay = (d) =>
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(d)) next.delete(d);
+      else next.add(d);
+      return next;
+    });
+
+  // per-day undo after Clear
+  const [plannerUndo, setPlannerUndo] = useState(null); // { day, items }
+  const plannerUndoTimerRef = useRef(null);
 
   const hydratedRef = useRef(false);
 
@@ -113,12 +131,13 @@ export default function OutfitPlanner({
         setPlan(norm);
       }
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (!plan) return;
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(plan));
+      syncSetItem(LS_KEY, JSON.stringify(plan));
     } catch {}
   }, [plan]);
 
@@ -186,31 +205,26 @@ export default function OutfitPlanner({
   }
 
   // export week
-  async function exportWeek() {
+  async function exportWeek(withEdit = false) {
     setSharing(true);
     setShareError("");
     setShareUrl("");
+    const payload = { kind: "wimc.weekPlan", version: 1, createdAt: new Date().toISOString(), note: shareNote, days: plan || {} };
     try {
-      const payload = {
-        kind: "wimc.weekPlan",
-        version: 1,
-        createdAt: new Date().toISOString(),
-        days: plan || {},
-      };
-      const res = await uploadRawJSON(payload, "wimc/week-plans");
-      if (res?.secure_url) setShareUrl(res.secure_url);
-      else setShareError("Export failed (no URL returned).");
-    } catch (e) {
-      console.error(e);
-      setShareError("Export failed. Please try again.");
-    } finally {
-      setSharing(false);
-    }
-  }
-  async function copyShareUrl() {
-    try {
-      if (shareUrl) await navigator.clipboard.writeText(shareUrl);
-    } catch {}
+      let url;
+      if (withEdit) {
+        url = await createCollabDoc("outfit", payload);
+      } else {
+        const res = await uploadRawJSON(payload, "wimc/week-plans");
+        const cloudUrl = res?.secure_url;
+        if (!cloudUrl) throw new Error("no url");
+        url = appShareUrl(cloudUrl, "outfit");
+      }
+      const result = await shareAppLink({ title: "My Outfit Plan 👗", text: shareNote ? `Check out my weekly outfit plan!\n\n📝 ${shareNote}` : "Check out my weekly outfit plan!", url });
+      setShareUrl(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setShareUrl(""), 3500);
+    } catch { setShareError("Export failed. Please try again."); }
+    finally { setSharing(false); }
   }
 
   // export one day
@@ -226,23 +240,19 @@ export default function OutfitPlanner({
         kind: "wimc.weekDay",
         version: 1,
         createdAt: new Date().toISOString(),
+        note: shareNote,
         day,
         items,
       };
       const res = await uploadRawJSON(payload, "wimc/week-days");
-      if (res?.secure_url) setDayShareUrl(res.secure_url);
-      else setDayShareError("Day export failed (no URL returned).");
-    } catch (e) {
-      console.error(e);
-      setDayShareError("Day export failed. Please try again.");
-    } finally {
-      setDaySharing(false);
-    }
-  }
-  async function copyDayUrl() {
-    try {
-      if (dayShareUrl) await navigator.clipboard.writeText(dayShareUrl);
-    } catch {}
+      const cloudUrl = res?.secure_url;
+      if (!cloudUrl) throw new Error("no url");
+      const url = appShareUrl(cloudUrl, "outfit");
+      const result = await shareAppLink({ title: `Outfit Plan - ${day}`, text: shareNote ? `Check out my outfit for the day!\n\n📝 ${shareNote}` : "Check out my outfit for the day!", url });
+      setDayShareUrl(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setDayShareUrl(""), 3500);
+    } catch { setDayShareError("Day export failed. Please try again."); }
+    finally { setDaySharing(false); }
   }
 
   // apply current preview
@@ -321,10 +331,11 @@ export default function OutfitPlanner({
           <h3 className="planner__title">Outfit of the Day</h3>
           <div className="planner__header-actions">
             <button
-              className="planner__toggle"
+              className="planner__toggle planner__close-toggle"
               onClick={collapsed ? open : close}
+              aria-label={collapsed ? "Open" : "Close"}
             >
-              {collapsed ? "Open" : "Minimize"}
+              {collapsed ? "Open" : "✕"}
             </button>
           </div>
         </header>
@@ -344,82 +355,76 @@ export default function OutfitPlanner({
           </div>
         ) : (
           <div className="planner__body">
-            <div className="planner__exportbar">
-              <button
-                className="planner__export"
-                onClick={exportWeek}
-                disabled={!plan || sharing}
-                title="Export Week Plan (shareable link)"
-              >
-                {sharing ? "Exporting…" : "Export Week"}
-              </button>
-              <label style={{ marginLeft: 8 }}>
-                Day:{" "}
-                <select
-                  value={selectedDay}
-                  onChange={(e) => setSelectedDay(e.target.value)}
+            <div className="planner__share-bar">
+              <div className="planner__share-btns">
+                <label>
+                  Day:{" "}
+                  <select
+                    value={selectedDay}
+                    onChange={(e) => setSelectedDay(e.target.value)}
+                  >
+                    {DAYS.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="planner__export"
+                  onClick={() => exportDay(selectedDay)}
+                  disabled={
+                    !plan ||
+                    daySharing ||
+                    (plan?.[selectedDay]?.length || 0) === 0
+                  }
+                  title={`Export ${selectedDay} only`}
                 >
-                  {DAYS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                className="planner__export"
-                onClick={() => exportDay(selectedDay)}
-                disabled={
-                  !plan ||
-                  daySharing ||
-                  (plan?.[selectedDay]?.length || 0) === 0
-                }
-                title={`Export ${selectedDay} only`}
-              >
-                {daySharing ? "Exporting…" : `Export ${selectedDay}`}
-              </button>
+                  {daySharing ? "Exporting…" : `Export ${selectedDay}`}
+                </button>
+                <button
+                  className="planner__export"
+                  onClick={() => exportWeek(false)}
+                  disabled={!plan || sharing}
+                  title="Share Week Plan (view only)"
+                >
+                  {sharing ? "Sharing…" : "Share Plan (View Only)"}
+                </button>
+                <button
+                  className="planner__export planner__export--edit"
+                  onClick={() => exportWeek(true)}
+                  disabled={!plan || sharing}
+                  title="Share Week Plan with edit access"
+                >
+                  ✏️ Share + Edit
+                </button>
+              </div>
+              <textarea
+                className="planner__share-note"
+                placeholder="Add a note for the recipient, when sharing (optional)…"
+                value={shareNote}
+                onChange={(e) => setShareNote(e.target.value)}
+                rows={2}
+              />
             </div>
 
-            {(shareUrl || shareError) && (
+            {(shareUrl || shareError || smsHref) && (
               <div className="planner__share">
-                {shareUrl ? (
-                  <>
-                    <a
-                      className="planner__share-link"
-                      href={shareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View week plan
-                    </a>
-                    <button className="planner__btn" onClick={copyShareUrl}>
-                      Copy link
-                    </button>
-                  </>
-                ) : (
-                  <span className="planner__error">{shareError}</span>
+                {shareUrl && <span className="planner__share-link">{shareUrl}</span>}
+                {smsHref && (
+                  <a href={smsHref} className="planner__export" style={{ textDecoration: "none" }}>
+                    📱 Text
+                  </a>
                 )}
+                {shareError && <span className="planner__error">{shareError}</span>}
               </div>
             )}
             {(dayShareUrl || dayShareError) && (
               <div className="planner__share">
-                {dayShareUrl ? (
-                  <>
-                    <a
-                      className="planner__share-link"
-                      href={dayShareUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View {selectedDay}
-                    </a>
-                    <button className="planner__btn" onClick={copyDayUrl}>
-                      Copy link
-                    </button>
-                  </>
-                ) : (
-                  <span className="planner__error">{dayShareError}</span>
-                )}
+                {dayShareUrl
+                  ? <span className="planner__share-link">{dayShareUrl}</span>
+                  : <span className="planner__error">{dayShareError}</span>
+                }
               </div>
             )}
 
@@ -517,14 +522,53 @@ export default function OutfitPlanner({
             {/* Week grid */}
             <div className="planner__grid">
               {DAYS.map((d) => (
-                <section key={d} className="planner__day">
+                <section
+                  key={d}
+                  className={
+                    "planner__day" +
+                    (expandedDays.has(d) ? "" : " planner__day--collapsed")
+                  }
+                >
                   <header className="planner__day-head">
+                    <button
+                      className="planner__day-caret"
+                      onClick={() => toggleDay(d)}
+                      title={expandedDays.has(d) ? "Collapse" : "Expand"}
+                      aria-label={expandedDays.has(d) ? "Collapse" : "Expand"}
+                    >
+                      {expandedDays.has(d) ? "▾" : "▸"}
+                    </button>
                     {d}
                     <div style={{ display: "flex", gap: 6 }}>
+                      {plannerUndo?.day === d && (
+                        <button
+                          className="planner__mini"
+                          onClick={() => {
+                            clearTimeout(plannerUndoTimerRef.current);
+                            setPlan({
+                              ...(plan || {}),
+                              [plannerUndo.day]: plannerUndo.items,
+                            });
+                            setPlannerUndo(null);
+                          }}
+                        >
+                          Undo
+                        </button>
+                      )}
                       <button
-                        className="planner__mini"
+                        className="planner__mini planner__mini--danger"
                         title="Remove all from day"
-                        onClick={() => setPlan({ ...(plan || {}), [d]: [] })}
+                        onClick={() => {
+                          const items = plan?.[d] || [];
+                          if (plannerUndoTimerRef.current)
+                            clearTimeout(plannerUndoTimerRef.current);
+                          setPlannerUndo({ day: d, items });
+                          setPlan({ ...(plan || {}), [d]: [] });
+                          plannerUndoTimerRef.current = setTimeout(
+                            () => setPlannerUndo(null),
+                            5000
+                          );
+                        }}
                         disabled={(plan?.[d]?.length || 0) === 0}
                       >
                         Clear
@@ -558,7 +602,7 @@ export default function OutfitPlanner({
                             title="Remove"
                             onClick={() => removeFromDay(d, i)}
                           >
-                            ×
+                            🗑️
                           </button>
                         </figure>
                       ))

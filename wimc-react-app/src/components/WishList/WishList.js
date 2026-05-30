@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import { syncSetItem } from '../../utils/syncStore';
+﻿import React, { useEffect, useRef, useState } from "react";
 import { uploadRawJSON } from "../../utils/CloudinaryAPI";
+import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import { fetchLinkPreview } from "../../utils/linkPreview";
 import ImageUpload from "../ImageUpload/ImageUpload"; // uses your existing widget
 import "./WishList.css";
@@ -33,7 +35,12 @@ const IconSave = (props) => (
   </svg>
 );
 
-export default function WishList() {
+export default function WishList({ storageKey }) {
+  // storageKey lets kids closets keep their own wish lists separate from the
+  // parent's main list.  Falls back to the original key for backward-compat.
+  const lsItemsKey = storageKey ? `${storageKey}_items`      : "wishListItems";
+  const lsListsKey = storageKey ? `${storageKey}_savedLists` : "wimc_saved_wishlists";
+
   const [wishListItems, setWishListItems] = useState([]);
   const [newItem, setNewItem] = useState({
     url: "",
@@ -52,16 +59,18 @@ export default function WishList() {
 
   // Share (current list)
   const [sharing, setSharing] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
-  const [shareErr, setShareErr] = useState("");
-  const [shareIsBlob, setShareIsBlob] = useState(false);
+  const [shareUrl, setShareUrl] = useState(""); // eslint-disable-line no-unused-vars
+  const [shareErr, setShareErr] = useState(""); // eslint-disable-line no-unused-vars
+  const [shareIsBlob, setShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
   const [shareMsg, setShareMsg] = useState("");
+  const [smsHref, setSmsHref] = useState(""); // eslint-disable-line no-unused-vars
+  const [shareNote, setShareNote] = useState("");
   const shareRowRef = useRef(null);
 
   // Saved lists drawer
   const [savedLists, setSavedLists] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("wimc_saved_wishlists") || "[]");
+      return JSON.parse(localStorage.getItem(lsListsKey) || "[]");
     } catch {
       return [];
     }
@@ -71,7 +80,7 @@ export default function WishList() {
   const [listsStatus, setListsStatus] = useState("");
   const [listsShareUrl, setListsShareUrl] = useState("");
   const [listsShareErr, setListsShareErr] = useState("");
-  const [listsShareIsBlob, setListsShareIsBlob] = useState(false);
+  const [listsShareIsBlob, setListsShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
   const [listsSharing, setListsSharing] = useState(false);
 
   // Inline preview for URL (OpenGraph/oEmbed via helper)
@@ -83,8 +92,9 @@ export default function WishList() {
   const [nameVisibleIds, setNameVisibleIds] = useState(() => new Set());
 
   useEffect(() => {
-    const savedItems = JSON.parse(localStorage.getItem("wishListItems")) || [];
+    const savedItems = JSON.parse(localStorage.getItem(lsItemsKey)) || [];
     setWishListItems(savedItems);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debounced preview on URL input
@@ -118,7 +128,7 @@ export default function WishList() {
   const persistLists = (next) => {
     setSavedLists(next);
     try {
-      localStorage.setItem("wimc_saved_wishlists", JSON.stringify(next));
+      syncSetItem(lsListsKey, JSON.stringify(next));
     } catch {}
   };
 
@@ -128,7 +138,7 @@ export default function WishList() {
   const pushItems = (items) => {
     setWishListItems((prev) => {
       const next = [...prev, ...items];
-      localStorage.setItem("wishListItems", JSON.stringify(next));
+      syncSetItem(lsItemsKey, JSON.stringify(next));
       return next;
     });
   };
@@ -160,7 +170,7 @@ export default function WishList() {
   const handleRemoveItem = (index) => {
     const updated = wishListItems.filter((_, i) => i !== index);
     setWishListItems(updated);
-    localStorage.setItem("wishListItems", JSON.stringify(updated));
+    syncSetItem(lsItemsKey, JSON.stringify(updated));
   };
 
   // Toggle caption/name visibility
@@ -225,7 +235,7 @@ export default function WishList() {
     }));
     setWishListItems((prev) => {
       if (mode === "replace") {
-        localStorage.setItem("wishListItems", JSON.stringify(incoming));
+        syncSetItem(lsItemsKey, JSON.stringify(incoming));
         return incoming;
       }
       const seen = new Set(
@@ -239,7 +249,7 @@ export default function WishList() {
           merged.push(it);
         }
       }
-      localStorage.setItem("wishListItems", JSON.stringify(merged));
+      syncSetItem(lsItemsKey, JSON.stringify(merged));
       return merged;
     });
   };
@@ -249,6 +259,7 @@ export default function WishList() {
     kind: "wimc.wishList",
     version: 2,
     createdAt: new Date().toISOString(),
+    note: shareNote,
     count: wishListItems.length,
     items: wishListItems.map((item) => ({
       id: item.id,
@@ -261,80 +272,36 @@ export default function WishList() {
     meta: { source: "WIMC Wish List" },
   });
 
-  async function handleShareWishList() {
+  async function handleShareWishList(withEdit = false) {
     setSharing(true);
     setShareErr("");
     setShareMsg("");
     setShareUrl("");
-    setShareIsBlob(false);
     try {
-      const res = await uploadRawJSON(buildWishPayload(), "wimc/wish-list");
-      const url =
-        res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
-      if (url) {
-        setShareUrl(url);
-        setShareMsg("Share link copied to clipboard.");
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {}
+      let url;
+      if (withEdit) {
+        url = await createCollabDoc("wishlist", buildWishPayload());
       } else {
-        const blob = new Blob([JSON.stringify(buildWishPayload(), null, 2)], {
-          type: "application/json",
-        });
-        const local = URL.createObjectURL(blob);
-        setShareUrl(local);
-        setShareIsBlob(true);
-        setShareErr(
-          "Upload failed — using a temporary local link. Keep this tab open.",
-        );
-        try {
-          await navigator.clipboard.writeText(local);
-          setShareMsg("Temporary link copied to clipboard.");
-        } catch {}
+        const res = await uploadRawJSON(buildWishPayload(), "wimc/wish-list");
+        const cloudUrl = res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
+        if (!cloudUrl) throw new Error("Upload failed");
+        url = appShareUrl(cloudUrl, "wishlist");
       }
-    } catch {
-      const blob = new Blob([JSON.stringify(buildWishPayload(), null, 2)], {
-        type: "application/json",
+      const result = await shareAppLink({
+        title: "My WIMC Wish List 🛍️",
+        text: shareNote ? `Check out my wish list on WIMC!\n\n📝 ${shareNote}` : "Check out my wish list on WIMC!",
+        url,
       });
-      const local = URL.createObjectURL(blob);
-      setShareUrl(local);
-      setShareIsBlob(true);
-      setShareErr(
-        "Share failed — a temporary local link was created. Keep this tab open.",
-      );
-      try {
-        await navigator.clipboard.writeText(local);
-        setShareMsg("Temporary link copied to clipboard.");
-      } catch {}
+      setShareMsg(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setShareMsg(""), 3500);
+    } catch {
+      setShareMsg("❌ Share failed. Please try again.");
+      setTimeout(() => setShareMsg(""), 3000);
     } finally {
       setSharing(false);
-      setTimeout(
-        () =>
-          shareRowRef.current?.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-          }),
-        0,
-      );
     }
   }
-  const downloadWishJson = () => {
-    const blob = new Blob([JSON.stringify(buildWishPayload(), null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `wimc-wish-list-${new Date()
-      .toISOString()
-      .replace(/[:.]/g, "-")}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // Share/JSON for ENTIRE saved lists
+  // Share for ENTIRE saved lists
   const buildSavedWishListsPayload = () => ({
     kind: "wimc.savedWishLists",
     version: 1,
@@ -360,70 +327,30 @@ export default function WishList() {
   async function shareSavedWishLists() {
     setListsSharing(true);
     setListsShareErr("");
-    setListsShareIsBlob(false);
     setListsShareUrl("");
     try {
       const res = await uploadRawJSON(
         buildSavedWishListsPayload(),
         "wimc/saved-wish-lists",
       );
-      const url =
+      const cloudUrl =
         res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
-      if (url) {
-        setListsShareUrl(url);
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {}
-      } else {
-        const blob = new Blob(
-          [JSON.stringify(buildSavedWishListsPayload(), null, 2)],
-          { type: "application/json" },
-        );
-        const local = URL.createObjectURL(blob);
-        setListsShareUrl(local);
-        setListsShareIsBlob(true);
-        setListsShareErr(
-          "Upload failed — temporary local link created. Keep this tab open.",
-        );
-        try {
-          await navigator.clipboard.writeText(local);
-        } catch {}
-      }
+      if (!cloudUrl) throw new Error("Upload failed");
+      const url = appShareUrl(cloudUrl, "wishlist");
+      const result = await shareAppLink({
+        title: "My WIMC Wish Lists 🛍️",
+        text: "Check out my saved wish lists on WIMC!",
+        url,
+      });
+      setListsShareUrl(result === "clipboard" ? "📋 Link copied!" : "✅ Shared!");
+      setTimeout(() => setListsShareUrl(""), 3500);
     } catch {
-      const blob = new Blob(
-        [JSON.stringify(buildSavedWishListsPayload(), null, 2)],
-        { type: "application/json" },
-      );
-      const local = URL.createObjectURL(blob);
-      setListsShareUrl(local);
-      setListsShareIsBlob(true);
-      setListsShareErr(
-        "Share failed — temporary local link created. Keep this tab open.",
-      );
-      try {
-        await navigator.clipboard.writeText(local);
-      } catch {}
+      setListsShareErr("Share failed. Please try again.");
+      setTimeout(() => setListsShareErr(""), 3000);
     } finally {
       setListsSharing(false);
     }
   }
-  const downloadSavedWishListsJson = () => {
-    const blob = new Blob(
-      [JSON.stringify(buildSavedWishListsPayload(), null, 2)],
-      { type: "application/json" },
-    );
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `wimc-saved-wish-lists-${new Date()
-      .toISOString()
-      .replace(/[:.]/g, "-")}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <>
       {/* Collapsible stub */}
@@ -508,46 +435,52 @@ export default function WishList() {
                 >
                   Saved Wish Lists
                 </button>
-                <button
-                  className="wish-modal__btn"
-                  onClick={handleShareWishList}
-                  disabled={sharing}
-                  title="Share Wish List"
-                >
-                  {sharing ? "Sharing…" : "Share"}
-                </button>
-                <button
-                  className="wish-modal__btn"
-                  onClick={downloadWishJson}
-                  title="Download JSON"
-                >
-                  JSON
-                </button>
-                <button className="wish-modal__btn" onClick={closeModal}>
-                  Close
+                <button className="wish-modal__btn wish-modal__close" onClick={closeModal} aria-label="Close">
+                  ✕
                 </button>
               </div>
             </header>
 
-            {(shareUrl || shareErr || shareMsg) && (
+            {/* Share bar — share buttons left, note right */}
+            <div className="wish-modal__share-bar">
+              <div className="wish-modal__share-btns">
+                <button
+                  className="wish-modal__share-btn"
+                  onClick={() => handleShareWishList(false)}
+                  disabled={sharing}
+                  title="Share Wish List (view only)"
+                >
+                  {sharing ? "Sharing…" : "Share (View Only)"}
+                </button>
+                <button
+                  className="wish-modal__share-btn wish-modal__share-btn--edit"
+                  onClick={() => handleShareWishList(true)}
+                  disabled={sharing}
+                  title="Share Wish List with edit access"
+                >
+                  ✏️ Share + Edit
+                </button>
+              </div>
+              <textarea
+                className="wish-modal__share-note"
+                placeholder="Add a note for the recipient, when sharing (optional)…"
+                value={shareNote}
+                onChange={(e) => setShareNote(e.target.value)}
+                rows={2}
+              />
+            </div>
+
+            {(shareMsg || smsHref) && (
               <div
                 ref={shareRowRef}
                 className="wish-modal__share"
                 aria-live="polite"
               >
-                {shareUrl ? (
-                  <a
-                    className="wish-modal__link"
-                    href={shareUrl}
-                    target={shareIsBlob ? "_self" : "_blank"}
-                    rel={shareIsBlob ? undefined : "noopener noreferrer"}
-                  >
-                    {shareIsBlob ? "Open local share URL" : "Open shared list"}
-                  </a>
-                ) : null}
                 {shareMsg && <span className="wish-modal__ok">{shareMsg}</span>}
-                {shareErr && (
-                  <span className="wish-modal__err">{shareErr}</span>
+                {smsHref && (
+                  <a href={smsHref} className="wish-modal__btn" style={{ textDecoration: "none" }}>
+                    📱 Text
+                  </a>
                 )}
               </div>
             )}
@@ -644,6 +577,7 @@ export default function WishList() {
                               className="wish-thumb__img"
                               src={src}
                               alt={item.name || "wish item"}
+                              loading="lazy"
                             />
                           ) : (
                             <div className="wish-thumb__fallback">
@@ -668,7 +602,7 @@ export default function WishList() {
                             onClick={() => handleRemoveItem(index)}
                             aria-label="Remove"
                           >
-                            ×
+                            🗑️
                           </button>
 
                           {/* name toggle (bottom-left) */}
@@ -744,7 +678,7 @@ export default function WishList() {
                       <span className="opp__badge">Saved!</span>
                     )}
 
-                    {/* Entire collection share/JSON */}
+                    {/* Entire collection share */}
                     <button
                       className="opp__btn"
                       onClick={shareSavedWishLists}
@@ -752,14 +686,6 @@ export default function WishList() {
                       title="Share all Saved Wish Lists"
                     >
                       {listsSharing ? "Sharing…" : "Share"}
-                    </button>
-                    <button
-                      className="opp__btn"
-                      onClick={downloadSavedWishListsJson}
-                      disabled={!savedLists.length}
-                      title="Download all Saved Wish Lists JSON"
-                    >
-                      JSON
                     </button>
 
                     <button
@@ -778,18 +704,7 @@ export default function WishList() {
                     aria-live="polite"
                   >
                     {listsShareUrl && (
-                      <a
-                        className="opp__share-link"
-                        href={listsShareUrl}
-                        target={listsShareIsBlob ? "_self" : "_blank"}
-                        rel={
-                          listsShareIsBlob ? undefined : "noopener noreferrer"
-                        }
-                      >
-                        {listsShareIsBlob
-                          ? "Open local share URL"
-                          : "Open shared Saved Wish Lists"}
-                      </a>
+                      <span className="opp__badge">{listsShareUrl}</span>
                     )}
                     {listsShareErr && (
                       <span className="opp__error">{listsShareErr}</span>

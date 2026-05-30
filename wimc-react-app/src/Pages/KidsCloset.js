@@ -1,8 +1,162 @@
-import React, { useState, useEffect } from "react";
-import { uploadRawJSON } from "../utils/CloudinaryAPI";
+import { syncSetItem } from '../utils/syncStore';
+﻿import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { uploadImage, uploadRawJSON } from "../utils/CloudinaryAPI";
+import { appShareUrl, createCollabDoc, shareAppLink } from "../utils/shareUtils";
+import { useBackground } from "../context/BackgroundContext";
 import KidsClosetModal from "../components/KidsClosetModal/KidsClosetModal";
 import KidsProfileModal from "../components/KidsProfileModal/KidsProfileModal";
+import { auth, db } from "../firebase";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import "./KidsCloset.css";
+
+const KIDS_PAGE_BG_KEY = "kids-closet-page";
+
+const PRESETS = [
+  { id: "dark-wood",     label: "Dark Wood",    url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1200&q=80" },
+  { id: "marble-white",  label: "Marble White", url: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80" },
+  { id: "blush-pink",    label: "Blush Pink",   url: "https://images.unsplash.com/photo-1595526051245-4506e0005bd0?w=1200&q=80" },
+  { id: "midnight-blue", label: "Midnight Blue",url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1200&q=80" },
+  { id: "sage-green",    label: "Sage Green",   url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&q=80" },
+  { id: "warm-linen",    label: "Warm Linen",   url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80" },
+  { id: "charcoal",      label: "Charcoal",     url: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1200&q=80" },
+  { id: "rose-gold",     label: "Rose Gold",    url: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=1200&q=80" },
+];
+
+const COLOR_PALETTE = [
+  { id: "col-ivory",      label: "Ivory",      value: "#FFFFF0" },
+  { id: "col-cream",      label: "Cream",      value: "#FFF8DC" },
+  { id: "col-blush",      label: "Blush",      value: "#FFE4E1" },
+  { id: "col-rose",       label: "Rose",       value: "#F4A7B9" },
+  { id: "col-mauve",      label: "Mauve",      value: "#C8A2C8" },
+  { id: "col-lavender",   label: "Lavender",   value: "#E6E0F8" },
+  { id: "col-periwinkle", label: "Periwinkle", value: "#CCCCFF" },
+  { id: "col-sky",        label: "Sky",        value: "#BFD7ED" },
+  { id: "col-powder",     label: "Powder",     value: "#B0E0E6" },
+  { id: "col-mint",       label: "Mint",       value: "#C8E6C9" },
+  { id: "col-sage",       label: "Sage",       value: "#B2C5B2" },
+  { id: "col-sage-dk",    label: "Sage Dark",  value: "#8FAF8F" },
+  { id: "col-sand",       label: "Sand",       value: "#F5DEB3" },
+  { id: "col-caramel",    label: "Caramel",    value: "#C68642" },
+  { id: "col-terracotta", label: "Terracotta", value: "#C1603E" },
+  { id: "col-slate",      label: "Slate",      value: "#708090" },
+  { id: "col-charcoal",   label: "Charcoal",   value: "#36454F" },
+  { id: "col-midnight",   label: "Midnight",   value: "#191970" },
+  { id: "col-black",      label: "Black",      value: "#1a1a1a" },
+  { id: "col-white",      label: "White",      value: "#FFFFFF" },
+];
+
+const COLOR_PREFIX = "color:";
+const isColor  = (v) => v && v.startsWith(COLOR_PREFIX);
+const colorVal = (v) => v.replace(COLOR_PREFIX, "");
+
+// ── Inline background picker (mirrors Settings → Appearance) ─────────────────
+function KidsPageBgPicker({ onClose }) {
+  const { backgrounds, setBackground, resetBackground } = useBackground();
+  const current  = backgrounds[KIDS_PAGE_BG_KEY] || null;
+  const fileRef  = useRef(null);
+  const [activeTab,  setActiveTab]  = useState("photos");
+  const [uploading,  setUploading]  = useState(false);
+  const [err,        setErr]        = useState("");
+  const [saved,      setSaved]      = useState(false);
+
+  const pick = (val) => {
+    setBackground(KIDS_PAGE_BG_KEY, val);
+    setSaved(true);
+    setTimeout(() => { setSaved(false); onClose(); }, 800);
+  };
+
+  const handleFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setErr("");
+    try {
+      const res = await uploadImage(file, "wimc-backgrounds");
+      if (res?.secure_url) pick(res.secure_url);
+      else setErr("Upload failed.");
+    } catch { setErr("Upload failed."); }
+    finally   { setUploading(false); }
+  };
+
+  return (
+    <div className="kcp-bg-picker">
+      {/* Header row */}
+      <div className="kcp-bg-picker__header">
+        <span className="kcp-bg-picker__title">🎨 Choose Background</span>
+        {saved && <span className="kcp-bg-picker__saved">✅ Saved!</span>}
+        <div className="kcp-bg-picker__header-actions">
+          {current && (
+            <button
+              className="kcp-bg-picker__reset"
+              onClick={() => { resetBackground(KIDS_PAGE_BG_KEY); onClose(); }}
+            >
+              ↩️ Reset
+            </button>
+          )}
+          <button className="kcp-bg-picker__close-btn" onClick={onClose}>×</button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="kcp-bg-tabs">
+        <button className={`kcp-bg-tab ${activeTab === "photos" ? "is-active" : ""}`} onClick={() => setActiveTab("photos")}>🖼️ Photos</button>
+        <button className={`kcp-bg-tab ${activeTab === "colors" ? "is-active" : ""}`} onClick={() => setActiveTab("colors")}>🎨 Colors</button>
+      </div>
+
+      {/* Photos tab */}
+      {activeTab === "photos" && (
+        <div className="kcp-bg-presets">
+          {PRESETS.map((p) => (
+            <button
+              key={p.id}
+              className={`kcp-bg-preset ${current === p.url ? "is-active" : ""}`}
+              onClick={() => pick(p.url)}
+              title={p.label}
+            >
+              <div className="kcp-bg-preset__thumb" style={{ backgroundImage: `url(${p.url})` }} />
+              <span className="kcp-bg-preset__name">{p.label}</span>
+              {current === p.url && <span className="kcp-bg-preset__check">✓</span>}
+            </button>
+          ))}
+          <button
+            className="kcp-bg-preset kcp-bg-preset--upload"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            title="Upload custom image"
+          >
+            <div className="kcp-bg-preset__thumb kcp-bg-preset__thumb--upload">{uploading ? "…" : "🖼️"}</div>
+            <span className="kcp-bg-preset__name">Custom</span>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFile} />
+          </button>
+        </div>
+      )}
+
+      {/* Colors tab */}
+      {activeTab === "colors" && (
+        <div className="kcp-color-palette">
+          {COLOR_PALETTE.map((c) => {
+            const encoded  = `${COLOR_PREFIX}${c.value}`;
+            const isActive = current === encoded;
+            return (
+              <button
+                key={c.id}
+                className={`kcp-color-swatch ${isActive ? "is-active" : ""}`}
+                style={{ backgroundColor: c.value }}
+                title={c.label}
+                onClick={() => pick(encoded)}
+              >
+                {isActive && <span className="kcp-color-swatch__check">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {err && <p className="kcp-bg-err">{err}</p>}
+    </div>
+  );
+}
 
 const LS_KEY = "wimc_kids_profiles";
 const LS_DELETED_KEY = "wimc_kids_deleted";
@@ -28,7 +182,7 @@ function load(key, fallback) {
 }
 function save(key, val) {
   try {
-    localStorage.setItem(key, JSON.stringify(val));
+    syncSetItem(key, JSON.stringify(val));
   } catch {}
 }
 
@@ -40,27 +194,94 @@ function daysLeft(deletedAt) {
 }
 
 export default function KidsCloset() {
+  const navigate = useNavigate();
+  const { backgrounds } = useBackground();
+  const currentBg = backgrounds[KIDS_PAGE_BG_KEY] || null;
+  const [showBgPicker, setShowBgPicker] = useState(false);
+
+  // Current Firebase user UID — named currentUid to avoid shadowing the uid()
+  // ID-generator function defined in module scope above.
+  const currentUid = auth.currentUser?.uid || null;
+
   const [profiles, setProfiles] = useState(() => load(LS_KEY, []));
   const [deleted, setDeleted] = useState(() => load(LS_DELETED_KEY, []));
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [editingProfile, setEditingProfile] = useState(null);
   const [activeChild, setActiveChild] = useState(null);
   const [sharing, setSharing] = useState({});
-  const [shareUrls, setShareUrls] = useState({});
+  const [smsHrefs, setSmsHrefs] = useState({});
   const [showDeleted, setShowDeleted] = useState(false);
 
-  // Persist on change
+  // ── Firestore sync ─────────────────────────────────────────────────────────
+  // firestoreLoaded gates the save effect so we never overwrite cloud data with
+  // stale localStorage data before the initial Firestore fetch completes.
+  const [firestoreLoaded, setFirestoreLoaded] = useState(false);
+
+  // Derive page background style
+  const pageStyle = currentBg
+    ? isColor(currentBg)
+      ? { backgroundImage: "none", backgroundColor: colorVal(currentBg) }
+      : { backgroundImage: `url(${currentBg})` }
+    : {};
+
+  // ── Load from Firestore on mount (source of truth for cross-device sync) ──
+  // Reads from the existing users/{uid} document (same collection App.js uses),
+  // so no extra Firestore security-rule changes are required.
+  useEffect(() => {
+    if (!currentUid) {
+      setFirestoreLoaded(true);
+      return;
+    }
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, "users", currentUid));
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.kidsProfiles) {
+            setProfiles(data.kidsProfiles);
+          }
+          if (data.kidsDeleted) {
+            setDeleted(
+              data.kidsDeleted.filter((p) => daysLeft(p.deletedAt) > 0)
+            );
+          } else {
+            setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
+          }
+        } else {
+          setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
+        }
+      } catch (e) {
+        console.warn("KidsCloset: could not load from Firestore:", e);
+        setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
+      } finally {
+        setFirestoreLoaded(true);
+      }
+    })();
+  }, [currentUid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Save to localStorage + Firestore whenever profiles or deleted change ──
+  // Merges into users/{uid} so other user fields (name, avatar, etc.) are untouched.
   useEffect(() => {
     save(LS_KEY, profiles);
-  }, [profiles]);
-  useEffect(() => {
     save(LS_DELETED_KEY, deleted);
-  }, [deleted]);
-
-  // Purge permanently expired deleted cards on load
-  useEffect(() => {
-    setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
-  }, []);
+    if (!currentUid || !firestoreLoaded) return;
+    const timer = setTimeout(async () => {
+      try {
+        await setDoc(
+          doc(db, "users", currentUid),
+          {
+            kidsProfiles: profiles,
+            kidsDeleted: deleted,
+            kidsProfilesUpdatedAt: new Date().toISOString(),
+          },
+          { merge: true } // never overwrites userName, avatarUrl, etc.
+        );
+      } catch (e) {
+        console.warn("KidsCloset: could not save to Firestore:", e);
+      }
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [profiles, deleted, currentUid, firestoreLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveProfile = (data) => {
     setProfiles((prev) =>
@@ -111,8 +332,9 @@ export default function KidsCloset() {
   };
 
   // ── Share ─────────────────────────────────────────────────────────────────
-  const handleShare = async (profile) => {
+  const handleShare = async (profile, withEdit = false) => {
     setSharing((prev) => ({ ...prev, [profile.id]: "sharing" }));
+    setSmsHrefs((prev) => ({ ...prev, [profile.id]: "" }));
     const payload = {
       kind: "wimc.kidsProfile",
       version: 1,
@@ -128,30 +350,32 @@ export default function KidsCloset() {
         favoriteColors: profile.favoriteColors,
         favoriteStyles: profile.favoriteStyles,
         notes: profile.notes || "",
+        photoUrl: profile.photoUrl || "",
       },
       meta: { source: "WIMC Kids' Closet" },
     };
     try {
-      const res = await uploadRawJSON(payload, "wimc/kids-profiles");
-      const url = res?.secure_url || res?.url || "";
-      if (url) {
-        setShareUrls((prev) => ({ ...prev, [profile.id]: url }));
-        try {
-          await navigator.clipboard.writeText(url);
-        } catch {}
-        if (navigator.share) {
-          try {
-            await navigator.share({
-              title: `${profile.name}'s Sizing Info — WIMC`,
-              text: `Here is ${profile.name}'s current clothing and shoe sizes!`,
-              url,
-            });
-          } catch {}
-        }
-        setSharing((prev) => ({ ...prev, [profile.id]: "done" }));
+      let shareUrl;
+      if (withEdit) {
+        shareUrl = await createCollabDoc("kidsprofile", payload);
       } else {
-        setSharing((prev) => ({ ...prev, [profile.id]: "error" }));
+        const res = await uploadRawJSON(payload, "wimc/kids-profiles");
+        const cloudUrl = res?.secure_url || res?.url || "";
+        if (!cloudUrl) throw new Error("no url");
+        shareUrl = appShareUrl(cloudUrl, "kidsprofile");
       }
+      const msgText = `Here is ${profile.name}'s current clothing and shoe sizes!`;
+      const result = await shareAppLink({
+        title: `${profile.name}'s Sizing Info — WIMC`,
+        text: msgText,
+        url: shareUrl,
+      });
+      if (result === "clipboard" || result === "unsupported") {
+        setSmsHrefs((prev) => ({ ...prev, [profile.id]: smsShareUrl(shareUrl, msgText) }));
+        setTimeout(() => setSmsHrefs((prev) => ({ ...prev, [profile.id]: "" })), 6000);
+      }
+      setSharing((prev) => ({ ...prev, [profile.id]: "done" }));
+      setTimeout(() => setSharing((prev) => ({ ...prev, [profile.id]: null })), 3000);
     } catch {
       setSharing((prev) => ({ ...prev, [profile.id]: "error" }));
     }
@@ -162,7 +386,31 @@ export default function KidsCloset() {
   const groupIcon = (val) => GROUP_ICONS[val] || "👶";
 
   // ── Profile card ──────────────────────────────────────────────────────────
-  const ProfileCard = ({ p, isDeletedCard = false }) => (
+  const ProfileCard = ({ p, isDeletedCard = false }) => {
+    const cardPhotoRef = useRef(null);
+    const [cardPhotoLoading, setCardPhotoLoading] = useState(false);
+
+    const handleCardPhotoChange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setCardPhotoLoading(true);
+      try {
+        const res = await uploadImage(file, "kid-avatars");
+        if (res?.secure_url) {
+          setProfiles((prev) =>
+            prev.map((q) =>
+              q.id === p.id ? { ...q, photoUrl: res.secure_url } : q
+            )
+          );
+        }
+      } catch {}
+      finally {
+        setCardPhotoLoading(false);
+        if (cardPhotoRef.current) cardPhotoRef.current.value = "";
+      }
+    };
+
+    return (
     <div className={`kids-card ${isDeletedCard ? "kids-card--deleted" : ""}`}>
       {isDeletedCard && (
         <div className="kids-card__deleted-banner">
@@ -172,7 +420,36 @@ export default function KidsCloset() {
       )}
 
       <div className="kids-card__top">
-        <span className="kids-card__icon">{groupIcon(p.ageGroup)}</span>
+        {/* Avatar / icon with camera overlay (active cards only) */}
+        <div
+          className="kids-card__avatar-wrap"
+          title={isDeletedCard ? undefined : "Change photo"}
+        >
+          {p.photoUrl ? (
+            <img src={p.photoUrl} alt={p.name} className="kids-card__avatar" />
+          ) : (
+            <span className="kids-card__icon">{groupIcon(p.ageGroup)}</span>
+          )}
+          {!isDeletedCard && (
+            <>
+              <button
+                className="kids-card__photo-btn"
+                onClick={() => cardPhotoRef.current?.click()}
+                title="Change photo"
+                type="button"
+              >
+                {cardPhotoLoading ? "…" : "📷"}
+              </button>
+              <input
+                ref={cardPhotoRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleCardPhotoChange}
+              />
+            </>
+          )}
+        </div>
         <div className="kids-card__name-group">
           <h2 className="kids-card__name">{p.name}</h2>
           <span className="kids-card__age-badge">
@@ -229,8 +506,9 @@ export default function KidsCloset() {
             </button>
             <button
               className="kids-card__btn kids-card__btn--share"
-              onClick={() => handleShare(p)}
+              onClick={() => handleShare(p, false)}
               disabled={sharing[p.id] === "sharing"}
+              title="Share child profile (view only)"
             >
               {sharing[p.id] === "sharing"
                 ? "Sharing…"
@@ -238,8 +516,25 @@ export default function KidsCloset() {
                   ? "✅ Shared!"
                   : sharing[p.id] === "error"
                     ? "❌ Failed"
-                    : "🔗 Share Sizes"}
+                    : "Share (View Only)"}
             </button>
+            <button
+              className="kids-card__btn kids-card__btn--share-edit"
+              onClick={() => handleShare(p, true)}
+              disabled={sharing[p.id] === "sharing"}
+              title="Share with edit access (WIMC users)"
+            >
+              ✏️ Share + Edit
+            </button>
+            {smsHrefs[p.id] && (
+              <a
+                href={smsHrefs[p.id]}
+                className="kids-card__btn kids-card__btn--share"
+                style={{ textDecoration: "none", textAlign: "center" }}
+              >
+                📱 Text
+              </a>
+            )}
             <button
               className="kids-card__btn kids-card__btn--edit"
               onClick={() => handleEdit(p)}
@@ -271,42 +566,56 @@ export default function KidsCloset() {
         )}
       </div>
 
-      {shareUrls[p.id] && (
-        <div className="kids-card__share-url">
-          <input
-            className="kids-card__url-input"
-            readOnly
-            value={shareUrls[p.id]}
-            onFocus={(e) => e.target.select()}
-          />
-        </div>
-      )}
     </div>
-  );
+    );
+  };
 
   // Active (non-expired) deleted cards
   const activeDeleted = deleted.filter((p) => daysLeft(p.deletedAt) > 0);
 
   return (
-    <main className="kids-closet">
+    <main className="kids-closet" style={pageStyle}>
       <header className="kids-closet__header">
-        <div className="kids-closet__header-text">
-          <h1 className="kids-closet__title">👶 Kids' Closet</h1>
-          <p className="kids-closet__sub">
-            Manage clothing and sizing for each child — and share their info
-            with family and friends.
-          </p>
+        <div className="kids-closet__header-left">
+          <button
+            className="kids-closet__back-btn"
+            onClick={() => navigate("/home")}
+            aria-label="Back to home"
+          >
+            ← Back
+          </button>
+          <div className="kids-closet__header-text">
+            <h1 className="kids-closet__title">👶 Kids' Closet</h1>
+            <p className="kids-closet__sub">
+              Manage clothing and sizing for each child — and share their info
+              with family and friends.
+            </p>
+          </div>
         </div>
-        <button
-          className="kids-closet__add-btn"
-          onClick={() => {
-            setEditingProfile(null);
-            setIsProfileOpen(true);
-          }}
-        >
-          + Add Child
-        </button>
+        <div className="kids-closet__header-actions">
+          <button
+            className="kids-closet__bg-btn"
+            onClick={() => setShowBgPicker((v) => !v)}
+            title="Change background"
+          >
+            🎨 Background
+          </button>
+          <button
+            className="kids-closet__add-btn"
+            onClick={() => {
+              setEditingProfile(null);
+              setIsProfileOpen(true);
+            }}
+          >
+            + Add Child
+          </button>
+        </div>
       </header>
+
+      {/* ── Background picker panel ── */}
+      {showBgPicker && (
+        <KidsPageBgPicker onClose={() => setShowBgPicker(false)} />
+      )}
 
       {/* ── Active profiles ── */}
       {profiles.length === 0 ? (
@@ -364,6 +673,12 @@ export default function KidsCloset() {
         <KidsClosetModal
           child={activeChild}
           onClose={() => setActiveChild(null)}
+          onUpdateChild={(updated) => {
+            setProfiles((prev) =>
+              prev.map((p) => (p.id === updated.id ? updated : p))
+            );
+            setActiveChild(updated);
+          }}
         />
       )}
     </main>
