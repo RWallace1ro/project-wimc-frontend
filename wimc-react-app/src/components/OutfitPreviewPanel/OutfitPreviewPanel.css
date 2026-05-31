@@ -11,6 +11,69 @@
   overflow: hidden;
 }
 
+@media (max-width: 1024px) {
+  .outfit-preview-panel:not(.opp--floating) {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* On phone: horizontal section strip + compact toolbar
+   (full-screen override is at the END of this file, after the base floating rule) */
+@media (max-width: 600px) {
+  /* Flip body to column so section tabs sit as a scroll strip above the canvas */
+  .opp--floating .opp__body {
+    flex-direction: column;
+  }
+  .opp--floating .opp__sections {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;        /* prevent buttons from stretching to container height */
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    padding: 4px 8px;           /* reduced from 6px — tightens gap below header */
+    gap: 6px;
+    scrollbar-width: none;
+  }
+  .opp--floating .opp__sections::-webkit-scrollbar {
+    display: none;
+  }
+  /* Section buttons: compact — override the global 44 px touch-target floor */
+  .opp--floating .opp__section-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-height: 0 !important;   /* beats global button { min-height: 44px } */
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+    line-height: 30px;
+  }
+  .opp--floating .opp__right {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Toolbar: wrap so Print / Note / Favorites / Saved Looks / X
+     don't fall outside the viewport on narrow phones */
+  .opp--floating .opp__toolbar {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-bottom: 4px;
+  }
+  /* All toolbar / header interactive elements: remove 44 px floor */
+  .opp--floating .opp__btn,
+  .opp--floating .opp__toggle,
+  .opp--floating .opp__icon-btn,
+  .opp--floating .opp__mini {
+    min-height: unset;
+    font-size: 13px;
+    padding: 5px 8px;
+  }
+}
+
 .opp__header {
   display: flex;
   align-items: center;
@@ -173,6 +236,7 @@
   grid-area: toolbar;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   position: relative;
 }
@@ -187,10 +251,24 @@
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
+  color: #1e293b;
+  white-space: nowrap;
+}
+/* Share + Edit variant — purple pill, always visible */
+.opp__btn--edit {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.opp__btn--edit:hover {
+  background: #6d28d9;
+  border-color: #6d28d9;
 }
 .opp__mini {
   padding: 4px 8px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .opp__btn:hover,
 .opp__mini:hover {
@@ -204,25 +282,38 @@
 .opp__danger:hover {
   background: #fef2f2;
 }
-.opp__note--inline {
+/* Share bar — share buttons left, note right; spans full toolbar width */
+.opp__share-bar {
+  flex: 0 0 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 2px;
+}
+.opp__share-btns {
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  margin-left: 8px;
-  min-width: 200px;
+  align-items: center;
+  flex-shrink: 0;
 }
-.opp__note-label {
-  font-size: 12px;
-  color: #444;
-  white-space: nowrap;
-}
-.opp__note-input {
-  width: 100%;
-  height: 32px;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
+
+.opp__share-note {
+  flex: 1;
+  min-width: 140px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 12px;
+  resize: vertical;
+  background: #f8fafc;
+  color: #1e293b;
+}
+.opp__share-note:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background: #fff;
 }
 
 /* Share row */
@@ -249,12 +340,12 @@
   border-radius: 8px;
   padding: 6px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
   position: relative;
-  z-index: 1;
   width: 100%;
 }
 .opp__hint {
@@ -268,84 +359,79 @@
 .opp__selected-grid {
   display: grid;
   grid-template-columns: repeat(var(--opp-cols, 2), 1fr);
+  align-content: start;
   gap: 6px;
   width: 100%;
-  height: 100%;
-  overflow: auto;
+  height: auto;
 }
 .opp__thumb {
   position: relative;
-  background: #fff;
+  background: #1a1a2e;
   border: 1px solid #eee;
   border-radius: 6px;
-  padding: 4px;
-  min-height: 90px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0;
+  overflow: hidden;
 }
 .opp__thumb-img,
 .opp__thumb-vid {
-  max-width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: auto;
   display: block;
-  border-radius: 4px;
+  border-radius: 6px;
 }
-.opp__remove {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 22px;
-  height: 22px;
-  border: none;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-}
-.opp__remove:hover {
-  background: #fef2f2;
-}
-
-/* Favorite star bottom-right */
-.opp__fav-btn {
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid #eee;
-  background: #fff;
-  cursor: pointer;
-  line-height: 1;
-  font-size: 14px;
-  display: grid;
-  place-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-}
-.opp__fav-btn.is-faved {
-  color: #f59e0b;
-}
-
-/* Name toggle bottom-left + badge */
+/* ── Overlay icon buttons: fixed 20×20 square → consistent size, never oval ── */
+.opp__remove,
+.opp__fav-btn,
 .opp__name-toggle {
   position: absolute;
-  left: 4px;
-  bottom: 4px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid #eee;
-  background: #fff;
-  cursor: pointer;
-  line-height: 1;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
   font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
 }
+
+.opp__remove       { top: 4px; right: 4px; }
+.opp__fav-btn      { top: 4px; right: 28px; } /* next to remove — always in view */
+.opp__name-toggle  { bottom: 4px; left: 4px; }
+
+.opp__remove:hover      { background: rgba(185, 28, 28, 0.80); }
+.opp__fav-btn:hover     { background: rgba(0, 0, 0, 0.72); }
+.opp__name-toggle:hover { background: rgba(0, 0, 0, 0.72); }
+
+.opp__fav-btn.is-faved {
+  color: #f59e0b;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* ── Hover-reveal: remove / drag-handle hidden until hovered ── */
+.opp__thumb .opp__remove,
+.opp__thumb .opp__name-toggle,
+.opp__thumb .opp__drag-handle {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.opp__thumb:hover .opp__remove,
+.opp__thumb:hover .opp__name-toggle,
+.opp__thumb:hover .opp__drag-handle {
+  opacity: 1;
+}
+/* ★ Fav button always visible so users can always star an item */
+.opp__thumb .opp__fav-btn {
+  opacity: 0.85;
+}
+.opp__thumb:hover .opp__fav-btn {
+  opacity: 1;
+}
+.opp__thumb .opp__fav-btn.is-faved { opacity: 1; }
 .opp__name-badge {
   position: absolute;
   left: 4px;
@@ -353,7 +439,7 @@
   right: 30px;
   max-height: 3.8em;
   padding: 4px 6px;
-  font-size: 11px;
+  font-size: 13px;
   color: #111;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #eee;
@@ -371,7 +457,6 @@
   overflow: auto;
   background: transparent;
   position: relative;
-  z-index: 0;
   width: 100%;
 }
 .opp__picker-title {
@@ -387,30 +472,33 @@
 }
 .opp__choices {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  grid-auto-rows: 120px;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: max-content; /* forces correct row height from aspect-ratio in scroll containers */
+  gap: 10px;
+  width: 100%;
 }
 .opp__choice {
-  padding: 0;
+  position: relative;
+  background: #1a1a2e;
   border: 1px solid #eee;
   border-radius: 6px;
-  background: #fff;
-  cursor: pointer;
+  padding: 0;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  cursor: pointer;
+  aspect-ratio: 3 / 4; /* portrait cell — fills with object-fit cover, no white space */
 }
 .opp__choice-img {
-  max-width: 100%;
-  height: 100%;
-  object-fit: contain;
   display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center; /* keep top of garment visible */
   border-radius: 6px;
 }
 .opp__choice-vidwrap {
   position: relative;
+  width: 100%;
+  height: 100%;
 }
 .opp__pill {
   position: absolute;
@@ -418,7 +506,7 @@
   right: 4px;
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   padding: 2px 4px;
   border-radius: 4px;
 }
@@ -439,13 +527,44 @@
   width: min(100vw - 48px, 1200px);
   height: min(100vh - 48px, 820px);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;                /* contain all child overflow */
+  overscroll-behavior: contain;    /* block elastic bounce inside modal */
+  touch-action: pan-y;             /* vertical scroll only — no horizontal drift */
 }
 .outfit-preview-panel.opp--floating .opp__sections {
   flex: 0 0 220px;
 }
 .outfit-preview-panel.opp--floating .opp__choices {
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 150px;
+  grid-auto-rows: max-content;
+  gap: 10px;
+}
+
+/* Dark header when floating (matches Shopping List / Video Bin) */
+.outfit-preview-panel.opp--floating .opp__header {
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  border-bottom: 1px solid #1e3a5f;
+  padding: 14px 18px;
+}
+.outfit-preview-panel.opp--floating .opp__title {
+  color: #fff;
+}
+.outfit-preview-panel.opp--floating .opp__toggle {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.outfit-preview-panel.opp--floating .opp__toggle:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 /* Import widgets */
@@ -475,17 +594,22 @@
 }
 .opp__drag-handle {
   position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  color: #666;
+  left: 4px;
+  top: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 13px;
+  color: #fff;
   user-select: none;
-  background: #fff;
-  border: 1px solid #eee;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
   border-radius: 4px;
-  padding: 0 4px;
   cursor: grab;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
 }
 
 /* Trash dropzone */
@@ -536,7 +660,7 @@
 .opp-favs__grid {
   padding: 10px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   overflow: auto;
 }
@@ -666,7 +790,7 @@
   display: block;
 }
 .opp__look-more {
-  font-size: 11px;
+  font-size: 13px;
   color: #475569;
   align-self: center;
 }
@@ -678,10 +802,164 @@
 
 /* Badges */
 .opp__badge {
-  font-size: 11px;
+  font-size: 13px;
   color: #065f46;
   background: #ecfdf5;
   border: 1px solid #a7f3d0;
   border-radius: 999px;
   padding: 2px 8px;
 }
+
+/* ── Phone: OPP floating modal goes full-screen ──────────────────────────────
+   ALL mobile overrides for .opp--floating live here, AFTER every base
+   .outfit-preview-panel.opp--floating rule, so same-specificity (0,3,0)
+   media-query rules win the cascade correctly. */
+@media (max-width: 600px) {
+  /* Full-screen panel */
+  .outfit-preview-panel.opp--floating {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+    animation: none;
+  }
+
+  /* Compact header — desktop 14 px padding is too tall on a phone */
+  .outfit-preview-panel.opp--floating .opp__header {
+    padding: 8px 12px;
+  }
+
+  /* ── Sections / tabs strip ────────────────────────────────────────────────
+     The base floating rule sets flex: 0 0 220px for the desktop left rail.
+     On mobile the body is flex-direction:column, so flex-basis applies to
+     HEIGHT — giving the strip 220 px of blank space.  Force it to auto. */
+  .outfit-preview-panel.opp--floating .opp__sections {
+    flex: 0 0 auto;          /* was 220px → that became 220px of height! */
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    padding: 4px 8px;
+    gap: 6px;
+    scrollbar-width: none;
+  }
+  .outfit-preview-panel.opp--floating .opp__sections::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Right column ─────────────────────────────────────────────────────────
+     Allow internal scrolling so the picker grid (closet items) is always
+     reachable even on small phones.  Reduce row min-heights so canvas and
+     picker share the available height more evenly. */
+  .outfit-preview-panel.opp--floating .opp__right {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 6px;
+    gap: 4px;
+    grid-template-rows: auto minmax(100px, 1fr) minmax(120px, 1fr);
+  }
+
+  /* Tighter toolbar */
+  .outfit-preview-panel.opp--floating .opp__toolbar {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* Canvas: single column on phone */
+  .outfit-preview-panel.opp--floating .opp__selected-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Picker thumbnails — 2 columns on phone */
+  .outfit-preview-panel.opp--floating .opp__choices {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: max-content;
+    gap: 10px;
+  }
+
+  /* Import (Load from link) section — inline in the tab strip, no top margin */
+  .outfit-preview-panel.opp--floating .opp__import {
+    margin-top: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .outfit-preview-panel.opp--floating .opp__import .opp__input {
+    width: 130px;
+    padding: 4px 6px;
+    font-size: 13px;
+    height: 30px;
+    box-sizing: border-box;
+  }
+  .outfit-preview-panel.opp--floating .opp__import-actions {
+    margin-top: 0;
+    display: flex;
+    gap: 4px;
+  }
+  .outfit-preview-panel.opp--floating .opp__import-actions .opp__btn {
+    min-height: 0 !important;
+    height: 30px;
+    padding: 0 10px;
+    font-size: 13px;
+    line-height: 30px;
+  }
+}
+
+/* ── Phone: share-bar stacks vertically to prevent horizontal overflow ── */
+@media (max-width: 600px) {
+  .opp__share-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .opp__share-btns {
+    flex-wrap: wrap;
+    flex-shrink: 1;
+  }
+  .opp__share-note {
+    min-width: 0;
+    width: 100%;
+    flex: none;
+  }
+}
+
+/* ── Clear-all undo toast ── */
+.opp__clear-toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #1e3a5f;
+  color: #fff;
+  font-size: 13px;
+  border-radius: 8px;
+  margin: 0 0 8px;
+  animation: oppToastIn 0.18s ease both;
+}
+.opp__clear-toast .opp__btn {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.opp__clear-toast .opp__btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.opp__clear-toast__dismiss {
+  margin-left: auto;
+  padding: 4px 8px !important;
+}
+@keyframes oppToastIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.opp__thumb-img--zoomable { cursor: zoom-in; }

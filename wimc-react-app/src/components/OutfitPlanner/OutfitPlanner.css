@@ -9,6 +9,14 @@
   padding: 0;
 }
 
+@media (max-width: 1024px) {
+  .planner:not(.planner--floating) {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 .planner:not(.planner--floating):not(.planner--collapsed) {
   height: 250px;
 }
@@ -26,6 +34,9 @@
   width: min(100vw - 48px, 1200px);
   height: min(100vh - 48px, 820px);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 /* Backdrop */
@@ -52,6 +63,88 @@
 .planner__header-actions {
   display: flex;
   gap: 8px;
+}
+
+/* Dark header when floating (matches Shopping List / Video Bin) */
+.planner--floating .planner__header {
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  border-bottom: 1px solid #1e3a5f;
+  padding: 14px 18px;
+}
+.planner--floating .planner__title {
+  color: #fff;
+}
+/* Header close/open icon — 32×32, white on dark */
+.planner--floating .planner__close-toggle {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.planner--floating .planner__close-toggle:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+/* Export bar action buttons — keep legible in floating mode */
+.planner--floating .planner__exportbar .planner__export {
+  background: #fff;
+  color: #1e293b;
+  border-color: #ddd;
+  width: auto;
+  height: auto;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+.planner--floating .planner__exportbar .planner__export:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+/* Allow Edit variant — purple, always visible */
+.planner__export--edit {
+  background: #7c3aed !important;
+  color: #fff !important;
+  border-color: #7c3aed !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.planner__export--edit:hover {
+  background: #6d28d9 !important;
+  border-color: #6d28d9 !important;
+}
+
+/* ── Dropdowns — consistent soft style across all screen sizes ── */
+.planner__share-btns select,
+.planner__picker-top select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #f1f5f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 28px 5px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 0;
+}
+.planner__share-btns select:focus,
+.planner__picker-top select:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background-color: #fff;
+}
+.planner__share-btns select:hover,
+.planner__picker-top select:hover {
+  border-color: #cbd5ff;
+  background-color: #e8edf5;
 }
 
 /* ── Buttons (matched to OutfitPreviewPanel) ── */
@@ -88,7 +181,7 @@
   background: #fff;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   transition:
     background 0.15s,
@@ -162,13 +255,38 @@
   padding: 12px;
 }
 
-/* Export bar */
-.planner__exportbar {
+/* Share bar — buttons left, note right */
+.planner__share-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
   margin-bottom: 10px;
+}
+.planner__share-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Share note textarea */
+.planner__share-note {
+  flex: 1;
+  min-width: 140px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  resize: vertical;
+  background: #f8fafc;
+  color: #1e293b;
+}
+.planner__share-note:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background: #fff;
 }
 
 /* Share row */
@@ -269,7 +387,7 @@
 .planner__choice-btn {
   padding: 0;
   border: 1px solid #eee;
-  background: #fff;
+  background: #f5f5f5;
   border-radius: 6px;
   cursor: pointer;
   overflow: hidden;
@@ -283,11 +401,9 @@
 }
 .planner__choice-img {
   width: 100%;
-  height: 90px;
-  object-fit: contain;
-  background: #fff;
-  border-radius: 6px;
+  height: auto;
   display: block;
+  border-radius: 6px;
 }
 
 /* Week grid */
@@ -314,42 +430,87 @@
   color: #334155;
 }
 
-/* Thumbs */
+/* Day toggle (expand/collapse caret) */
+.planner__day-caret {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.planner__day-caret:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Collapsed day — hide item list */
+.planner__day--collapsed .planner__items {
+  display: none;
+}
+.planner__day--collapsed {
+  padding-bottom: 2px;
+}
+.planner__day--collapsed .planner__day-head {
+  margin-bottom: 0;
+}
+
+/* Scrollable item list */
 .planner__items {
+  max-height: 320px;
+  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
+
+/* Thumbs */
 .planner__thumb {
   position: relative;
   margin: 0;
 }
 .planner__remove {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  border: none;
-  background: #fff;
-  color: #b91c1c;
+  top: 4px;
+  right: 4px;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
   font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
   transition: background 0.15s;
 }
 .planner__remove:hover {
-  background: #fef2f2;
+  background: rgba(185, 28, 28, 0.80);
+}
+
+/* Hover-reveal for day-item remove button */
+.planner__thumb .planner__remove {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.planner__thumb:hover .planner__remove {
+  opacity: 1;
 }
 .planner__img {
   width: 100%;
-  height: 70px;
-  object-fit: cover;
-  border-radius: 6px;
+  height: auto;
   display: block;
+  border-radius: 6px;
 }
 .planner__empty {
   color: #777;
@@ -367,3 +528,30 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+@media (max-width: 600px) {
+  .planner--floating {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+    animation: none;
+  }
+  /* Stack share-bar vertically to prevent horizontal overflow on phone */
+  .planner__share-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .planner__share-btns {
+    flex-shrink: 1;
+  }
+  .planner__share-note {
+    min-width: 0;
+    width: 100%;
+    flex: none;
+  }
+}
+
+.planner__img--zoomable { cursor: zoom-in; }

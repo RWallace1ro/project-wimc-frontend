@@ -9,6 +9,14 @@
   padding: 0;
 }
 
+@media (max-width: 1024px) {
+  .tp:not(.tp--floating) {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 .tp:not(.tp--floating):not(.tp--collapsed) {
   height: 250px;
 }
@@ -26,6 +34,9 @@
   width: min(100vw - 48px, 1200px);
   height: min(100vh - 48px, 820px);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 /* Backdrop */
@@ -48,6 +59,138 @@
 .tp__title {
   margin: 0;
   font-size: 16px;
+}
+
+/* Dark header when floating (matches Shopping List / Video Bin) */
+.tp--floating .tp__header {
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  border-bottom: 1px solid #1e3a5f;
+  padding: 14px 18px;
+}
+.tp--floating .tp__title {
+  color: #fff;
+}
+/* Header close/open icon — 32×32, white on dark */
+.tp--floating .tp__close-toggle {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.tp--floating .tp__close-toggle:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+/* Share bar — buttons left, note right */
+.tp__share-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.tp__share-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Share note textarea */
+.tp__share-note {
+  flex: 1;
+  min-width: 140px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  resize: vertical;
+  background: #f8fafc;
+  color: #1e293b;
+}
+.tp__share-note:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background: #fff;
+}
+
+/* Export bar action buttons — keep legible in floating mode */
+.tp--floating .tp__exportbar .tp__toggle {
+  background: #fff;
+  color: #1e293b;
+  border-color: #ddd;
+  width: auto;
+  height: auto;
+  padding: 6px 10px;
+  display: inline-flex;
+  place-items: unset;
+  align-items: center;
+  line-height: normal;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.tp--floating .tp__exportbar .tp__toggle:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+/* Allow Edit variant — purple, always visible */
+.tp__toggle--edit {
+  background: #7c3aed !important;
+  color: #fff !important;
+  border-color: #7c3aed !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tp__toggle--edit:hover {
+  background: #6d28d9 !important;
+  border-color: #6d28d9 !important;
+}
+/* AI button — purple gradient, matches Shopping List AI toggle */
+.tp__toggle--ai {
+  background: linear-gradient(135deg, #7c3aed, #a855f7) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.tp__toggle--ai:hover {
+  opacity: 0.9;
+}
+
+/* ── Dropdowns — consistent soft style across all screen sizes ── */
+.tp__share-btns select,
+.tp__picker-top select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: #f1f5f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 28px 5px 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-width: 0;
+}
+.tp__share-btns select:focus,
+.tp__picker-top select:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background-color: #fff;
+}
+.tp__share-btns select:hover,
+.tp__picker-top select:hover {
+  border-color: #cbd5ff;
+  background-color: #e8edf5;
 }
 
 /* ── Buttons (matched to OutfitPreviewPanel) ── */
@@ -92,7 +235,7 @@
   background: #fff;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   transition:
     background 0.15s,
@@ -107,9 +250,19 @@
   cursor: not-allowed;
 }
 
+/* Danger variant (clear) */
+.tp__mini--danger {
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+.tp__mini--danger:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
 /* Badge (Selected day indicator) */
 .tp__badge {
-  font-size: 11px;
+  font-size: 13px;
   background: #eef2ff;
   color: #4338ca;
   border: 1px solid #c7d2fe;
@@ -241,7 +394,7 @@
 .tp__choice-btn {
   padding: 0;
   border: 1px solid #eee;
-  background: #fff;
+  background: #f5f5f5;
   border-radius: 6px;
   cursor: pointer;
   overflow: hidden;
@@ -255,11 +408,9 @@
 }
 .tp__choice-img {
   width: 100%;
-  height: 90px;
-  object-fit: contain;
-  background: #fff;
-  border-radius: 6px;
+  height: auto;
   display: block;
+  border-radius: 6px;
 }
 
 /* Sync row */
@@ -288,15 +439,48 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
+  gap: 4px;
 }
 .tp__daytop h4 {
   margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: #334155;
+  flex: 1;
 }
 
-/* Item list */
+/* Day expand/collapse caret */
+.tp__day-caret {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #64748b;
+  font-size: 13px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: background 0.12s;
+}
+.tp__day-caret:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Collapsed day — hide item list */
+.tp__day--collapsed .tp__list {
+  display: none;
+}
+.tp__day--collapsed {
+  padding-bottom: 2px;
+}
+.tp__day--collapsed .tp__daytop {
+  margin-bottom: 0;
+}
+
+/* Item list — scrollable */
 .tp__list {
   list-style: none;
   margin: 0;
@@ -304,47 +488,64 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
 }
 .tp__li {
   position: relative;
   border: 1px solid #eee;
   border-radius: 8px;
-  padding: 6px;
-  background: #fff;
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  padding: 0;
+  background: #f5f5f5;
+  overflow: hidden;
+  display: block;
 }
 .tp__thumb {
-  width: 56px;
-  height: 56px;
-  object-fit: cover;
-  border-radius: 6px;
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0;
 }
 .tp__text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
   font-size: 13px;
   color: #334155;
+  padding: 8px;
+  text-align: center;
 }
 .tp__remove {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  border: none;
-  background: #fff;
-  color: #b91c1c;
+  top: 4px;
+  right: 4px;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
   font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
   transition: background 0.15s;
 }
 .tp__remove:hover {
-  background: #fef2f2;
+  background: rgba(185, 28, 28, 0.80);
+}
+
+/* Hover-reveal for pack-day item remove button */
+.tp__li .tp__remove {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.tp__li:hover .tp__remove {
+  opacity: 1;
 }
 .tp__empty {
   color: #777;
@@ -362,3 +563,30 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 600px) {
+  .tp--floating {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+    animation: none;
+  }
+  /* Stack share-bar vertically to prevent horizontal overflow on phone */
+  .tp__share-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .tp__share-btns {
+    flex-shrink: 1;
+  }
+  .tp__share-note {
+    min-width: 0;
+    width: 100%;
+    flex: none;
+  }
+}
+
+.tp__thumb--zoomable { cursor: zoom-in; }

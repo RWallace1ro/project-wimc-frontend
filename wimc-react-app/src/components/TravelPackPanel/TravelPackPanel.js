@@ -8,6 +8,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import AIPackingAssistant from "../AIPackingAssistant/AIPackingAssistant";
+import Lightbox from "../Lightbox/Lightbox";
 import "./TravelPackPanel.css";
 
 const DAYS = [
@@ -99,6 +100,12 @@ export default function TravelPackPanel({
   const [dayShareUrl, setDayShareUrl] = useState("");
   const [dayShareError, setDayShareError] = useState("");
   const [shareNote, setShareNote] = useState("");
+
+  // lightbox
+  const [lbImages, setLbImages] = useState([]);
+  const [lbIndex, setLbIndex] = useState(0);
+  const openLightbox = (images, idx) => { setLbImages(images); setLbIndex(idx); };
+  const closeLightbox = () => setLbImages([]);
 
   // per-day expand/collapse
   const [expandedDays, setExpandedDays] = useState(() => new Set(DAYS));
@@ -311,6 +318,9 @@ export default function TravelPackPanel({
 
   return (
     <>
+      {lbImages.length > 0 && (
+        <Lightbox images={lbImages} index={lbIndex} onClose={closeLightbox} onChange={setLbIndex} />
+      )}
       {floating && <div className="tp__backdrop" onClick={close} />}
 
       <section
@@ -538,28 +548,43 @@ export default function TravelPackPanel({
                     {(packPlan[d] || []).length === 0 ? (
                       <li className="tp__empty">No items</li>
                     ) : (
-                      packPlan[d].map((it, i) => (
-                        <li
-                          key={(it.mediaUrl || it.name || "i") + i}
-                          className="tp__li"
-                        >
-                          {it.kind === "text" ? (
-                            <span className="tp__text">{it.name}</span>
-                          ) : (
-                            <img
-                              className="tp__thumb"
-                              src={it.mediaThumb || it.mediaUrl}
-                              alt={it.name || "item"}
-                            />
-                          )}
-                          <button
-                            className="tp__remove"
-                            onClick={() => removeAt(d, i)}
+                      packPlan[d].map((it, i) => {
+                        const dayImgs = (packPlan[d] || [])
+                          .filter((x) => x.kind !== "text" && x.mediaType !== "video")
+                          .map((x) => ({ src: x.mediaThumb || x.mediaUrl, alt: x.name || "" }));
+                        const nonTextItems = (packPlan[d] || []).filter(x => x.kind !== "text" && x.mediaType !== "video");
+                        const imgIdx = nonTextItems.indexOf(it);
+                        return (
+                          <li
+                            key={(it.mediaUrl || it.name || "i") + i}
+                            className="tp__li"
                           >
-                            🗑️
-                          </button>
-                        </li>
-                      ))
+                            {it.kind === "text" ? (
+                              <span className="tp__text">{it.name}</span>
+                            ) : it.mediaType === "video" ? (
+                              <img
+                                className="tp__thumb"
+                                src={it.mediaPoster || ""}
+                                alt={it.name || "video"}
+                              />
+                            ) : (
+                              <img
+                                className="tp__thumb tp__thumb--zoomable"
+                                src={it.mediaThumb || it.mediaUrl}
+                                alt={it.name || "item"}
+                                title="Click to enlarge"
+                                onClick={() => openLightbox(dayImgs, Math.max(0, imgIdx))}
+                              />
+                            )}
+                            <button
+                              className="tp__remove"
+                              onClick={() => removeAt(d, i)}
+                            >
+                              🗑️
+                            </button>
+                          </li>
+                        );
+                      })
                     )}
                   </ul>
                 </section>

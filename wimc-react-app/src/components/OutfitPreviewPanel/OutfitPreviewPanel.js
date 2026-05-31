@@ -8,6 +8,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import "./OutfitPreviewPanel.css";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
+import Lightbox from "../Lightbox/Lightbox";
 
 const SECTION_OPTIONS_FEMALE = [
   { value: "dresses-skirts",   label: "Dresses/Skirts" },
@@ -207,6 +208,12 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
 
   // per-item name visibility (hidden by default)
   const [nameVisibleKeys, setNameVisibleKeys] = useState(() => new Set());
+
+  // lightbox
+  const [lbImages, setLbImages] = useState([]);
+  const [lbIndex, setLbIndex] = useState(0);
+  const openLightbox = (images, idx) => { setLbImages(images); setLbIndex(idx); };
+  const closeLightbox = () => setLbImages([]);
 
   // clear-all toast
   const [clearToast, setClearToast] = useState(false);
@@ -900,6 +907,9 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
 
   return (
     <>
+      {lbImages.length > 0 && (
+        <Lightbox images={lbImages} index={lbIndex} onClose={closeLightbox} onChange={setLbIndex} />
+      )}
       {isFloating && <div className="opp-backdrop" onClick={closePanel} />}
 
       {/* Favorites Drawer */}
@@ -1418,10 +1428,20 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                               </video>
                             ) : (
                               <img
-                                className="opp__thumb-img"
+                                className="opp__thumb-img opp__thumb-img--zoomable"
                                 src={it.mediaThumb || it.mediaUrl}
                                 onError={(e) => onImgError(e, it)}
                                 alt={it.name || "Selected"}
+                                title="Click to enlarge"
+                                onClick={() => {
+                                  const imgs = selected
+                                    .filter((x) => x.mediaType !== "video")
+                                    .map((x) => ({ src: x.mediaThumb || x.mediaUrl, alt: x.name || "" }));
+                                  const imgIdx = selected
+                                    .filter((x) => x.mediaType !== "video")
+                                    .indexOf(it);
+                                  openLightbox(imgs, Math.max(0, imgIdx));
+                                }}
                               />
                             )}
 

@@ -1,0 +1,136 @@
+/* ── Lightbox Overlay ── */
+.lb__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lb-fade-in 0.18s ease;
+}
+
+@keyframes lb-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Image wrapper ── */
+.lb__img-wrap {
+  position: relative;
+  max-width: 90vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.lb__img {
+  max-width: 90vw;
+  max-height: 82vh;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
+  display: block;
+  user-select: none;
+  animation: lb-zoom-in 0.18s ease;
+}
+
+@keyframes lb-zoom-in {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+.lb__caption {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  text-align: center;
+  max-width: 80vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Close button ── */
+.lb__close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 2001;
+  transition: background 0.15s;
+  line-height: 1;
+}
+.lb__close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* ── Counter ── */
+.lb__counter {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px 10px;
+  border-radius: 20px;
+  z-index: 2001;
+  pointer-events: none;
+}
+
+/* ── Navigation arrows ── */
+.lb__nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 300;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 2001;
+  transition: background 0.15s;
+  line-height: 1;
+}
+.lb__nav:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+.lb__nav--prev { left: 12px; }
+.lb__nav--next { right: 12px; }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  .lb__nav {
+    width: 38px;
+    height: 52px;
+    font-size: 24px;
+  }
+  .lb__nav--prev { left: 4px; }
+  .lb__nav--next { right: 4px; }
+  .lb__img {
+    max-width: 96vw;
+    max-height: 78vh;
+  }
+  .lb__img-wrap {
+    max-width: 96vw;
+  }
+}

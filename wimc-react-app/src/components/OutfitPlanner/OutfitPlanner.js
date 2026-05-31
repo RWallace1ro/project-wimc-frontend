@@ -7,6 +7,7 @@ import {
   videoPoster,
 } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
+import Lightbox from "../Lightbox/Lightbox";
 import "./OutfitPlanner.css";
 
 const DAYS = [
@@ -85,6 +86,7 @@ export default function OutfitPlanner({
   const [importUrl, setImportUrl] = useState("");
   const [loadingImport, setLoadingImport] = useState(false);
   const [importError, setImportError] = useState("");
+  const [smsHref, setSmsHref] = useState(""); // eslint-disable-line no-unused-vars
   const [sharing, setSharing] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [shareError, setShareError] = useState("");
@@ -98,6 +100,12 @@ export default function OutfitPlanner({
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
+
+  // lightbox
+  const [lbImages, setLbImages] = useState([]);
+  const [lbIndex, setLbIndex] = useState(0);
+  const openLightbox = (images, idx) => { setLbImages(images); setLbIndex(idx); };
+  const closeLightbox = () => setLbImages([]);
 
   // per-day expand/collapse
   const [expandedDays, setExpandedDays] = useState(() => new Set(DAYS));
@@ -317,6 +325,9 @@ export default function OutfitPlanner({
 
   return (
     <>
+      {lbImages.length > 0 && (
+        <Lightbox images={lbImages} index={lbIndex} onClose={closeLightbox} onChange={setLbIndex} />
+      )}
       {floating && <div className="planner__backdrop" onClick={close} />}
 
       <section
@@ -579,33 +590,46 @@ export default function OutfitPlanner({
                     {(plan?.[d] || []).length === 0 ? (
                       <div className="planner__empty">No items</div>
                     ) : (
-                      (plan?.[d] || []).map((it, i) => (
-                        <figure
-                          key={`${it.mediaUrl || it.imageUrl}-${i}`}
-                          className="planner__thumb"
-                        >
-                          {it.mediaType === "video" ? (
-                            <img
-                              className="planner__img"
-                              src={it.mediaPoster || ""}
-                              alt="video poster"
-                            />
-                          ) : (
-                            <img
-                              className="planner__img"
-                              src={it.mediaThumb || it.mediaUrl}
-                              alt={it.name || "item"}
-                            />
-                          )}
-                          <button
-                            className="planner__remove"
-                            title="Remove"
-                            onClick={() => removeFromDay(d, i)}
+                      (plan?.[d] || []).map((it, i) => {
+                        const dayImgs = (plan?.[d] || [])
+                          .filter((x) => x.mediaType !== "video")
+                          .map((x) => ({ src: x.mediaThumb || x.mediaUrl, alt: x.name || "" }));
+                        const imgIdx = (plan?.[d] || [])
+                          .filter((x) => x.mediaType !== "video")
+                          .findIndex((_, fi) => {
+                            const nonVid = (plan?.[d] || []).filter(x => x.mediaType !== "video");
+                            return nonVid[fi] === (plan?.[d] || [])[i];
+                          });
+                        return (
+                          <figure
+                            key={`${it.mediaUrl || it.imageUrl}-${i}`}
+                            className="planner__thumb"
                           >
-                            🗑️
-                          </button>
-                        </figure>
-                      ))
+                            {it.mediaType === "video" ? (
+                              <img
+                                className="planner__img"
+                                src={it.mediaPoster || ""}
+                                alt="video poster"
+                              />
+                            ) : (
+                              <img
+                                className="planner__img planner__img--zoomable"
+                                src={it.mediaThumb || it.mediaUrl}
+                                alt={it.name || "item"}
+                                title="Click to enlarge"
+                                onClick={() => openLightbox(dayImgs, Math.max(0, imgIdx))}
+                              />
+                            )}
+                            <button
+                              className="planner__remove"
+                              title="Remove"
+                              onClick={() => removeFromDay(d, i)}
+                            >
+                              🗑️
+                            </button>
+                          </figure>
+                        );
+                      })
                     )}
                   </div>
                 </section>
