@@ -1,9 +1,6 @@
 .closet-section-modal__overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;                          /* explicit on all 4 sides — avoids scroll-bar offset */
   background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
@@ -70,7 +67,9 @@
 .closet-section-modal__item {
   margin: 10px 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
 }
 
 .closet-section-modal__item-image {
@@ -142,6 +141,43 @@
   font-weight: 600;
 }
 
+/* ── Section switcher nav ── */
+.closet-section-modal__section-nav {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 4px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  scrollbar-width: none;
+  border-bottom: 1px solid #eee;
+}
+.closet-section-modal__section-nav::-webkit-scrollbar {
+  display: none;
+}
+.closet-section-modal__section-pill {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.closet-section-modal__section-pill:hover {
+  background: #f5f7fb;
+  border-color: #93c5fd;
+}
+.closet-section-modal__section-pill.is-active {
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+}
+
 .closet-section-modal__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -154,4 +190,232 @@
   height: auto;
   border-radius: 8px;
   display: block;
+}
+
+/* ── Delete button (top-right) ── */
+.csm-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  padding: 4px 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 2;
+}
+.closet-section-modal__item:hover .csm-delete-btn {
+  opacity: 1;
+}
+.csm-delete-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* ── Move button (top-left) ── */
+.csm-move-btn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(37, 99, 235, 0.75);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  padding: 4px 7px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  z-index: 2;
+}
+.closet-section-modal__item:hover .csm-move-btn {
+  opacity: 1;
+}
+.csm-move-btn:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+/* ── Move dropdown menu ── */
+.csm-move-menu {
+  position: absolute;
+  top: 34px;
+  left: 6px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+  z-index: 20;
+  min-width: 150px;
+  overflow: hidden;
+}
+.csm-move-menu__title {
+  margin: 0;
+  padding: 7px 12px 5px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f3f4f6;
+}
+.csm-move-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  color: #111827;
+  transition: background 0.12s;
+}
+.csm-move-option:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+/* ── Zoom cursor on clickable images ── */
+.csm-zoomable {
+  cursor: zoom-in;
+}
+
+/* ── Fullscreen Lightbox ── */
+.csm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: lbFadeIn 0.18s ease both;
+}
+@keyframes lbFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.csm-lightbox__img {
+  max-width: calc(100vw - 120px);
+  max-height: calc(100vh - 80px);
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 8px 48px rgba(0, 0, 0, 0.7);
+  animation: lbImgIn 0.18s ease both;
+  user-select: none;
+}
+@keyframes lbImgIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* Close button — top right */
+.csm-lightbox__close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 100000;
+  transition: background 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+.csm-lightbox__close:hover {
+  background: rgba(185, 28, 28, 0.75);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Image counter — top left */
+.csm-lightbox__counter {
+  position: fixed;
+  top: 22px;
+  left: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 4px 10px;
+  border-radius: 20px;
+  z-index: 100000;
+  pointer-events: none;
+}
+
+/* Prev / Next nav arrows */
+.csm-lightbox__nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 100000;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  user-select: none;
+}
+.csm-lightbox__nav--prev { left: 16px; }
+.csm-lightbox__nav--next { right: 16px; }
+.csm-lightbox__nav:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-50%) scale(1.08);
+}
+
+@media (max-width: 600px) {
+  .csm-lightbox__img {
+    max-width: 100vw;
+    max-height: calc(100vh - 100px);
+    border-radius: 0;
+  }
+  .csm-lightbox__nav {
+    width: 40px;
+    height: 40px;
+    font-size: 26px;
+  }
+  .csm-lightbox__nav--prev { left: 6px; }
+  .csm-lightbox__nav--next { right: 6px; }
+}
+
+/* ── Full-screen on phone / tablet (portrait + landscape) ── */
+@media (max-width: 768px) {
+  /* Pin the modal directly to the viewport edges — bypasses flex centering */
+  .closet-section-modal {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    padding: 12px 10px 10px;
+    margin: 0;
+  }
+  .closet-section-modal__grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    padding: 8px;
+  }
 }

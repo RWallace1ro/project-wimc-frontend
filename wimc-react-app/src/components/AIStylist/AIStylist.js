@@ -17,6 +17,8 @@ const QUICK_PROMPTS = [
   "Suggest a capsule wardrobe for travel",
   "What should I wear to a summer wedding?",
   "Give me a chic work-from-home look",
+  "🎨 What are the colors of the season?",
+  "🌿 What are the current seasonal fashion trends?",
 ];
 
 export default function AIStylist({ isOpen, onClose, onAddToPlanner }) {
@@ -55,7 +57,14 @@ Your role:
 - If the user asks about packing or travel, focus on outfit combinations they can mix and match
 - Format outfit suggestions clearly, e.g.:
   ✨ Outfit 1: [Top] + [Pants/Jeans] + [Shoes/Sneakers]
-  ✨ Outfit 2: [Dresses/Skirts] + [Bags/Accessories] + [Jackets/Coats]`;
+  ✨ Outfit 2: [Dresses/Skirts] + [Bags/Accessories] + [Jackets/Coats]
+
+Seasonal Colors & Trends:
+- When asked about colors of the season, provide the current season's Pantone and runway color palette with names, hex codes where helpful, and how to wear each color
+- When asked about seasonal trends, cover: silhouettes, fabrics, patterns, key pieces, and how to incorporate trends using items already in the user's closet categories
+- Always tie trend advice back to the user's existing closet so they can shop their own wardrobe first
+- Be specific: name actual trend names (e.g. "quiet luxury", "coastal grandmother", "dopamine dressing") and explain them in plain language
+- Include both high-fashion runway trends AND accessible everyday wearable versions`;
 
   const sendMessage = async (text) => {
     const userText = (text || input).trim();
@@ -82,55 +91,32 @@ Your role:
 
     try {
       abortRef.current = new AbortController();
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
         method: "POST",
         signal: abortRef.current.signal,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-5",
           max_tokens: 1000,
           system: systemPrompt,
-          stream: true,
           messages: history,
         }),
       });
 
-      if (!res.ok) throw new Error(`API error ${res.status}`);
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(data);
-            const delta =
-              parsed?.delta?.text || parsed?.delta?.content?.[0]?.text || "";
-            if (delta) {
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistMsg.id
-                    ? { ...m, content: m.content + delta }
-                    : m,
-                ),
-              );
-            }
-          } catch {}
-        }
+      const data = await res.json();
+      if (!res.ok) {
+        const detail = data?.error?.message || data?.error || `HTTP ${res.status}`;
+        throw new Error(String(detail));
       }
+      const text = data.content?.[0]?.text || "";
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === assistMsg.id ? { ...m, content: text } : m,
+        ),
+      );
     } catch (e) {
       if (e.name !== "AbortError") {
-        setError("Something went wrong. Please try again.");
+        setError(`Error: ${e.message}`);
         setMessages((prev) => prev.filter((m) => m.id !== assistMsg.id));
       }
     } finally {
@@ -193,7 +179,7 @@ Your role:
               onClick={onClose}
               aria-label="Close"
             >
-              ×
+              ✕
             </button>
           </div>
         </header>

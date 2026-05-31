@@ -3,7 +3,6 @@
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
-  bottom: 20px;
   flex-direction: column;
   padding: 12px;
 }
@@ -98,8 +97,8 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 401;
-  width: min(100vw - 48px, 980px);
-  max-height: min(100vh - 48px, 760px);
+  width: min(100vw - 48px, 1200px);
+  height: min(100vh - 48px, 820px);
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -124,23 +123,141 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  border-bottom: 1px solid #eee;
-  background: #fff;
-  gap: 10px;
-  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-bottom: 1px solid #1e3a5f;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-height: 52px;
 }
 .wish-modal__title {
   margin: 0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   flex-shrink: 0;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* Buttons inside the dark modal header */
+.wish-modal__head .wish-modal__btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  white-space: nowrap;
+  height: 32px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.wish-modal__head .wish-modal__btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+/* Allow Edit variant — purple, stands out clearly */
+.wish-modal__btn--edit {
+  background: #7c3aed !important;
+  color: #fff !important;
+  border-color: #7c3aed !important;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wish-modal__btn--edit:hover {
+  background: #6d28d9 !important;
+  border-color: #6d28d9 !important;
+}
+
+/* Close "✕" button — fixed size, right-aligned, separated */
+.wish-modal__close {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-left: 4px;
 }
 .wish-modal__actions {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* Share bar — share buttons left, note right */
+.wish-modal__share-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+.wish-modal__share-btns {
+  display: flex;
   flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.wish-modal__share-btn {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.wish-modal__share-btn:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+.wish-modal__share-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.wish-modal__share-btn--edit {
+  background: #7c3aed !important;
+  color: #fff !important;
+  border-color: #7c3aed !important;
+  font-weight: 600;
+}
+.wish-modal__share-btn--edit:hover {
+  background: #6d28d9 !important;
+  border-color: #6d28d9 !important;
+}
+
+.wish-modal__share-note {
+  flex: 1;
+  min-width: 140px;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  resize: vertical;
+  background: #fff;
+  color: #1e293b;
+}
+.wish-modal__share-note:focus {
+  outline: none;
+  border-color: #a78bfa;
+  background: #fff;
 }
 
 .wish-modal__share {
@@ -218,29 +335,42 @@
 .wish-thumb__img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: top center;
   display: block;
 }
 .wish-thumb__remove {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
   border: none;
-  border-radius: 50%;
-  background: #fff;
-  color: #b91c1c;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
   cursor: pointer;
-  font-size: 14px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   transition: background 0.15s;
-  line-height: 1;
 }
 .wish-thumb__remove:hover {
-  background: #fef2f2;
+  background: rgba(185, 28, 28, 0.80);
+}
+
+/* Hover-reveal for wish-list tile buttons */
+.wish-thumb .wish-thumb__remove,
+.wish-thumb .opp__name-toggle {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.wish-thumb:hover .wish-thumb__remove,
+.wish-thumb:hover .opp__name-toggle {
+  opacity: 1;
 }
 .wish-thumb__cap {
   position: absolute;
@@ -249,7 +379,7 @@
   bottom: 36px;
   max-height: 3.8em;
   padding: 4px 6px;
-  font-size: 11px;
+  font-size: 13px;
   color: #111;
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid #eee;
@@ -274,19 +404,21 @@
 /* Name toggle — matches Outfit Preview */
 .opp__name-toggle {
   position: absolute;
-  left: 6px;
-  bottom: 6px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 1px solid #eee;
-  background: #fff;
-  cursor: pointer;
-  line-height: 1;
+  left: 4px;
+  bottom: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
   font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
   display: grid;
   place-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
 }
 
 /* Card layout */
@@ -313,7 +445,7 @@
   object-fit: cover;
 }
 .wish-card__placeholder {
-  font-size: 11px;
+  font-size: 13px;
   color: #6b7280;
 }
 .wish-card__meta {
@@ -332,7 +464,7 @@
   border-radius: 3px;
 }
 .wish-card__domain {
-  font-size: 11px;
+  font-size: 13px;
   color: #6b7280;
 }
 .wish-card__title {
@@ -346,7 +478,7 @@
   -webkit-box-orient: vertical;
 }
 .wish-card__desc {
-  font-size: 11px;
+  font-size: 13px;
   color: #4b5563;
   max-height: 3.6em;
   overflow: hidden;
@@ -386,7 +518,7 @@
   line-height: 1.3;
 }
 .wish-preview__site {
-  font-size: 11px;
+  font-size: 13px;
   color: #666;
 }
 
@@ -406,5 +538,17 @@
   }
   .wish-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .wish-modal {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+    animation: none;
   }
 }

@@ -1,67 +1,216 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   fetchImagesByTag,
   fetchVideosByTag,
   videoPoster,
+  deleteImage,
+  deleteVideo,
+  transferItem,
 } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
 import "./ClosetSectionModal.css";
 
 const LABEL_TO_TAG = {
-  "Dresses/Skirts": "dresses-skirts",
-  "Shoes/Sneakers": "shoes-sneakers",
-  "Pants/Jeans": "pants-jeans",
-  Tops: "tops",
-  "Bags/Accessories": "bags-accessories",
-  "Jackets/Coats": "jackets-coats",
+  "Dresses/Skirts":          "dresses-skirts",
+  "Dress Shirts/Suits":      "dress-shirts-suits",
+  "Button-Ups/Dress Clothes":"dress-shirts-suits",
+  "Shoes/Sneakers":          "shoes-sneakers",
+  "Pants/Jeans":             "pants-jeans",
+  Tops:                      "tops",
+  "Bags/Accessories":        "bags-accessories",
+  "Jackets/Coats":           "jackets-coats",
 };
 
-function ClosetSectionModal({ isOpen, sectionName, onClose, onAddItem }) {
-  const [items, setItems] = useState([]);
-  const [videos, setVideos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [tab, setTab] = useState("images");
+function ClosetSectionModal({
+  isOpen,
+  sectionName,
+  tag: tagProp,
+  onClose,
+  onAddItem,
+  /** Array of { label, tag } for all sections in this closet (used for the Move feature) */
+  allSections = [],
+  /** Called with a section tag when the user picks a different section from within the modal */
+  onSwitchSection,
+}) {
+  // ── Per-tag item cache ────────────────────────────────────────────────────
+  // Keyed by section tag so switching sections never wipes fetched data and
+  // so transfers can update both source and destination immediately without
+  // waiting for Cloudinary's (stale) CDN tag-list cache to refresh.
+  const [itemsByTag,   setItemsByTag]   = useState({}); // { [tag]: [url, ...] }
+  const [videosByTag,  setVideosByTag]  = useState({}); // { [tag]: [url, ...] }
+  const [loadingTags,  setLoadingTags]  = useState(new Set());
+  const [error,        setError]        = useState(null);
+  const [tab,          setTab]          = useState("images");
+  const [deleting,     setDeleting]     = useState(null);
+  const [moving,       setMoving]       = useState(null);
+  const [moveMenuFor,  setMoveMenuFor]  = useState(null);
+  const [lightboxIdx,  setLightboxIdx]  = useState(null); // null = closed
 
   const { getBackground } = useBackground();
 
-  // ✅ Correctly derive the section background
   const sectionBg = sectionName
     ? getBackground(LABEL_TO_TAG[sectionName] || null)
     : null;
 
   const tag = useMemo(() => {
+    if (tagProp) return tagProp;
     if (!sectionName) return "";
     const s = String(sectionName);
     return s.includes(" ")
       ? s.replace(/\s+/g, "-").toLowerCase()
       : s.toLowerCase();
-  }, [sectionName]);
+  }, [sectionName, tagProp]);
 
+  // Derived views for the current section
+  const items  = itemsByTag[tag]  || [];
+  const videos = videosByTag[tag] || [];
+
+  // ── Fetch current section (only if not yet cached) ─────────────────────
   useEffect(() => {
-    const fetchItems = async () => {
-      if (!isOpen || !sectionName || !tag) return;
-      setLoading(true);
+    if (!isOpen || !sectionName || !tag) return;
+    // Skip if we already have data for this tag (prevents stale-CDN re-fetches
+    // after transfers and avoids the duplicate-item bug on section switch).
+    if (itemsByTag[tag] !== undefined) return;
+
+    let cancelled = false;
+    const load = async () => {
+      setLoadingTags((prev) => new Set(prev).add(tag));
       setError(null);
       try {
         const [fetchedImages, fetchedVideos] = await Promise.all([
           fetchImagesByTag(tag),
           fetchVideosByTag(tag),
         ]);
-        setItems(fetchedImages || []);
-        setVideos(fetchedVideos || []);
+        if (!cancelled) {
+          setItemsByTag((prev) => ({ ...prev, [tag]: fetchedImages || [] }));
+          setVideosByTag((prev) => ({ ...prev, [tag]: fetchedVideos || [] }));
+        }
       } catch {
-        setError("Failed to load items. Please try again.");
+        if (!cancelled) setError("Failed to load items. Please try again.");
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoadingTags((prev) => {
+            const next = new Set(prev);
+            next.delete(tag);
+            return next;
+          });
+        }
       }
     };
-    fetchItems();
+    load();
+    return () => { cancelled = true; };
+  // itemsByTag intentionally excluded — we only want to trigger on tag/isOpen
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, tag]);
+
+  // ── Delete helpers ───────────────────────────────────────────────────────
+  const handleDeleteImage = async (url) => {
+    if (!window.confirm("Delete this image? This cannot be undone.")) return;
+    setDeleting(url);
+    try {
+      await deleteImage(url);
+      setItemsByTag((prev) => ({
+        ...prev,
+        [tag]: (prev[tag] || []).filter((u) => u !== url),
+      }));
+    } catch (err) {
+      console.error("Image delete failed:", err);
+      alert(`Failed to delete image: ${err.message}`);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleDeleteVideo = async (url) => {
+    if (!window.confirm("Delete this video? This cannot be undone.")) return;
+    setDeleting(url);
+    try {
+      await deleteVideo(url);
+      setVideosByTag((prev) => ({
+        ...prev,
+        [tag]: (prev[tag] || []).filter((u) => u !== url),
+      }));
+    } catch (err) {
+      console.error("Video delete failed:", err);
+      alert(`Failed to delete video: ${err.message}`);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  // ── Move / transfer ──────────────────────────────────────────────────────
+  const handleMoveItem = async (url, destTag, resourceType = "image") => {
+    const destLabel =
+      allSections.find((s) => s.tag === destTag)?.label || destTag;
+    if (
+      !window.confirm(
+        `Move this item to "${destLabel}"? It will be removed from the current section.`
+      )
+    )
+      return;
+
+    setMoveMenuFor(null);
+    setMoving(url);
+    try {
+      // transferItem returns the new delivery URL of the copy in the destination.
+      const newUrl = await transferItem(url, destTag, resourceType);
+
+      // ── Immediate optimistic updates (no Cloudinary CDN re-fetch needed) ──
+
+      if (resourceType === "video") {
+        // Remove from source
+        setVideosByTag((prev) => ({
+          ...prev,
+          [tag]: (prev[tag] || []).filter((u) => u !== url),
+        }));
+        // Add to destination cache (create empty array if not yet loaded)
+        setVideosByTag((prev) => ({
+          ...prev,
+          [destTag]: [...(prev[destTag] || []), newUrl],
+        }));
+      } else {
+        // Remove from source
+        setItemsByTag((prev) => ({
+          ...prev,
+          [tag]: (prev[tag] || []).filter((u) => u !== url),
+        }));
+        // Add to destination cache (create empty array if not yet loaded)
+        setItemsByTag((prev) => ({
+          ...prev,
+          [destTag]: [...(prev[destTag] || []), newUrl],
+        }));
+      }
+    } catch (err) {
+      console.error("Move failed:", err);
+      alert(`Failed to move item: ${err.message}`);
+    } finally {
+      setMoving(null);
+    }
+  };
+
+  // ── Lightbox keyboard navigation ─────────────────────────────────────────
+  const lightboxClose = useCallback(() => setLightboxIdx(null), []);
+  const lightboxPrev  = useCallback(() =>
+    setLightboxIdx((i) => (i > 0 ? i - 1 : items.length - 1)), [items.length]);
+  const lightboxNext  = useCallback(() =>
+    setLightboxIdx((i) => (i < items.length - 1 ? i + 1 : 0)), [items.length]);
+
+  useEffect(() => {
+    if (lightboxIdx === null) return;
+    const onKey = (e) => {
+      if (e.key === "Escape")     lightboxClose();
+      if (e.key === "ArrowLeft")  lightboxPrev();
+      if (e.key === "ArrowRight") lightboxNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxIdx, lightboxClose, lightboxPrev, lightboxNext]);
 
   const handleOverlayClick = (e) => {
     if (e.target.classList.contains("closet-section-modal__overlay")) onClose();
   };
+
+  const loading = loadingTags.has(tag);
 
   if (!isOpen) return null;
 
@@ -73,10 +222,9 @@ function ClosetSectionModal({ isOpen, sectionName, onClose, onAddItem }) {
       aria-labelledby="closet-section-modal-title"
       aria-hidden={!isOpen}
     >
-      {/* ✅ style prop is now correctly inside the opening tag */}
       <div
         className="closet-section-modal"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); setMoveMenuFor(null); }}
         style={
           sectionBg
             ? {
@@ -113,6 +261,22 @@ function ClosetSectionModal({ isOpen, sectionName, onClose, onAddItem }) {
             </button>
           )}
         </header>
+
+        {/* Section switcher — lets users navigate between sections without closing */}
+        {allSections.length > 1 && onSwitchSection && (
+          <nav className="closet-section-modal__section-nav" aria-label="Switch section">
+            {allSections.map((s) => (
+              <button
+                key={s.tag}
+                className={`closet-section-modal__section-pill${s.tag === tag ? " is-active" : ""}`}
+                onClick={() => s.tag !== tag && onSwitchSection(s.tag)}
+                aria-current={s.tag === tag ? "true" : undefined}
+              >
+                {s.label}
+              </button>
+            ))}
+          </nav>
+        )}
 
         {/* Tabs */}
         <nav
@@ -157,19 +321,69 @@ function ClosetSectionModal({ isOpen, sectionName, onClose, onAddItem }) {
           <main className="closet-section-modal__levels">
             <section className="closet-section-modal__level closet-section-modal__level--dark">
               <div className="closet-section-modal__grid">
-                {items.map((url, i) => (
-                  <figure
-                    key={`img-${i}`}
-                    className="closet-section-modal__item"
-                  >
-                    <img
-                      src={url}
-                      alt={`image-${i}`}
-                      className="closet-section-modal__item-image"
-                      loading="lazy"
-                    />
-                  </figure>
-                ))}
+                {items.map((url, i) => {
+                  const destOptions = allSections.filter((s) => s.tag !== tag);
+                  const isBusy = deleting === url || moving === url;
+                  return (
+                    <figure
+                      key={`img-${i}`}
+                      className="closet-section-modal__item"
+                    >
+                      <img
+                        src={url}
+                        alt={`image-${i}`}
+                        className="closet-section-modal__item-image csm-zoomable"
+                        loading="lazy"
+                        onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
+                        title="Click to enlarge"
+                      />
+                      {/* Delete button — top-right */}
+                      <button
+                        className="csm-delete-btn"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteImage(url); }}
+                        disabled={isBusy}
+                        title="Delete image"
+                        aria-label="Delete image"
+                      >
+                        {deleting === url ? "…" : "🗑️"}
+                      </button>
+                      {/* Move button — top-left (only shown when other sections exist) */}
+                      {destOptions.length > 0 && (
+                        <>
+                          <button
+                            className="csm-move-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMoveMenuFor(moveMenuFor === url ? null : url);
+                            }}
+                            disabled={isBusy}
+                            title="Move to another section"
+                            aria-label="Move to another section"
+                          >
+                            {moving === url ? "…" : "↗"}
+                          </button>
+                          {moveMenuFor === url && (
+                            <div
+                              className="csm-move-menu"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <p className="csm-move-menu__title">Move to…</p>
+                              {destOptions.map((s) => (
+                                <button
+                                  key={s.tag}
+                                  className="csm-move-option"
+                                  onClick={() => handleMoveItem(url, s.tag, "image")}
+                                >
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </figure>
+                  );
+                })}
               </div>
             </section>
           </main>
@@ -179,26 +393,128 @@ function ClosetSectionModal({ isOpen, sectionName, onClose, onAddItem }) {
           <main className="closet-section-modal__levels">
             <section className="closet-section-modal__level closet-section-modal__level--dark">
               <div className="closet-section-modal__grid">
-                {videos.map((vurl, i) => (
-                  <figure
-                    key={`vid-${i}`}
-                    className="closet-section-modal__item"
-                  >
-                    <video
-                      className="closet-section-modal__item-video"
-                      controls
-                      preload="metadata"
-                      poster={videoPoster(vurl)}
+                {videos.map((vurl, i) => {
+                  const destOptions = allSections.filter((s) => s.tag !== tag);
+                  const isBusy = deleting === vurl || moving === vurl;
+                  return (
+                    <figure
+                      key={`vid-${i}`}
+                      className="closet-section-modal__item"
                     >
-                      <source src={vurl} />
-                    </video>
-                  </figure>
-                ))}
+                      <video
+                        className="closet-section-modal__item-video"
+                        controls
+                        preload="metadata"
+                        poster={videoPoster(vurl)}
+                      >
+                        <source src={vurl} />
+                      </video>
+                      {/* Delete button — top-right */}
+                      <button
+                        className="csm-delete-btn"
+                        onClick={(e) => { e.stopPropagation(); handleDeleteVideo(vurl); }}
+                        disabled={isBusy}
+                        title="Delete video"
+                        aria-label="Delete video"
+                      >
+                        {deleting === vurl ? "…" : "🗑️"}
+                      </button>
+                      {/* Move button — top-left */}
+                      {destOptions.length > 0 && (
+                        <>
+                          <button
+                            className="csm-move-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMoveMenuFor(moveMenuFor === vurl ? null : vurl);
+                            }}
+                            disabled={isBusy}
+                            title="Move to another section"
+                            aria-label="Move to another section"
+                          >
+                            {moving === vurl ? "…" : "↗"}
+                          </button>
+                          {moveMenuFor === vurl && (
+                            <div
+                              className="csm-move-menu"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <p className="csm-move-menu__title">Move to…</p>
+                              {destOptions.map((s) => (
+                                <button
+                                  key={s.tag}
+                                  className="csm-move-option"
+                                  onClick={() => handleMoveItem(vurl, s.tag, "video")}
+                                >
+                                  {s.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </figure>
+                  );
+                })}
               </div>
             </section>
           </main>
         )}
       </div>
+
+      {/* ── Fullscreen Lightbox ── */}
+      {lightboxIdx !== null && items[lightboxIdx] && (
+        <div
+          className="csm-lightbox"
+          onClick={lightboxClose}
+          role="dialog"
+          aria-label="Fullscreen image viewer"
+        >
+          {/* Close */}
+          <button
+            className="csm-lightbox__close"
+            onClick={lightboxClose}
+            aria-label="Close fullscreen view"
+          >
+            ✕
+          </button>
+
+          {/* Counter */}
+          <span className="csm-lightbox__counter">
+            {lightboxIdx + 1} / {items.length}
+          </span>
+
+          {/* Prev */}
+          {items.length > 1 && (
+            <button
+              className="csm-lightbox__nav csm-lightbox__nav--prev"
+              onClick={(e) => { e.stopPropagation(); lightboxPrev(); }}
+              aria-label="Previous image"
+            >
+              ‹
+            </button>
+          )}
+
+          {/* Image */}
+          <img
+            src={items[lightboxIdx]}
+            alt={`fullscreen-${lightboxIdx}`}
+            className="csm-lightbox__img"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Next */}
+          {items.length > 1 && (
+            <button
+              className="csm-lightbox__nav csm-lightbox__nav--next"
+              onClick={(e) => { e.stopPropagation(); lightboxNext(); }}
+              aria-label="Next image"
+            >
+              ›
+            </button>
+          )}
+        </div>
+      )}
     </section>
   );
 }
