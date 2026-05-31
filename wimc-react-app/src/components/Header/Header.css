@@ -30,15 +30,37 @@
   background-color: #b45309;
 }
 
-/* ── BOTTOM LAYER (tabs) ── */
+/* ── BOTTOM LAYER (tabs + home button) ── */
 .header__bottom {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 24px;
+  justify-content: flex-start;
+  padding: 0;
   background-color: #f0f0f0;
   min-height: 44px;
-  overflow-x: auto;
+  overflow: hidden;
+}
+
+/* Home button inside the tabs bar */
+.header__bottom .header__home-btn {
+  flex-shrink: 0;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border-right: 1px solid #ddd;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+}
+.header__bottom .header__home-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
 }
 
 /* Logo */
@@ -59,8 +81,31 @@
 .header__home-icon {
   width: 22px;
   height: 22px;
+  display: block;
+}
+.header__home-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  line-height: 1;
+  white-space: nowrap;
+}
+.header__home-btn {
+  background: none;
+  border: none;
   cursor: pointer;
-  vertical-align: middle;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.header__home-btn:hover {
+  background: rgba(0, 0, 0, 0.07);
 }
 
 /* User section */
@@ -81,8 +126,8 @@
 }
 
 .header__avatar {
-  width: 36px;
-  height: 36px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #e2e8f0;
@@ -165,12 +210,16 @@
 
 /* ── Tabs layer overrides ── */
 .header__bottom .closet-tabs {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
 }
 .header__bottom .closet-tabs__container {
-  justify-content: center;
+  justify-content: flex-start;
   gap: 4px;
-  padding: 6px 0;
+  padding: 6px 8px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 .header__bottom .closet-tabs__tab {
   font-size: 14px;
@@ -202,6 +251,86 @@
   background-color: #d97706;
 }
 
+.header__button--tour {
+  background-color: #7c3aed;
+}
+.header__button--tour:hover {
+  background-color: #6d28d9;
+}
+
+/* ── Mobile controls (hamburger + avatar) — hidden on desktop ── */
+.header__mobile-controls {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.header__hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.header__hamburger-line {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #333;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.header__mobile-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+  z-index: 200;
+}
+
+.header__mobile-menu .header__button,
+.header__mobile-menu .header__about-button {
+  width: 100%;
+  text-align: left;
+  border-radius: 6px;
+}
+
+.header__mobile-menu .header__divider {
+  width: 100%;
+  height: 1px;
+  margin: 2px 0;
+}
+
+.header__mobile-username {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin: 0 0 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+/* Desktop nav — shown on desktop, hidden on mobile */
+.header__nav--desktop {
+  display: flex;
+}
+
 /* ── Tablet (≤1024px) ── */
 @media screen and (max-width: 1024px) {
   .header__top {
@@ -223,45 +352,89 @@
     font-size: 12px;
   }
   .header__avatar {
-    width: 30px;
-    height: 30px;
+    width: 42px;
+    height: 42px;
   }
 
   .header__bottom {
-    justify-content: flex-start;
-    padding: 0 14px;
+    padding: 0;
   }
   .header__bottom .closet-tabs__container {
     justify-content: flex-start;
   }
 }
 
-/* ── Mobile (≤480px) ── */
-@media screen and (max-width: 480px) {
+/* ── Switch to hamburger at 768px ── */
+@media screen and (max-width: 768px) {
+  .header__nav--desktop {
+    display: none;
+  }
+  .header__mobile-controls {
+    display: flex;
+  }
   .header__top {
-    padding: 8px 10px;
+    padding: 8px 12px;
   }
-  .header__logo {
-    font-size: 18px;
+  .header__bottom {
+    padding: 0;
   }
-  .header__user,
-  .header__auth-buttons {
-    gap: 5px;
-  }
-  .header__button,
-  .header__about-button {
-    padding: 5px 9px;
-    font-size: 11px;
-  }
-  .header__avatar {
-    width: 28px;
-    height: 28px;
-  }
-  .header__user-name {
-    font-size: 12px;
+  .header__bottom .closet-tabs__container {
+    gap: 2px;
+    padding: 4px 6px;
+    justify-content: flex-start;
   }
   .header__bottom .closet-tabs__tab {
     font-size: 12px;
     padding: 6px 10px;
+  }
+}
+
+/* Mobile auth buttons shown inline */
+.header__mobile-auth {
+  display: none;
+  align-items: center;
+  gap: 6px;
+}
+@media screen and (max-width: 768px) {
+  .header__mobile-auth {
+    display: flex;
+  }
+}
+.header__button--signup-mobile {
+  background-color: #7c3aed;
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.header__button--signup-mobile:hover {
+  background-color: #6d28d9;
+}
+.header__button--login-mobile {
+  background-color: #007bff;
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.header__button--login-mobile:hover {
+  background-color: #0056b3;
+}
+
+/* ── Mobile (≤480px) ── */
+@media screen and (max-width: 480px) {
+  .header__top {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .header__logo {
+    font-size: 17px;
+  }
+  .header__bottom .closet-tabs__tab {
+    font-size: 13px;
+    padding: 5px 7px;
+  }
+  .header__button--signup-mobile,
+  .header__button--login-mobile {
+    padding: 5px 9px;
+    font-size: 13px;
   }
 }

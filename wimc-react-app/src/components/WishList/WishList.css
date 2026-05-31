@@ -130,6 +130,32 @@
   flex-wrap: nowrap;
   min-height: 52px;
 }
+
+@media (max-width: 600px) {
+  .wish-modal__head {
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .wish-modal__title {
+    flex: 1 1 100%;
+    font-size: 14px;
+  }
+  .wish-modal__actions {
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .wish-modal__head .wish-modal__btn {
+    font-size: 11px;
+    padding: 0 8px;
+    height: 28px;
+  }
+  .wish-modal__close {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+}
 .wish-modal__title {
   margin: 0;
   font-size: 15px;

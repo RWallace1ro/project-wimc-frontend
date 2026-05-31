@@ -1,6 +1,7 @@
 .closet-tabs__container {
-  position: sticky;
-  top: 0;
+  /* Stickiness is handled by the parent .header — no separate sticky needed here.
+     Having position:sticky on a child can cause it to render above position:fixed
+     modals due to a browser stacking-context quirk. */
   display: flex;
   justify-content: space-between;
   padding: 0;
@@ -61,17 +62,18 @@
 
 @media screen and (max-width: 1024px) {
   .closet-tabs__container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
     justify-content: flex-start;
-    flex-direction: column;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, auto);
-    gap: 10px;
+    overflow-x: auto;
+    gap: 4px;
   }
 
   .closet-tabs__tab {
     font-size: 14px;
     padding: 8px 12px;
+    flex-shrink: 0;
   }
 
   .closet-tabs__gallery {
@@ -81,20 +83,27 @@
   .closet-tabs__image-container {
     width: 150px;
     height: 120px;
-    flex-direction: column;
   }
 }
 
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 600px) {
   .closet-tabs__container {
-    flex-direction: column;
-    align-items: center;
     display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 4px;
+    padding: 0 4px;
+    justify-content: flex-start;
+    -webkit-overflow-scrolling: touch;
   }
 
   .closet-tabs__tab {
-    padding: 6px 10px;
-    font-size: 12px;
+    flex-shrink: 0;
+    padding: 7px 12px;
+    font-size: 13px;
+    margin: 0;
+    white-space: nowrap;
   }
 
   .closet-tabs__gallery {

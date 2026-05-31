@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import ClosetTabs from "../ClosetTabs/ClosetTabs";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ReactComponent as HomeIcon } from "../../assets/images/home-icon.svg";
 import WeatherModal from "../WeatherModal/WeatherModal";
 import TryOnStudio from "../TryOnStudio/TryOnStudio";
 import AIStylist from "../AIStylist/AIStylist";
 import UserSettingsModal from "../UserSettingsModal/UserSettingsModal";
+import WIMCTourVideo, { useWIMCTour } from "../WIMCTourVideo/WIMCTourVideo";
 import "./Header.css";
 
 function Header({
@@ -13,7 +14,7 @@ function Header({
   avatarUrl,
   isLoggedIn,
   userData,
-  onUserUpdate, // ✅ new — bubbles updates to App.js
+  onUserUpdate,
   onSignUpClick,
   onLoginClick,
   onLogoutClick,
@@ -26,6 +27,10 @@ function Header({
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
   const [isStylistOpen, setIsStylistOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef(null);
+
+  const { isOpen: isTourOpen, openTour, closeTour, showIfNew } = useWIMCTour();
 
   const defaultAvatarUrl =
     "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
@@ -33,175 +38,162 @@ function Header({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Sync local state whenever App.js userData changes (e.g. on refresh)
+  useEffect(() => { setCurrentUserName(userName); }, [userName]);
+  useEffect(() => { setCurrentAvatarUrl(avatarUrl); }, [avatarUrl]);
+
   useEffect(() => {
-    setCurrentUserName(userName);
-  }, [userName]);
+    if (isLoggedIn) showIfNew();
+  }, [isLoggedIn, showIfNew]);
+
+  // Close mobile menu when route changes
   useEffect(() => {
-    setCurrentAvatarUrl(avatarUrl);
-  }, [avatarUrl]);
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handler = (e) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target)) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isMobileMenuOpen]);
 
   const handleTabChange = (tab) => {
-    if (!isLoggedIn) {
-      onLoginClick();
-      return;
-    }
+    if (!isLoggedIn) { onLoginClick(); return; }
     if (handleSelectTab) handleSelectTab(tab);
   };
 
   const handleLogout = () => {
     onLogoutClick();
     setCurrentUserName("Your Closet");
+    setIsMobileMenuOpen(false);
     navigate("/");
   };
 
-  // ✅ When settings saves, update local display AND persist via App.js
   const handleSettingsUpdate = (updated) => {
     setCurrentUserName(updated.userName);
     setCurrentAvatarUrl(updated.avatarUrl || currentAvatarUrl);
-    onUserUpdate?.(updated); // persists to localStorage via App.js
+    onUserUpdate?.(updated);
   };
 
   const activeTab = location.pathname === "/closet-data" ? selectedTab : "";
   const displayAvatarUrl = currentAvatarUrl || defaultAvatarUrl;
 
+  const loggedInButtons = (
+    <>
+      <button className="header__button header__button--weather" onClick={() => { setIsWeatherOpen(true); setIsMobileMenuOpen(false); }}>🌤️ Weather</button>
+      <button className="header__button header__button--tryon" onClick={() => { setIsTryOnOpen(true); setIsMobileMenuOpen(false); }}>🎬 Try On</button>
+      <button className="header__button header__button--stylist" onClick={() => { setIsStylistOpen(true); setIsMobileMenuOpen(false); }}>✨ AI Stylist</button>
+      <button className="header__button header__button--kids" onClick={() => { navigate("/kids-closet"); setIsMobileMenuOpen(false); }}>👶 Kids</button>
+      <button className="header__button header__button--receipts" onClick={() => { navigate("/receipts"); setIsMobileMenuOpen(false); }}>🧾 Receipts</button>
+      <button className="header__button header__button--tour" onClick={() => { openTour(); setIsMobileMenuOpen(false); }}>🎬 Tour</button>
+      <button className="header__about-button" onClick={() => { navigate("/about"); setIsMobileMenuOpen(false); }}>About</button>
+      <button className="header__button header__button--settings" onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false); }}>⚙️ Settings</button>
+      <div className="header__divider" />
+      <button className="header__button header__button--logout" onClick={handleLogout}>Logout</button>
+    </>
+  );
+
+  const loggedOutButtons = (
+    <>
+      <button className="header__button" onClick={() => { onSignUpClick(); setIsMobileMenuOpen(false); }}>Sign Up</button>
+      <button className="header__button" onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }}>Login</button>
+      <div className="header__divider" />
+      <button className="header__button header__button--weather" onClick={() => { setIsWeatherOpen(true); setIsMobileMenuOpen(false); }}>🌤️ Weather</button>
+      <button className="header__button header__button--tour" onClick={() => { openTour(); setIsMobileMenuOpen(false); }}>🎬 Tour</button>
+      <div className="header__divider" />
+      <button className="header__about-button" onClick={() => { navigate("/about"); setIsMobileMenuOpen(false); }}>About</button>
+    </>
+  );
+
   return (
     <>
       <header className="header">
-        {/* ── TOP LAYER ── */}
         <div className="header__top">
-          <Link to={isLoggedIn ? "/home" : "/"} className="header__logo-link">
+          {/* Logo — brand mark only, no navigation */}
+          <div className="header__logo-link">
             <div className="header__logo">WIMC™</div>
-            {location.pathname === "/home" && (
-              <HomeIcon className="header__home-icon" />
-            )}
-          </Link>
+          </div>
 
-          {isLoggedIn ? (
-            <div className="header__user">
-              <span className="header__user-name">
-                {currentUserName
-                  ? `${currentUserName}'s Closet`
-                  : "Your Closet"}
-              </span>
-              {/* ✅ Avatar now reflects live updates */}
-              <img
-                src={displayAvatarUrl}
-                alt="User Avatar"
-                className="header__avatar"
-                onError={(e) => {
-                  e.target.src = defaultAvatarUrl;
-                }}
-              />
-              <div className="header__divider" />
-              <button
-                className="header__button header__button--logout"
-                onClick={handleLogout}
-              >
-                Logout
-              </button>
-              <button
-                className="header__button header__button--weather"
-                onClick={() => setIsWeatherOpen(true)}
-              >
-                🌤️ Weather
-              </button>
-              <button
-                className="header__button header__button--tryon"
-                onClick={() => setIsTryOnOpen(true)}
-              >
-                🎬 Try On
-              </button>
-              <button
-                className="header__button header__button--stylist"
-                onClick={() => setIsStylistOpen(true)}
-              >
-                ✨ AI Stylist
-              </button>
-              <button
-                className="header__button header__button--kids"
-                onClick={() => navigate("/kids-closet")}
-              >
-                👶 Kids
-              </button>
-              <button
-                className="header__button header__button--receipts"
-                onClick={() => navigate("/receipts")}
-              >
-                🧾 Receipts
-              </button>
-              <div className="header__divider" />
-              <button
-                className="header__about-button"
-                onClick={() => navigate("/about")}
-              >
-                About
-              </button>
-              <button
-                className="header__button header__button--settings"
-                onClick={() => setIsSettingsOpen(true)}
-              >
-                ⚙️ Settings
-              </button>
-            </div>
-          ) : (
-            <div className="header__auth-buttons">
-              <button className="header__button" onClick={onSignUpClick}>
-                Sign Up
-              </button>
-              <button className="header__button" onClick={onLoginClick}>
-                Login
-              </button>
-              <div className="header__divider" />
-              <button
-                className="header__button header__button--weather"
-                onClick={() => setIsWeatherOpen(true)}
-              >
-                🌤️ Weather
-              </button>
-              <div className="header__divider" />
-              <button
-                className="header__about-button"
-                onClick={() => navigate("/about")}
-              >
-                About
-              </button>
-            </div>
-          )}
+          {/* Desktop nav */}
+          <nav className="header__nav header__nav--desktop" aria-label="Main navigation">
+            {isLoggedIn ? (
+              <div className="header__user">
+                <span className="header__user-name">{currentUserName ? `${currentUserName}'s Closet` : "Your Closet"}</span>
+                <img src={displayAvatarUrl} alt="User avatar" className="header__avatar" onError={(e) => { e.target.src = defaultAvatarUrl; }} />
+                <div className="header__divider" />
+                {loggedInButtons}
+              </div>
+            ) : (
+              <div className="header__auth-buttons">{loggedOutButtons}</div>
+            )}
+          </nav>
+
+          {/* Mobile: auth buttons (logged out) + avatar + hamburger */}
+          <div className="header__mobile-controls" ref={mobileMenuRef}>
+            {/* Show Login / Sign Up directly in bar when logged out */}
+            {!isLoggedIn && (
+              <div className="header__mobile-auth">
+                <button className="header__button header__button--signup-mobile" onClick={() => { onSignUpClick(); setIsMobileMenuOpen(false); }}>Sign Up</button>
+                <button className="header__button header__button--login-mobile" onClick={() => { onLoginClick(); setIsMobileMenuOpen(false); }}>Login</button>
+              </div>
+            )}
+            {isLoggedIn && (
+              <img src={displayAvatarUrl} alt="User avatar" className="header__avatar" onError={(e) => { e.target.src = defaultAvatarUrl; }} />
+            )}
+            <button
+              className="header__hamburger"
+              onClick={() => setIsMobileMenuOpen((o) => !o)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMobileMenuOpen}
+            >
+              <span className="header__hamburger-line" />
+              <span className="header__hamburger-line" />
+              <span className="header__hamburger-line" />
+            </button>
+
+            {isMobileMenuOpen && (
+              <nav className="header__mobile-menu" aria-label="Mobile navigation">
+                {isLoggedIn && (
+                  <p className="header__mobile-username">{currentUserName ? `${currentUserName}'s Closet` : "Your Closet"}</p>
+                )}
+                {isLoggedIn ? loggedInButtons : loggedOutButtons}
+              </nav>
+            )}
+          </div>
         </div>
 
-        {/* ── BOTTOM LAYER — tabs only ── */}
         <div className="header__bottom">
+          {location.pathname === "/closet-data" && (
+            <button
+              className="header__home-btn"
+              onClick={() => navigate("/home")}
+              aria-label="Go to Home"
+              title="Go to Home"
+            >
+              <HomeIcon className="header__home-icon" />
+              <span className="header__home-label">Home</span>
+            </button>
+          )}
           <ClosetTabs selectedTab={activeTab} onSelectTab={handleTabChange} />
         </div>
       </header>
 
-      <WeatherModal
-        isOpen={isWeatherOpen}
-        onClose={() => setIsWeatherOpen(false)}
-      />
-      <TryOnStudio
-        isOpen={isTryOnOpen}
-        onClose={() => setIsTryOnOpen(false)}
-        initialImageUrl={null}
-        initialSection={null}
-      />
-      <AIStylist
-        isOpen={isStylistOpen}
-        onClose={() => setIsStylistOpen(false)}
-      />
+      <WeatherModal isOpen={isWeatherOpen} onClose={() => setIsWeatherOpen(false)} />
+      <TryOnStudio isOpen={isTryOnOpen} onClose={() => setIsTryOnOpen(false)} initialImageUrl={null} initialSection={null} />
+      <AIStylist isOpen={isStylistOpen} onClose={() => setIsStylistOpen(false)} />
       <UserSettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        userData={
-          userData || {
-            userName: currentUserName,
-            email: "",
-            avatarUrl: currentAvatarUrl,
-          }
-        }
+        userData={userData || { userName: currentUserName, email: "", avatarUrl: currentAvatarUrl }}
         onUserUpdate={handleSettingsUpdate}
+        onLogout={onLogoutClick}
       />
+      <WIMCTourVideo isOpen={isTourOpen} onClose={closeTour} autoPlay={true} />
     </>
   );
 }

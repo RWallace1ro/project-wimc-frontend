@@ -412,7 +412,6 @@ export default function WishList({ storageKey }) {
                   tag="wishlist"
                   onUploadSuccess={onUploadSuccess}
                 />
-
                 <button
                   className="wish-modal__btn"
                   onClick={handleAddItem}
@@ -433,12 +432,12 @@ export default function WishList({ storageKey }) {
                   onClick={() => setListsOpen(true)}
                   title="Open Saved Wish Lists"
                 >
-                  Saved Wish Lists
-                </button>
-                <button className="wish-modal__btn wish-modal__close" onClick={closeModal} aria-label="Close">
-                  ✕
+                  Saved Lists
                 </button>
               </div>
+              <button className="wish-modal__btn wish-modal__close" onClick={closeModal} aria-label="Close">
+                ✕
+              </button>
             </header>
 
             {/* Share bar — share buttons left, note right */}
