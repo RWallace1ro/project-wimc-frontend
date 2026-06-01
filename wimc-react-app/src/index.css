@@ -1,13 +1,255 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ── Type scale ────────────────────────────────────────────────────────────
+   Follows Apple HIG / Material Design minimums:
+     xs   12px  captions & badges  (absolute minimum for phone legibility)
+     sm   13px  secondary labels
+     md   14px  UI labels, buttons
+     base 16px  body / inputs  (prevents iOS Safari auto-zoom)
+     lg   18px  section headings
+     xl   22px  page titles
+   ──────────────────────────────────────────────────────────────────────── */
+:root {
+  --fs-xs:    0.75rem;    /* 12px */
+  --fs-sm:    0.8125rem;  /* 13px */
+  --fs-md:    0.875rem;   /* 14px */
+  --fs-base:  1rem;       /* 16px */
+  --fs-lg:    1.125rem;   /* 18px */
+  --fs-xl:    1.375rem;   /* 22px */
+
+  --lh-tight:   1.25;
+  --lh-snug:    1.4;
+  --lh-normal:  1.5;
+  --lh-relaxed: 1.625;
+
+  --fw-normal:   400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide:   0.025em;
+  --letter-spacing-wider:  0.05em;
+}
+
+/* Clamp both html and body so nothing can push the viewport wider */
+html {
+  font-size: 16px;              /* 1rem = 16px on all platforms        */
+  overflow-x: hidden;
+  max-width: 100%;
+  text-size-adjust: 100%;       /* Prevent browser font inflation       */
+  -webkit-text-size-adjust: 100%;
+  /* Prevent elastic horizontal bounce on iOS */
+  overscroll-behavior-x: none;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
+  font-size: var(--fs-base);        /* 16px base — comfortable on all screens */
+  line-height: var(--lh-normal);    /* 1.5 line height for readability        */
+  font-weight: var(--fw-normal);
+  letter-spacing: var(--letter-spacing-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100%;
+  /* Prevent the page from shifting sideways when a touch begins */
+  touch-action: pan-y;
+}
+
+/* ── iOS Safari auto-zoom prevention ──────────────────────────────────────
+   Safari auto-zooms the page whenever a focused input has font-size < 16px.
+   Forcing max(16px, 1em) satisfies the threshold without overriding
+   intentional larger sizes, and eliminates the jarring zoom on every tap.  */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  font-size: max(16px, 1em);
+  line-height: var(--lh-snug);
+}
+
+/* ── Headings ──────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  line-height: var(--lh-tight);
+  font-weight: var(--fw-bold);
+  margin-top: 0;
+  letter-spacing: -0.01em;   /* slightly tighter for large text */
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* ── Android / mobile touch fixes ─────────────────────────────────────────
+   1. Remove the blue/grey tap-highlight flash on Android Chrome
+   2. touch-action: manipulation removes the 300ms tap delay on older
+      Android browsers (pre-Chrome 55) without disabling pinch-zoom        */
+button,
+a,
+[role="button"],
+label {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Minimum touch target size for all interactive elements */
+button,
+a,
+input,
+select,
+textarea {
+  min-height: 44px;
+}
+
+/* Inline buttons that should stay small (icon buttons) */
+button.closet-section-card__add-btn,
+button.closet-section-card__tryon-btn,
+button.closet-section-card__bg-btn,
+/* Overlay icon buttons (trash, favorite, name-toggle) — fixed 20×20 */
+button.opp__remove,
+button.opp__fav-btn,
+button.wish-thumb__remove,
+button.donate-thumb__remove,
+button.opp__name-toggle,
+button.planner__remove,
+button.tp__remove,
+button.modal__close,
+/* OPP floating modal toolbar + section strip (phone) */
+button.opp__btn,
+button.opp__btn--edit,
+button.opp__mini,
+button.opp__icon-btn,
+button.opp__toggle,
+button.opp__section-btn,
+/* Closet section modal section pills */
+button.closet-section-modal__section-pill,
+/* Day expand/collapse carets */
+button.planner__day-caret,
+button.tp__day-caret,
+/* Header home icon button */
+button.header__home-btn,
+/* Kids closet avatar edit buttons */
+button.kcm-avatar-edit-btn,
+button.kids-card__photo-btn,
+/* Settings avatar edit button */
+button.usm-avatar-edit-btn {
+  min-height: unset;
+}
+
+/* Consistent focus ring for keyboard users */
+:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Utility: visually hidden (for screen readers) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Global loading / error message */
+.loading-message,
+.error-message {
+  text-align: center;
+  padding: 16px;
+  font-size: 15px;
+}
+
+.error-message {
+  color: #dc2626;
+}
+
+/* Images always responsive */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Body scroll lock ──────────────────────────────────────────────────────
+   Whenever ANY modal overlay/backdrop is present in the DOM, prevent the
+   page from scrolling.  This stops the header and footer from drifting over
+   a fixed-position modal when the user swipes up/down on mobile.
+   CSS :has() is supported in all modern browsers (Chrome 105+, Safari 15.4+,
+   Firefox 121+).
+   ────────────────────────────────────────────────────────────────────────── */
+html:has(
+  .modal-overlay,
+  .opp-backdrop,
+  .planner__backdrop,
+  .tp__backdrop,
+  .closet-section-modal__overlay,
+  .vb-overlay,
+  .vb-player-overlay,
+  .sl-backdrop,
+  .sl-cat-modal__overlay,
+  .wish-overlay,
+  .stylist-overlay,
+  .aida-overlay,
+  .aisf-overlay,
+  .aipa-overlay,
+  .cs-overlay,
+  .bgp-overlay,
+  .tryon-overlay,
+  .weather-overlay,
+  .tour-overlay,
+  .usm-overlay,
+  .kcm-overlay,
+  .kpm-overlay,
+  .receipts-overlay,
+  .opp-favs__backdrop,
+  .opp-saved__backdrop,
+  .lb__overlay
+) {
+  overflow: hidden;
+  /* Prevent iOS elastic bounce from making fixed modals dance */
+  overscroll-behavior: none;
+}
+
+/* Also lock the body — iOS Safari needs both html AND body locked */
+html:has(
+  .modal-overlay,
+  .opp-backdrop,
+  .planner__backdrop,
+  .tp__backdrop,
+  .closet-section-modal__overlay,
+  .vb-overlay,
+  .vb-player-overlay,
+  .sl-backdrop,
+  .sl-cat-modal__overlay,
+  .wish-overlay,
+  .stylist-overlay,
+  .aida-overlay,
+  .aisf-overlay,
+  .aipa-overlay,
+  .cs-overlay,
+  .bgp-overlay,
+  .tryon-overlay,
+  .weather-overlay,
+  .tour-overlay,
+  .usm-overlay,
+  .kcm-overlay,
+  .kpm-overlay,
+  .receipts-overlay,
+  .opp-favs__backdrop,
+  .opp-saved__backdrop,
+  .lb__overlay
+) body {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
