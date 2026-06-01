@@ -96,6 +96,20 @@ function ClosetData({
   const [tryOnImageUrl, setTryOnImageUrl] = useState(null);
   const [tryOnSection, setTryOnSection] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  // Search → panel routing
+  const [previewIncoming,  setPreviewIncoming]  = useState(null);
+  const [plannerIncoming,  setPlannerIncoming]  = useState(null);
+  const [packIncoming,     setPackIncoming]     = useState(null);
+  const [donateIncoming,   setDonateIncoming]   = useState(null);
+
+  const handleApplyItems = (items, target) => {
+    const payload = { items, ts: Date.now() };
+    if (target === "preview") setPreviewIncoming(payload);
+    if (target === "planner") setPlannerIncoming(payload);
+    if (target === "pack")    setPackIncoming(payload);
+    if (target === "donate")  setDonateIncoming(payload);
+  };
+
   const [isBgPickerOpen, setIsBgPickerOpen] = useState(false);
   const [bgPickerSection, setBgPickerSection] = useState(null);
   const [weekPlan, setWeekPlan] = useState({
@@ -234,15 +248,17 @@ function ClosetData({
 
       <section className="closet-data">
         <aside className="closet-data__side-left">
-          <OutfitPreviewPanel onSelectionChange={setPreviewSelection} gender={gender} />
+          <OutfitPreviewPanel onSelectionChange={setPreviewSelection} gender={gender} incomingItems={previewIncoming} />
           <aside className="closet-data__side-container">
             <OutfitPlanner
               weekPlan={weekPlan}
               onChange={setWeekPlan}
               currentPreview={previewSelection}
+              incomingItems={plannerIncoming}
             />
             <TravelPackPanel
               currentPreview={previewSelection}
+              incomingItems={packIncoming}
               onSyncToPlanner={(day, items) => {
                 setWeekPlan((prev) => {
                   const seen = new Set();
@@ -258,7 +274,7 @@ function ClosetData({
               }}
             />
           </aside>
-          <DonateBin clothingItems={closetItems} />
+          <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} />
         </aside>
 
         <div className="closet-data__cards-container">
@@ -341,6 +357,7 @@ function ClosetData({
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         onSectionSelect={(tag) => openSection(tag)}
+        onApplyItems={handleApplyItems}
       />
     </main>
   );

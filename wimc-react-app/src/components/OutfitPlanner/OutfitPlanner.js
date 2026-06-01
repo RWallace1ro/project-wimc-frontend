@@ -76,6 +76,7 @@ export default function OutfitPlanner({
   onChange,
   currentPreview = [],
   tagPrefix = "",
+  incomingItems = null,
 }) {
   const plannerLsKey = getPlannerLsKey(tagPrefix);
   const [internalPlan, setInternalPlan] = useState(emptyWeek());
@@ -105,6 +106,16 @@ export default function OutfitPlanner({
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
+
+  // Apply items from search results into selected day
+  useEffect(() => {
+    if (!incomingItems?.items?.length) return;
+    const normalized = incomingItems.items
+      .map((it) => normalizeMedia(it, it?.section))
+      .filter(Boolean);
+    setPlan(mergePlans(plan || {}, { [selectedDay]: normalized }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingItems]);
 
   // lightbox
   const [lbImages, setLbImages] = useState([]);

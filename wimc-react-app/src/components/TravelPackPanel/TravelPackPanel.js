@@ -74,9 +74,8 @@ function normalizeMedia(x, section) {
 export default function TravelPackPanel({
   currentPreview = [],
   onSyncToPlanner,
-  // tagPrefix — e.g. "kid-abc123". When set, section items are fetched from
-  // "kid-abc123-tops" etc. and plan state is stored under a child-specific key.
   tagPrefix = "",
+  incomingItems = null,
 }) {
   // Child-specific localStorage key so each child has their own travel pack
   const lsKey = tagPrefix ? `wimc_travel_pack_${tagPrefix}_v2` : LS_KEY;
@@ -100,6 +99,25 @@ export default function TravelPackPanel({
   const [dayShareUrl, setDayShareUrl] = useState("");
   const [dayShareError, setDayShareError] = useState("");
   const [shareNote, setShareNote] = useState("");
+
+  // Apply items from search results into selected day
+  useEffect(() => {
+    if (!incomingItems?.items?.length) return;
+    const toAdd = incomingItems.items
+      .map((it) => normalizeMedia(it, it?.section))
+      .filter(Boolean);
+    setPackPlan((prev) => {
+      const seen = new Set((prev[selectedDay] || []).map((p) => p.mediaUrl || p.name));
+      const unique = toAdd.filter((it) => {
+        const k = it.mediaUrl || it.name;
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      return { ...prev, [selectedDay]: [...(prev[selectedDay] || []), ...unique] };
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingItems]);
 
   // lightbox
   const [lbImages, setLbImages] = useState([]);

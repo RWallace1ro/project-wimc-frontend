@@ -52,7 +52,7 @@
 }
 .cs-header__sub {
   margin: 0;
-  font-size: 11px;
+  font-size: 13px;
   opacity: 0.8;
 }
 .cs-close {
@@ -243,4 +243,177 @@
 .cs-error {
   font-size: 13px;
   color: #b91c1c;
+}
+
+/* ── Results bar (count + select/clear) ── */
+.cs-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cs-results-count {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+.cs-results-actions {
+  display: flex;
+  gap: 6px;
+}
+.cs-mini-btn {
+  padding: 4px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  color: #475569;
+  transition: background 0.15s;
+}
+.cs-mini-btn:hover {
+  background: #f1f5f9;
+}
+
+/* ── Image results grid ── */
+.cs-image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px;
+  background: #f8fafc;
+}
+.cs-image-tile {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  aspect-ratio: 3/4;
+  background: #e2e8f0;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.cs-image-tile:hover {
+  transform: translateY(-1px);
+  border-color: #94a3b8;
+}
+.cs-image-tile.is-selected {
+  border-color: #007bff;
+}
+.cs-image-tile__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.cs-image-tile__check {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #007bff;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.cs-image-tile.is-selected .cs-image-tile__check {
+  opacity: 1;
+}
+.cs-image-tile__label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 5px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Apply to panel bar ── */
+.cs-apply-bar {
+  background: #f0f4ff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cs-apply-bar__label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+.cs-apply-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.cs-apply-btn {
+  padding: 7px 13px;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #3730a3;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.cs-apply-btn:hover:not(:disabled) {
+  background: #eef2ff;
+  border-color: #818cf8;
+}
+.cs-apply-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.cs-apply-feedback {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #065f46;
+  animation: csFadeIn 0.2s ease;
+}
+@keyframes csFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Wider modal when showing image results ── */
+.cs-modal {
+  width: min(100vw - 32px, 720px);
+  max-height: min(100vh - 32px, 820px);
+}
+
+@media (max-width: 600px) {
+  .cs-image-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cs-apply-btns {
+    flex-direction: column;
+  }
+  .cs-apply-btn {
+    width: 100%;
+    text-align: center;
+  }
 }

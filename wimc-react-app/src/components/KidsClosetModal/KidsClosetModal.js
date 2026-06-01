@@ -7,6 +7,7 @@ import AddClothingModal from "../AddClothingModal/AddClothingModal";
 import OutfitPreviewPanel from "../OutfitPreviewPanel/OutfitPreviewPanel";
 import OutfitPlanner from "../OutfitPlanner/OutfitPlanner";
 import TravelPackPanel from "../TravelPackPanel/TravelPackPanel";
+import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import WishList from "../WishList/WishList";
 import DonateBin from "../DonateBin/DonateBin";
 import dressesSkirtsImg   from "../../assets/images/dresses-skirts.jpg";
@@ -224,6 +225,19 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
   const bgKey = `kid-closet-${child?.id}`;
   const currentBg = child ? backgrounds[bgKey] || null : null;
   const [showBgPicker, setShowBgPicker] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [kidsPreviewIncoming, setKidsPreviewIncoming] = useState(null);
+  const [kidsPlannerIncoming, setKidsPlannerIncoming] = useState(null);
+  const [kidsPackIncoming,    setKidsPackIncoming]    = useState(null);
+  const [kidsDonateIncoming,  setKidsDonateIncoming]  = useState(null);
+
+  const handleKidsApplyItems = (items, target) => {
+    const payload = { items, ts: Date.now() };
+    if (target === "preview") setKidsPreviewIncoming(payload);
+    if (target === "planner") setKidsPlannerIncoming(payload);
+    if (target === "pack")    setKidsPackIncoming(payload);
+    if (target === "donate")  setKidsDonateIncoming(payload);
+  };
 
   // ── Profile photo ─────────────────────────────────────────────────────────
   const photoInputRef = useRef(null);
@@ -408,6 +422,13 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
             </button>
             <button
               className="kcm-header__add-btn"
+              onClick={() => setIsSearchOpen(true)}
+              title="Search this closet"
+            >
+              🔍 Search
+            </button>
+            <button
+              className="kcm-header__add-btn"
               onClick={() => { setSelectedSection(null); setIsAddOpen(true); }}
             >
               + Add Item
@@ -451,11 +472,11 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
           <div className="kcm-features">
             <h3 className="kcm-features__heading">Features</h3>
             <div className="kcm-features__panels">
-              <OutfitPreviewPanel tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} />
-              <OutfitPlanner      tagPrefix={`kid-${child.id}`} />
-              <TravelPackPanel    tagPrefix={`kid-${child.id}`} />
+              <OutfitPreviewPanel tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPreviewIncoming} />
+              <OutfitPlanner      tagPrefix={`kid-${child.id}`} incomingItems={kidsPlannerIncoming} />
+              <TravelPackPanel    tagPrefix={`kid-${child.id}`} incomingItems={kidsPackIncoming} />
               <WishList           storageKey={`kid-${child.id}-wishlist`} />
-              <DonateBin          tagPrefix={`kid-${child.id}`} />
+              <DonateBin          tagPrefix={`kid-${child.id}`} incomingItems={kidsDonateIncoming} />
             </div>
           </div>
         </div>
@@ -484,6 +505,14 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
             tag: childTag(child.id, s.tag), // e.g. "kid-abc123-tops"
           }))}
           onSwitchSection={handleSwitchSection}
+        />
+
+        {/* ── Kids Closet Search ── */}
+        <ClosetSearch
+          isOpen={isSearchOpen}
+          onClose={() => setIsSearchOpen(false)}
+          onApplyItems={handleKidsApplyItems}
+          tagPrefix={`kid-${child.id}`}
         />
 
         {/* ── Add clothing ── */}

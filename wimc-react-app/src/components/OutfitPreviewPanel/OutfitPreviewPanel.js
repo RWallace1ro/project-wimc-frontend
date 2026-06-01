@@ -166,7 +166,7 @@ const IconPrint = (props) => (
   </svg>
 );
 
-export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", gender = "female" }) {
+export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", gender = "female", incomingItems = null }) {
   const SECTION_OPTIONS = gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE;
   // Child-specific LS keys — prevents main closet and kids closets sharing preview state
   const LS = buildLS(tagPrefix);
@@ -213,6 +213,13 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
 
   // per-item name visibility (hidden by default)
   const [nameVisibleKeys, setNameVisibleKeys] = useState(() => new Set());
+
+  // Apply items from search results
+  useEffect(() => {
+    if (!incomingItems?.items?.length) return;
+    addMany(incomingItems.items, "merge");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingItems]);
 
   // lightbox
   const [lbImages, setLbImages] = useState([]);

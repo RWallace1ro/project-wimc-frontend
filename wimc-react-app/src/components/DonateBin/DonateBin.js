@@ -83,7 +83,7 @@ function normalizeChoice(x, sectionHint) {
 }
 const keyOf = (it) => it.imageUrl || it.url || it.mediaUrl || it.name || "";
 
-export default function DonateBin({ tagPrefix = "" }) {
+export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
   // Child-specific localStorage keys so each child has their own donate bin data
   const lsDonateKey  = tagPrefix ? `wimc_donateItems_${tagPrefix}`  : "donateItems";
   const lsDonatedKey = tagPrefix ? `wimc_donatedItems_${tagPrefix}` : "donatedItems";
@@ -130,6 +130,23 @@ export default function DonateBin({ tagPrefix = "" }) {
   const [donatedShareUrl, setDonatedShareUrl] = useState("");
   const [donatedShareErr, setDonatedShareErr] = useState("");
   const [donatedShareIsBlob, setDonatedShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
+
+  // Apply items from search results into donation canvas
+  useEffect(() => {
+    if (!incomingItems?.items?.length) return;
+    const toAdd = incomingItems.items.map((it) => normalizeChoice(it, it?.section)).filter(Boolean);
+    setDonateItems((prev) => {
+      const seen = new Set(prev.map((p) => keyOf(p)));
+      const unique = toAdd.filter((it) => {
+        const k = keyOf(it);
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      });
+      return [...prev, ...unique];
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incomingItems]);
 
   const toggleNameFor = (it) => {
     const k = keyOf(it);
