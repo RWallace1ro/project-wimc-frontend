@@ -1,4 +1,4 @@
-import { syncSetItem } from '../../utils/syncStore';
+import { syncSetItem, syncRemoveItem } from '../../utils/syncStore';
 ﻿import React, { useEffect, useState, useMemo } from "react";
 import AIDonationAdvisor from "../AIDonationAdvisor/AIDonationAdvisor";
 import {
@@ -556,53 +556,48 @@ export default function DonateBin({ tagPrefix = "" }) {
               </div>
             )}
 
-            <div className="donate-modal__body donate-modal__layout">
-              {/* LEFT RAIL */}
-              <nav className="opp__sections" aria-label="Closet sections">
-                {SECTION_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    className={
-                      "opp__section-btn" +
-                      (section === opt.value ? " is-active" : "")
-                    }
-                    onClick={() => setSection(opt.value)}
-                    title={opt.label}
-                    type="button"
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+            {/* ── Horizontal section strip ── */}
+            <div className="donate-section-strip">
+              {SECTION_OPTIONS.map((opt) => (
                 <button
-                  className="opp__section-btn opp__section-btn--saved"
+                  key={opt.value}
+                  className={"donate-section-pill" + (section === opt.value ? " is-active" : "")}
+                  onClick={() => setSection(opt.value)}
                   type="button"
-                  onClick={() => setSetsOpen(true)}
-                  title="Open Saved Donation Sets"
                 >
-                  Saved Sets
+                  {opt.label}
                 </button>
-                <button
-                  className="donate-modal__btn donate-modal__btn--ai"
-                  onClick={() => setIsAdvisorOpen(true)}
-                >
-                  🤖 AI Advisor
-                </button>
-                <button
-                  className="opp__section-btn"
-                  type="button"
-                  onClick={() => setDonatedOpen(true)}
-                  title="Open Donated Items"
-                >
-                  Donated Items
-                </button>
-              </nav>
+              ))}
+              <button
+                className="donate-section-pill donate-section-pill--action"
+                type="button"
+                onClick={() => setSetsOpen(true)}
+              >
+                💾 Saved Sets
+              </button>
+              <button
+                className="donate-section-pill donate-section-pill--action"
+                type="button"
+                onClick={() => setIsAdvisorOpen(true)}
+              >
+                🤖 AI Advisor
+              </button>
+              <button
+                className="donate-section-pill donate-section-pill--action"
+                type="button"
+                onClick={() => setDonatedOpen(true)}
+              >
+                ↩️ Donated Items
+              </button>
+            </div>
 
-              {/* RIGHT: Canvas + Picker */}
+            <div className="donate-modal__body">
+              {/* Full-width canvas + picker */}
               <div className="donate-modal__right">
                 <div className="donate-canvas">
                   {donateItems.length === 0 ? (
                     <div className="donate-canvas__hint">
-                      No items selected — choose from the closet on the left.
+                      No items selected — choose from the closet below.
                     </div>
                   ) : (
                     <div className="donate-grid">
