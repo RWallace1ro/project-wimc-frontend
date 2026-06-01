@@ -148,7 +148,7 @@
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .faq-page__hero {
-    padding: 40px 56px 36px;
+    padding: 48px 72px 36px;
   }
   .faq-page__title {
     font-size: 1.6rem;
