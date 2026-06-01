@@ -337,6 +337,20 @@ export default function TravelPackPanel({
           </button>
         </header>
 
+        {!collapsed && !doors.opening && (
+          <div className="tp__day-strip">
+            {DAYS.map((d) => (
+              <button
+                key={d}
+                className={`tp__day-tab${selectedDay === d ? " is-active" : ""}`}
+                onClick={() => setSelectedDay(d)}
+              >
+                {d.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+        )}
+
         {collapsed ? (
           <div className="tp__collapsed-row">{totalCount} items</div>
         ) : doors.opening ? (
@@ -351,19 +365,6 @@ export default function TravelPackPanel({
             {/* Share bar — buttons left, note right */}
             <div className="tp__share-bar">
               <div className="tp__share-btns">
-                <label>
-                  Pack for the Day:{" "}
-                  <select
-                    value={selectedDay}
-                    onChange={(e) => setSelectedDay(e.target.value)}
-                  >
-                    {DAYS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </label>
                 <button
                   className="tp__toggle"
                   onClick={() => exportPackDay(selectedDay)}
@@ -444,24 +445,20 @@ export default function TravelPackPanel({
 
             {/* Inline picker */}
             <div className="tp__picker">
-              <div className="tp__picker-top">
-                <label>
-                  Section:{" "}
-                  <select
-                    value={pickerSection}
-                    onChange={(e) => setPickerSection(e.target.value)}
+              <div className="tp__section-strip">
+                {SECTION_OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    className={`tp__section-tab${pickerSection === o.value ? " is-active" : ""}`}
+                    onClick={() => setPickerSection(o.value)}
                   >
-                    {SECTION_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <span className="tp__picker-tip">
-                  Click an item to add to <strong>{selectedDay}</strong>
-                </span>
+                    {o.label}
+                  </button>
+                ))}
               </div>
+              <p className="tp__picker-tip">
+                Click an item to add to <strong>{selectedDay}</strong>
+              </p>
               {choicesLoading ? (
                 <div className="tp__loading">Loading…</div>
               ) : choicesError ? (
@@ -592,19 +589,7 @@ export default function TravelPackPanel({
             </div>
 
             <div className="tp__sync">
-              <label>
-                Sync day to Planner:{" "}
-                <select
-                  value={selectedDay}
-                  onChange={(e) => setSelectedDay(e.target.value)}
-                >
-                  {DAYS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <span className="tp__sync-day">Syncing: <strong>{selectedDay}</strong></span>
               <button
                 onClick={syncToPlanner}
                 title="Copy this pack day into the Planner's same day"

@@ -165,32 +165,88 @@
   opacity: 0.9;
 }
 
-/* ── Dropdowns — consistent soft style across all screen sizes ── */
-.tp__share-btns select,
-.tp__picker-top select {
-  appearance: none;
-  -webkit-appearance: none;
-  background: #f1f5f9 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+/* ── Day tab strip — horizontal scrollable weekday selector ── */
+.tp__day-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #f0f4ff;
+  border-bottom: 1px solid #e2e8f0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+}
+.tp__day-strip::-webkit-scrollbar { display: none; }
+
+.tp__day-tab {
+  flex-shrink: 0;
+  padding: 5px 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 5px 28px 5px 10px;
-  font-size: 13px;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 12px;
   font-weight: 500;
-  color: #334155;
+  color: #475569;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-  min-width: 0;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.tp__share-btns select:focus,
-.tp__picker-top select:focus {
-  outline: none;
-  border-color: #a78bfa;
-  background-color: #fff;
-}
-.tp__share-btns select:hover,
-.tp__picker-top select:hover {
+.tp__day-tab:hover {
+  background: #e8edf5;
   border-color: #cbd5ff;
-  background-color: #e8edf5;
+}
+.tp__day-tab.is-active {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Section tab strip — horizontal scrollable section selector ── */
+.tp__section-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 4px;
+  padding: 4px 0 8px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 6px;
+}
+.tp__section-strip::-webkit-scrollbar { display: none; }
+
+.tp__section-tab {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.tp__section-tab:hover {
+  background: #e8edf5;
+  border-color: #cbd5ff;
+}
+.tp__section-tab.is-active {
+  background: #eef2ff;
+  border-color: #6366f1;
+  color: #4338ca;
+  font-weight: 600;
+}
+
+/* Sync day label */
+.tp__sync-day {
+  font-size: 12px;
+  color: #64748b;
 }
 
 /* ── Buttons (matched to OutfitPreviewPanel) ── */

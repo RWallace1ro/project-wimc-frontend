@@ -19,51 +19,20 @@
   }
 }
 
-/* On phone: horizontal section strip + compact toolbar
-   (full-screen override is at the END of this file, after the base floating rule) */
+/* Section buttons: compact on phone — override global 44px touch-target floor */
 @media (max-width: 600px) {
-  /* Flip body to column so section tabs sit as a scroll strip above the canvas */
-  .opp--floating .opp__body {
-    flex-direction: column;
-  }
-  .opp--floating .opp__sections {
-    flex: 0 0 auto;
-    flex-direction: row;
-    align-items: center;        /* prevent buttons from stretching to container height */
-    overflow-x: auto;
-    overflow-y: hidden;
-    border-right: none;
-    border-bottom: 1px solid #eee;
-    padding: 4px 8px;           /* reduced from 6px — tightens gap below header */
-    gap: 6px;
-    scrollbar-width: none;
-  }
-  .opp--floating .opp__sections::-webkit-scrollbar {
-    display: none;
-  }
-  /* Section buttons: compact — override the global 44 px touch-target floor */
-  .opp--floating .opp__section-btn {
-    flex-shrink: 0;
-    white-space: nowrap;
-    min-height: 0 !important;   /* beats global button { min-height: 44px } */
+  .opp__section-btn {
+    min-height: 0 !important;
     height: 30px;
     padding: 0 10px;
     font-size: 12px;
     line-height: 30px;
   }
-  .opp--floating .opp__right {
-    min-width: 0;
-    width: 100%;
-  }
-
-  /* Toolbar: wrap so Print / Note / Favorites / Saved Looks / X
-     don't fall outside the viewport on narrow phones */
   .opp--floating .opp__toolbar {
     flex-wrap: wrap;
     gap: 4px;
     padding-bottom: 4px;
   }
-  /* All toolbar / header interactive elements: remove 44 px floor */
   .opp--floating .opp__btn,
   .opp--floating .opp__toggle,
   .opp--floating .opp__icon-btn,
@@ -153,51 +122,57 @@
   background: #4cae4c;
 }
 
-/* Open body */
+/* Open body — full column layout, sections strip above content */
 .opp__body {
   display: flex;
+  flex-direction: column;
   min-height: 0;
   height: 100%;
-  align-items: stretch;
 }
 
-/* Left rail */
+/* Section strip — always horizontal scroll at all sizes */
 .opp__sections {
-  flex: 0 0 110px;
-  border-right: 1px solid #eee;
-  padding: 8px 6px;
-  overflow: auto;
+  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #f0f4ff;
+  border-bottom: 1px solid #e2e8f0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.opp__sections::-webkit-scrollbar { display: none; }
+
 .opp__section-btn {
-  text-align: left;
-  padding: 8px 10px;
-  border: 1px solid #eee;
-  border-radius: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 5px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
   background: #fff;
   cursor: pointer;
   font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .opp__section-btn:hover {
-  background: #f5f7fb;
+  background: #e8edf5;
   border-color: #cbd5ff;
 }
 .opp__section-btn.is-active {
-  background: #eef2ff;
-  border-color: #cbd5ff;
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
   font-weight: 600;
 }
-.opp__section-btn--saved {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 .opp__section-btn--saved::before {
-  content: "💾";
-  font-size: 12px;
-  line-height: 1;
+  content: "💾 ";
+  font-size: 11px;
 }
 
 /* --- NEW: compact icon buttons for toolbar --- */
@@ -219,16 +194,17 @@
   border-color: #cbd5ff;
 }
 
-/* Right column grid */
+/* Right column grid — now takes full width since sections is above */
 .opp__right {
   flex: 1 1 auto;
   display: grid;
   grid-template-areas: "toolbar" "canvas" "picker";
-  grid-template-rows: auto minmax(220px, 1fr) minmax(220px, 1fr);
+  grid-template-rows: auto minmax(200px, 1fr) minmax(200px, 1fr);
   gap: 6px;
   padding: 8px;
   min-width: 0;
-  width: auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Toolbar */
@@ -531,8 +507,10 @@
   overscroll-behavior: contain;    /* block elastic bounce inside modal */
   touch-action: pan-y;             /* vertical scroll only — no horizontal drift */
 }
+/* Sections strip in floating mode — same horizontal strip, slightly taller padding */
 .outfit-preview-panel.opp--floating .opp__sections {
-  flex: 0 0 220px;
+  padding: 8px 14px;
+  gap: 6px;
 }
 .outfit-preview-panel.opp--floating .opp__choices {
   grid-template-columns: repeat(3, 1fr);
@@ -829,26 +807,6 @@
   /* Compact header — desktop 14 px padding is too tall on a phone */
   .outfit-preview-panel.opp--floating .opp__header {
     padding: 8px 12px;
-  }
-
-  /* ── Sections / tabs strip ────────────────────────────────────────────────
-     The base floating rule sets flex: 0 0 220px for the desktop left rail.
-     On mobile the body is flex-direction:column, so flex-basis applies to
-     HEIGHT — giving the strip 220 px of blank space.  Force it to auto. */
-  .outfit-preview-panel.opp--floating .opp__sections {
-    flex: 0 0 auto;          /* was 220px → that became 220px of height! */
-    flex-direction: row;
-    align-items: center;
-    overflow-x: auto;
-    overflow-y: hidden;
-    border-right: none;
-    border-bottom: 1px solid #eee;
-    padding: 4px 8px;
-    gap: 6px;
-    scrollbar-width: none;
-  }
-  .outfit-preview-panel.opp--floating .opp__sections::-webkit-scrollbar {
-    display: none;
   }
 
   /* ── Right column ─────────────────────────────────────────────────────────

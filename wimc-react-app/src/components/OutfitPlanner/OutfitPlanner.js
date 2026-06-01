@@ -357,6 +357,20 @@ export default function OutfitPlanner({
           </div>
         </header>
 
+        {!collapsed && !doors.opening && (
+          <div className="planner__day-strip">
+            {DAYS.map((d) => (
+              <button
+                key={d}
+                className={`planner__day-tab${selectedDay === d ? " is-active" : ""}`}
+                onClick={() => setSelectedDay(d)}
+              >
+                {d.slice(0, 3)}
+              </button>
+            ))}
+          </div>
+        )}
+
         {collapsed ? (
           <div className="planner__collapsed-row">
             Plan your week • {daysSetCount}/7 days set
@@ -374,19 +388,6 @@ export default function OutfitPlanner({
           <div className="planner__body">
             <div className="planner__share-bar">
               <div className="planner__share-btns">
-                <label>
-                  Day:{" "}
-                  <select
-                    value={selectedDay}
-                    onChange={(e) => setSelectedDay(e.target.value)}
-                  >
-                    {DAYS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </label>
                 <button
                   className="planner__export"
                   onClick={() => exportDay(selectedDay)}
@@ -475,6 +476,7 @@ export default function OutfitPlanner({
 
             {/* Apply current preview */}
             <div className="planner__apply">
+              <span className="planner__apply-day">Adding to: <strong>{selectedDay}</strong></span>
               <button
                 className="planner__btn"
                 disabled={!currentPreview?.length}
@@ -487,24 +489,20 @@ export default function OutfitPlanner({
 
             {/* Inline picker */}
             <div className="planner__picker">
-              <div className="planner__picker-top">
-                <label>
-                  Section:{" "}
-                  <select
-                    value={pickerSection}
-                    onChange={(e) => setPickerSection(e.target.value)}
+              <div className="planner__section-strip">
+                {SECTION_OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    className={`planner__section-tab${pickerSection === o.value ? " is-active" : ""}`}
+                    onClick={() => setPickerSection(o.value)}
                   >
-                    {SECTION_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <span className="planner__picker-tip">
-                  Click an item to add to <strong>{selectedDay}</strong>
-                </span>
+                    {o.label}
+                  </button>
+                ))}
               </div>
+              <p className="planner__picker-tip">
+                Click an item to add to <strong>{selectedDay}</strong>
+              </p>
               {choicesLoading ? (
                 <div className="planner__loading">Loading…</div>
               ) : choicesError ? (
