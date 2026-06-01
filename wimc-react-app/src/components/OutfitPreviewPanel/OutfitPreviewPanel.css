@@ -122,6 +122,52 @@
   background: #4cae4c;
 }
 
+/* ── Section strip: horizontal scroll bar directly below header ──────────── */
+.opp__section-strip {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: #f0f4ff;
+  border-bottom: 1px solid #e2e8f0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex-shrink: 0;
+  min-height: 0;
+}
+.opp__section-strip::-webkit-scrollbar { display: none; }
+
+.opp__section-pill {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center;
+  padding: 5px 13px;
+  height: 30px;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.opp__section-pill:hover {
+  background: #e8edf5;
+  border-color: #cbd5ff;
+}
+.opp__section-pill.is-active {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  font-weight: 600;
+}
+
 /* Open body — fills remaining space below the section strip */
 .opp__body {
   display: flex;

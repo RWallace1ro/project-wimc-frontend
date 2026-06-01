@@ -1172,38 +1172,33 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
           </div>
         ) : (
           <>
-            {/* ── Section strip — directly below header, always horizontal ── */}
-            <nav className="opp__sections" aria-label="Sections">
+            {/* ── Section strip — horizontal scroll, always below header ── */}
+            <div className="opp__section-strip">
               {SECTION_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
-                  className={
-                    "opp__section-btn" +
-                    (section === opt.value ? " is-active" : "")
-                  }
+                  className={"opp__section-pill" + (section === opt.value ? " is-active" : "")}
                   onClick={() => setSection(opt.value)}
-                  title={opt.label}
+                  type="button"
                 >
                   {opt.label}
                 </button>
               ))}
               <button
-                className="opp__section-btn"
+                className="opp__section-pill"
                 type="button"
                 onClick={() => setFavsOpen(true)}
-                title="Open Favorites"
               >
                 ★ Favorites
               </button>
               <button
-                className="opp__section-btn opp__section-btn--saved"
+                className="opp__section-pill"
                 type="button"
                 onClick={() => setLooksOpen(true)}
-                title="Open Saved Looks"
               >
-                Saved Looks
+                💾 Saved Looks
               </button>
-            </nav>
+            </div>
 
           <div className="opp__body">
             <div className="opp__right">
