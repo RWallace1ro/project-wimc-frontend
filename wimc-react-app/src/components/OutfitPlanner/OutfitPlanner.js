@@ -20,6 +20,9 @@ const DAYS = [
   "Sunday",
 ];
 const LS_KEY = "wimc_week_plan_v1";
+function getPlannerLsKey(tagPrefix) {
+  return tagPrefix ? `wimc_week_plan_${tagPrefix}_v1` : LS_KEY;
+}
 
 const SECTION_OPTIONS = [
   { value: "dresses-skirts", label: "Dresses/Skirts" },
@@ -72,7 +75,9 @@ export default function OutfitPlanner({
   weekPlan,
   onChange,
   currentPreview = [],
+  tagPrefix = "",
 }) {
+  const plannerLsKey = getPlannerLsKey(tagPrefix);
   const [internalPlan, setInternalPlan] = useState(emptyWeek());
   const plan = weekPlan ?? internalPlan;
   const setPlan = onChange ?? setInternalPlan;
@@ -127,9 +132,8 @@ export default function OutfitPlanner({
     if (hydratedRef.current) return;
     hydratedRef.current = true;
     try {
-      const saved = JSON.parse(localStorage.getItem(LS_KEY) || "null");
+      const saved = JSON.parse(localStorage.getItem(plannerLsKey) || "null");
       if (saved && typeof saved === "object") {
-        // normalize each day
         const norm = emptyWeek();
         for (const d of DAYS) {
           norm[d] = (saved[d] || [])
@@ -145,8 +149,9 @@ export default function OutfitPlanner({
   useEffect(() => {
     if (!plan) return;
     try {
-      syncSetItem(LS_KEY, JSON.stringify(plan));
+      syncSetItem(plannerLsKey, JSON.stringify(plan));
     } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan]);
 
   // open/close
@@ -280,8 +285,9 @@ export default function OutfitPlanner({
       setChoicesLoading(true);
       setChoicesError("");
       try {
-        const imgs = await fetchImagesByTag(pickerSection);
-        const vids = await fetchVideosByTag(pickerSection);
+        const effectiveSection = tagPrefix ? `${tagPrefix}-${pickerSection}` : pickerSection;
+        const imgs = await fetchImagesByTag(effectiveSection);
+        const vids = await fetchVideosByTag(effectiveSection);
         const norm = [
           ...(imgs || []).map((u) => normalizeMedia(u, pickerSection)),
           ...(vids || []).map((u) =>

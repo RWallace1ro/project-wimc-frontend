@@ -34,11 +34,14 @@ const GRID_COLS_COMPACT = 2;
 const DOOR_MS = 3000;
 const SHARE_VERSION = 1;
 
-// LocalStorage keys
-const LS = {
-  STATE_V2: "wimc_preview_state_v2",
-  LEGACY_ITEMS_V1: "wimc_preview_items",
-};
+// LocalStorage keys — built dynamically so each child has their own preview state
+function buildLS(tagPrefix) {
+  const suffix = tagPrefix ? `_${tagPrefix}` : "";
+  return {
+    STATE_V2: `wimc_preview_state_v2${suffix}`,
+    LEGACY_ITEMS_V1: `wimc_preview_items${suffix}`,
+  };
+}
 
 // ---------- helpers ----------
 function ensureHttps(u) {
@@ -165,6 +168,8 @@ const IconPrint = (props) => (
 
 export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", gender = "female" }) {
   const SECTION_OPTIONS = gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE;
+  // Child-specific LS keys — prevents main closet and kids closets sharing preview state
+  const LS = buildLS(tagPrefix);
   // layout & doors
   const [isOpen, setIsOpen] = useState(false);
   const [opening, setOpening] = useState(false);
