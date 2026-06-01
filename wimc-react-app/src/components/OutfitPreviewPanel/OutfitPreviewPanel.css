@@ -122,12 +122,13 @@
   background: #4cae4c;
 }
 
-/* Open body — full column layout, sections strip above content */
+/* Open body — fills remaining space below the section strip */
 .opp__body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  height: 100%;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 /* Section strip — always horizontal scroll at all sizes */
@@ -545,12 +546,18 @@
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-/* Import widgets */
+/* Import widgets — inline in toolbar */
 .opp__import {
-  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 0 0 100%;
+  margin-top: 4px;
 }
 .opp__input {
-  width: 100%;
+  flex: 1;
+  min-width: 120px;
   box-sizing: border-box;
   padding: 6px 8px;
   border: 1px solid #ddd;
@@ -560,7 +567,6 @@
 .opp__import-actions {
   display: flex;
   gap: 6px;
-  margin-top: 6px;
 }
 
 /* Drag affordances */

@@ -1171,8 +1171,8 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
             )}
           </div>
         ) : (
-          <div className="opp__body">
-            {/* Left column: sections + import + Saved Looks launcher */}
+          <>
+            {/* ── Section strip — directly below header, always horizontal ── */}
             <nav className="opp__sections" aria-label="Sections">
               {SECTION_OPTIONS.map((opt) => (
                 <button
@@ -1187,18 +1187,14 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                   {opt.label}
                 </button>
               ))}
-
-              {/* Favorites launcher (floating) */}
               <button
                 className="opp__section-btn"
                 type="button"
                 onClick={() => setFavsOpen(true)}
                 title="Open Favorites"
               >
-                Favorites
+                ★ Favorites
               </button>
-
-              {/* Saved Looks launcher (left rail) — per request */}
               <button
                 className="opp__section-btn opp__section-btn--saved"
                 type="button"
@@ -1207,41 +1203,40 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
               >
                 Saved Looks
               </button>
-
-              {/* Import/Merge current outfit from URL */}
-              <div className="opp__import">
-                <input
-                  className="opp__input"
-                  type="url"
-                  placeholder="Load from link…"
-                  value={loadUrl}
-                  onChange={(e) => setLoadUrl(e.target.value)}
-                />
-                <div className="opp__import-actions">
-                  <button
-                    className="opp__btn"
-                    disabled={!loadUrl || loadingImport}
-                    onClick={() => importFromUrl("replace")}
-                    title="Replace current selection"
-                  >
-                    {loadingImport ? "Loading…" : "Load"}
-                  </button>
-                  <button
-                    className="opp__btn"
-                    disabled={!loadUrl || loadingImport}
-                    onClick={() => importFromUrl("merge")}
-                    title="Merge with current selection"
-                  >
-                    Merge
-                  </button>
-                </div>
-                {importError && <div className="opp__error">{importError}</div>}
-              </div>
             </nav>
 
-            {/* Right column */}
+          <div className="opp__body">
             <div className="opp__right">
               <div className="opp__toolbar">
+                {/* Import/Merge from URL */}
+                <div className="opp__import">
+                  <input
+                    className="opp__input"
+                    type="url"
+                    placeholder="Load from link…"
+                    value={loadUrl}
+                    onChange={(e) => setLoadUrl(e.target.value)}
+                  />
+                  <div className="opp__import-actions">
+                    <button
+                      className="opp__btn"
+                      disabled={!loadUrl || loadingImport}
+                      onClick={() => importFromUrl("replace")}
+                      title="Replace current selection"
+                    >
+                      {loadingImport ? "Loading…" : "Load"}
+                    </button>
+                    <button
+                      className="opp__btn"
+                      disabled={!loadUrl || loadingImport}
+                      onClick={() => importFromUrl("merge")}
+                      title="Merge with current selection"
+                    >
+                      Merge
+                    </button>
+                  </div>
+                  {importError && <div className="opp__error">{importError}</div>}
+                </div>
                 <button
                   className="opp__btn"
                   onClick={doUndo}
@@ -1568,6 +1563,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
               </div>
             </div>
           </div>
+          </>
         )}
       </section>
     </>
