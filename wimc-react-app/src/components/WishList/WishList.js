@@ -417,13 +417,10 @@ export default function WishList({ storageKey }) {
             <header className="wish-modal__head">
               <h4 className="wish-modal__title">Wish List</h4>
               <div className="wish-modal__actions">
-                {/* Upload: files and camera only — URL uploads disabled to
-                    avoid 403 errors from retailers that block hotlinking */}
                 <ImageUpload
                   folder="wimc/wish-list"
                   tag="wishlist"
                   onUploadSuccess={onUploadSuccess}
-                  sources={["local", "camera"]}
                 />
                 <button
                   className="wish-modal__btn"
