@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { shareItemImage } from "../../utils/shareUtils";
+import "./ClosetSectionCard.css";
 
 const COLOR_PREFIX = "color:";
 function cardBgStyle(bg) {
@@ -10,7 +11,6 @@ function cardBgStyle(bg) {
   }
   return { backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" };
 }
-import "./ClosetSectionCard.css";
 
 function ClosetSectionCard({
   imageUrl: propImageUrl,

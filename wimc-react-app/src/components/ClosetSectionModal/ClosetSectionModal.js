@@ -9,6 +9,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
 import { syncSetItem } from "../../utils/syncStore";
+import "./ClosetSectionModal.css";
 
 function getPinnedKey(tag)  { return `wimc_card_image_${tag}`; }
 function getOrderKey(tag)   { return `wimc_image_order_${tag}`; }
@@ -27,7 +28,6 @@ function applyStoredOrder(fetchedUrls, tag) {
 function saveOrder(tag, urls) {
   try { syncSetItem(getOrderKey(tag), JSON.stringify(urls)); } catch {}
 }
-import "./ClosetSectionModal.css";
 
 const LABEL_TO_TAG = {
   "Dresses/Skirts":          "dresses-skirts",
