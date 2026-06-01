@@ -361,16 +361,23 @@
   text-decoration: underline;
 }
 
-/* Import */
+/* Import — input + Load/Merge buttons on one row */
 .planner__import {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.planner__import .planner__input {
+  flex: 1;
+  min-width: 120px;
 }
 .planner__import-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 .planner__import-actions button {
   padding: 6px 10px;
