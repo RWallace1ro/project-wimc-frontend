@@ -1,7 +1,15 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
-import { AdvancedImage } from "@cloudinary/react";
-import { CloudinaryImage } from "@cloudinary/url-gen";
+import { shareItemImage } from "../../utils/shareUtils";
+
+const COLOR_PREFIX = "color:";
+function cardBgStyle(bg) {
+  if (!bg) return {};
+  if (bg.startsWith(COLOR_PREFIX)) {
+    return { backgroundColor: bg.replace(COLOR_PREFIX, "") };
+  }
+  return { backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" };
+}
 import "./ClosetSectionCard.css";
 
 function ClosetSectionCard({
@@ -16,6 +24,7 @@ function ClosetSectionCard({
   sectionBackground, // ✅ passed directly from parent — guarantees re-render
 }) {
   const [media, setMedia] = useState(null);
+  const [sharing, setSharing] = useState(false);
 
   const isVideoUrl = (u) => !!u && /\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i.test(u);
   const toPoster = (u) =>
@@ -78,12 +87,19 @@ function ClosetSectionCard({
   }, [propImageUrl, tag]);
 
   const display = normalizedFromProp || media;
-  const isCloudinary = display?.url?.includes("res.cloudinary.com");
+
+  const handleShareImage = async (e) => {
+    e.stopPropagation();
+    if (!display?.url || sharing) return;
+    setSharing(true);
+    await shareItemImage(display.url, {
+      title: `${sectionName} — WIMC`,
+      text: `Check out this item from my ${sectionName} closet! 👗`,
+    });
+    setSharing(false);
+  };
 
   const renderMedia = () => {
-    // ✅ If a custom background is set, don't render the clothing image on top
-    if (sectionBackground) return null;
-
     if (!display?.url) {
       return (
         <img
@@ -106,21 +122,8 @@ function ClosetSectionCard({
         </video>
       );
     }
-    if (isCloudinary) {
-      try {
-        return (
-          <AdvancedImage
-            cldImg={
-              new CloudinaryImage(display.thumb || display.url, {
-                cloudName: "djoh2vfhd",
-              })
-            }
-            className="closet-section-card__image"
-            alt={sectionName}
-          />
-        );
-      } catch {}
-    }
+    // Always use a plain <img> with the full delivery URL — AdvancedImage
+    // expects a public_id, not a full URL, and would produce a broken src.
     return (
       <img
         src={display.thumb || display.url}
@@ -135,15 +138,7 @@ function ClosetSectionCard({
     <section
       className="closet-section-card"
       onClick={onClick}
-      style={
-        sectionBackground
-          ? {
-              backgroundImage: `url(${sectionBackground})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }
-          : {}
-      }
+      style={cardBgStyle(sectionBackground)}
     >
       <figure className="closet-section-card__image-container">
         {renderMedia()}
@@ -191,6 +186,18 @@ function ClosetSectionCard({
               title="Customize background"
             >
               🎨
+            </button>
+          )}
+          {display?.url && display.type !== "video" && (
+            <button
+              type="button"
+              className="closet-section-card__share-btn"
+              onClick={handleShareImage}
+              aria-label={`Share ${sectionName} image`}
+              title="Share image"
+              disabled={sharing}
+            >
+              {sharing ? "…" : "↗"}
             </button>
           )}
         </div>

@@ -217,6 +217,54 @@
   opacity: 0.7;
 }
 
+/* ── Pin as card image (bottom-left) ── */
+.csm-pin-btn {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.15s;
+  z-index: 2;
+}
+.closet-section-modal__item:hover .csm-pin-btn { opacity: 1; }
+.csm-pin-btn.is-pinned {
+  opacity: 1;
+  background: rgba(124, 58, 237, 0.85);
+}
+.csm-pin-btn:hover { background: rgba(124, 58, 237, 0.9); }
+
+/* ── Move to top (bottom-right) ── */
+.csm-top-btn {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.15s;
+  z-index: 2;
+}
+.closet-section-modal__item:hover .csm-top-btn { opacity: 1; }
+.csm-top-btn:hover { background: rgba(16, 185, 129, 0.85); }
+
 /* ── Move button (top-left) ── */
 .csm-move-btn {
   position: absolute;

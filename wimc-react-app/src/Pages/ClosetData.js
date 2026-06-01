@@ -263,11 +263,15 @@ function ClosetData({
 
         <div className="closet-data__cards-container">
           {closetSections.map((section) => {
+            // Pinned card image takes priority over everything else
+            const pinnedCardUrl = (() => {
+              try { return localStorage.getItem(`wimc_card_image_${section.tag}`) || null; } catch { return null; }
+            })();
             const imageUrl =
-              closetItems.length > 0
-                ? closetItems.find((item) => item.includes(section.tag)) ||
-                  section.placeholderUrl
-                : section.placeholderUrl;
+              pinnedCardUrl ||
+              (closetItems.length > 0
+                ? closetItems.find((item) => item.includes(section.tag)) || section.placeholderUrl
+                : section.placeholderUrl);
             return (
               <ClosetSectionCard
                 key={section.name}

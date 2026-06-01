@@ -8,6 +8,25 @@ import {
   transferItem,
 } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
+import { syncSetItem } from "../../utils/syncStore";
+
+function getPinnedKey(tag)  { return `wimc_card_image_${tag}`; }
+function getOrderKey(tag)   { return `wimc_image_order_${tag}`; }
+
+function applyStoredOrder(fetchedUrls, tag) {
+  try {
+    const stored = JSON.parse(localStorage.getItem(getOrderKey(tag)) || "null");
+    if (!Array.isArray(stored) || stored.length === 0) return fetchedUrls;
+    const set = new Set(fetchedUrls);
+    const ordered = stored.filter((u) => set.has(u));
+    const rest = fetchedUrls.filter((u) => !ordered.includes(u));
+    return [...ordered, ...rest];
+  } catch { return fetchedUrls; }
+}
+
+function saveOrder(tag, urls) {
+  try { syncSetItem(getOrderKey(tag), JSON.stringify(urls)); } catch {}
+}
 import "./ClosetSectionModal.css";
 
 const LABEL_TO_TAG = {
@@ -45,6 +64,8 @@ function ClosetSectionModal({
   const [moving,       setMoving]       = useState(null);
   const [moveMenuFor,  setMoveMenuFor]  = useState(null);
   const [lightboxIdx,  setLightboxIdx]  = useState(null); // null = closed
+  const [pinnedUrl,    setPinnedUrl]    = useState(null); // pinned card image
+  const [pinFlash,     setPinFlash]     = useState(null); // url that just got pinned
 
   const { getBackground } = useBackground();
 
@@ -82,8 +103,12 @@ function ClosetSectionModal({
           fetchVideosByTag(tag),
         ]);
         if (!cancelled) {
-          setItemsByTag((prev) => ({ ...prev, [tag]: fetchedImages || [] }));
+          const ordered = applyStoredOrder(fetchedImages || [], tag);
+          setItemsByTag((prev) => ({ ...prev, [tag]: ordered }));
           setVideosByTag((prev) => ({ ...prev, [tag]: fetchedVideos || [] }));
+          // Load pinned card image for this tag
+          const pinned = localStorage.getItem(getPinnedKey(tag));
+          setPinnedUrl(pinned || null);
         }
       } catch {
         if (!cancelled) setError("Failed to load items. Please try again.");
@@ -136,6 +161,24 @@ function ClosetSectionModal({
     } finally {
       setDeleting(null);
     }
+  };
+
+  // ── Pin image as card cover ──────────────────────────────────────────────
+  const handlePinImage = (url) => {
+    syncSetItem(getPinnedKey(tag), url);
+    setPinnedUrl(url);
+    setPinFlash(url);
+    setTimeout(() => setPinFlash(null), 2000);
+  };
+
+  // ── Move image to top of order ───────────────────────────────────────────
+  const handleMoveToTop = (url) => {
+    setItemsByTag((prev) => {
+      const current = prev[tag] || [];
+      const next = [url, ...current.filter((u) => u !== url)];
+      saveOrder(tag, next);
+      return { ...prev, [tag]: next };
+    });
   };
 
   // ── Move / transfer ──────────────────────────────────────────────────────
@@ -337,6 +380,26 @@ function ClosetSectionModal({
                         onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
                         title="Click to enlarge"
                       />
+                      {/* Pin as card image — bottom-left */}
+                      <button
+                        className={`csm-pin-btn${pinnedUrl === url ? " is-pinned" : ""}`}
+                        onClick={(e) => { e.stopPropagation(); handlePinImage(url); }}
+                        title={pinnedUrl === url ? "Card image (pinned)" : "Set as card image"}
+                        aria-label="Set as card image"
+                      >
+                        {pinFlash === url ? "✅" : pinnedUrl === url ? "📌" : "📌"}
+                      </button>
+
+                      {/* Move to top — bottom-right */}
+                      <button
+                        className="csm-top-btn"
+                        onClick={(e) => { e.stopPropagation(); handleMoveToTop(url); }}
+                        title="Move to top"
+                        aria-label="Move to top"
+                      >
+                        ⬆
+                      </button>
+
                       {/* Delete button — top-right */}
                       <button
                         className="csm-delete-btn"

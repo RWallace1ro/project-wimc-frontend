@@ -4,72 +4,58 @@ import { useBackground } from "../../context/BackgroundContext";
 import "./BackgroundPicker.css";
 
 const SECTION_LABELS = {
-  "dresses-skirts": "Dresses/Skirts",
-  "shoes-sneakers": "Shoes/Sneakers",
-  "pants-jeans": "Pants/Jeans",
-  tops: "Tops",
-  "bags-accessories": "Bags/Accessories",
-  "jackets-coats": "Jackets/Coats",
+  "dresses-skirts":    "Dresses/Skirts",
+  "dress-shirts-suits":"Dress Shirts/Suits",
+  "shoes-sneakers":    "Shoes/Sneakers",
+  "pants-jeans":       "Pants/Jeans",
+  tops:                "Tops",
+  "bags-accessories":  "Bags/Accessories",
+  "jackets-coats":     "Jackets/Coats",
 };
 
-// Preset backgrounds — elegant closet-themed images from Unsplash (free)
-const PRESETS = [
-  {
-    id: "dark-wood",
-    label: "Dark Wood",
-    url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1200&q=80",
-  },
-  {
-    id: "marble-white",
-    label: "Marble White",
-    url: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80",
-  },
-  {
-    id: "blush-pink",
-    label: "Blush Pink",
-    url: "https://images.unsplash.com/photo-1595526051245-4506e0005bd0?w=1200&q=80",
-  },
-  {
-    id: "midnight-blue",
-    label: "Midnight Blue",
-    url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1200&q=80",
-  },
-  {
-    id: "sage-green",
-    label: "Sage Green",
-    url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&q=80",
-  },
-  {
-    id: "warm-linen",
-    label: "Warm Linen",
-    url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80",
-  },
-  {
-    id: "charcoal",
-    label: "Charcoal",
-    url: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1200&q=80",
-  },
-  {
-    id: "rose-gold",
-    label: "Rose Gold",
-    url: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=1200&q=80",
-  },
+const COLOR_PREFIX = "color:";
+
+// Colour palette — shown as solid swatches, applied as card background colour
+const COLOR_PALETTE = [
+  { id: "ivory",       label: "Ivory",        value: "#FFFFF0" },
+  { id: "cream",       label: "Cream",        value: "#FFF8DC" },
+  { id: "blush",       label: "Blush Pink",   value: "#FFE4E1" },
+  { id: "rose",        label: "Rose",         value: "#F4A7B9" },
+  { id: "mauve",       label: "Mauve",        value: "#C8A2C8" },
+  { id: "lavender",    label: "Lavender",     value: "#E6E0F8" },
+  { id: "periwinkle",  label: "Periwinkle",   value: "#CCCCFF" },
+  { id: "sky",         label: "Sky Blue",     value: "#BFD7ED" },
+  { id: "powder",      label: "Powder Blue",  value: "#B0E0E6" },
+  { id: "mint",        label: "Mint",         value: "#C8E6C9" },
+  { id: "sage",        label: "Sage Green",   value: "#B2C5B2" },
+  { id: "linen",       label: "Warm Linen",   value: "#F5F0E8" },
+  { id: "sand",        label: "Sand",         value: "#F5DEB3" },
+  { id: "caramel",     label: "Caramel",      value: "#C68642" },
+  { id: "terracotta",  label: "Terracotta",   value: "#C1603E" },
+  { id: "slate",       label: "Slate",        value: "#708090" },
+  { id: "charcoal",    label: "Charcoal",     value: "#36454F" },
+  { id: "midnight",    label: "Midnight Blue",value: "#191970" },
+  { id: "black",       label: "Black",        value: "#1a1a1a" },
+  { id: "white",       label: "White",        value: "#FFFFFF" },
 ];
 
 export default function BackgroundPicker({ isOpen, onClose, section }) {
   const { getBackground, setBackground, resetBackground } = useBackground();
+  const [activeTab, setActiveTab] = useState("colors");
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState("");
-  const [preview, setPreview] = useState(null);
   const [saved, setSaved] = useState(false);
   const fileRef = useRef(null);
 
   const currentBg = getBackground(section);
+  const isColor   = currentBg?.startsWith(COLOR_PREFIX);
+  const currentColor = isColor ? currentBg.replace(COLOR_PREFIX, "") : null;
 
-  const handlePreset = (url) => {
-    setBackground(section, url);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+  const flash = () => { setSaved(true); setTimeout(() => setSaved(false), 1500); };
+
+  const handleColor = (hex) => {
+    setBackground(section, COLOR_PREFIX + hex);
+    flash();
   };
 
   const handleFile = async (e) => {
@@ -77,13 +63,11 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
     if (!file) return;
     setUploading(true);
     setUploadErr("");
-    setPreview(URL.createObjectURL(file));
     try {
       const res = await uploadImage(file, "wimc-backgrounds");
       if (res?.secure_url) {
         setBackground(section, res.secure_url);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 1500);
+        flash();
       } else {
         setUploadErr("Upload failed. Please try again.");
       }
@@ -96,21 +80,24 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
 
   const handleReset = () => {
     resetBackground(section);
-    setPreview(null);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+    flash();
   };
 
   if (!isOpen) return null;
 
   const label = SECTION_LABELS[section] || section;
 
+  // Preview swatch for the current background
+  const previewStyle = isColor
+    ? { backgroundColor: currentColor }
+    : currentBg
+      ? { backgroundImage: `url(${currentBg})`, backgroundSize: "cover", backgroundPosition: "center" }
+      : {};
+
   return (
     <div
       className="bgp-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="bgp-modal" role="dialog" aria-label="Background Picker">
         <header className="bgp-header">
@@ -121,69 +108,83 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
               <p className="bgp-header__sub">{label}</p>
             </div>
           </div>
-          <button className="bgp-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <button className="bgp-close" onClick={onClose} aria-label="Close">×</button>
         </header>
 
+        {/* Current preview */}
+        <div className="bgp-current" style={previewStyle}>
+          {!currentBg && (
+            <span className="bgp-current__placeholder">Default background</span>
+          )}
+          {saved && <span className="bgp-saved-badge">✅ Saved!</span>}
+        </div>
+
+        {/* Tabs */}
+        <div className="bgp-tabs">
+          <button
+            className={`bgp-tab${activeTab === "colors" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("colors")}
+          >
+            🎨 Colors
+          </button>
+          <button
+            className={`bgp-tab${activeTab === "image" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("image")}
+          >
+            🖼️ Custom Image
+          </button>
+        </div>
+
         <div className="bgp-body">
-          {/* Current background preview */}
-          <div
-            className="bgp-current"
-            style={{ backgroundImage: `url(${preview || currentBg || ""})` }}
-          >
-            {!preview && !currentBg && (
-              <span className="bgp-current__placeholder">
-                Default background
-              </span>
-            )}
-            {saved && <span className="bgp-saved-badge">✅ Saved!</span>}
-          </div>
+          {activeTab === "colors" && (
+            <>
+              <p className="bgp-tip">
+                The selected colour shows <strong>behind</strong> your clothing images as a card background.
+              </p>
+              <div className="bgp-color-grid">
+                {COLOR_PALETTE.map((c) => (
+                  <button
+                    key={c.id}
+                    className={`bgp-color-swatch${currentColor === c.value ? " is-active" : ""}`}
+                    style={{ backgroundColor: c.value }}
+                    onClick={() => handleColor(c.value)}
+                    title={c.label}
+                    aria-label={c.label}
+                  >
+                    {currentColor === c.value && (
+                      <span className="bgp-color-swatch__check">✓</span>
+                    )}
+                    <span className="bgp-color-swatch__label">{c.label}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
-          {/* Preset grid */}
-          <div className="bgp-section-title">Choose a Preset</div>
-          <div className="bgp-presets">
-            {PRESETS.map((p) => (
-              <button
-                key={p.id}
-                className={`bgp-preset ${currentBg === p.url ? "is-active" : ""}`}
-                onClick={() => handlePreset(p.url)}
-                title={p.label}
+          {activeTab === "image" && (
+            <>
+              <p className="bgp-tip">
+                Upload a custom image to use as your card background. The image shows <strong>behind</strong> your clothing photos.
+              </p>
+              <div
+                className="bgp-upload-area"
+                onClick={() => fileRef.current?.click()}
               >
-                <div
-                  className="bgp-preset__thumb"
-                  style={{ backgroundImage: `url(${p.url})` }}
+                <p>🖼️ Tap to upload your own image</p>
+                <p className="bgp-upload-hint">JPG, PNG, WebP — recommended 1920×1080 or larger</p>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleFile}
                 />
-                <span className="bgp-preset__label">{p.label}</span>
-                {currentBg === p.url && (
-                  <span className="bgp-preset__check">✓</span>
-                )}
-              </button>
-            ))}
-          </div>
+              </div>
+              {uploading && <p className="bgp-uploading">Uploading…</p>}
+              {uploadErr  && <p className="bgp-err">{uploadErr}</p>}
+            </>
+          )}
 
-          {/* Upload custom */}
-          <div className="bgp-section-title">Upload Custom Background</div>
-          <div
-            className="bgp-upload-area"
-            onClick={() => fileRef.current?.click()}
-          >
-            <p>🖼️ Tap to upload your own image</p>
-            <p className="bgp-upload-hint">
-              JPG, PNG, WebP — recommended 1920×1080 or larger
-            </p>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleFile}
-            />
-          </div>
-          {uploading && <p className="bgp-uploading">Uploading…</p>}
-          {uploadErr && <p className="bgp-err">{uploadErr}</p>}
-
-          {/* Reset */}
           {currentBg && (
             <button className="bgp-reset-btn" onClick={handleReset}>
               ↩️ Reset to default
@@ -192,9 +193,7 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
         </div>
 
         <footer className="bgp-footer">
-          <button className="bgp-btn bgp-btn--close" onClick={onClose}>
-            Done
-          </button>
+          <button className="bgp-btn bgp-btn--close" onClick={onClose}>Done</button>
         </footer>
       </div>
     </div>
