@@ -92,6 +92,26 @@ export default function WishList({ storageKey }) {
   // Per-item name visibility toggle
   const [nameVisibleIds, setNameVisibleIds] = useState(() => new Set());
 
+  // Inline item editor
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState({ name: "", description: "" });
+
+  const startEdit = (item) => {
+    setEditingId(item.id);
+    setEditDraft({ name: item.name || "", description: item.description || "" });
+  };
+  const saveEdit = () => {
+    setWishListItems((prev) => {
+      const next = prev.map((it) =>
+        it.id === editingId ? { ...it, name: editDraft.name, description: editDraft.description } : it
+      );
+      syncSetItem(lsItemsKey, JSON.stringify(next));
+      return next;
+    });
+    setEditingId(null);
+  };
+  const cancelEdit = () => setEditingId(null);
+
   // Lightbox
   const [lbImages, setLbImages] = useState([]);
   const [lbIndex, setLbIndex] = useState(0);
@@ -487,6 +507,11 @@ export default function WishList({ storageKey }) {
               </div>
             )}
 
+            {/* Screenshot tip */}
+            <div className="wish-modal__tip">
+              💡 <strong>Tip:</strong> If an item fails to upload from a retailer's website, take a screenshot of the item and upload it as a file instead.
+            </div>
+
             <div className="wish-modal__body">
               {/* Canvas */}
               <div className="wish-canvas">
@@ -544,6 +569,16 @@ export default function WishList({ storageKey }) {
                             🗑️
                           </button>
 
+                          {/* edit description (top-left) */}
+                          <button
+                            type="button"
+                            className="wish-thumb__edit"
+                            title="Edit name / description"
+                            onClick={(e) => { e.stopPropagation(); startEdit(item); }}
+                          >
+                            ✏️
+                          </button>
+
                           {/* name toggle (bottom-left) */}
                           <button
                             type="button"
@@ -569,6 +604,33 @@ export default function WishList({ storageKey }) {
                   </div>
                 )}
               </div>
+
+              {/* Inline item editor */}
+              {editingId && (
+                <div className="wish-item-editor">
+                  <h5 className="wish-item-editor__title">✏️ Edit Item</h5>
+                  <label className="wish-item-editor__label">Name</label>
+                  <input
+                    className="wish-item-editor__input"
+                    type="text"
+                    placeholder="Item name…"
+                    value={editDraft.name}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
+                  />
+                  <label className="wish-item-editor__label">Description</label>
+                  <textarea
+                    className="wish-item-editor__textarea"
+                    placeholder="Add a description, size, colour, or any notes…"
+                    rows={3}
+                    value={editDraft.description}
+                    onChange={(e) => setEditDraft((d) => ({ ...d, description: e.target.value }))}
+                  />
+                  <div className="wish-item-editor__actions">
+                    <button className="wish-modal__btn" onClick={cancelEdit}>Cancel</button>
+                    <button className="wish-modal__btn wish-modal__btn--save" onClick={saveEdit}>Save</button>
+                  </div>
+                </div>
+              )}
             </div>
           </aside>
 

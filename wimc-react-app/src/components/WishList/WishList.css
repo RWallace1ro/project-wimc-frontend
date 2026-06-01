@@ -547,6 +547,95 @@
   color: #666;
 }
 
+/* ── Screenshot tip banner ── */
+.wish-modal__tip {
+  padding: 8px 14px;
+  background: #fffbeb;
+  border-bottom: 1px solid #fde68a;
+  font-size: 12px;
+  color: #78350f;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+/* ── Edit button on thumb (top-left, next to remove) ── */
+.wish-thumb__edit {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.18s ease, background 0.15s;
+}
+.wish-thumb:hover .wish-thumb__edit { opacity: 1; }
+.wish-thumb__edit:hover { background: rgba(37, 99, 235, 0.85); }
+
+/* ── Inline item editor panel ── */
+.wish-item-editor {
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 14px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.wish-item-editor__title {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+.wish-item-editor__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+}
+.wish-item-editor__input,
+.wish-item-editor__textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fff;
+  color: #1e293b;
+  resize: vertical;
+}
+.wish-item-editor__input:focus,
+.wish-item-editor__textarea:focus {
+  outline: none;
+  border-color: #a78bfa;
+}
+.wish-item-editor__actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.wish-modal__btn--save {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  font-weight: 600;
+}
+.wish-modal__btn--save:hover {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+
 /* Responsive */
 @media (min-width: 1100px) {
   .wish-grid {
