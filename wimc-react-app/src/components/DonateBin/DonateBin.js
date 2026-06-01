@@ -8,6 +8,7 @@ import {
   videoPoster,
 } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
+import Lightbox from "../Lightbox/Lightbox";
 import "./DonateBin.css";
 
 const SECTION_OPTIONS = [
@@ -121,6 +122,10 @@ export default function DonateBin({ tagPrefix = "" }) {
   const [setsShareErr, setSetsShareErr] = useState("");
   const [setsShareIsBlob, setSetsShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
   const [donatedOpen, setDonatedOpen] = useState(false);
+  const [lbImages, setLbImages] = useState([]);
+  const [lbIndex, setLbIndex] = useState(0);
+  const openLb = (imgs, idx) => { setLbImages(imgs); setLbIndex(idx); };
+  const closeLb = () => setLbImages([]);
   const [donatedSharing, setDonatedSharing] = useState(false);
   const [donatedShareUrl, setDonatedShareUrl] = useState("");
   const [donatedShareErr, setDonatedShareErr] = useState("");
@@ -477,6 +482,10 @@ export default function DonateBin({ tagPrefix = "" }) {
         </div>
       )}
 
+      {lbImages.length > 0 && (
+        <Lightbox images={lbImages} index={lbIndex} onClose={closeLb} onChange={setLbIndex} />
+      )}
+
       {/* Floating Donate modal */}
       {isOpen && (
         <>
@@ -603,6 +612,10 @@ export default function DonateBin({ tagPrefix = "" }) {
                     <div className="donate-grid">
                       {donateItems.map((it, i) => {
                         const nameShown = nameVisibleKeys.has(keyOf(it));
+                        const canvasImgs = donateItems
+                          .filter(x => x.imageUrl || x.url)
+                          .map(x => ({ src: x.imageUrl || x.url, alt: x.name || "" }));
+                        const imgIdx = donateItems.filter(x => x.imageUrl || x.url).indexOf(it);
                         return (
                           <figure
                             key={(it.url || it.imageUrl || it.name || "it") + i}
@@ -613,6 +626,9 @@ export default function DonateBin({ tagPrefix = "" }) {
                               src={it.imageUrl || it.url}
                               alt={it.name || "Selected"}
                               loading="lazy"
+                              style={{ cursor: "zoom-in" }}
+                              title="Click to enlarge"
+                              onClick={() => openLb(canvasImgs, Math.max(0, imgIdx))}
                             />
                             <button
                               className="donate-thumb__remove"
@@ -882,15 +898,21 @@ export default function DonateBin({ tagPrefix = "" }) {
                     <div className="opp__looks-list">
                       <div className="opp__look">
                         <div className="opp__look-strip">
-                          {donatedItems.slice(0, 120).map((it, i) => (
+                          {donatedItems.slice(0, 120).map((it, i) => {
+                            const donatedImgs = donatedItems.filter(x => x.imageUrl || x.url).map(x => ({ src: x.imageUrl || x.url, alt: x.name || "" }));
+                            const imgIdx = donatedItems.filter(x => x.imageUrl || x.url).indexOf(it);
+                            return (
                             <img
                               key={(it.imageUrl || it.url || "donated") + i}
                               className="opp__look-thumb"
                               src={it.imageUrl || it.url}
                               alt={it.name || "donated"}
-                              title={it.name || ""}
+                              title="Click to enlarge"
+                              style={{ cursor: "zoom-in" }}
+                              onClick={() => openLb(donatedImgs, Math.max(0, imgIdx))}
                             />
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     </div>

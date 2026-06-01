@@ -1,5 +1,6 @@
 import { syncSetItem } from '../../utils/syncStore';
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import Lightbox from "../Lightbox/Lightbox";
 import { uploadRawJSON } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import { fetchLinkPreview } from "../../utils/linkPreview";
@@ -90,6 +91,12 @@ export default function WishList({ storageKey }) {
 
   // Per-item name visibility toggle
   const [nameVisibleIds, setNameVisibleIds] = useState(() => new Set());
+
+  // Lightbox
+  const [lbImages, setLbImages] = useState([]);
+  const [lbIndex, setLbIndex] = useState(0);
+  const openLb = (imgs, idx) => { setLbImages(imgs); setLbIndex(idx); };
+  const closeLb = () => setLbImages([]);
 
   useEffect(() => {
     const savedItems = JSON.parse(localStorage.getItem(lsItemsKey)) || [];
@@ -393,6 +400,10 @@ export default function WishList({ storageKey }) {
         </div>
       </section>
 
+      {lbImages.length > 0 && (
+        <Lightbox images={lbImages} index={lbIndex} onClose={closeLb} onChange={setLbIndex} />
+      )}
+
       {/* Floating modal */}
       {isOpen && (
         <>
@@ -406,19 +417,14 @@ export default function WishList({ storageKey }) {
             <header className="wish-modal__head">
               <h4 className="wish-modal__title">Wish List</h4>
               <div className="wish-modal__actions">
-                {/* Upload: files, camera, social via Cloudinary widget config */}
+                {/* Upload: files and camera only — URL uploads disabled to
+                    avoid 403 errors from retailers that block hotlinking */}
                 <ImageUpload
                   folder="wimc/wish-list"
                   tag="wishlist"
                   onUploadSuccess={onUploadSuccess}
+                  sources={["local", "camera"]}
                 />
-                <button
-                  className="wish-modal__btn"
-                  onClick={handleAddItem}
-                  title="Add to Wish List"
-                >
-                  Add to Wish List
-                </button>
                 <button
                   className="wish-modal__btn"
                   onClick={saveCurrentWishList}
@@ -485,76 +491,6 @@ export default function WishList({ storageKey }) {
             )}
 
             <div className="wish-modal__body">
-              {/* Inputs + inline preview */}
-              <form
-                className="wish-list__form"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleAddItem();
-                }}
-              >
-                <label htmlFor="url">Item URL (auto-preview):</label>
-                <input
-                  id="url"
-                  type="url"
-                  name="url"
-                  placeholder="https://example.com/item"
-                  value={newItem.url}
-                  onChange={handleInputChange}
-                />
-
-                {previewLoading && (
-                  <div className="wish-preview">Looking up preview…</div>
-                )}
-                {!previewLoading &&
-                  preview &&
-                  (preview.title || preview.image) && (
-                    <div className="wish-preview">
-                      {preview.image ? (
-                        <img
-                          className="wish-preview__img"
-                          src={preview.image}
-                          alt={preview.title || "preview"}
-                        />
-                      ) : null}
-                      <div className="wish-preview__meta">
-                        <div className="wish-preview__title">
-                          {preview.title || " "}
-                        </div>
-                        <div className="wish-preview__desc">
-                          {preview.description || " "}
-                        </div>
-                        <div className="wish-preview__site">
-                          {preview.siteName || ""}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                <label htmlFor="name">Item Name (Optional):</label>
-                <input
-                  id="name"
-                  type="text"
-                  name="name"
-                  placeholder="Enter item name"
-                  value={newItem.name}
-                  onChange={handleInputChange}
-                />
-                <label htmlFor="description">
-                  Item Description (Optional):
-                </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  placeholder="Enter item description"
-                  value={newItem.description}
-                  onChange={handleInputChange}
-                />
-                {addAttempted && error && (
-                  <p className="wish-list__error">{error}</p>
-                )}
-              </form>
-
               {/* Canvas */}
               <div className="wish-canvas">
                 {wishListItems.length === 0 ? (
@@ -569,6 +505,10 @@ export default function WishList({ storageKey }) {
                         /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i,
                       );
                       const src = item.image || (isImg ? item.url : "");
+                      const canvasImgs = wishListItems
+                        .filter(it => it.image || (it.url || "").match(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i))
+                        .map(it => ({ src: it.image || it.url, alt: it.name || "" }));
+                      const imgIdx = canvasImgs.findIndex(ci => ci.src === src);
                       return (
                         <figure key={item.id} className="wish-thumb">
                           {src ? (
@@ -577,6 +517,9 @@ export default function WishList({ storageKey }) {
                               src={src}
                               alt={item.name || "wish item"}
                               loading="lazy"
+                              style={{ cursor: "zoom-in" }}
+                              title="Click to enlarge"
+                              onClick={() => openLb(canvasImgs, Math.max(0, imgIdx))}
                             />
                           ) : (
                             <div className="wish-thumb__fallback">
@@ -752,35 +695,29 @@ export default function WishList({ storageKey }) {
                             </div>
                           </div>
                           <div className="opp__look-strip">
-                            {(l.items || []).slice(0, 10).map((it, i) => (
+                            {(l.items || []).slice(0, 10).map((it, i) => {
+                              const hasImg = it.image || it.url?.match(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i);
+                              const listImgs = (l.items || []).filter(x => x.image || x.url?.match(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i)).map(x => ({ src: x.image || x.url, alt: x.name || "" }));
+                              const imgIdx = listImgs.findIndex(ci => ci.src === (it.image || it.url));
+                              return (
                               <div
                                 key={(it.url || "thumb") + i}
                                 className="opp__look-thumb"
-                                style={{
-                                  display: "grid",
-                                  placeItems: "center",
-                                  fontSize: 10,
-                                }}
+                                style={{ display: "grid", placeItems: "center", fontSize: 10, cursor: hasImg ? "zoom-in" : "default" }}
+                                onClick={() => hasImg && openLb(listImgs, Math.max(0, imgIdx))}
                               >
-                                {it.image ||
-                                it.url?.match(
-                                  /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i,
-                                ) ? (
+                                {hasImg ? (
                                   <img
                                     src={it.image || it.url}
                                     alt={it.name || "item"}
-                                    style={{
-                                      width: "100%",
-                                      height: "100%",
-                                      objectFit: "cover",
-                                      borderRadius: 6,
-                                    }}
+                                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6 }}
                                   />
                                 ) : (
                                   it.name || "item"
                                 )}
                               </div>
-                            ))}
+                              );
+                            })}
                             {(l.items || []).length > 10 && (
                               <span className="opp__look-more">
                                 +{(l.items || []).length - 10}

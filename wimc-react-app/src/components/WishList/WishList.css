@@ -309,13 +309,12 @@
   color: #b91c1c;
 }
 
-/* Body layout: inputs + canvas */
+/* Body layout: canvas only (form removed) */
 .wish-modal__body {
   min-height: 0;
   overflow: auto;
   padding: 10px;
-  display: grid;
-  grid-template-columns: 320px 1fr;
+  display: block;
   gap: 12px;
 }
 
