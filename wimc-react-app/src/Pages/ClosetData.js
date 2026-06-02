@@ -38,19 +38,31 @@ function getSectionTagToDisplayName(gender) {
   };
 }
 
+// Male sections use a "male-" tag prefix so male items never merge with the
+// female closet (which keeps the original plain tags). `name` stays the base
+// key for display-name lookup; `tag` is the gender-specific Cloudinary tag.
 function getClosetSections(gender) {
+  const p = gender === "male" ? "male-" : "";
   const firstSection =
     gender === "male"
-      ? { name: "dress-shirts-suits", tag: "dress-shirts-suits", placeholderUrl: dressesSkirtsImg }
+      ? { name: "dress-shirts-suits", tag: "male-dress-shirts-suits", placeholderUrl: dressesSkirtsImg }
       : { name: "dresses-skirts", tag: "dresses-skirts", placeholderUrl: dressesSkirtsImg };
   return [
     firstSection,
-    { name: "shoes-sneakers", tag: "shoes-sneakers", placeholderUrl: shoesSneakersImg },
-    { name: "pants-jeans",    tag: "pants-jeans",    placeholderUrl: pantsJeansImg },
-    { name: "tops",           tag: "tops",           placeholderUrl: topsImg },
-    { name: "bags-accessories", tag: "bags-accessories", placeholderUrl: bagsAccessoriesImg },
-    { name: "jackets-coats",  tag: "jackets-coats",  placeholderUrl: jacketsCoatsImg },
+    { name: "shoes-sneakers",   tag: `${p}shoes-sneakers`,   placeholderUrl: shoesSneakersImg },
+    { name: "pants-jeans",      tag: `${p}pants-jeans`,      placeholderUrl: pantsJeansImg },
+    { name: "tops",             tag: `${p}tops`,             placeholderUrl: topsImg },
+    { name: "bags-accessories", tag: `${p}bags-accessories`, placeholderUrl: bagsAccessoriesImg },
+    { name: "jackets-coats",    tag: `${p}jackets-coats`,    placeholderUrl: jacketsCoatsImg },
   ];
+}
+
+// Map a (possibly "male-"-prefixed) tag back to its display label
+function tagToDisplayName(tag) {
+  if (!tag) return "";
+  const base = tag.replace(/^male-/, "");
+  const names = getSectionTagToDisplayName();
+  return names[base] || base;
 }
 
 const COLOR_PREFIX = "color:";
@@ -279,20 +291,18 @@ function ClosetData({
 
         <div className="closet-data__cards-container">
           {closetSections.map((section) => {
-            // Pinned card image takes priority over everything else
+            // Pinned card image takes priority; otherwise the card fetches its
+            // own thumbnail by the gender-specific tag (so male/female stay
+            // separate). Passing tag + undefined imageUrl triggers that fetch.
             const pinnedCardUrl = (() => {
               try { return localStorage.getItem(`wimc_card_image_${section.tag}`) || null; } catch { return null; }
             })();
-            const imageUrl =
-              pinnedCardUrl ||
-              (closetItems.length > 0
-                ? closetItems.find((item) => item.includes(section.tag)) || section.placeholderUrl
-                : section.placeholderUrl);
             return (
               <ClosetSectionCard
-                key={section.name}
+                key={section.tag}
                 sectionName={sectionTagToDisplayName[section.name]}
-                imageUrl={imageUrl}
+                tag={section.tag}
+                imageUrl={pinnedCardUrl || undefined}
                 placeholderUrl={section.placeholderUrl}
                 onClick={() => handleCardClick(section.tag)}
                 onAdd={() => {
@@ -319,13 +329,14 @@ function ClosetData({
 
         <ClosetSectionModal
           isOpen={isModalOpen}
-          sectionName={selectedSection}
+          sectionName={tagToDisplayName(selectedSection)}
+          tag={selectedSection}
           placeholderUrl={topsImg}
           onClose={handleModalClose}
           onAddItem={openAddForSection}
           onSwitchSection={(tag) => setSelectedSection(tag)}
           allSections={closetSections.map((s) => ({
-            label: sectionTagToDisplayName[s.tag] || s.tag,
+            label: sectionTagToDisplayName[s.name] || s.tag,
             tag: s.tag,
           }))}
         />
