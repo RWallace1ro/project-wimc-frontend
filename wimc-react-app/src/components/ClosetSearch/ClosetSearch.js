@@ -31,6 +31,37 @@ const TARGET_LABELS = {
 function toThumb(url) {
   return url?.replace("/upload/", "/upload/f_auto,q_auto,w_400,c_limit/") || url;
 }
+
+// POST to the Anthropic proxy with automatic retry on transient failures.
+// Fixes the "had to click 2–3 times" issue when the first request hiccups.
+async function postProxy(body, retries = 2) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        // Retry on server/rate errors; throw immediately on client errors
+        if (res.status >= 500 || res.status === 429) {
+          lastErr = new Error(data?.error?.message || `HTTP ${res.status}`);
+        } else {
+          throw new Error(data?.error?.message || `HTTP ${res.status}`);
+        }
+      } else {
+        return data;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+    // brief backoff before retrying
+    if (attempt < retries) await new Promise((r) => setTimeout(r, 600));
+  }
+  throw lastErr || new Error("Request failed");
+}
 function normalizeForPanels(url, sectionTag) {
   return {
     mediaType: "image",
@@ -58,18 +89,12 @@ Give a short, friendly 1-2 sentence response, then identify which categories are
 Return a JSON block at the END: {"sections": ["dresses-skirts"]}
 Only include the most relevant 1-3 sections. Always include the JSON block.`;
 
-  const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-5",
-      max_tokens: 300,
-      system: systemPrompt,
-      messages: [{ role: "user", content: query }],
-    }),
+  const data = await postProxy({
+    model: "claude-sonnet-4-5",
+    max_tokens: 300,
+    system: systemPrompt,
+    messages: [{ role: "user", content: query }],
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
   const fullText = data.content?.[0]?.text || "";
   const jsonMatch = fullText.match(/\{"sections":\s*\[.*?\]\}/s);
   let sections = [];
@@ -118,17 +143,11 @@ If NONE of the items match the search, respond with exactly: {"matching": []}`,
       content.push({ type: "image", source: { type: "url", url: visionUrl } });
     });
 
-    const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-5",
-        max_tokens: 200,
-        messages: [{ role: "user", content }],
-      }),
+    const data = await postProxy({
+      model: "claude-sonnet-4-5",
+      max_tokens: 200,
+      messages: [{ role: "user", content }],
     });
-    const data = await res.json();
-    if (!res.ok) return { matched: batch, errored: true }; // API failed → show all
 
     const text = data.content?.[0]?.text || "";
     const jsonMatch = text.match(/\{"matching":\s*\[.*?\]\}/s);
@@ -237,7 +256,22 @@ export default function ClosetSearch({
   };
 
   const selectAll = () => setSelected(new Set(resultImages.map((x) => x.url)));
-  const clearAll  = () => setSelected(new Set());
+
+  // Remove the currently-selected items from the results grid
+  const removeSelected = () => {
+    setResultImages((prev) => prev.filter((x) => !selected.has(x.url)));
+    setSelected(new Set());
+  };
+
+  // Remove a single item from the results grid (trash-can on each tile)
+  const removeOne = (url) => {
+    setResultImages((prev) => prev.filter((x) => x.url !== url));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.delete(url);
+      return next;
+    });
+  };
 
   const handleApply = useCallback(() => {
     const chosenItems = resultImages
@@ -386,7 +420,14 @@ export default function ClosetSearch({
                     </span>
                     <div className="cs-results-actions">
                       <button className="cs-mini-btn" onClick={selectAll}>Select All</button>
-                      <button className="cs-mini-btn" onClick={clearAll}>Clear</button>
+                      <button
+                        className="cs-mini-btn cs-mini-btn--danger"
+                        onClick={removeSelected}
+                        disabled={selectedCount === 0}
+                        title="Remove the selected items from these results"
+                      >
+                        Remove Selected
+                      </button>
                     </div>
                   </div>
 
@@ -407,6 +448,15 @@ export default function ClosetSearch({
                             loading="lazy"
                           />
                           <div className="cs-image-tile__check">{isSelected ? "✓" : ""}</div>
+                          {/* Trash-can — remove this item from results */}
+                          <button
+                            className="cs-image-tile__remove"
+                            onClick={(e) => { e.stopPropagation(); removeOne(url); }}
+                            title="Remove from results"
+                            aria-label="Remove from results"
+                          >
+                            🗑️
+                          </button>
                           {sec && (
                             <div className="cs-image-tile__label">{sec.emoji} {sec.label}</div>
                           )}
