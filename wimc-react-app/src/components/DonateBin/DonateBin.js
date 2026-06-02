@@ -623,7 +623,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
                 </button>
               ))}
               <button
-                className="donate-section-pill donate-section-pill--action"
+                className="donate-section-pill donate-section-pill--search"
                 type="button"
                 onClick={() => setIsSearchOpen(true)}
               >
