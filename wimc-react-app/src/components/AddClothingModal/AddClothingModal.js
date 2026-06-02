@@ -4,12 +4,31 @@ import ImageUpload from "../ImageUpload/ImageUpload";
 import "./AddClothingModal.css";
 
 // function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
+// Default (female) section options — used when no `sections` prop is provided
+const DEFAULT_SECTIONS = [
+  { value: "dresses-skirts",   label: "Dresses/Skirts" },
+  { value: "shoes-sneakers",   label: "Shoes/Sneakers" },
+  { value: "pants-jeans",      label: "Pants/Jeans" },
+  { value: "tops",             label: "Tops" },
+  { value: "bags-accessories", label: "Bags/Accessories" },
+  { value: "jackets-coats",    label: "Jackets/Coats" },
+];
+
 function AddClothingModal({
   isOpen,
   onClose,
   onClothingAdded,
   initialCategory,
+  // tagPrefix — e.g. "kid-abc123". When set, the final upload tag is
+  //   `${tagPrefix}-${formData.category}` so each child's section stays isolated.
+  // uploadTag  — legacy fixed override (kept for backward-compat; tagPrefix wins).
+  tagPrefix,
+  uploadTag,
+  // sections — gender-aware [{ value, label }] so the category dropdown matches
+  //   the closet's actual section cards (male vs female, kids vs main).
+  sections,
 }) {
+  const categoryOptions = (sections && sections.length) ? sections : DEFAULT_SECTIONS;
   const [formData, setFormData] = useState({
     name: "",
     designer: "",
@@ -141,11 +160,23 @@ function AddClothingModal({
     return () => {
       document.removeEventListener("keydown", handleKeyPress);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, onClose]);
 
-  const tag = formData.category?.trim()
-    ? formData.category.trim().toLowerCase()
-    : "uncategorized";
+  // Build the Cloudinary tag used for this upload.
+  // Priority: tagPrefix → uploadTag (legacy) → plain category
+  //
+  // • tagPrefix="kid-abc123" + category="tops"  → "kid-abc123-tops"
+  //   This means changing the category dropdown re-routes the upload to the
+  //   correct kids-closet section automatically.
+  // • uploadTag (legacy fixed string) — still honoured for back-compat.
+  // • Fallback: plain category value (main closet).
+  const category = formData.category?.trim().toLowerCase() || "";
+  const tag = tagPrefix && category
+    ? `${tagPrefix}-${category}`
+    : uploadTag
+    || category
+    || "uncategorized";
 
   if (!isOpen) return null;
 
@@ -163,7 +194,7 @@ function AddClothingModal({
             onClick={onClose}
             aria-label="Close Modal"
           >
-            &times;
+            ✕
           </button>
         </header>
 
@@ -235,12 +266,9 @@ function AddClothingModal({
             required
           >
             <option value="">Select Category</option>
-            <option value="dresses-skirts">Dresses/Skirts</option>
-            <option value="shoes-sneakers">Shoes/Sneakers</option>
-            <option value="pants-jeans">Pants/Jeans</option>
-            <option value="tops">Tops</option>
-            <option value="bags-accessories">Bags/Accessories</option>
-            <option value="jackets-coats">Jackets/Coats</option>
+            {categoryOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
 
           {source === "device" ? (

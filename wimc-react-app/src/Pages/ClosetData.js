@@ -334,6 +334,10 @@ function ClosetData({
           onClose={resetModals}
           onClothingAdded={handleAddClothing}
           initialCategory={selectedSection}
+          sections={closetSections.map((s) => ({
+            value: s.tag,
+            label: sectionTagToDisplayName[s.name] || sectionTagToDisplayName[s.tag] || s.tag,
+          }))}
         />
       </section>
 

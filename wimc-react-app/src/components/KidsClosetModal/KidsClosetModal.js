@@ -529,6 +529,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
           onClothingAdded={handleAddClothing}
           initialCategory={selectedSection || ""}
           tagPrefix={`kid-${child.id}`}
+          sections={SECTIONS.map((s) => ({ value: s.tag, label: s.label }))}
         />
       </div>
     </div>
