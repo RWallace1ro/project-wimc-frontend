@@ -133,7 +133,20 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
   const [donatedShareIsBlob, setDonatedShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
 
   const addSearchItems = (rawItems) => {
-    const toAdd = rawItems.map((it) => normalizeChoice(it, it?.section)).filter(Boolean);
+    // Map to the SAME shape addFromChoice uses ({ name, description, url, imageUrl })
+    // so the donate grid (which renders it.imageUrl || it.url) shows the images.
+    const toAdd = rawItems
+      .map((raw) => {
+        const it = normalizeChoice(raw, raw?.section);
+        if (!it?.mediaUrl) return null;
+        return {
+          name: it.name || "",
+          description: "",
+          url: it.mediaUrl || "",
+          imageUrl: it.mediaThumb || it.mediaUrl || "",
+        };
+      })
+      .filter(Boolean);
     setDonateItems((prev) => {
       const seen = new Set(prev.map((p) => keyOf(p)));
       const unique = toAdd.filter((it) => {
@@ -651,10 +664,11 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
                     <div className="donate-grid">
                       {donateItems.map((it, i) => {
                         const nameShown = nameVisibleKeys.has(keyOf(it));
+                        const srcOf = (x) => x.imageUrl || x.url || x.mediaThumb || x.mediaUrl;
                         const canvasImgs = donateItems
-                          .filter(x => x.imageUrl || x.url)
-                          .map(x => ({ src: x.imageUrl || x.url, alt: x.name || "" }));
-                        const imgIdx = donateItems.filter(x => x.imageUrl || x.url).indexOf(it);
+                          .filter((x) => srcOf(x))
+                          .map((x) => ({ src: srcOf(x), alt: x.name || "" }));
+                        const imgIdx = donateItems.filter((x) => srcOf(x)).indexOf(it);
                         return (
                           <figure
                             key={(it.url || it.imageUrl || it.name || "it") + i}
@@ -662,7 +676,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
                           >
                             <img
                               className="donate-thumb__img"
-                              src={it.imageUrl || it.url}
+                              src={it.imageUrl || it.url || it.mediaThumb || it.mediaUrl}
                               alt={it.name || "Selected"}
                               loading="lazy"
                               style={{ cursor: "zoom-in" }}

@@ -81,38 +81,54 @@ Only include the most relevant 1-3 sections. Always include the JSON block.`;
 }
 
 // ── Step 2: visually filter images to match the query ────────────────────────
+// Returns { matched: [...], errored: false }
+// - matched: the images the vision model confirmed match the query
+// - errored: true if the API failed (caller shows all as fallback)
 async function filterImagesByQuery(imageObjects, userQuery) {
-  if (!imageObjects.length) return imageObjects;
+  if (!imageObjects.length) return { matched: [], errored: false };
   const batch = imageObjects.slice(0, 20); // Vision API limit
 
   try {
+    // Interleave a numbered text label BEFORE each image so the model can
+    // reliably map its answer back to the correct index.
     const content = [
       {
         type: "text",
-        text: `The user searched for: "${userQuery}".
-Here are ${batch.length} clothing images from their closet (numbered 0 to ${batch.length - 1}).
-Look at each image carefully and identify which ones match the user's search, considering color, style, and type.
-Respond ONLY with a JSON object: {"matching": [0, 2, 4]}
-List indices of images that match. Be selective — only include genuine matches.
-If no images clearly match, return {"matching": []}.`,
+        text: `The user is searching their clothing closet for: "${userQuery}".
+
+I will show you ${batch.length} clothing items, each labeled "Item 0", "Item 1", etc.
+
+Your job: return ONLY the items that genuinely match ALL aspects of the search.
+- If the search names a COLOR (e.g. "black dresses"), the item's MAIN color must be that color. A mostly-white dress with black trim is NOT a black dress. Be strict about color.
+- If the search names a TYPE (e.g. "dress", "jacket"), the item must be that type.
+- If the search names a STYLE/occasion (e.g. "formal", "casual"), judge by the garment's look.
+
+Examine each item's actual dominant color and details carefully. Only include an item if you are confident it matches.
+
+Respond with ONLY a JSON object listing the matching item numbers, e.g.:
+{"matching": [0, 3]}
+
+If NONE of the items match the search, respond with exactly: {"matching": []}`,
       },
-      ...batch.map(({ url }) => ({
-        type: "image",
-        source: { type: "url", url },
-      })),
     ];
+    batch.forEach((obj, i) => {
+      // Use a moderate-size thumbnail for faster, reliable vision analysis
+      const visionUrl = obj.url?.replace("/upload/", "/upload/f_auto,q_auto,w_500,c_limit/") || obj.url;
+      content.push({ type: "text", text: `Item ${i}:` });
+      content.push({ type: "image", source: { type: "url", url: visionUrl } });
+    });
 
     const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
-        max_tokens: 150,
+        max_tokens: 200,
         messages: [{ role: "user", content }],
       }),
     });
     const data = await res.json();
-    if (!res.ok) return batch; // fallback: show all
+    if (!res.ok) return { matched: batch, errored: true }; // API failed → show all
 
     const text = data.content?.[0]?.text || "";
     const jsonMatch = text.match(/\{"matching":\s*\[.*?\]\}/s);
@@ -121,12 +137,15 @@ If no images clearly match, return {"matching": []}.`,
       if (Array.isArray(matching)) {
         const matchSet = new Set(matching);
         const filtered = batch.filter((_, i) => matchSet.has(i));
-        // If nothing matched, return all so user isn't left empty-handed
-        return filtered.length > 0 ? filtered : batch;
+        // Respect an explicit empty result — do NOT fall back to all,
+        // otherwise a "black dresses" search wrongly shows every colour.
+        return { matched: filtered, errored: false };
       }
     }
-  } catch {}
-  return batch; // fallback on any error
+    return { matched: batch, errored: true }; // unparseable → show all
+  } catch {
+    return { matched: batch, errored: true }; // network error → show all
+  }
 }
 
 export default function ClosetSearch({
@@ -144,6 +163,7 @@ export default function ClosetSearch({
   const [loadingImages, setLoadingImages] = useState(false);
   const [filteringImages, setFilteringImages] = useState(false);
   const [resultImages, setResultImages] = useState([]);
+  const [noMatches, setNoMatches] = useState(false);
   const [selected, setSelected] = useState(new Set());
   const [applyFeedback, setApplyFeedback] = useState("");
   const [error, setError] = useState("");
@@ -161,6 +181,7 @@ export default function ClosetSearch({
     setResultText("");
     setSections([]);
     setResultImages([]);
+    setNoMatches(false);
     setSelected(new Set());
     setError("");
     setStreaming(true);
@@ -190,11 +211,13 @@ export default function ClosetSearch({
 
       // Step 3 — visually filter images to match the query
       setFilteringImages(true);
-      const filtered = await filterImagesByQuery(flat, q);
+      const { matched, errored } = await filterImagesByQuery(flat, q);
       setFilteringImages(false);
 
-      setResultImages(filtered);
-      setSelected(new Set(filtered.map((x) => x.url))); // auto-select all matches
+      setResultImages(matched);
+      setSelected(new Set(matched.map((x) => x.url))); // auto-select all matches
+      // Show a clear message when the vision model found no genuine matches
+      setNoMatches(matched.length === 0 && !errored);
     } catch (e) {
       if (e.name !== "AbortError") setError(`Error: ${e.message}`);
     } finally {
@@ -236,6 +259,7 @@ export default function ClosetSearch({
     setResultText("");
     setSections([]);
     setResultImages([]);
+    setNoMatches(false);
     setSelected(new Set());
     setError("");
     setStreaming(false);
@@ -320,8 +344,16 @@ export default function ClosetSearch({
             <div className="cs-result">
               <p className="cs-result__text">{resultText}</p>
 
+              {/* No genuine matches found */}
+              {!hasImages && !isLoading && noMatches && (
+                <p className="cs-no-matches">
+                  No items in your closet match that search. Try a different
+                  colour, style, or description.
+                </p>
+              )}
+
               {/* Section nav (fallback when no images found) */}
-              {!hasImages && !isLoading && sections.length > 0 && (
+              {!hasImages && !isLoading && !noMatches && sections.length > 0 && (
                 <>
                   <p className="cs-result__heading">Matching sections:</p>
                   <div className="cs-result__sections">
