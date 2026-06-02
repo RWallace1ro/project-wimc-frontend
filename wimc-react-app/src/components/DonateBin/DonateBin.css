@@ -432,10 +432,12 @@
 }
 
 .donate-modal__right {
+  flex: 1 1 auto;            /* fill the body so 1fr rows have a definite height */
   display: grid;
-  grid-template-rows: minmax(260px, 1fr) minmax(260px, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
   min-height: 0;
+  overflow: hidden;
 }
 
 .donate-canvas {
