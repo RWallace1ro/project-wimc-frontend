@@ -1,5 +1,5 @@
 import { syncSetItem } from '../utils/syncStore';
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 
 const LS_KEY = "wimc_section_backgrounds";
 
@@ -24,8 +24,30 @@ const BackgroundContext = createContext(null);
 
 export function BackgroundProvider({ children }) {
   const [backgrounds, setBackgrounds] = useState(load);
+  // Skip the first persist so we never overwrite cloud data with the initial
+  // (possibly empty) localStorage value before Firestore hydration completes.
+  const skipPersist = useRef(true);
+
+  // When SyncProvider finishes pulling cloud data into localStorage, re-read it
+  // so the user's saved card backgrounds/colors are restored (after a deploy,
+  // cache clear, or on a new device).
+  useEffect(() => {
+    const onHydrated = () => {
+      const fromCloud = load();
+      if (fromCloud && Object.keys(fromCloud).length > 0) {
+        skipPersist.current = true; // don't echo this back as a user change
+        setBackgrounds(fromCloud);
+      }
+    };
+    window.addEventListener("wimc-hydrated", onHydrated);
+    return () => window.removeEventListener("wimc-hydrated", onHydrated);
+  }, []);
 
   useEffect(() => {
+    if (skipPersist.current) {
+      skipPersist.current = false;
+      return;
+    }
     try {
       syncSetItem(LS_KEY, JSON.stringify(backgrounds));
     } catch {}

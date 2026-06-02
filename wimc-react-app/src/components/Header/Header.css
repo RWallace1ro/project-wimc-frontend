@@ -215,7 +215,7 @@
   overflow-x: auto;
 }
 .header__bottom .closet-tabs__container {
-  justify-content: flex-start;
+  justify-content: center;   /* centered under the header on laptop/desktop */
   gap: 4px;
   padding: 6px 8px;
   flex-wrap: nowrap;
