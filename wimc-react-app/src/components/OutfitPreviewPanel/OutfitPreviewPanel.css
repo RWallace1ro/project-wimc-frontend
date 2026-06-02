@@ -973,3 +973,15 @@
 }
 
 .opp__thumb-img--zoomable { cursor: zoom-in; }
+
+/* In-panel search button */
+.opp__btn--search {
+  background: #0ea5e9;
+  border-color: #0ea5e9;
+  color: #fff;
+  font-weight: 600;
+}
+.opp__btn--search:hover {
+  background: #0284c7;
+  border-color: #0284c7;
+}

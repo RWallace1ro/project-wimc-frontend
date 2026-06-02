@@ -9,6 +9,7 @@ import {
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import AIPackingAssistant from "../AIPackingAssistant/AIPackingAssistant";
 import Lightbox from "../Lightbox/Lightbox";
+import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import "./TravelPackPanel.css";
 
 const DAYS = [
@@ -100,12 +101,8 @@ export default function TravelPackPanel({
   const [dayShareError, setDayShareError] = useState("");
   const [shareNote, setShareNote] = useState("");
 
-  // Apply items from search results into selected day
-  useEffect(() => {
-    if (!incomingItems?.items?.length) return;
-    const toAdd = incomingItems.items
-      .map((it) => normalizeMedia(it, it?.section))
-      .filter(Boolean);
+  const addItemsToDay = (rawItems) => {
+    const toAdd = rawItems.map((it) => normalizeMedia(it, it?.section)).filter(Boolean);
     setPackPlan((prev) => {
       const seen = new Set((prev[selectedDay] || []).map((p) => p.mediaUrl || p.name));
       const unique = toAdd.filter((it) => {
@@ -116,8 +113,17 @@ export default function TravelPackPanel({
       });
       return { ...prev, [selectedDay]: [...(prev[selectedDay] || []), ...unique] };
     });
+  };
+
+  // Apply items from search results (parent-routed, legacy)
+  useEffect(() => {
+    if (!incomingItems?.items?.length) return;
+    addItemsToDay(incomingItems.items);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingItems]);
+
+  // In-panel closet search
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // lightbox
   const [lbImages, setLbImages] = useState([]);
@@ -339,6 +345,13 @@ export default function TravelPackPanel({
       {lbImages.length > 0 && (
         <Lightbox images={lbImages} index={lbIndex} onClose={closeLightbox} onChange={setLbIndex} />
       )}
+      <ClosetSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        target="pack"
+        tagPrefix={tagPrefix}
+        onApplyItems={addItemsToDay}
+      />
       {floating && <div className="tp__backdrop" onClick={close} />}
 
       <section
@@ -383,6 +396,13 @@ export default function TravelPackPanel({
             {/* Share bar — buttons left, note right */}
             <div className="tp__share-bar">
               <div className="tp__share-btns">
+                <button
+                  className="tp__toggle tp__toggle--search"
+                  onClick={() => setIsSearchOpen(true)}
+                  title="Search your closet and add items to this day"
+                >
+                  🔍 Search Closet
+                </button>
                 <button
                   className="tp__toggle"
                   onClick={() => exportPackDay(selectedDay)}

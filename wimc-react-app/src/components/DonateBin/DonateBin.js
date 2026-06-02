@@ -9,6 +9,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
+import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import "./DonateBin.css";
 
 const SECTION_OPTIONS = [
@@ -131,10 +132,8 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
   const [donatedShareErr, setDonatedShareErr] = useState("");
   const [donatedShareIsBlob, setDonatedShareIsBlob] = useState(false); // eslint-disable-line no-unused-vars
 
-  // Apply items from search results into donation canvas
-  useEffect(() => {
-    if (!incomingItems?.items?.length) return;
-    const toAdd = incomingItems.items.map((it) => normalizeChoice(it, it?.section)).filter(Boolean);
+  const addSearchItems = (rawItems) => {
+    const toAdd = rawItems.map((it) => normalizeChoice(it, it?.section)).filter(Boolean);
     setDonateItems((prev) => {
       const seen = new Set(prev.map((p) => keyOf(p)));
       const unique = toAdd.filter((it) => {
@@ -145,8 +144,17 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
       });
       return [...prev, ...unique];
     });
+  };
+
+  // Apply items from search results (parent-routed, legacy)
+  useEffect(() => {
+    if (!incomingItems?.items?.length) return;
+    addSearchItems(incomingItems.items);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingItems]);
+
+  // In-panel closet search
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const toggleNameFor = (it) => {
     const k = keyOf(it);
@@ -502,6 +510,13 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
       {lbImages.length > 0 && (
         <Lightbox images={lbImages} index={lbIndex} onClose={closeLb} onChange={setLbIndex} />
       )}
+      <ClosetSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        target="donate"
+        tagPrefix={tagPrefix}
+        onApplyItems={addSearchItems}
+      />
 
       {/* Floating Donate modal */}
       {isOpen && (
@@ -594,6 +609,13 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
                   {opt.label}
                 </button>
               ))}
+              <button
+                className="donate-section-pill donate-section-pill--action"
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                🔍 Search Closet
+              </button>
               <button
                 className="donate-section-pill donate-section-pill--action"
                 type="button"

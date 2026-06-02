@@ -9,6 +9,7 @@ import {
 import "./OutfitPreviewPanel.css";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
+import ClosetSearch from "../ClosetSearch/ClosetSearch";
 
 const SECTION_OPTIONS_FEMALE = [
   { value: "dresses-skirts",   label: "Dresses/Skirts" },
@@ -214,12 +215,15 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   // per-item name visibility (hidden by default)
   const [nameVisibleKeys, setNameVisibleKeys] = useState(() => new Set());
 
-  // Apply items from search results
+  // Apply items from search results (parent-routed, legacy)
   useEffect(() => {
     if (!incomingItems?.items?.length) return;
     addMany(incomingItems.items, "merge");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingItems]);
+
+  // In-panel closet search
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // lightbox
   const [lbImages, setLbImages] = useState([]);
@@ -922,6 +926,13 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
       {lbImages.length > 0 && (
         <Lightbox images={lbImages} index={lbIndex} onClose={closeLightbox} onChange={setLbIndex} />
       )}
+      <ClosetSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        target="preview"
+        tagPrefix={tagPrefix}
+        onApplyItems={(items) => addMany(items, "merge")}
+      />
       {isFloating && <div className="opp-backdrop" onClick={closePanel} />}
 
       {/* Favorites Drawer */}
@@ -1239,6 +1250,13 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                   </div>
                   {importError && <div className="opp__error">{importError}</div>}
                 </div>
+                <button
+                  className="opp__btn opp__btn--search"
+                  onClick={() => setIsSearchOpen(true)}
+                  title="Search your closet and add items"
+                >
+                  🔍 Search Closet
+                </button>
                 <button
                   className="opp__btn"
                   onClick={doUndo}

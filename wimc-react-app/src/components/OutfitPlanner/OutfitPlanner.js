@@ -8,6 +8,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
+import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import "./OutfitPlanner.css";
 
 const DAYS = [
@@ -107,7 +108,7 @@ export default function OutfitPlanner({
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
 
-  // Apply items from search results into selected day
+  // Apply items from search results into selected day (parent-routed, legacy)
   useEffect(() => {
     if (!incomingItems?.items?.length) return;
     const normalized = incomingItems.items
@@ -116,6 +117,13 @@ export default function OutfitPlanner({
     setPlan(mergePlans(plan || {}, { [selectedDay]: normalized }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingItems]);
+
+  // In-panel closet search
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const applySearchItems = (items) => {
+    const normalized = items.map((it) => normalizeMedia(it, it?.section)).filter(Boolean);
+    setPlan(mergePlans(plan || {}, { [selectedDay]: normalized }));
+  };
 
   // lightbox
   const [lbImages, setLbImages] = useState([]);
@@ -345,6 +353,13 @@ export default function OutfitPlanner({
       {lbImages.length > 0 && (
         <Lightbox images={lbImages} index={lbIndex} onClose={closeLightbox} onChange={setLbIndex} />
       )}
+      <ClosetSearch
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        target="planner"
+        tagPrefix={tagPrefix}
+        onApplyItems={applySearchItems}
+      />
       {floating && <div className="planner__backdrop" onClick={close} />}
 
       <section
@@ -399,6 +414,13 @@ export default function OutfitPlanner({
           <div className="planner__body">
             <div className="planner__share-bar">
               <div className="planner__share-btns">
+                <button
+                  className="planner__export planner__export--search"
+                  onClick={() => setIsSearchOpen(true)}
+                  title="Search your closet and add items to this day"
+                >
+                  🔍 Search Closet
+                </button>
                 <button
                   className="planner__export"
                   onClick={() => exportDay(selectedDay)}

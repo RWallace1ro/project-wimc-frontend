@@ -646,3 +646,15 @@
 }
 
 .tp__thumb--zoomable { cursor: zoom-in; }
+
+/* In-panel search button */
+.tp__toggle--search {
+  background: #0ea5e9 !important;
+  border-color: #0ea5e9 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.tp__toggle--search:hover {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+}

@@ -618,3 +618,15 @@
 }
 
 .planner__img--zoomable { cursor: zoom-in; }
+
+/* In-panel search button */
+.planner__export--search {
+  background: #0ea5e9 !important;
+  border-color: #0ea5e9 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+.planner__export--search:hover {
+  background: #0284c7 !important;
+  border-color: #0284c7 !important;
+}
