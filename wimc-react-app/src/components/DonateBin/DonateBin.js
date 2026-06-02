@@ -722,19 +722,19 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
                   ) : choices.length === 0 ? (
                     <div className="opp__empty">No items found.</div>
                   ) : (
-                    <div className="opp__choices">
+                    <div className="donate-choices">
                       {choices.map((it, idx) => (
                         <button
                           key={(it.mediaUrl || "choice") + idx}
-                          className="opp__choice"
+                          className="donate-choice"
                           onClick={() => addFromChoice(it)}
                           title="Add to donation selection"
                           type="button"
                         >
                           {it.mediaType === "video" ? (
-                            <div className="opp__choice-vidwrap">
+                            <div className="donate-choice-vidwrap">
                               <img
-                                className="opp__choice-img"
+                                className="donate-choice-img"
                                 src={it.mediaPoster || ""}
                                 alt="video poster"
                                 loading="lazy"
@@ -742,11 +742,11 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
                                   (e.currentTarget.style.display = "none")
                                 }
                               />
-                              <span className="opp__pill">Video</span>
+                              <span className="donate-pill">Video</span>
                             </div>
                           ) : (
                             <img
-                              className="opp__choice-img"
+                              className="donate-choice-img"
                               src={it.mediaThumb || it.mediaUrl}
                               alt={it.name || "item"}
                               loading="lazy"

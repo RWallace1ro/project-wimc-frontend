@@ -346,6 +346,21 @@ export default function OutfitPlanner({
     setPlan(next);
   }
 
+  // Move an item from one day to another
+  const [moveMenuFor, setMoveMenuFor] = useState(null); // `${day}-${index}` or null
+  function moveItemToDay(fromDay, index, toDay) {
+    if (fromDay === toDay) { setMoveMenuFor(null); return; }
+    setPlan((prevPlan) => {
+      const base = prevPlan || {};
+      const fromArr = [...(base[fromDay] || [])];
+      const [moved] = fromArr.splice(index, 1);
+      if (!moved) return base;
+      const toArr = [...(base[toDay] || []), moved];
+      return { ...base, [fromDay]: fromArr, [toDay]: toArr };
+    });
+    setMoveMenuFor(null);
+  }
+
   const daysSetCount = DAYS.filter((d) => (plan?.[d] || []).length > 0).length;
 
   return (
@@ -360,6 +375,26 @@ export default function OutfitPlanner({
         tagPrefix={tagPrefix}
         onApplyItems={applySearchItems}
       />
+      {/* Move-to-day popover (fixed, centered — never clipped) */}
+      {moveMenuFor && (() => {
+        const [mDay, mIdx] = [moveMenuFor.slice(0, moveMenuFor.lastIndexOf("-")), Number(moveMenuFor.slice(moveMenuFor.lastIndexOf("-") + 1))];
+        return (
+          <>
+            <div className="planner__move-backdrop" onClick={() => setMoveMenuFor(null)} />
+            <div className="planner__move-popover" role="dialog" aria-label="Move to day">
+              <p className="planner__move-popover-title">Move to which day?</p>
+              <div className="planner__move-popover-grid">
+                {DAYS.filter((dd) => dd !== mDay).map((dd) => (
+                  <button key={dd} className="planner__move-popover-btn" onClick={() => moveItemToDay(mDay, mIdx, dd)}>
+                    {dd}
+                  </button>
+                ))}
+              </div>
+              <button className="planner__move-popover-cancel" onClick={() => setMoveMenuFor(null)}>Cancel</button>
+            </div>
+          </>
+        );
+      })()}
       {floating && <div className="planner__backdrop" onClick={close} />}
 
       <section
@@ -663,6 +698,18 @@ export default function OutfitPlanner({
                               onClick={() => removeFromDay(d, i)}
                             >
                               🗑️
+                            </button>
+                            {/* Move to another day */}
+                            <button
+                              className="planner__move"
+                              title="Move to another day"
+                              aria-label="Move to another day"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMoveMenuFor(`${d}-${i}`);
+                              }}
+                            >
+                              📅
                             </button>
                           </figure>
                         );

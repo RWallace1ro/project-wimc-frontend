@@ -251,6 +251,20 @@ export default function TravelPackPanel({
     });
   }
 
+  // Move an item from one day to another
+  const [moveMenuFor, setMoveMenuFor] = useState(null); // `${day}-${index}` or null
+  function moveItemToDay(fromDay, index, toDay) {
+    if (fromDay === toDay) { setMoveMenuFor(null); return; }
+    setPackPlan((prev) => {
+      const fromArr = [...(prev[fromDay] || [])];
+      const [moved] = fromArr.splice(index, 1);
+      if (!moved) return prev;
+      const toArr = [...(prev[toDay] || []), moved];
+      return { ...prev, [fromDay]: fromArr, [toDay]: toArr };
+    });
+    setMoveMenuFor(null);
+  }
+
   function syncToPlanner() {
     if (!onSyncToPlanner) return;
     onSyncToPlanner(selectedDay, packPlan[selectedDay]);
@@ -352,6 +366,27 @@ export default function TravelPackPanel({
         tagPrefix={tagPrefix}
         onApplyItems={addItemsToDay}
       />
+      {/* Move-to-day popover (fixed, centered — never clipped) */}
+      {moveMenuFor && (() => {
+        const mDay = moveMenuFor.slice(0, moveMenuFor.lastIndexOf("-"));
+        const mIdx = Number(moveMenuFor.slice(moveMenuFor.lastIndexOf("-") + 1));
+        return (
+          <>
+            <div className="tp__move-backdrop" onClick={() => setMoveMenuFor(null)} />
+            <div className="tp__move-popover" role="dialog" aria-label="Move to day">
+              <p className="tp__move-popover-title">Move to which day?</p>
+              <div className="tp__move-popover-grid">
+                {DAYS.filter((dd) => dd !== mDay).map((dd) => (
+                  <button key={dd} className="tp__move-popover-btn" onClick={() => moveItemToDay(mDay, mIdx, dd)}>
+                    {dd}
+                  </button>
+                ))}
+              </div>
+              <button className="tp__move-popover-cancel" onClick={() => setMoveMenuFor(null)}>Cancel</button>
+            </div>
+          </>
+        );
+      })()}
       {floating && <div className="tp__backdrop" onClick={close} />}
 
       <section
@@ -616,6 +651,18 @@ export default function TravelPackPanel({
                               onClick={() => removeAt(d, i)}
                             >
                               🗑️
+                            </button>
+                            {/* Move to another day */}
+                            <button
+                              className="tp__move"
+                              title="Move to another day"
+                              aria-label="Move to another day"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMoveMenuFor(`${d}-${i}`);
+                              }}
+                            >
+                              📅
                             </button>
                           </li>
                         );

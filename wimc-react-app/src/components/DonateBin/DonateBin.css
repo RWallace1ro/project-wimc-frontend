@@ -563,10 +563,12 @@
   font-weight: 600;
   flex-shrink: 0;
 }
-.opp__choices {
+/* Donate picker choices — unique classes (avoid collision with
+   OutfitPreviewPanel's global .opp__choices/.opp__choice rules) */
+.donate-choices {
   flex: 1 1 auto;
-  min-height: 0;           /* allow the grid to shrink so overflow scrolls */
-  overflow-y: auto;        /* vertical scrolling restored */
+  min-height: 0;             /* allow the grid to shrink so overflow scrolls */
+  overflow-y: auto;          /* vertical scrolling */
   -webkit-overflow-scrolling: touch;
   padding: 8px;
   display: grid;
@@ -574,7 +576,7 @@
   align-content: start;
   gap: 10px;                 /* ≥5px clear spacing all around */
 }
-.opp__choice {
+.donate-choice {
   position: relative;
   padding: 0;
   border: 1px solid #eee;
@@ -583,26 +585,26 @@
   cursor: pointer;
   overflow: hidden;
 }
-.opp__choice-img {
+.donate-choice-img {
   width: 100%;
   height: auto;              /* natural aspect ratio — full image, fills width */
   display: block;
   border-radius: 6px;
 }
-.opp__choice-vidwrap {
+.donate-choice-vidwrap {
   position: relative;
+  width: 100%;
 }
-.opp__pill {
+.donate-pill {
   position: absolute;
   bottom: 4px;
   right: 4px;
   background: rgba(0, 0, 0, 0.65);
   color: #fff;
-  font-size: 12px;
-  padding: 2px 4px;
+  font-size: 11px;
+  padding: 2px 6px;
   border-radius: 4px;
 }
-
 .opp-saved {
   position: fixed;
   right: 12px;
@@ -672,7 +674,7 @@
   .donate-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .opp__choices {
+  .donate-choices {
     grid-template-columns: repeat(2, 1fr);
   }
 }
