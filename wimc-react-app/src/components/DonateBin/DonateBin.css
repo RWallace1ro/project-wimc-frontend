@@ -332,6 +332,12 @@
   flex-shrink: 0;
 }
 .donate-section-strip::-webkit-scrollbar { display: none; }
+/* Trailing spacer so the last pill (Donated Items) isn't cut off at the
+   right edge — flex scroll containers collapse right padding otherwise. */
+.donate-section-strip::after {
+  content: "";
+  flex: 0 0 12px;
+}
 
 .donate-section-pill {
   flex-shrink: 0 !important;
@@ -546,15 +552,22 @@
   background: transparent;
   position: relative;
   z-index: 0;
+  display: flex;            /* flex column so choices can scroll within */
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 .opp__picker-title {
   margin: 6px;
   font-size: 12px;
   font-weight: 600;
+  flex-shrink: 0;
 }
 .opp__choices {
   flex: 1 1 auto;
-  overflow: auto;
+  min-height: 0;           /* allow the grid to shrink so overflow scrolls */
+  overflow-y: auto;        /* vertical scrolling restored */
+  -webkit-overflow-scrolling: touch;
   padding: 8px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
