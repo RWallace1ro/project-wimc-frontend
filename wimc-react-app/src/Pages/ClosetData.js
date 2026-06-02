@@ -141,6 +141,8 @@ function ClosetData({
   const handleGenderChange = (g) => {
     setGender(g);
     syncSetItem(CLOSET_GENDER_KEY, g);
+    // Notify the header tabs so they switch to this gender's sections instantly
+    try { window.dispatchEvent(new Event("wimc-gender-changed")); } catch {}
   };
 
   const closetSections = getClosetSections(gender);

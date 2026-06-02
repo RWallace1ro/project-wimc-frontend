@@ -1,64 +1,65 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./ClosetTabs.css";
 
-function ClosetTabs({ selectedTab, onSelectTab }) {
-  const tabs = [
-    "dresses-skirts",
-    "shoes-sneakers",
-    "pants-jeans",
-    "tops",
-    "bags-accessories",
-    "jackets-coats",
+const CLOSET_GENDER_KEY = "wimc_closet_gender";
+
+// Build the gender-aware tab list. Male sections use a "male-" tag prefix so
+// they map to the same gender-specific Cloudinary tags the closet cards use.
+function getTabs(gender) {
+  const p = gender === "male" ? "male-" : "";
+  const first =
+    gender === "male"
+      ? { tag: "male-dress-shirts-suits", label: "Dress Shirts/Suits" }
+      : { tag: "dresses-skirts", label: "Dresses/Skirts" };
+  return [
+    first,
+    { tag: `${p}shoes-sneakers`,   label: "Shoes/Sneakers" },
+    { tag: `${p}pants-jeans`,      label: "Pants/Jeans" },
+    { tag: `${p}tops`,             label: "Tops" },
+    { tag: `${p}bags-accessories`, label: "Bags/Accessories" },
+    { tag: `${p}jackets-coats`,    label: "Jackets/Coats" },
   ];
+}
 
-  const displayNames = {
-    "dresses-skirts": "Dresses/Skirts",
-    "shoes-sneakers": "Shoes/Sneakers",
-    "pants-jeans": "Pants/Jeans",
-    tops: "Tops",
-    "bags-accessories": "Bags/Accessories",
-    "jackets-coats": "Jackets/Coats",
-  };
-
+function ClosetTabs({ selectedTab, onSelectTab }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleTabClick = (tab) => {
-    console.log("[ClosetTabs] Tab clicked:", tab);
-    console.log("[ClosetTabs] onSelectTab is:", typeof onSelectTab);
-    console.log("[ClosetTabs] Current path:", location.pathname);
+  const [gender, setGender] = useState(
+    () => localStorage.getItem(CLOSET_GENDER_KEY) || "female"
+  );
 
-    if (typeof onSelectTab === "function") {
-      onSelectTab(tab);
-      console.log("[ClosetTabs] onSelectTab called with:", tab);
-    } else {
-      console.warn(
-        "[ClosetTabs] onSelectTab is NOT a function — prop not passed correctly",
-      );
-    }
+  // Keep tabs in sync when the gender toggle changes (same tab or another)
+  useEffect(() => {
+    const sync = () =>
+      setGender(localStorage.getItem(CLOSET_GENDER_KEY) || "female");
+    window.addEventListener("wimc-gender-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("wimc-gender-changed", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
-    if (location.pathname !== "/closet-data") {
-      console.log("[ClosetTabs] Navigating to /closet-data");
-      navigate("/closet-data");
-    } else {
-      console.log(
-        "[ClosetTabs] Already on /closet-data — no navigation needed",
-      );
-    }
+  const tabs = getTabs(gender);
+
+  const handleTabClick = (tag) => {
+    if (typeof onSelectTab === "function") onSelectTab(tag);
+    if (location.pathname !== "/closet-data") navigate("/closet-data");
   };
 
   return (
     <section className="closet-tabs">
       <nav className="closet-tabs__container">
-        {tabs.map((tab) => (
+        {tabs.map(({ tag, label }) => (
           <button
-            key={tab}
-            className={`closet-tabs__tab ${selectedTab === tab ? "active" : ""}`}
-            onClick={() => handleTabClick(tab)}
-            aria-label={`Select ${displayNames[tab]}`}
+            key={tag}
+            className={`closet-tabs__tab ${selectedTab === tag ? "active" : ""}`}
+            onClick={() => handleTabClick(tag)}
+            aria-label={`Select ${label}`}
           >
-            {displayNames[tab]}
+            {label}
           </button>
         ))}
       </nav>
