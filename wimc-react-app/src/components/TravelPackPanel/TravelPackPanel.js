@@ -274,7 +274,23 @@ export default function TravelPackPanel({
     setSharing(true);
     setShareUrl("");
     setShareError("");
-    const payload = { kind: "wimc.travelPack", version: 1, createdAt: new Date().toISOString(), note: shareNote, days: packPlan };
+    // Sanitize: Firestore rejects undefined values. Map every item to a clean,
+    // fully-defined shape (JSON.stringify silently drops undefined, which is why
+    // view-only worked but Share+Edit failed).
+    const cleanItem = (it) => ({
+      kind: it.kind || "media",
+      mediaType: it.mediaType || "image",
+      mediaUrl: it.mediaUrl || "",
+      mediaThumb: it.mediaThumb || "",
+      mediaPoster: it.mediaPoster || "",
+      name: it.name || "",
+      section: it.section || "",
+    });
+    const cleanDays = {};
+    Object.keys(packPlan || {}).forEach((d) => {
+      cleanDays[d] = (packPlan[d] || []).map(cleanItem);
+    });
+    const payload = { kind: "wimc.travelPack", version: 1, createdAt: new Date().toISOString(), note: shareNote || "", days: cleanDays };
     try {
       let url;
       if (withEdit) {
