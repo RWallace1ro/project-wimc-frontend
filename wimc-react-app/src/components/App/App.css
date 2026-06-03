@@ -12,3 +12,93 @@
   justify-content: center;
   padding: 20px;
 }
+
+/* ── Email verification gate ── */
+.verify-gate {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+}
+.verify-gate__card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  max-width: 440px;
+  width: 100%;
+  padding: 32px 28px;
+  text-align: center;
+}
+.verify-gate__icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+.verify-gate__title {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.verify-gate__text {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #334155;
+}
+.verify-gate__hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #64748b;
+}
+.verify-gate__msg {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  font-size: 13px;
+  color: #1e293b;
+}
+.verify-gate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+.verify-gate__btn {
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.verify-gate__btn:hover:not(:disabled) {
+  background: #f8fafc;
+  border-color: #cbd5ff;
+}
+.verify-gate__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.verify-gate__btn--primary {
+  background: #007bff;
+  border-color: #007bff;
+  color: #fff;
+}
+.verify-gate__btn--primary:hover:not(:disabled) {
+  background: #0056b3;
+  border-color: #0056b3;
+}
+.verify-gate__btn--ghost {
+  border-color: transparent;
+  color: #64748b;
+  font-weight: 500;
+}
+.verify-gate__btn--ghost:hover:not(:disabled) {
+  background: #f1f5f9;
+}
