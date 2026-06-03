@@ -14,6 +14,7 @@ import {
   onAuthStateChanged,
   updateProfile,
   sendEmailVerification,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import {
   doc,
@@ -260,6 +261,11 @@ function AppInner() {
         setLoginError(`Login failed (${err.code || "unknown"}). Try a different browser or check your connection.`);
       }
     }
+  };
+
+  // Send a password-reset email. Throws on error so the modal can react.
+  const handleForgotPassword = async (email) => {
+    await sendPasswordResetEmail(auth, email);
   };
 
   const handleLogout = async () => {
@@ -516,6 +522,7 @@ function AppInner() {
             isSignUp={false}
             formData={loginData}
             error={loginError}
+            onForgotPassword={handleForgotPassword}
           />
         </main>
       </SyncProvider>
