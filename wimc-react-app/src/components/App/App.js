@@ -45,6 +45,7 @@ const TermsOfService = React.lazy(() => import("../../Pages/TermsOfService"));
 const FAQ = React.lazy(() => import("../../Pages/FAQ"));
 const Pricing = React.lazy(() => import("../../Pages/Pricing"));
 const SharedView = React.lazy(() => import("../../Pages/SharedView"));
+const AuthAction = React.lazy(() => import("../../Pages/AuthAction"));
 
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
@@ -447,6 +448,7 @@ function AppInner() {
               <Route path="/faq" element={<FAQ />} />
               <Route path="/pricing" element={<Pricing isLoggedIn={isLoggedIn} />} />
               <Route path="/shared" element={<SharedView />} />
+              <Route path="/auth-action" element={<AuthAction />} />
 
               {/* Protected routes — redirect + open login if not authenticated */}
               <Route
