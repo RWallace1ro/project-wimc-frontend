@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── User data ────────────────────────────────────────────────────────────
+    // Each user's profile doc and EVERYTHING under it (incl. the syncdata
+    // subcollection) is private to that authenticated user only.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ── Shared / collaborative content ───────────────────────────────────────
+    // Public shareable links (outfits, wish lists, shopping lists, etc.).
+    match /sharedContent/{docId} {
+      // Anyone with the link can VIEW (the /shared route is public)
+      allow read: if true;
+
+      // Only a signed-in user can create a share, and they must stamp
+      // themselves as the owner.
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid;
+
+      // Collaborative editing is limited to toggling checkboxes (checkedItems)
+      // and only when the share opted in via anyoneCanEdit. No other field can
+      // be altered by a recipient.
+      allow update: if resource.data.anyoneCanEdit == true
+                    && request.resource.data.diff(resource.data)
+                         .affectedKeys().hasOnly(['checkedItems']);
+
+      // Only the original owner can delete their share.
+      allow delete: if request.auth != null
+                    && request.auth.uid == resource.data.ownerId;
+    }
+
+    // ── Default deny ─────────────────────────────────────────────────────────
+    // Anything not explicitly matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
