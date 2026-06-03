@@ -539,6 +539,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
         onClose={() => setIsSearchOpen(false)}
         target="donate"
         tagPrefix={tagPrefix}
+        gender={gender}
         onApplyItems={addSearchItems}
       />
 

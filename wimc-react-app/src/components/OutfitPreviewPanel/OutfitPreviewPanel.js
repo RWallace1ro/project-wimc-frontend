@@ -935,6 +935,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
         onClose={() => setIsSearchOpen(false)}
         target="preview"
         tagPrefix={tagPrefix}
+        gender={gender}
         onApplyItems={(items) => addMany(items, "merge")}
       />
       {isFloating && <div className="opp-backdrop" onClick={closePanel} />}

@@ -392,6 +392,7 @@ export default function TravelPackPanel({
         onClose={() => setIsSearchOpen(false)}
         target="pack"
         tagPrefix={tagPrefix}
+        gender={gender}
         onApplyItems={addItemsToDay}
       />
       {/* Move-to-day popover (fixed, centered — never clipped) */}

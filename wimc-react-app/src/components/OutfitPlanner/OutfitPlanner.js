@@ -385,6 +385,7 @@ export default function OutfitPlanner({
         onClose={() => setIsSearchOpen(false)}
         target="planner"
         tagPrefix={tagPrefix}
+        gender={gender}
         onApplyItems={applySearchItems}
       />
       {/* Move-to-day popover (fixed, centered — never clipped) */}
