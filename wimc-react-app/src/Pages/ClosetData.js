@@ -147,6 +147,9 @@ function ClosetData({
 
   const closetSections = getClosetSections(gender);
   const sectionTagToDisplayName = getSectionTagToDisplayName(gender);
+  // Gender-derived tag prefix for the side panels & search: male items live
+  // under "male-*" tags; female keeps the original plain tags (data preserved).
+  const genderPrefix = gender === "male" ? "male" : "";
 
   const fetchSectionItems = async (tag) => {
     setIsLoading(true);
@@ -262,17 +265,21 @@ function ClosetData({
 
       <section className="closet-data">
         <aside className="closet-data__side-left">
-          <OutfitPreviewPanel onSelectionChange={setPreviewSelection} gender={gender} incomingItems={previewIncoming} />
+          <OutfitPreviewPanel onSelectionChange={setPreviewSelection} gender={gender} tagPrefix={genderPrefix} incomingItems={previewIncoming} />
           <aside className="closet-data__side-container">
             <OutfitPlanner
               weekPlan={weekPlan}
               onChange={setWeekPlan}
               currentPreview={previewSelection}
               incomingItems={plannerIncoming}
+              gender={gender}
+              tagPrefix={genderPrefix}
             />
             <TravelPackPanel
               currentPreview={previewSelection}
               incomingItems={packIncoming}
+              gender={gender}
+              tagPrefix={genderPrefix}
               onSyncToPlanner={(day, items) => {
                 setWeekPlan((prev) => {
                   const seen = new Set();
@@ -288,7 +295,7 @@ function ClosetData({
               }}
             />
           </aside>
-          <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} />
+          <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} gender={gender} tagPrefix={genderPrefix} />
         </aside>
 
         <div className="closet-data__cards-container">
@@ -375,6 +382,8 @@ function ClosetData({
         onClose={() => setIsSearchOpen(false)}
         onSectionSelect={(tag) => openSection(tag)}
         onApplyItems={handleApplyItems}
+        gender={gender}
+        tagPrefix={genderPrefix}
       />
     </main>
   );

@@ -180,6 +180,10 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   // data
   const [selected, setSelected] = useState([]);
   const [section, setSection] = useState(SECTION_OPTIONS[0].value);
+  // Reset section when gender changes so we never fetch the wrong tag
+  useEffect(() => {
+    setSection((gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE)[0].value);
+  }, [gender]);
   const [choices, setChoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

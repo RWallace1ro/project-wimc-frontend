@@ -74,11 +74,15 @@ function normalizeForPanels(url, sectionTag) {
 }
 
 // ── Step 1: identify sections from query ─────────────────────────────────────
-async function identifySections(query) {
+async function identifySections(query, gender = "female") {
+  // Only offer the categories that exist for THIS closet's gender, so the AI
+  // never returns a section that doesn't apply (e.g. Dresses for a male closet).
+  const firstCat = gender === "male"
+    ? "- Dress Shirts/Suits (tag: dress-shirts-suits)"
+    : "- Dresses/Skirts (tag: dresses-skirts)";
   const systemPrompt = `You are WIMC's Natural Language Closet Search assistant.
 The user's closet has these categories:
-- Dresses/Skirts (tag: dresses-skirts)
-- Dress Shirts/Suits (tag: dress-shirts-suits)
+${firstCat}
 - Shoes/Sneakers (tag: shoes-sneakers)
 - Pants/Jeans (tag: pants-jeans)
 - Tops (tag: tops)
@@ -86,8 +90,8 @@ The user's closet has these categories:
 - Jackets/Coats (tag: jackets-coats)
 
 Give a short, friendly 1-2 sentence response, then identify which categories are relevant.
-Return a JSON block at the END: {"sections": ["dresses-skirts"]}
-Only include the most relevant 1-3 sections. Always include the JSON block.`;
+Return a JSON block at the END: {"sections": ["tops"]}
+Only include the most relevant 1-3 sections from the list above. Always include the JSON block.`;
 
   const data = await postProxy({
     model: "claude-sonnet-4-5",
@@ -173,7 +177,8 @@ export default function ClosetSearch({
   onSectionSelect,
   onApplyItems,   // (items) — required when target is set
   target = null,  // "preview"|"planner"|"pack"|"donate"|null
-  tagPrefix = "", // Kids Closet: "kid-{id}"
+  tagPrefix = "", // Kids Closet: "kid-{id}" or main male closet: "male"
+  gender = "female", // restricts the AI to this closet's sections
 }) {
   const [query, setQuery] = useState("");
   const [resultText, setResultText] = useState("");
@@ -207,7 +212,7 @@ export default function ClosetSearch({
 
     try {
       // Step 1 — identify relevant sections
-      const { text, sections: secs } = await identifySections(q);
+      const { text, sections: secs } = await identifySections(q, gender);
       setResultText(text);
       setSections(secs);
       setStreaming(false);

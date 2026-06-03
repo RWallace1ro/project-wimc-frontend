@@ -12,14 +12,20 @@ import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import "./DonateBin.css";
 
-const SECTION_OPTIONS = [
-  { value: "dresses-skirts", label: "Dresses/Skirts" },
-  { value: "shoes-sneakers", label: "Shoes/Sneakers" },
-  { value: "pants-jeans", label: "Pants/Jeans" },
-  { value: "tops", label: "Tops" },
-  { value: "bags-accessories", label: "Bags/Accessories" },
-  { value: "jackets-coats", label: "Jackets/Coats" },
-];
+// Gender-aware section options (male first section = Dress Shirts/Suits)
+function getSectionOptions(gender) {
+  const first = gender === "male"
+    ? { value: "dress-shirts-suits", label: "Dress Shirts/Suits" }
+    : { value: "dresses-skirts", label: "Dresses/Skirts" };
+  return [
+    first,
+    { value: "shoes-sneakers", label: "Shoes/Sneakers" },
+    { value: "pants-jeans", label: "Pants/Jeans" },
+    { value: "tops", label: "Tops" },
+    { value: "bags-accessories", label: "Bags/Accessories" },
+    { value: "jackets-coats", label: "Jackets/Coats" },
+  ];
+}
 
 const IconSave = (props) => (
   <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" {...props}>
@@ -84,7 +90,8 @@ function normalizeChoice(x, sectionHint) {
 }
 const keyOf = (it) => it.imageUrl || it.url || it.mediaUrl || it.name || "";
 
-export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
+export default function DonateBin({ tagPrefix = "", incomingItems = null, gender = "female" }) {
+  const SECTION_OPTIONS = getSectionOptions(gender);
   // Child-specific localStorage keys so each child has their own donate bin data
   const lsDonateKey  = tagPrefix ? `wimc_donateItems_${tagPrefix}`  : "donateItems";
   const lsDonatedKey = tagPrefix ? `wimc_donatedItems_${tagPrefix}` : "donatedItems";
@@ -99,6 +106,10 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null }) {
   const [donateItems, setDonateItems] = useState([]);
   const [donatedItems, setDonatedItems] = useState([]);
   const [section, setSection] = useState(SECTION_OPTIONS[0].value);
+  // Reset section when gender changes so we never fetch the wrong tag
+  useEffect(() => {
+    setSection(getSectionOptions(gender)[0].value);
+  }, [gender]);
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");

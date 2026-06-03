@@ -473,10 +473,10 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
             <h3 className="kcm-features__heading">Features</h3>
             <div className="kcm-features__panels">
               <OutfitPreviewPanel tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPreviewIncoming} />
-              <OutfitPlanner      tagPrefix={`kid-${child.id}`} incomingItems={kidsPlannerIncoming} />
-              <TravelPackPanel    tagPrefix={`kid-${child.id}`} incomingItems={kidsPackIncoming} />
+              <OutfitPlanner      tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPlannerIncoming} />
+              <TravelPackPanel    tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPackIncoming} />
               <WishList           storageKey={`kid-${child.id}-wishlist`} />
-              <DonateBin          tagPrefix={`kid-${child.id}`} incomingItems={kidsDonateIncoming} />
+              <DonateBin          tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsDonateIncoming} />
             </div>
           </div>
         </div>
@@ -513,6 +513,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
           onClose={() => setIsSearchOpen(false)}
           onApplyItems={handleKidsApplyItems}
           tagPrefix={`kid-${child.id}`}
+          gender={child?.gender || "female"}
         />
 
         {/* ── Add clothing ── */}
