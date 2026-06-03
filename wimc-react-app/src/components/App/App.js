@@ -378,8 +378,10 @@ function AppInner() {
             Please click the link in that email to activate your account, then
             choose <strong>"I've verified"</strong> below.
           </p>
-          <p className="verify-gate__hint">
-            Can't find it? Check your spam/junk folder.
+          <p className="verify-gate__spam">
+            📁 <strong>Don't see the email?</strong> Please check your{" "}
+            <strong>spam / junk folder</strong> — verification emails sometimes
+            land there.
           </p>
           {verifyMsg && <p className="verify-gate__msg">{verifyMsg}</p>}
           <div className="verify-gate__actions">
