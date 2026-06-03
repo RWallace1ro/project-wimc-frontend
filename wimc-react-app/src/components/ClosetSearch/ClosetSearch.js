@@ -12,14 +12,33 @@ const SECTIONS = [
   { tag: "jackets-coats",     label: "Jackets/Coats",     emoji: "🧥" },
 ];
 
-const QUICK_SEARCHES = [
-  "Show me all my black dresses",
-  "Find something casual for the weekend",
-  "A formal outfit for a wedding",
-  "Comfortable travel outfit",
-  "Business casual for the office",
-  "Something bright and summery",
-];
+// Gender-specific quick-search examples + input placeholder
+function getQuickSearches(gender) {
+  if (gender === "male") {
+    return [
+      "Show me all my dress shirts",
+      "Find something casual for the weekend",
+      "A formal suit for a wedding",
+      "Comfortable travel outfit",
+      "Business casual for the office",
+      "Something light for summer",
+    ];
+  }
+  return [
+    "Show me all my black dresses",
+    "Find something casual for the weekend",
+    "A formal outfit for a wedding",
+    "Comfortable travel outfit",
+    "Business casual for the office",
+    "Something bright and summery",
+  ];
+}
+
+function getPlaceholder(gender) {
+  return gender === "male"
+    ? "e.g. Show me all my dress shirts…"
+    : "e.g. Show me all my black dresses…";
+}
 
 const TARGET_LABELS = {
   preview: "👗 Add to Outfit Preview",
@@ -341,7 +360,7 @@ export default function ClosetSearch({
               ref={inputRef}
               className="cs-input"
               type="text"
-              placeholder="e.g. Show me all my black dresses…"
+              placeholder={getPlaceholder(gender)}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
@@ -362,7 +381,7 @@ export default function ClosetSearch({
             <div className="cs-quick">
               <p className="cs-quick__label">Try a quick search:</p>
               <div className="cs-quick__chips">
-                {QUICK_SEARCHES.map((s) => (
+                {getQuickSearches(gender).map((s) => (
                   <button key={s} className="cs-chip" onClick={() => { setQuery(s); handleSearch(s); }}>
                     {s}
                   </button>
