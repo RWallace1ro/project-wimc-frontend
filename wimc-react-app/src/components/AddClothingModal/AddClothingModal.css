@@ -140,3 +140,19 @@
   border: 1px solid #e2e8f0;
   background: #f8fafc;
 }
+
+/* Paste-URL explanatory note */
+.modal__web-note {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-top: 4px;
+}
+.modal__web-note p {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #075985;
+}
+.modal__web-note p:last-child { margin-bottom: 0; }

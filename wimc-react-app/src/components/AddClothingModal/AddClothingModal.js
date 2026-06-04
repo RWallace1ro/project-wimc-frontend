@@ -322,11 +322,23 @@ function AddClothingModal({
                 value={webUrl}
                 onChange={(e) => { setWebUrl(e.target.value); setError(""); }}
               />
-              <p className="modal__web-hint">
-                Paste the link, fill in the details, then tap <strong>Add Item</strong> —
-                the image is fetched and saved automatically.<br />
-                📱 On a phone: long-press an image → "Copy image address", then paste it here.
-              </p>
+              <div className="modal__web-note">
+                <p>
+                  <strong>How to get the image link:</strong> right-click the
+                  image (on phone, long-press) → <strong>"Copy image address"</strong>,
+                  then paste it here. Use the <em>image</em> link, not the page
+                  address.
+                </p>
+                <p>
+                  ✅ <strong>Your image is saved permanently.</strong> WIMC stores
+                  its own copy, so it stays on your closet card even if the
+                  retailer later removes the photo or takes the page down.
+                </p>
+                <p>
+                  Then fill in the details and tap <strong>Add Item</strong> —
+                  the image is fetched and saved automatically.
+                </p>
+              </div>
             </div>
           )}
 
