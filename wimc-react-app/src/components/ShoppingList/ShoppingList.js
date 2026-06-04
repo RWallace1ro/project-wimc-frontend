@@ -2,6 +2,7 @@ import { syncSetItem } from '../../utils/syncStore';
 ﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { uploadRawJSON } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
+import { aiProxyFetch } from "../../utils/aiProxy";
 import "./ShoppingList.css";
 
 // ── Default categories ────────────────────────────────────────────────────────
@@ -24,17 +25,16 @@ function uid() {
 
 // ── AI call via Anthropic API ─────────────────────────────────────────────────
 async function callAI(messages, systemPrompt) {
-  const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-5",
-      max_tokens: 1000,
-      system: systemPrompt,
-      messages,
-    }),
+  const res = await aiProxyFetch({
+    model: "claude-sonnet-4-5",
+    max_tokens: 1000,
+    system: systemPrompt,
+    messages,
   });
   const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.error || `AI request failed (${res.status})`);
+  }
   return data.content?.find((b) => b.type === "text")?.text || "";
 }
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { aiProxyFetch } from "../../utils/aiProxy";
 import "./AIStylist.css";
 
 const SECTION_LABELS = [
@@ -91,17 +92,12 @@ Seasonal Colors & Trends:
 
     try {
       abortRef.current = new AbortController();
-      const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
-        method: "POST",
-        signal: abortRef.current.signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5",
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: history,
-        }),
-      });
+      const res = await aiProxyFetch({
+        model: "claude-sonnet-4-5",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: history,
+      }, { signal: abortRef.current.signal });
 
       const data = await res.json();
       if (!res.ok) {

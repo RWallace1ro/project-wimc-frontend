@@ -1,5 +1,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import { aiProxyFetch } from "../../utils/aiProxy";
 import "./ClosetSearch.css";
 
 const SECTIONS = [
@@ -57,11 +58,7 @@ async function postProxy(body, retries = 2) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const res = await aiProxyFetch(body);
       const data = await res.json();
       if (!res.ok) {
         // Retry on server/rate errors; throw immediately on client errors

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { aiProxyFetch } from "../../utils/aiProxy";
 import "./AIStyleFeedback.css";
 
 const OCCASIONS = [
@@ -49,41 +50,16 @@ Please give me style feedback on this outfit!`;
 
     try {
       abortRef.current = new AbortController();
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        signal: abortRef.current.signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: systemPrompt,
-          stream: true,
-          messages: [{ role: "user", content: userMsg }],
-        }),
-      });
+      const res = await aiProxyFetch({
+        model: "claude-sonnet-4-5",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMsg }],
+      }, { signal: abortRef.current.signal });
 
       if (!res.ok) throw new Error(`API error ${res.status}`);
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(data);
-            const delta = parsed?.delta?.text || "";
-            if (delta) setFeedback((prev) => prev + delta);
-          } catch {}
-        }
-      }
+      const data = await res.json();
+      setFeedback(data.content?.[0]?.text || "");
     } catch (e) {
       if (e.name !== "AbortError")
         setError("Something went wrong. Please try again.");
