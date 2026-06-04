@@ -16,7 +16,15 @@ const admin = require("firebase-admin");
 // Initialize the Admin SDK once (used for ID-token verification + Firestore
 // usage counters). Admin SDK bypasses Firestore security rules.
 if (!admin.apps.length) admin.initializeApp();
-const adminDb = admin.firestore();
+
+// Lazily create the Firestore client. Calling admin.firestore() at module load
+// eagerly initializes gRPC, which can hang the CLI's code-analysis phase and
+// cause "Cannot determine backend specification. Timeout" during deploy.
+let _adminDb = null;
+function getAdminDb() {
+  if (!_adminDb) _adminDb = admin.firestore();
+  return _adminDb;
+}
 
 // Per-user daily cap on AI proxy calls (resets at UTC midnight). Prevents a
 // single account from running up the Anthropic bill.
@@ -47,6 +55,7 @@ async function verifyUser(req) {
 // Atomically check + increment today's usage for a user. Returns
 // { allowed, count }. Resets the counter when the UTC date changes.
 async function checkAndIncrementUsage(uid) {
+  const adminDb = getAdminDb();
   const ref = adminDb.collection("aiUsage").doc(uid);
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
   return adminDb.runTransaction(async (tx) => {
