@@ -1,13 +1,14 @@
 import React from "react";
 import "./ImageUpload.css";
 
-// Default sources include direct web image search (image_search), Unsplash,
-// the web address/URL option, plus device, camera, and cloud drives.
+// Default sources. Unsplash provides free web image search (no API key).
+// Note: "image_search" (full-web Google search) is intentionally NOT included
+// because it requires a Google Custom Search API key (googleApiKey). It can be
+// added later once that key is configured.
 const DEFAULT_SOURCES = [
   "local",
   "camera",
   "url",
-  "image_search",
   "unsplash",
   "google_drive",
   "dropbox",
