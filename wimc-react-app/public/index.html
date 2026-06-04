@@ -11,7 +11,7 @@
     -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' https://upload-widget.cloudinary.com;
+      script-src 'self' https://upload-widget.cloudinary.com 'sha256-gEJJ3znKpnHML/iTUXZM0ij/4govdgqYo3+a6Nx0+l4=';
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: blob:
         https://res.cloudinary.com
@@ -41,6 +41,8 @@
         https://*.cloudinary.com;
       object-src 'none';
       base-uri 'self';
+      form-action 'self';
+      upgrade-insecure-requests;
     " />
 
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
