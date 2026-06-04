@@ -156,3 +156,15 @@
   color: #075985;
 }
 .modal__web-note p:last-child { margin-bottom: 0; }
+
+/* "From device" helper note */
+.modal__device-note {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #075985;
+}

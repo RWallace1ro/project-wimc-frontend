@@ -302,7 +302,16 @@ function AddClothingModal({
           </select>
 
           {source === "device" && (
-            <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
+            <>
+              <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
+              <p className="modal__device-note">
+                📱 <strong>On a phone?</strong> Tap <em>Choose File</em> /
+                <em> My Files</em> and you'll get <strong>Take Photo or Video</strong>{" "}
+                (camera), <strong>Photo Library</strong>, and{" "}
+                <strong>Choose Files</strong> — so you can snap a new photo or
+                pick an existing one.
+              </p>
+            </>
           )}
 
           {source === "web" && (
