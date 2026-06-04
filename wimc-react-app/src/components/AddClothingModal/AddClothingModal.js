@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import MediaUploader from "../MediaUploader/MediaUploader";
 import ImageUpload from "../ImageUpload/ImageUpload";
+import { uploadImage } from "../../utils/CloudinaryAPI";
 import "./AddClothingModal.css";
 
 // function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
@@ -38,6 +39,8 @@ function AddClothingModal({
   });
 
   const [source, setSource] = useState("device"); // "device" | "web"
+  const [webUrl, setWebUrl] = useState("");
+  const [webBusy, setWebBusy] = useState(false);
 
   // NEW: media state (image or video)
   const [media, setMedia] = useState(null); // { type, url, thumb?, poster?, __raw? }
@@ -144,6 +147,8 @@ function AddClothingModal({
       });
       setMedia(null);
       setError("");
+      setWebUrl("");
+      setWebBusy(false);
     }
 
     if (isOpen && initialCategory) {
@@ -177,6 +182,31 @@ function AddClothingModal({
     : uploadTag
     || category
     || "uncategorized";
+
+  // Mobile-proof web add: paste an image link; Cloudinary fetches it server-side.
+  const handleAddFromUrl = async () => {
+    const u = webUrl.trim();
+    if (!u) { setError("Paste an image link first."); return; }
+    if (!/^https?:\/\//i.test(u)) {
+      setError("Enter a valid image URL (it should start with http).");
+      return;
+    }
+    setError("");
+    setWebBusy(true);
+    try {
+      const res = await uploadImage(u, tag);
+      if (res?.secure_url) {
+        handleMediaUploaded({ type: "image", url: res.secure_url, thumb: res.secure_url });
+        setWebUrl("");
+      } else {
+        setError("Couldn't fetch that image. The site may block it — try a screenshot via 'From device'.");
+      }
+    } catch {
+      setError("Couldn't fetch that image. The site may block it — try a screenshot via 'From device'.");
+    } finally {
+      setWebBusy(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -274,10 +304,43 @@ function AddClothingModal({
           {source === "device" ? (
             <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
           ) : (
-            <ImageUpload
-              folder="closet-items"
-              tag={tag}
-              onUploadSuccess={handleImageUploadSuccess}
+            <div className="modal__web">
+              <ImageUpload
+                folder="closet-items"
+                tag={tag}
+                onUploadSuccess={handleImageUploadSuccess}
+              />
+              <div className="modal__web-divider">— or paste an image link —</div>
+              <div className="modal__web-url">
+                <input
+                  type="url"
+                  className="modal__input"
+                  placeholder="Paste an image link (works on phone)"
+                  value={webUrl}
+                  onChange={(e) => setWebUrl(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="modal__web-url-btn"
+                  onClick={handleAddFromUrl}
+                  disabled={webBusy}
+                >
+                  {webBusy ? "Adding…" : "Add link"}
+                </button>
+              </div>
+              <p className="modal__web-hint">
+                📱 On a phone? From Unsplash, long-press the image → "Copy image
+                address", then paste it here.
+              </p>
+            </div>
+          )}
+
+          {/* Preview of the selected/added web image */}
+          {source === "web" && (media?.url || formData.imageUrl) && (
+            <img
+              className="modal__web-preview"
+              src={media?.thumb || media?.url || formData.imageUrl}
+              alt="Selected item"
             />
           )}
           {error && <p className="modal__error">{error}</p>}

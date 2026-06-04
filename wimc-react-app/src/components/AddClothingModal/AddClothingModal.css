@@ -14,12 +14,35 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  /* extend to modal edges despite the parent's padding: 20px */
+  margin: -20px -20px 15px -20px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  border-radius: 10px 10px 0 0;
 }
 
 .modal__title {
   font-size: 20px;
   font-weight: bold;
+  color: #fff;
+}
+
+.modal__close {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.modal__close:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .modal__form {
@@ -69,4 +92,51 @@
 .segmented__btn.is-active {
   background: #f5f7fb;
   border-color: #c9d3f5;
+}
+
+/* Web upload: paste-link fallback (mobile-proof) */
+.modal__web {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.modal__web-divider {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+}
+.modal__web-url {
+  display: flex;
+  gap: 8px;
+}
+.modal__web-url .modal__input {
+  flex: 1;
+  min-width: 0;
+}
+.modal__web-url-btn {
+  flex-shrink: 0;
+  padding: 0 14px;
+  border: none;
+  border-radius: 8px;
+  background: #007bff;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.modal__web-url-btn:hover:not(:disabled) { background: #0056b3; }
+.modal__web-url-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.modal__web-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #64748b;
+}
+.modal__web-preview {
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
