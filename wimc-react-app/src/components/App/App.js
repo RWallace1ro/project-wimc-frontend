@@ -26,6 +26,7 @@ import { auth, db } from "../../firebase";
 
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
+import CookieConsent from "../CookieConsent/CookieConsent";
 import Main from "../Main/Main";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
 import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
@@ -505,6 +506,7 @@ function AppInner() {
             </React.Suspense>
           </section>
           <Footer />
+          <CookieConsent />
           <ModalWithForm
             isOpen={isSignUpModalOpen}
             onClose={() => setIsSignUpModalOpen(false)}

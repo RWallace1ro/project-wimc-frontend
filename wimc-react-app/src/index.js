@@ -4,30 +4,18 @@ import { BrowserRouter as Router } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 import App from "./components/App/App";
 import { unregister as unregisterSW } from "./serviceWorkerRegistration";
+import { initSentry } from "./utils/analytics";
+import { hasAnalyticsConsent } from "./utils/consent";
 import "./index.css";
 
-// ── Sentry error monitoring ──────────────────────────────────────────────────
-// Only active in production so local dev errors don't pollute your dashboard.
-Sentry.init({
-  dsn: process.env.REACT_APP_SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-  // Capture 100% of errors, 10% of performance traces (adjust after launch)
-  tracesSampleRate: 0.1,
-  // Ignore noisy browser-extension and network errors
-  ignoreErrors: [
-    "ResizeObserver loop limit exceeded",
-    "Non-Error promise rejection captured",
-    /^Network request failed/,
-    /^Failed to fetch/,
-  ],
-  // Only send events from your own domain, not injected scripts
-  allowUrls: [/https?:\/\/(.*\.)?rwallace1ro\.github\.io/],
-  beforeSend(event) {
-    // Never send events in development
-    if (process.env.NODE_ENV !== "production") return null;
-    return event;
-  },
-});
+// ── Sentry error monitoring (consent-gated) ──────────────────────────────────
+// Optional analytics. Per GDPR, Sentry is only initialized once the user has
+// explicitly accepted optional cookies. If they haven't chosen yet, or chose
+// "essential only", nothing is sent. The CookieConsent banner calls initSentry()
+// at the moment the user accepts, so it also starts within the same session.
+if (hasAnalyticsConsent()) {
+  initSentry();
+}
 
 // ── App ──────────────────────────────────────────────────────────────────────
 const root = ReactDOM.createRoot(document.getElementById("root"));
