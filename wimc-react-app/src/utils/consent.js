@@ -13,6 +13,16 @@
 
 export const CONSENT_KEY = "wimc_cookie_consent";
 export const CONSENT_EVENT = "wimc-consent-changed";
+export const CONSENT_REOPEN_EVENT = "wimc-consent-reopen";
+
+/** Re-open the consent banner so the user can change or withdraw their choice. */
+export function openConsentSettings() {
+  try {
+    window.dispatchEvent(new Event(CONSENT_REOPEN_EVENT));
+  } catch {
+    /* no-op */
+  }
+}
 
 export function getConsent() {
   try {

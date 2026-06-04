@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { setConsent, hasChosen } from "../../utils/consent";
-import { initSentry } from "../../utils/analytics";
+import { setConsent, hasChosen, CONSENT_REOPEN_EVENT } from "../../utils/consent";
+import { initSentry, stopSentry } from "../../utils/analytics";
 import "./CookieConsent.css";
 
 /**
@@ -18,6 +18,11 @@ function CookieConsent() {
   useEffect(() => {
     // Defer to after first paint so it never blocks initial render.
     if (!hasChosen()) setVisible(true);
+    // Allow the footer "Cookie Settings" link to re-open the banner so users
+    // can change or withdraw consent at any time.
+    const reopen = () => setVisible(true);
+    window.addEventListener(CONSENT_REOPEN_EVENT, reopen);
+    return () => window.removeEventListener(CONSENT_REOPEN_EVENT, reopen);
   }, []);
 
   const acceptAll = () => {
@@ -28,6 +33,7 @@ function CookieConsent() {
 
   const essentialOnly = () => {
     setConsent("essential");
+    stopSentry(); // withdraw analytics immediately if it was running
     setVisible(false);
   };
 

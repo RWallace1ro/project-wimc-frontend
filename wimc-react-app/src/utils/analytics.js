@@ -35,3 +35,25 @@ export function initSentry() {
     },
   });
 }
+
+/**
+ * Stop sending analytics within the current session (used when the user
+ * withdraws consent). Flushes/closes the Sentry client so nothing further is
+ * transmitted without a page reload.
+ */
+export function stopSentry() {
+  if (!started) return;
+  started = false;
+  try {
+    // Prefer the active client's close(); fall back to the top-level helper.
+    const client =
+      typeof Sentry.getClient === "function" ? Sentry.getClient() : null;
+    if (client && typeof client.close === "function") {
+      client.close();
+    } else if (typeof Sentry.close === "function") {
+      Sentry.close();
+    }
+  } catch {
+    /* best-effort */
+  }
+}
