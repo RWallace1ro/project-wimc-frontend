@@ -84,7 +84,7 @@ function AddClothingModal({
     setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (
@@ -97,10 +97,41 @@ function AddClothingModal({
       return;
     }
 
-    // Validate media: accept either an uploaded image/video (preferred) or legacy imageUrl
-    const hasMedia = media?.url || formData.imageUrl;
+    // Resolve the media. For the "Paste URL" option, convert the link into a
+    // stored Cloudinary image right now (server-side fetch) so the user just
+    // pastes + clicks Add Item.
+    let resolvedMedia = media;
+    let resolvedImageUrl = formData.imageUrl;
+
+    if (source === "url" && !resolvedMedia?.url && !resolvedImageUrl) {
+      const u = webUrl.trim();
+      if (!u) { setError("Paste an image link first."); return; }
+      if (!/^https?:\/\//i.test(u)) {
+        setError("Enter a valid image URL (it should start with http).");
+        return;
+      }
+      setWebBusy(true);
+      setError("");
+      try {
+        const res = await uploadImage(u, tag);
+        if (res?.secure_url) {
+          resolvedMedia = { type: "image", url: res.secure_url, thumb: res.secure_url };
+          resolvedImageUrl = res.secure_url;
+        } else {
+          setError("Couldn't fetch that image. The site may block it — try a screenshot via 'From device'.");
+          return;
+        }
+      } catch {
+        setError("Couldn't fetch that image. The site may block it — try a screenshot via 'From device'.");
+        return;
+      } finally {
+        setWebBusy(false);
+      }
+    }
+
+    const hasMedia = resolvedMedia?.url || resolvedImageUrl;
     if (!hasMedia) {
-      setError("Please upload an image or video before submitting.");
+      setError("Please add an image or video before submitting.");
       return;
     }
 
@@ -110,28 +141,19 @@ function AddClothingModal({
       designer: formData.designer,
       size: formData.size,
       category: formData.category,
-
-      // Preferred new fields:
-      mediaType: media?.type || (formData.imageUrl ? "image" : "image"),
-      mediaUrl: media?.url || formData.imageUrl || "",
-      mediaThumb: media?.thumb || "",
-      mediaPoster: media?.poster || "",
-
-      // Legacy field (kept just in case other parts of the app still read it)
-      imageUrl: formData.imageUrl || "",
+      mediaType: resolvedMedia?.type || "image",
+      mediaUrl: resolvedMedia?.url || resolvedImageUrl || "",
+      mediaThumb: resolvedMedia?.thumb || "",
+      mediaPoster: resolvedMedia?.poster || "",
+      imageUrl: resolvedImageUrl || "",
     };
 
     onClothingAdded(newItem);
 
     // reset
-    setFormData({
-      name: "",
-      designer: "",
-      size: "",
-      category: "",
-      imageUrl: "",
-    });
+    setFormData({ name: "", designer: "", size: "", category: "", imageUrl: "" });
     setMedia(null);
+    setWebUrl("");
     setError("");
     onClose();
   };
@@ -183,31 +205,6 @@ function AddClothingModal({
     || category
     || "uncategorized";
 
-  // Mobile-proof web add: paste an image link; Cloudinary fetches it server-side.
-  const handleAddFromUrl = async () => {
-    const u = webUrl.trim();
-    if (!u) { setError("Paste an image link first."); return; }
-    if (!/^https?:\/\//i.test(u)) {
-      setError("Enter a valid image URL (it should start with http).");
-      return;
-    }
-    setError("");
-    setWebBusy(true);
-    try {
-      const res = await uploadImage(u, tag);
-      if (res?.secure_url) {
-        handleMediaUploaded({ type: "image", url: res.secure_url, thumb: res.secure_url });
-        setWebUrl("");
-      } else {
-        setError("Couldn't fetch that image. The site may block it — try a screenshot via 'From device'.");
-      }
-    } catch {
-      setError("Couldn't fetch that image. The site may block it — try a screenshot via 'From device'.");
-    } finally {
-      setWebBusy(false);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
@@ -233,21 +230,24 @@ function AddClothingModal({
           <div className="modal__segmented">
             <button
               type="button"
-              className={`segmented__btn ${
-                source === "device" ? "is-active" : ""
-              }`}
+              className={`segmented__btn ${source === "device" ? "is-active" : ""}`}
               onClick={() => setSource("device")}
             >
               From device (image/video)
             </button>
             <button
               type="button"
-              className={`segmented__btn ${
-                source === "web" ? "is-active" : ""
-              }`}
+              className={`segmented__btn ${source === "web" ? "is-active" : ""}`}
               onClick={() => setSource("web")}
             >
               Web search (image)
+            </button>
+            <button
+              type="button"
+              className={`segmented__btn ${source === "url" ? "is-active" : ""}`}
+              onClick={() => setSource("url")}
+            >
+              Paste URL
             </button>
           </div>
           <label htmlFor="name">Item Name</label>
@@ -301,42 +301,37 @@ function AddClothingModal({
             ))}
           </select>
 
-          {source === "device" ? (
+          {source === "device" && (
             <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
-          ) : (
+          )}
+
+          {source === "web" && (
+            <ImageUpload
+              folder="closet-items"
+              tag={tag}
+              onUploadSuccess={handleImageUploadSuccess}
+            />
+          )}
+
+          {source === "url" && (
             <div className="modal__web">
-              <ImageUpload
-                folder="closet-items"
-                tag={tag}
-                onUploadSuccess={handleImageUploadSuccess}
+              <input
+                type="url"
+                className="modal__input"
+                placeholder="Paste an image link (e.g. https://…/photo.jpg)"
+                value={webUrl}
+                onChange={(e) => { setWebUrl(e.target.value); setError(""); }}
               />
-              <div className="modal__web-divider">— or paste an image link —</div>
-              <div className="modal__web-url">
-                <input
-                  type="url"
-                  className="modal__input"
-                  placeholder="Paste an image link (works on phone)"
-                  value={webUrl}
-                  onChange={(e) => setWebUrl(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="modal__web-url-btn"
-                  onClick={handleAddFromUrl}
-                  disabled={webBusy}
-                >
-                  {webBusy ? "Adding…" : "Add link"}
-                </button>
-              </div>
               <p className="modal__web-hint">
-                📱 On a phone? From Unsplash, long-press the image → "Copy image
-                address", then paste it here.
+                Paste the link, fill in the details, then tap <strong>Add Item</strong> —
+                the image is fetched and saved automatically.<br />
+                📱 On a phone: long-press an image → "Copy image address", then paste it here.
               </p>
             </div>
           )}
 
-          {/* Preview of the selected/added web image */}
-          {source === "web" && (media?.url || formData.imageUrl) && (
+          {/* Preview of the selected/added image (web search or pasted URL) */}
+          {(source === "web" || source === "url") && (media?.url || formData.imageUrl) && (
             <img
               className="modal__web-preview"
               src={media?.thumb || media?.url || formData.imageUrl}
@@ -345,8 +340,8 @@ function AddClothingModal({
           )}
           {error && <p className="modal__error">{error}</p>}
 
-          <button type="submit" className="modal__submit">
-            Add Item
+          <button type="submit" className="modal__submit" disabled={webBusy}>
+            {webBusy ? "Adding…" : "Add Item"}
           </button>
         </form>
       </div>
