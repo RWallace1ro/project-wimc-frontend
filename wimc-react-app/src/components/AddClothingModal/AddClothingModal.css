@@ -8,6 +8,8 @@
   position: relative;
   max-height: 80vh;
   overflow-y: auto;
+  overscroll-behavior: contain;          /* don't chain scroll to the page */
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal__header {
@@ -167,4 +169,22 @@
   font-size: 12.5px;
   line-height: 1.5;
   color: #075985;
+}
+
+/* ── Phone: stop the modal "dancing" while scrolling ──────────────────────
+   On small screens the OVERLAY scrolls (top-aligned) and the modal grows
+   naturally — no nested inner scroll / elastic bounce fighting each other. */
+@media (max-width: 600px) {
+  .modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 12px 0;
+  }
+  .modal {
+    max-height: none;
+    overflow: visible;
+    margin: 0 auto;
+  }
 }
