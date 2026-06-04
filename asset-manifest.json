@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/project-wimc-frontend/static/css/main.627c124f.css",
-    "main.js": "/project-wimc-frontend/static/js/main.84b2c20d.js",
+    "main.js": "/project-wimc-frontend/static/js/main.0400c76f.js",
     "static/css/908.bcb65360.chunk.css": "/project-wimc-frontend/static/css/908.bcb65360.chunk.css",
     "static/js/908.a395bcf3.chunk.js": "/project-wimc-frontend/static/js/908.a395bcf3.chunk.js",
     "static/css/739.16d65d5e.chunk.css": "/project-wimc-frontend/static/css/739.16d65d5e.chunk.css",
@@ -40,6 +40,6 @@
   },
   "entrypoints": [
     "static/css/main.627c124f.css",
-    "static/js/main.84b2c20d.js"
+    "static/js/main.0400c76f.js"
   ]
 }
