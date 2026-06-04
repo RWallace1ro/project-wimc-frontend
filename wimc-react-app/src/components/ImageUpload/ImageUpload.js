@@ -1,6 +1,18 @@
 import React from "react";
 import "./ImageUpload.css";
 
+// Default sources include direct web image search (image_search), Unsplash,
+// the web address/URL option, plus device, camera, and cloud drives.
+const DEFAULT_SOURCES = [
+  "local",
+  "camera",
+  "url",
+  "image_search",
+  "unsplash",
+  "google_drive",
+  "dropbox",
+];
+
 const ImageUpload = ({ folder, tag, onUploadSuccess, sources }) => {
   const handleUpload = () => {
     if (!folder || !tag) {
@@ -13,10 +25,10 @@ const ImageUpload = ({ folder, tag, onUploadSuccess, sources }) => {
       uploadPreset: process.env.REACT_APP_UPLOAD_PRESET,
       folder,
       tags: [tag],
+      // Explicit sources so "Search the web" (image_search) is always offered
+      // alongside the URL/web-address option. Callers can still override.
+      sources: sources || DEFAULT_SOURCES,
     };
-    // Allow callers to restrict upload sources (e.g. remove 'url' to prevent
-    // 403 errors from retailers that block direct hotlinking)
-    if (sources) widgetConfig.sources = sources;
 
     const widget = window.cloudinary.createUploadWidget(
       widgetConfig,
