@@ -1,15 +1,20 @@
 import React from "react";
 import "./ImageUpload.css";
 
-// Default sources. Unsplash provides free web image search (no API key).
-// Note: "image_search" (full-web Google search) is intentionally NOT included
-// because it requires a Google Custom Search API key (googleApiKey). It can be
-// added later once that key is configured.
+// Default sources — restores the full set the widget had before, including the
+// stock-image SEARCH providers (Unsplash, Shutterstock, Getty Images, iStock),
+// plus device, camera, web address (url), and cloud drives.
+// Note: "image_search" (full-web Google search) is intentionally excluded — it
+// requires a Google Custom Search API key. Add it back here + pass googleApiKey
+// once that key is configured.
 const DEFAULT_SOURCES = [
   "local",
   "camera",
   "url",
   "unsplash",
+  "shutterstock",
+  "gettyimages",
+  "istock",
   "google_drive",
   "dropbox",
 ];
