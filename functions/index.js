@@ -141,6 +141,13 @@ exports.deleteCloudinaryAsset = functions
       return;
     }
 
+    // Require a signed-in user — prevents anonymous deletion of any asset.
+    const delUid = await verifyUser(req);
+    if (!delUid) {
+      res.status(401).json({ error: "Please sign in." });
+      return;
+    }
+
     const { public_id, resource_type = "image", api_key, cloud_name } = req.body;
     if (!public_id || !api_key || !cloud_name) {
       res.status(400).json({ error: "Missing required fields: public_id, api_key, cloud_name" });
@@ -192,7 +199,7 @@ exports.deleteCloudinaryAsset = functions
 // ── Cloudinary signature generator ───────────────────────────────────────────
 exports.cloudinarySign = functions
   .runWith({ secrets: ["CLOUDINARY_API_SECRET"] })
-  .https.onRequest((req, res) => {
+  .https.onRequest(async (req, res) => {
     setCORS(res);
 
     if (req.method === "OPTIONS") {
@@ -201,6 +208,14 @@ exports.cloudinarySign = functions
     }
     if (req.method !== "POST") {
       res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    // Require a signed-in user — prevents anonymous minting of upload
+    // signatures (which would allow arbitrary uploads to the account).
+    const signUid = await verifyUser(req);
+    if (!signUid) {
+      res.status(401).json({ error: "Please sign in." });
       return;
     }
 
