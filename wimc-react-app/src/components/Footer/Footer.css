@@ -18,7 +18,7 @@
 
 .footer__legal {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;        /* keep all items on one row (laptop/desktop) */
   gap: 8px;
   align-items: center;
   justify-content: center;
@@ -30,6 +30,7 @@
   text-decoration: none;
   font-size: 0.85rem;
   line-height: 1.4;
+  white-space: nowrap;      /* don't break labels like "Privacy Policy" */
 }
 
 .footer__legal-link:hover {
@@ -82,8 +83,9 @@
 
   /* Tidy two-per-row wrap of the legal links on narrow phones */
   .footer__legal {
+    flex-wrap: wrap;        /* allow wrapping only on phones */
     column-gap: 10px;
-    row-gap: 6px;
+    row-gap: 3px;           /* tight gap between the wrapped rows */
     max-width: 320px;
   }
 
