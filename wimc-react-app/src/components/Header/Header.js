@@ -18,6 +18,7 @@ function Header({
   onSignUpClick,
   onLoginClick,
   onLogoutClick,
+  onDeletionScheduled,
   handleSelectTab,
   selectedTab,
 }) {
@@ -192,6 +193,7 @@ function Header({
         userData={userData || { userName: currentUserName, email: "", avatarUrl: currentAvatarUrl }}
         onUserUpdate={handleSettingsUpdate}
         onLogout={onLogoutClick}
+        onDeletionScheduled={() => { setIsSettingsOpen(false); onDeletionScheduled?.(); }}
       />
       <WIMCTourVideo isOpen={isTourOpen} onClose={closeTour} autoPlay={true} />
     </>

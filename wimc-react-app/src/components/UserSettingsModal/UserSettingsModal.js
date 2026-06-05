@@ -8,7 +8,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../../firebase";
 import { uploadImage } from "../../utils/CloudinaryAPI";
-import { deleteAllUserData } from "../../utils/accountDeletion";
+import { deleteAllUserData, scheduleDeletion } from "../../utils/accountDeletion";
 import { useBackground } from "../../context/BackgroundContext";
 import "./UserSettingsModal.css";
 
@@ -285,6 +285,7 @@ export default function UserSettingsModal({
   userData,
   onUserUpdate,
   onLogout,
+  onDeletionScheduled,
 }) {
   const [tab, setTab] = useState("profile");
 
@@ -311,6 +312,8 @@ export default function UserSettingsModal({
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteMsg, setDeleteMsg] = useState({ text: "", type: "" });
   const [isDeleting, setIsDeleting] = useState(false);
+  // "grace" = schedule 14-day soft delete; "immediate" = erase now
+  const [deleteTiming, setDeleteTiming] = useState("grace");
 
   const fileInputRef = useRef(null);
   const modalRef = useRef(null);
@@ -496,23 +499,26 @@ export default function UserSettingsModal({
       const credential = EmailAuthProvider.credential(user.email, deletePassword);
       await reauthenticateWithCredential(user, credential);
 
-      // 1. Full data erasure — Cloudinary images, syncdata subcollection,
-      //    owned share links, and the profile doc. Done while still
-      //    authenticated (Firestore rules require it). Best-effort: image
-      //    failures never block the account deletion.
-      if (userData?.uid) {
-        await deleteAllUserData(userData.uid);
+      if (deleteTiming === "grace") {
+        // ── Soft delete: schedule erasure 14 days from now ──────────────────
+        // The account stays fully active; the user can log in and cancel.
+        // A scheduled Cloud Function (Phase B) will complete the erasure.
+        if (userData?.uid) {
+          await scheduleDeletion(userData.uid);
+        }
+        onClose();
+        // Notify the parent so it can refresh userData and show the banner.
+        onDeletionScheduled?.();
+      } else {
+        // ── Immediate delete: full erasure right now ─────────────────────────
+        if (userData?.uid) {
+          await deleteAllUserData(userData.uid);
+        }
+        LOCAL_STORAGE_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
+        await deleteUser(user);
+        onClose();
+        onLogout?.();
       }
-
-      // 2. Clear app-specific localStorage data
-      LOCAL_STORAGE_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
-
-      // 3. Delete the Firebase Auth account (must be last)
-      await deleteUser(user);
-
-      // 4. Sign out of the app and redirect home
-      onClose();
-      onLogout?.();
     } catch (err) {
       if (
         err.code === "auth/wrong-password" ||
@@ -822,10 +828,45 @@ export default function UserSettingsModal({
               <div className="usm-danger-zone">
                 <p className="usm-danger-zone__title">⚠️ Danger Zone</p>
                 <p className="usm-danger-zone__desc">
-                  Deleting your account is <strong>permanent and cannot be undone</strong>.
-                  Your profile, closet data, saved outfits, share links, and all
-                  uploaded images will be erased immediately and cannot be recovered.
+                  Choose when your account and all its data should be deleted.
                 </p>
+              </div>
+
+              {/* ── Timing choice ── */}
+              <div className="usm-field usm-delete-timing">
+                <label className="usm-delete-timing__option">
+                  <input
+                    type="radio"
+                    name="deleteTiming"
+                    value="grace"
+                    checked={deleteTiming === "grace"}
+                    onChange={() => setDeleteTiming("grace")}
+                  />
+                  <span className="usm-delete-timing__label">
+                    <strong>Schedule deletion in 14 days</strong>
+                    <span className="usm-delete-timing__sub">
+                      Your account stays active. You can log back in and cancel
+                      any time before the 14 days are up.
+                    </span>
+                  </span>
+                </label>
+                <label className="usm-delete-timing__option">
+                  <input
+                    type="radio"
+                    name="deleteTiming"
+                    value="immediate"
+                    checked={deleteTiming === "immediate"}
+                    onChange={() => setDeleteTiming("immediate")}
+                  />
+                  <span className="usm-delete-timing__label">
+                    <strong>Delete immediately</strong>
+                    <span className="usm-delete-timing__sub">
+                      Your profile, closet data, outfits, share links, and
+                      uploaded images are erased right now and <em>cannot be
+                      recovered</em>.
+                    </span>
+                  </span>
+                </label>
               </div>
 
               <div className="usm-field">
@@ -879,7 +920,10 @@ export default function UserSettingsModal({
                   className="usm-btn usm-btn--delete"
                   disabled={isDeleting || deleteConfirmText !== "DELETE" || !deletePassword}
                 >
-                  {isDeleting ? "Deleting…" : "Delete My Account"}
+                  {isDeleting
+                    ? (deleteTiming === "grace" ? "Scheduling…" : "Deleting…")
+                    : (deleteTiming === "grace" ? "Schedule Deletion" : "Delete Now")
+                  }
                 </button>
               </div>
             </form>

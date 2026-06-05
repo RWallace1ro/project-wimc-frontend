@@ -28,6 +28,7 @@ import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import CookieConsent from "../CookieConsent/CookieConsent";
 import CookiePreferences from "../CookiePreferences/CookiePreferences";
+import PendingDeletionBanner from "../PendingDeletionBanner/PendingDeletionBanner";
 import Main from "../Main/Main";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
 import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
@@ -138,6 +139,8 @@ function AppInner() {
             userName: profile.userName || firebaseUser.displayName || "Your Closet",
             avatarUrl: profile.avatarUrl || firebaseUser.photoURL || DEFAULT_AVATAR,
             email: firebaseUser.email,
+            pendingDeletion: profile.pendingDeletion || false,
+            deletionDate: profile.deletionDate || null,
           });
           setIsLoggedIn(true);
           setIsLoading(false);
@@ -269,6 +272,24 @@ function AppInner() {
   // Send a password-reset email. Throws on error so the modal can react.
   const handleForgotPassword = async (email) => {
     await sendPasswordResetEmail(auth, email);
+  };
+
+  // Called after user schedules a 14-day deletion — re-reads the profile so
+  // the pending-deletion banner appears without forcing a full sign-out.
+  const handleDeletionScheduled = async () => {
+    try {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
+      const snap = await getDoc(doc(db, "users", uid));
+      const profile = snap.exists() ? snap.data() : {};
+      setUserData((prev) => ({
+        ...prev,
+        pendingDeletion: profile.pendingDeletion || false,
+        deletionDate: profile.deletionDate || null,
+      }));
+    } catch {
+      /* non-fatal — banner will appear on next login */
+    }
   };
 
   const handleLogout = async () => {
@@ -426,6 +447,18 @@ function AppInner() {
       <BackgroundProvider>
       <SyncProvider uid={isLoggedIn ? userData.uid : null}>
         <main className="app">
+          {isLoggedIn && userData?.pendingDeletion && (
+            <PendingDeletionBanner
+              userData={userData}
+              onCancelled={() =>
+                setUserData((prev) => ({
+                  ...prev,
+                  pendingDeletion: false,
+                  deletionDate: null,
+                }))
+              }
+            />
+          )}
           <Header
             userName={isLoggedIn ? userData.userName : "Your Closet"}
             avatarUrl={userData.avatarUrl}
@@ -435,6 +468,7 @@ function AppInner() {
             onSignUpClick={() => setIsSignUpModalOpen(true)}
             onLoginClick={() => setIsLoginModalOpen(true)}
             onLogoutClick={handleLogout}
+            onDeletionScheduled={handleDeletionScheduled}
             handleSelectTab={handleSelectTab}
             selectedTab={selectedTab}
           />

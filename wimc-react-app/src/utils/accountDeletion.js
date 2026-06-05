@@ -20,6 +20,13 @@
  *
  * Must be called while the user is still authenticated (Firestore rules require
  * request.auth.uid == uid for their own data).
+ *
+ * scheduleDeletion(uid) — marks the account for deletion 14 days from now.
+ *   Stores { pendingDeletion: true, deletionDate: <ISO string> } on the profile
+ *   doc. Phase B (scheduled Cloud Function) will complete the erasure when the
+ *   date arrives. The user can log back in and cancel any time before then.
+ *
+ * cancelDeletion(uid) — clears the pending-deletion flag.
  */
 
 import { db } from "../firebase";
@@ -29,6 +36,8 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  setDoc,
+  updateDoc,
   query,
   where,
 } from "firebase/firestore";
@@ -132,4 +141,42 @@ export async function deleteAllUserData(uid) {
   }
 
   return result;
+}
+
+// ── Grace-period helpers ──────────────────────────────────────────────────────
+
+const GRACE_DAYS = 14;
+
+/**
+ * Schedule an account for deletion GRACE_DAYS from now.
+ * Stores { pendingDeletion: true, deletionDate } on the profile doc so Phase B
+ * (a scheduled Cloud Function) can complete the erasure when the date arrives.
+ * The user remains fully active and can cancel until then.
+ *
+ * @param {string} uid
+ * @returns {Promise<string>} ISO date string of the scheduled deletion date
+ */
+export async function scheduleDeletion(uid) {
+  if (!uid) throw new Error("uid required");
+  const deletionDate = new Date(
+    Date.now() + GRACE_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  await setDoc(
+    doc(db, "users", uid),
+    { pendingDeletion: true, deletionDate },
+    { merge: true },
+  );
+  return deletionDate;
+}
+
+/**
+ * Cancel a pending deletion — clears the flag so the account is active again.
+ * @param {string} uid
+ */
+export async function cancelDeletion(uid) {
+  if (!uid) return;
+  await updateDoc(doc(db, "users", uid), {
+    pendingDeletion: false,
+    deletionDate: null,
+  });
 }
