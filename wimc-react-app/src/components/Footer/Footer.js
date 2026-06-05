@@ -6,16 +6,19 @@ import "./Footer.css";
 function Footer() {
   return (
     <footer className="footer">
-      <p className="footer__year">© 2024–{new Date().getFullYear()} GingerFaith LLC. All rights reserved.</p>
-      <nav className="footer__legal" aria-label="Legal">
+      <p className="footer__year">
+        © 2024–{new Date().getFullYear()} GingerFaith LLC. All rights reserved.
+      </p>
+      {/* All legal links rendered as inline text — no flexbox, no wrapping edge-cases */}
+      <p className="footer__legal">
         <Link to="/faq" className="footer__legal-link">FAQ</Link>
-        <span className="footer__legal-sep" aria-hidden="true">·</span>
+        <span className="footer__legal-sep"> · </span>
         <Link to="/pricing" className="footer__legal-link">Pricing</Link>
-        <span className="footer__legal-sep" aria-hidden="true">·</span>
+        <span className="footer__legal-sep"> · </span>
         <Link to="/privacy-policy" className="footer__legal-link">Privacy Policy</Link>
-        <span className="footer__legal-sep" aria-hidden="true">·</span>
+        <span className="footer__legal-sep"> · </span>
         <Link to="/terms-of-service" className="footer__legal-link">Terms of Service</Link>
-        <span className="footer__legal-sep" aria-hidden="true">·</span>
+        <span className="footer__legal-sep"> · </span>
         <button
           type="button"
           className="footer__legal-link footer__legal-link--button"
@@ -23,7 +26,7 @@ function Footer() {
         >
           Cookie Settings
         </button>
-      </nav>
+      </p>
     </footer>
   );
 }

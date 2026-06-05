@@ -1,10 +1,9 @@
-/* ── Footer base ──────────────────────────────────────────────────────────── */
+/* ── Footer shell ─────────────────────────────────────────────────────────── */
 .footer {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: nowrap;
   padding: 16px 20px;
   background-color: #333;
   color: #fff;
@@ -13,35 +12,30 @@
   z-index: 1;
 }
 
-.footer__developer,
+/* ── Copyright line ───────────────────────────────────────────────────────── */
 .footer__year {
   margin: 0;
   font-size: 0.85rem;
   white-space: nowrap;
 }
 
-/* ── Legal nav ──────────────────────────────────────────────────────────────
-   All items (links + button) sit on one row. The button is explicitly reset
-   to match the <a> siblings so no browser UA styles push it onto a new line. */
+/* ── Legal links — inline paragraph, NOT a flex container ─────────────────
+   Everything is display:inline so Cookie Settings is just text on the same
+   line as the other links. It cannot be on a "row below" because there is no
+   row — just a continuous run of inline text. */
 .footer__legal {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 6px;
   margin: 0;
-  padding: 0;
-  list-style: none;
+  font-size: 0;         /* collapse whitespace gaps between inline children */
+  white-space: nowrap;  /* keep the whole line together on wide screens */
+  text-align: right;
 }
 
 .footer__legal-link {
-  display: inline-block;
+  display: inline;
   color: #ccc;
   text-decoration: none;
   font-size: 0.8rem;
-  line-height: 1;
-  white-space: nowrap;
-  vertical-align: middle;
+  line-height: 1.4;
 }
 
 .footer__legal-link:hover {
@@ -49,9 +43,16 @@
   text-decoration: underline;
 }
 
-/* Button reset — matches <a> exactly so it sits on the same flex row */
+.footer__legal-sep {
+  display: inline;
+  color: #666;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* Button reset — looks and flows identically to the <a> siblings */
 .footer__legal-link--button {
-  display: inline-block;
+  display: inline;
   background: none;
   border: none;
   padding: 0;
@@ -59,30 +60,33 @@
   cursor: pointer;
   font-family: inherit;
   font-size: 0.8rem;
-  line-height: 1;
-  white-space: nowrap;
-  vertical-align: middle;
+  line-height: 1.4;
+  color: #ccc;
   -webkit-appearance: none;
   appearance: none;
+  min-height: 0;        /* override the global 44px touch-target rule */
+  height: auto;
+  vertical-align: baseline;
 }
 
-.footer__legal-sep {
-  display: inline-block;
-  color: #666;
-  font-size: 0.8rem;
-  line-height: 1;
-  vertical-align: middle;
+.footer__legal-link--button:hover {
+  color: #fff;
+  text-decoration: underline;
 }
 
-/* ── Tablet / small laptop (≤ 900px) ───────────────────────────────────────
-   Stack year above nav but keep nav as a single row. */
-@media screen and (max-width: 900px) {
+/* ── Tablet / small laptop (≤ 860px): stack year above links ─────────────── */
+@media screen and (max-width: 860px) {
   .footer {
     flex-direction: column;
     align-items: center;
-    text-align: center;
     gap: 8px;
     padding: 14px 16px;
+    text-align: center;
+  }
+
+  .footer__legal {
+    text-align: center;
+    white-space: normal;   /* allow the paragraph to wrap at tablet widths */
   }
 }
 
@@ -90,28 +94,28 @@
 @media screen and (max-width: 520px) {
   .footer {
     padding: 10px 12px;
-    gap: 6px;
+    gap: 4px;
   }
 
   .footer__year {
     font-size: 0.75rem;
   }
 
-  /* Allow the nav to wrap on narrow phones and hide the · separators */
-  .footer__legal {
-    flex-wrap: wrap;
-    justify-content: center;
-    column-gap: 10px;
-    row-gap: 4px;
-    max-width: 300px;
+  .footer__legal,
+  .footer__legal-link,
+  .footer__legal-link--button,
+  .footer__legal-sep {
+    font-size: 0.78rem;
   }
 
+  /* Hide the · dots on small phones so the links wrap cleanly */
   .footer__legal-sep {
     display: none;
   }
 
+  /* With dots hidden, add a small gap between each link via margin */
   .footer__legal-link,
   .footer__legal-link--button {
-    font-size: 0.78rem;
+    margin: 0 4px;
   }
 }
