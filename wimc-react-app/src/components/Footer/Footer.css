@@ -1,36 +1,47 @@
+/* ── Footer base ──────────────────────────────────────────────────────────── */
 .footer {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  padding: 20px;
+  flex-wrap: nowrap;
+  padding: 16px 20px;
   background-color: #333;
   color: #fff;
   margin-top: auto;
   position: relative;
   z-index: 1;
-  background-size: 20px;
 }
 
 .footer__developer,
 .footer__year {
   margin: 0;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
+/* ── Legal nav ──────────────────────────────────────────────────────────────
+   All items (links + button) sit on one row. The button is explicitly reset
+   to match the <a> siblings so no browser UA styles push it onto a new line. */
 .footer__legal {
   display: flex;
-  flex-wrap: nowrap;        /* keep all items on one row (laptop/desktop) */
-  gap: 8px;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .footer__legal-link {
+  display: inline-block;
   color: #ccc;
   text-decoration: none;
-  font-size: 0.85rem;
-  line-height: 1.4;
-  white-space: nowrap;      /* don't break labels like "Privacy Policy" */
+  font-size: 0.8rem;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .footer__legal-link:hover {
@@ -38,64 +49,69 @@
   text-decoration: underline;
 }
 
-/* "Cookie Settings" is a <button> styled to match the link siblings */
+/* Button reset — matches <a> exactly so it sits on the same flex row */
 .footer__legal-link--button {
+  display: inline-block;
   background: none;
   border: none;
   padding: 0;
   margin: 0;
   cursor: pointer;
   font-family: inherit;
-  font-size: 0.85rem;   /* match links so it stays on the same row */
-  line-height: 1.4;
-  vertical-align: baseline;
+  font-size: 0.8rem;
+  line-height: 1;
+  white-space: nowrap;
+  vertical-align: middle;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .footer__legal-sep {
-  color: #888;
-  font-size: 0.85rem;
+  display: inline-block;
+  color: #666;
+  font-size: 0.8rem;
+  line-height: 1;
+  vertical-align: middle;
 }
 
-@media screen and (max-width: 1024px) {
+/* ── Tablet / small laptop (≤ 900px) ───────────────────────────────────────
+   Stack year above nav but keep nav as a single row. */
+@media screen and (max-width: 900px) {
   .footer {
     flex-direction: column;
     align-items: center;
     text-align: center;
-    gap: 10px;
-    margin-top: auto;
-    margin-bottom: 0;
+    gap: 8px;
+    padding: 14px 16px;
   }
 }
 
-@media screen and (max-width: 480px) {
+/* ── Phone (≤ 520px) ─────────────────────────────────────────────────────── */
+@media screen and (max-width: 520px) {
   .footer {
-    padding: 12px 10px;
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
+    padding: 10px 12px;
+    gap: 6px;
   }
 
   .footer__year {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
   }
 
-  /* Tidy two-per-row wrap of the legal links on narrow phones */
+  /* Allow the nav to wrap on narrow phones and hide the · separators */
   .footer__legal {
-    flex-wrap: wrap;        /* allow wrapping only on phones */
+    flex-wrap: wrap;
+    justify-content: center;
     column-gap: 10px;
-    row-gap: 3px;           /* tight gap between the wrapped rows */
-    max-width: 320px;
+    row-gap: 4px;
+    max-width: 300px;
+  }
+
+  .footer__legal-sep {
+    display: none;
   }
 
   .footer__legal-link,
   .footer__legal-link--button {
-    font-size: 0.8rem;
-  }
-
-  /* Hide the dot separators on phone — the wrap reads cleaner without them */
-  .footer__legal-sep {
-    display: none;
+    font-size: 0.78rem;
   }
 }
