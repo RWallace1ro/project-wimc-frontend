@@ -27,6 +27,7 @@ import { auth, db } from "../../firebase";
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import CookieConsent from "../CookieConsent/CookieConsent";
+import CookiePreferences from "../CookiePreferences/CookiePreferences";
 import Main from "../Main/Main";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
 import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
@@ -507,6 +508,7 @@ function AppInner() {
           </section>
           <Footer />
           <CookieConsent />
+          <CookiePreferences />
           <ModalWithForm
             isOpen={isSignUpModalOpen}
             onClose={() => setIsSignUpModalOpen(false)}

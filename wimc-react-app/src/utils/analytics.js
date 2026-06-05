@@ -41,6 +41,15 @@ export function initSentry() {
  * withdraws consent). Flushes/closes the Sentry client so nothing further is
  * transmitted without a page reload.
  */
+/** Start or stop analytics to match a saved preferences object. */
+export function applyAnalytics(prefs) {
+  if (prefs && prefs.analytics) {
+    initSentry();
+  } else {
+    stopSentry();
+  }
+}
+
 export function stopSentry() {
   if (!started) return;
   started = false;

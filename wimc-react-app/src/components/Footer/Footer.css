@@ -18,8 +18,10 @@
 
 .footer__legal {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  justify-content: center;
   margin: 0;
 }
 
@@ -27,6 +29,7 @@
   color: #ccc;
   text-decoration: none;
   font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 .footer__legal-link:hover {
@@ -42,7 +45,9 @@
   margin: 0;
   cursor: pointer;
   font-family: inherit;
-  line-height: inherit;
+  font-size: 0.85rem;   /* match links so it stays on the same row */
+  line-height: 1.4;
+  vertical-align: baseline;
 }
 
 .footer__legal-sep {
@@ -55,6 +60,7 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    gap: 10px;
     margin-top: auto;
     margin-bottom: 0;
   }
@@ -62,8 +68,32 @@
 
 @media screen and (max-width: 480px) {
   .footer {
-    padding: 5px;
+    padding: 12px 10px;
     margin-top: auto;
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer__year {
+    font-size: 0.78rem;
+  }
+
+  /* Tidy two-per-row wrap of the legal links on narrow phones */
+  .footer__legal {
+    column-gap: 10px;
+    row-gap: 6px;
+    max-width: 320px;
+  }
+
+  .footer__legal-link,
+  .footer__legal-link--button {
+    font-size: 0.8rem;
+  }
+
+  /* Hide the dot separators on phone — the wrap reads cleaner without them */
+  .footer__legal-sep {
+    display: none;
   }
 }
