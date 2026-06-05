@@ -140,7 +140,9 @@ button.header__home-btn,
 button.kcm-avatar-edit-btn,
 button.kids-card__photo-btn,
 /* Settings avatar edit button */
-button.usm-avatar-edit-btn {
+button.usm-avatar-edit-btn,
+/* Footer "Cookie Settings" — inline text link, must match link height */
+button.footer__legal-link--button {
   min-height: unset;
 }
 
