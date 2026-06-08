@@ -1,9 +1,9 @@
 {
   "files": {
     "main.css": "/project-wimc-frontend/static/css/main.05508652.css",
-    "main.js": "/project-wimc-frontend/static/js/main.865394bd.js",
-    "static/css/136.0c02a308.chunk.css": "/project-wimc-frontend/static/css/136.0c02a308.chunk.css",
-    "static/js/136.4590157c.chunk.js": "/project-wimc-frontend/static/js/136.4590157c.chunk.js",
+    "main.js": "/project-wimc-frontend/static/js/main.df53a87b.js",
+    "static/css/136.d040447c.chunk.css": "/project-wimc-frontend/static/css/136.d040447c.chunk.css",
+    "static/js/136.56073da5.chunk.js": "/project-wimc-frontend/static/js/136.56073da5.chunk.js",
     "static/css/839.ebc48160.chunk.css": "/project-wimc-frontend/static/css/839.ebc48160.chunk.css",
     "static/js/839.bcd06574.chunk.js": "/project-wimc-frontend/static/js/839.bcd06574.chunk.js",
     "static/css/208.3a10a84b.chunk.css": "/project-wimc-frontend/static/css/208.3a10a84b.chunk.css",
@@ -48,9 +48,9 @@
     "index.html": "/project-wimc-frontend/index.html",
     "static/media/home-icon.svg": "/project-wimc-frontend/static/media/home-icon.590a91c51c7e28b5b3cc4d453f1e11ef.svg",
     "main.05508652.css.map": "/project-wimc-frontend/static/css/main.05508652.css.map",
-    "main.865394bd.js.map": "/project-wimc-frontend/static/js/main.865394bd.js.map",
-    "136.0c02a308.chunk.css.map": "/project-wimc-frontend/static/css/136.0c02a308.chunk.css.map",
-    "136.4590157c.chunk.js.map": "/project-wimc-frontend/static/js/136.4590157c.chunk.js.map",
+    "main.df53a87b.js.map": "/project-wimc-frontend/static/js/main.df53a87b.js.map",
+    "136.d040447c.chunk.css.map": "/project-wimc-frontend/static/css/136.d040447c.chunk.css.map",
+    "136.56073da5.chunk.js.map": "/project-wimc-frontend/static/js/136.56073da5.chunk.js.map",
     "839.ebc48160.chunk.css.map": "/project-wimc-frontend/static/css/839.ebc48160.chunk.css.map",
     "839.bcd06574.chunk.js.map": "/project-wimc-frontend/static/js/839.bcd06574.chunk.js.map",
     "208.3a10a84b.chunk.css.map": "/project-wimc-frontend/static/css/208.3a10a84b.chunk.css.map",
@@ -87,6 +87,6 @@
   },
   "entrypoints": [
     "static/css/main.05508652.css",
-    "static/js/main.865394bd.js"
+    "static/js/main.df53a87b.js"
   ]
 }
