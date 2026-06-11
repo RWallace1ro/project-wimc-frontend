@@ -542,7 +542,7 @@ function AppInner() {
                 }
               />
 
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<NotFound isLoggedIn={isLoggedIn} />} />
             </Routes>
             </React.Suspense>
           </section>

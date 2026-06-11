@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./NotFound.css";
 
-export default function NotFound() {
+export default function NotFound({ isLoggedIn = false }) {
   return (
     <main className="notfound">
       <div className="notfound__card">
@@ -15,12 +15,20 @@ export default function NotFound() {
           The page you're looking for doesn't exist or may have been moved.
         </p>
         <div className="notfound__actions">
-          <Link to="/" className="notfound__btn notfound__btn--primary">
-            🏠 Go Home
-          </Link>
-          <Link to="/closet-data" className="notfound__btn">
-            👗 My Closet
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link to="/home" className="notfound__btn notfound__btn--primary">
+                🏠 Go Home
+              </Link>
+              <Link to="/closet-data" className="notfound__btn">
+                👗 My Closet
+              </Link>
+            </>
+          ) : (
+            <Link to="/" className="notfound__btn notfound__btn--primary">
+              🏠 Go Home
+            </Link>
+          )}
         </div>
       </div>
     </main>
