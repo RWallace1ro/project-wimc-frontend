@@ -1,0 +1,75 @@
+.notfound {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+
+.notfound__card {
+  text-align: center;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 40px 32px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.notfound__emoji {
+  font-size: 56px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.notfound__code {
+  margin: 0;
+  font-size: 56px;
+  font-weight: 800;
+  color: #7c3aed;
+  letter-spacing: 0.02em;
+}
+
+.notfound__title {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.notfound__text {
+  margin: 10px 0 24px;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.notfound__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.notfound__btn {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid #c4b5fd;
+  background: #f5f3ff;
+  color: #6d28d9;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+.notfound__btn:hover {
+  background: #ede9fe;
+}
+.notfound__btn--primary {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+.notfound__btn--primary:hover {
+  background: #6d28d9;
+}
