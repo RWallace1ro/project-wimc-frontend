@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import { syncSetItem } from "../../utils/syncStore";
 import "./AIStylist.css";
 
 const CLOSET_GENDER_KEY = "wimc_closet_gender";
@@ -127,6 +128,16 @@ export default function AIStylist({
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
   }, [isOpen]);
 
+  // Re-read saved outfits whenever the modal opens — picks up cloud-synced
+  // saves made on another device (hydration/remote sync update localStorage).
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const fresh = JSON.parse(localStorage.getItem(SAVED_OUTFITS_KEY) || "[]");
+      setSavedOutfits(fresh);
+    } catch {}
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) abortRef.current?.abort();
   }, [isOpen]);
@@ -226,7 +237,7 @@ Respond with ONLY a JSON object mapping section label to chosen item number, e.g
   // ── Saved outfits ────────────────────────────────────────────────────────
   const persistOutfits = (list) => {
     setSavedOutfits(list);
-    try { localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(list)); } catch {}
+    try { syncSetItem(SAVED_OUTFITS_KEY, JSON.stringify(list)); } catch {}
   };
 
   const saveOutfit = (msgId, sections) => {

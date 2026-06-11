@@ -60,9 +60,30 @@ export function SyncProvider({ uid, children }) {
     setRemoteUpdated(false);
   }, []);
 
+  // While hydrating a logged-in user's cloud data, hold back the app so
+  // components initialize from the LATEST localStorage (not stale device
+  // state). Logged-out users (uid=null) are never gated.
+  const gating = Boolean(uid) && syncing;
+
   return (
     <SyncContext.Provider value={{ syncing, remoteUpdated, dismissRemoteUpdate }}>
-      {children}
+      {gating ? (
+        <div style={{
+          minHeight: "60vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 12,
+          color: "#64748b",
+          fontSize: 14,
+        }}>
+          <span style={{ fontSize: 32 }}>🔄</span>
+          Syncing your closet…
+        </div>
+      ) : (
+        children
+      )}
       {remoteUpdated && (
         <div style={{
           position: "fixed",
