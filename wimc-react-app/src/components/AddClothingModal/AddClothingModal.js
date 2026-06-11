@@ -226,26 +226,19 @@ function AddClothingModal({
         </header>
 
         <form className="modal__form" onSubmit={handleSubmit}>
-          {/* Upload source toggle */}
+          {/* Optional alternative sources — device uploader is always visible below */}
           <div className="modal__segmented">
             <button
               type="button"
-              className={`segmented__btn ${source === "device" ? "is-active" : ""}`}
-              onClick={() => setSource("device")}
-            >
-              From device (image/video)
-            </button>
-            <button
-              type="button"
               className={`segmented__btn ${source === "web" ? "is-active" : ""}`}
-              onClick={() => setSource("web")}
+              onClick={() => setSource(source === "web" ? "device" : "web")}
             >
               Web search (image)
             </button>
             <button
               type="button"
               className={`segmented__btn ${source === "url" ? "is-active" : ""}`}
-              onClick={() => setSource("url")}
+              onClick={() => setSource(source === "url" ? "device" : "url")}
             >
               Paste URL
             </button>
@@ -301,18 +294,18 @@ function AddClothingModal({
             ))}
           </select>
 
-          {source === "device" && (
-            <>
-              <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
-              <p className="modal__device-note">
-                📱 <strong>On a phone?</strong> Tap <em>Choose File</em> /
-                <em> My Files</em> and you'll get <strong>Take Photo or Video</strong>{" "}
-                (camera), <strong>Photo Library</strong>, and{" "}
-                <strong>Choose Files</strong> — so you can snap a new photo or
-                pick an existing one.
-              </p>
-            </>
-          )}
+          {/* From Device — always visible */}
+          <>
+            <p className="modal__source-label">📁 From Device</p>
+            <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
+            <p className="modal__device-note">
+              📱 <strong>On a phone?</strong> Tap <em>Choose File</em> /
+              <em> My Files</em> and you'll get <strong>Take Photo or Video</strong>{" "}
+              (camera), <strong>Photo Library</strong>, and{" "}
+              <strong>Choose Files</strong> — so you can snap a new photo or
+              pick an existing one.
+            </p>
+          </>
 
           {source === "web" && (
             <ImageUpload

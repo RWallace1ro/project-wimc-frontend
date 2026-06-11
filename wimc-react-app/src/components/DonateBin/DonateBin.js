@@ -601,12 +601,12 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                   ✏️ Share + Edit
                 </button>
               </div>
-              <textarea
+              <input
+                type="text"
                 className="donate-modal__share-note"
                 placeholder="Add a note for the recipient, when sharing (optional)…"
                 value={shareNote}
                 onChange={(e) => setShareNote(e.target.value)}
-                rows={2}
               />
             </div>
 

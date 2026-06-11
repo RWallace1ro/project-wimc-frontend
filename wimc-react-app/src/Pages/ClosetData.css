@@ -23,12 +23,18 @@
   align-items: start;
   width: 100%;
   position: relative;
-  z-index: 1;
+  /* z-index removed — it was creating a stacking context that capped all
+     position:fixed modals inside to effective z-index 1, placing them behind
+     the header (z-index:10) and making modal headers unreachable. Without
+     z-index, position:relative does not create a stacking context, so each
+     modal's own z-index (400–10000) is compared directly against the header's
+     z-index:10 and wins. */
   flex-grow: 1;
 }
 
-.closet-data__left,
-.closet-data__right {
+/* These class names match the JSX: closet-data__side-left / closet-data__side-right */
+.closet-data__side-left,
+.closet-data__side-right {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -54,16 +60,15 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  margin-top: 20px;
+  /* margin-top removed — parent flex gap: 20px handles spacing */
 }
 
 .wish-list {
   background: #fff;
-  margin-top: 20px;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 265px;
+  width: 100%;           /* fills the sidebar column — matches ShoppingList / TravelPack */
   position: relative;
 }
 
@@ -75,6 +80,41 @@
   gap: 15px;
   margin-bottom: 20px;
   width: 100%;
+  flex-wrap: wrap;
+}
+
+/* ── Gender toggle ── */
+.closet-data__gender-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #e9e3f8;
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid #c4b5fd;
+}
+.closet-data__gender-btn {
+  padding: 6px 16px;
+  border: 1px solid #a78bfa;
+  border-radius: 6px;
+  background: #fff;
+  color: #5b21b6;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s;
+  white-space: nowrap;
+}
+.closet-data__gender-btn.is-active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+  font-weight: 700;
+}
+.closet-data__gender-btn:hover:not(.is-active) {
+  background: #ede9fe;
+  border-color: #7c3aed;
+  color: #7c3aed;
 }
 
 .add-clothing-button {
@@ -107,13 +147,7 @@
   margin-bottom: 20px;
 }
 
-.closet-section-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1;
-}
+/* .closet-section-modal layout is fully owned by ClosetSectionModal.css */
 
 .footer {
   display: flex;
@@ -145,6 +179,8 @@
 
   .closet-data__side-left {
     order: 0;
+    width: 100%;
+    align-items: stretch;
   }
 
   .closet-data__cards-container {
@@ -155,18 +191,21 @@
 
   .closet-data__side-right {
     order: 2;
+    width: 100%;
+    align-items: stretch;
   }
 
   .closet-data__side-container {
     flex-direction: column;
     gap: 20px;
     position: static;
-    margin-top: 20px;
+    width: 100%;
   }
 
+  /* All sidebar widget cards fill the full column width */
   .wish-list {
     position: relative;
-    width: 90%;
+    width: 100%;
   }
 
   .add-clothing-button {
@@ -183,35 +222,35 @@
     gap: 8px;
   }
 
-  .closet-section-modal {
-    max-width: 400px;
-  }
+  /* closet-section-modal sizing handled by ClosetSectionModal.css */
 }
 
-/* ===== Mobile (≤480px) ===== */
-@media screen and (max-width: 480px) {
+/* ===== Mobile (≤600px) ===== */
+@media screen and (max-width: 600px) {
   .closet-data-page {
     padding: 10px;
     box-sizing: border-box;
   }
 
+  /* Two cards per row on phone — compact tiles, not full-width */
   .closet-data__cards-container {
-    grid-template-columns: 1fr;
-    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 12px 8px;
   }
 
   .closet-data__side-container {
     position: static;
     flex-direction: column;
     gap: 15px;
-    margin-top: 15px;
     width: 100%;
     box-sizing: border-box;
   }
 
+  /* Full width — same as closet section cards */
   .wish-list {
-    width: 85%;
-    margin: 0 auto;
+    width: 100%;
+    margin: 0;
     box-sizing: border-box;
   }
 
@@ -228,10 +267,6 @@
   .closet-data__buttons {
     flex-direction: column;
     gap: 5px;
-  }
-
-  .closet-section-modal {
-    width: 300px;
   }
 
   .footer {

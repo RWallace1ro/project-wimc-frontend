@@ -23,6 +23,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
+import { logAppEvent } from "../../utils/analytics";
 
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
@@ -94,6 +95,7 @@ function AppInner() {
   // Tracks a pending post-login navigation so ProtectedRoute doesn't
   // race against the async onAuthStateChanged callback.
   const pendingNavRef = useRef(null);
+
 
   // Listen for Firebase auth state changes
   useEffect(() => {
@@ -220,6 +222,7 @@ function AppInner() {
       await setDoc(doc(db, "users", user.uid), profile);
       // Send the verification email; the auth listener will show the verify gate.
       try { await sendEmailVerification(user); } catch (e) { console.warn("verify email send failed", e); }
+      logAppEvent("sign_up", { method: "email" });
       setIsSignUpModalOpen(false);
     } catch (err) {
       pendingNavRef.current = null;
@@ -240,6 +243,7 @@ function AppInner() {
     try {
       pendingNavRef.current = "/home"; // navigate after auth state confirms
       await signInWithEmailAndPassword(auth, data.email, data.password);
+      logAppEvent("login", { method: "email" });
       setLoginData({ email: "", password: "" });
       setIsLoginModalOpen(false);
     } catch (err) {
@@ -471,6 +475,7 @@ function AppInner() {
             onDeletionScheduled={handleDeletionScheduled}
             handleSelectTab={handleSelectTab}
             selectedTab={selectedTab}
+            closetItems={closetItems}
           />
           <section className="app__content">
             {apiError && <p className="error-message">{apiError}</p>}

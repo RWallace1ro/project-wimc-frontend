@@ -1134,6 +1134,8 @@ export default function ShoppingList() {
   const [importError, setImportError] = useState("");
   const [loadingImport, setLoadingImport] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [lastCleared, setLastCleared] = useState(null); // undo clear
+  const undoClearTimerRef = useRef(null);
   const inputRef = useRef(null);
   const hydratedRef = useRef(false);
 
@@ -1210,10 +1212,21 @@ export default function ShoppingList() {
     setItems((prev) => prev.filter((i) => i.id !== id));
   const editNote = (id, note) =>
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, note } : i)));
-  const clearChecked = () =>
-    setItems((prev) =>
-      prev.filter((i) => !(i.categoryId === activeCatId && i.checked)),
-    );
+  const clearChecked = () => {
+    setItems((prev) => {
+      const toRemove = prev.filter((i) => i.categoryId === activeCatId && i.checked);
+      setLastCleared(toRemove);
+      clearTimeout(undoClearTimerRef.current);
+      undoClearTimerRef.current = setTimeout(() => setLastCleared(null), 6000);
+      return prev.filter((i) => !(i.categoryId === activeCatId && i.checked));
+    });
+  };
+  const undoClear = () => {
+    if (!lastCleared) return;
+    setItems((prev) => [...prev, ...lastCleared]);
+    setLastCleared(null);
+    clearTimeout(undoClearTimerRef.current);
+  };
 
   const addCategory = (cat) => {
     setCategories((prev) => [...prev, cat]);
@@ -1281,6 +1294,9 @@ export default function ShoppingList() {
     navigator.clipboard.writeText(text).then(() => {
       setShareMsg("📋 Text copied!");
       setTimeout(() => setShareMsg(""), 2000);
+    }).catch(() => {
+      setShareMsg("⚠️ Could not copy — please copy manually.");
+      setTimeout(() => setShareMsg(""), 3000);
     });
   };
 
@@ -1446,12 +1462,12 @@ export default function ShoppingList() {
               ✏️ Share + Edit
             </button>
           </div>
-          <textarea
+          <input
+            type="text"
             className="sl-share-note"
             placeholder="Add a note for the recipient, when sharing (optional)…"
             value={shareNote}
             onChange={(e) => setShareNote(e.target.value)}
-            rows={2}
           />
         </div>
 
@@ -1597,6 +1613,14 @@ export default function ShoppingList() {
                   onClick={clearChecked}
                 >
                   Clear done ({checkedCount})
+                </button>
+              )}
+              {lastCleared && lastCleared.length > 0 && (
+                <button
+                  className="sl-btn sl-btn--sm sl-btn--undo"
+                  onClick={undoClear}
+                >
+                  ↩ Undo clear ({lastCleared.length})
                 </button>
               )}
             </div>

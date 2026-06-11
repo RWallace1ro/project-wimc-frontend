@@ -19,6 +19,39 @@
   background: rgba(255, 255, 255, 0.88);
   border-radius: 14px;
   padding: 20px 24px;
+  flex-wrap: wrap;
+}
+.kids-closet__header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+}
+.kids-closet__back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.kids-closet__back-btn:hover {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+.kids-closet__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
 .kids-closet__title {
   margin: 0 0 4px;
@@ -46,6 +79,157 @@
 .kids-closet__add-btn:hover {
   background: #6d28d9;
 }
+
+/* Background button in header */
+.kids-closet__bg-btn {
+  padding: 9px 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+.kids-closet__bg-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+/* ── Full background picker panel (mirrors KidsClosetModal) ── */
+.kcp-bg-picker {
+  background: #1e293b;
+  padding: 14px 18px 16px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+}
+.kcp-bg-picker__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.kcp-bg-picker__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  flex: 1;
+}
+.kcp-bg-picker__saved {
+  font-size: 12px;
+  color: #4ade80;
+}
+.kcp-bg-picker__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kcp-bg-picker__reset {
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.kcp-bg-picker__reset:hover { background: rgba(255,255,255,0.18); }
+.kcp-bg-picker__close-btn {
+  background: rgba(255,255,255,0.12);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.kcp-bg-picker__close-btn:hover { background: rgba(255,255,255,0.22); }
+
+/* Tabs */
+.kcp-bg-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.kcp-bg-tab {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.kcp-bg-tab:hover { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+.kcp-bg-tab.is-active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+
+/* Photo presets */
+.kcp-bg-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.kcp-bg-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  padding: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.kcp-bg-preset:hover { background: rgba(255,255,255,0.12); }
+.kcp-bg-preset.is-active { border-color: #7c3aed; }
+.kcp-bg-preset__thumb {
+  width: 80px;
+  height: 52px;
+  border-radius: 5px;
+  background-size: cover;
+  background-position: center;
+}
+.kcp-bg-preset__thumb--upload {
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.08);
+  font-size: 20px;
+}
+.kcp-bg-preset__name { font-size: 12px; color: #94a3b8; white-space: nowrap; }
+.kcp-bg-preset__check { font-size: 12px; color: #a78bfa; font-weight: 700; }
+
+/* Color palette */
+.kcp-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.kcp-color-swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  position: relative;
+  display: grid;
+  place-items: center;
+  transition: transform 0.1s, border-color 0.15s;
+}
+.kcp-color-swatch:hover { transform: scale(1.12); }
+.kcp-color-swatch.is-active { border-color: #7c3aed; box-shadow: 0 0 0 2px #7c3aed; }
+.kcp-color-swatch__check { font-size: 14px; color: #7c3aed; font-weight: 900; text-shadow: 0 0 3px rgba(255,255,255,0.8); }
+
+.kcp-bg-err { color: #f87171; font-size: 12px; margin-top: 8px; }
 
 .kids-closet__empty {
   text-align: center;
@@ -84,8 +268,47 @@
   align-items: center;
   gap: 12px;
 }
+
+/* Avatar / icon area on the card */
+.kids-card__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.kids-card__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+  display: block;
+}
 .kids-card__icon {
   font-size: 40px;
+  display: block;
+  line-height: 1;
+}
+/* Camera overlay button on the card avatar */
+.kids-card__photo-btn {
+  position: absolute;
+  bottom: -2px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: #0f172a;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+.kids-card__photo-btn:hover {
+  background: #7c3aed;
 }
 .kids-card__name {
   margin: 0;
@@ -190,15 +413,37 @@
   background: #6d28d9;
 }
 .kids-card__btn--share {
-  background: #0ea5e9;
-  color: #fff;
-  border-color: #0ea5e9;
+  background: #fff;
+  color: #1e293b;
+  border-color: #ddd;
+  white-space: nowrap;
 }
 .kids-card__btn--share:hover {
-  background: #0284c7;
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+/* Share + Edit variant — purple, high contrast */
+.kids-card__btn--share-edit {
+  background: #7c3aed;
+  color: #fff !important;
+  border-color: #7c3aed;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.kids-card__btn--share-edit:hover {
+  background: #6d28d9;
+  border-color: #6d28d9;
 }
 .kids-card__btn--edit {
   background: #f8fafc;
+}
+.kids-card__btn--restore {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+.kids-card__btn--restore:hover {
+  background: #dcfce7;
 }
 .kids-card__btn--delete {
   color: #b91c1c;
@@ -225,7 +470,17 @@
   .kids-closet__header {
     flex-direction: column;
   }
+  .kids-closet__header-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .kids-closet__add-btn,
+  .kids-closet__bg-btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
   .kids-closet__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 }

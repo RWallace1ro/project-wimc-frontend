@@ -1,0 +1,103 @@
+.legal-page {
+  font-family: inherit;
+  color: #222;
+  line-height: 1.7;
+}
+
+/* ── Dark hero banner (matches FAQ) ── */
+.legal-hero {
+  position: relative;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  color: #fff;
+  padding: 56px 24px 48px;
+  text-align: center;
+}
+.legal-hero__back {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+}
+.legal-hero__back:hover {
+  background: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.legal-hero__title {
+  margin: 0 0 8px;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.legal-hero__updated {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.9rem;
+}
+
+/* ── Body content ── */
+.legal-page__body {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+.legal-page__section {
+  margin-bottom: 28px;
+}
+
+.legal-page__section h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111;
+}
+
+.legal-page__section p,
+.legal-page__section ul {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+}
+
+.legal-page__section p:last-child,
+.legal-page__section ul:last-child {
+  margin-bottom: 0;
+}
+
+.legal-page__section ul {
+  padding-left: 20px;
+}
+
+.legal-page__section ul li {
+  margin-bottom: 6px;
+}
+
+.legal-page__section code {
+  background: #f3f3f3;
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.85em;
+  font-family: monospace;
+}
+
+@media (max-width: 600px) {
+  .legal-hero {
+    padding: 40px 16px 36px;
+  }
+  .legal-hero__title {
+    font-size: 1.5rem;
+  }
+  .legal-page__body {
+    padding: 24px 16px 40px;
+  }
+}

@@ -1,12 +1,18 @@
 /**
- * analytics — Sentry error/performance monitoring, gated behind user consent.
+ * analytics — Sentry error monitoring + Firebase Analytics, both gated behind
+ * user consent (see utils/consent). No non-essential tracking fires until the
+ * user explicitly accepts optional cookies — GDPR-compliant.
  *
- * initSentry() is idempotent and is only ever called once the user has opted in
- * to optional analytics (see utils/consent). This keeps WIMC GDPR-compliant:
- * no non-essential tracking fires until the user accepts.
+ * Public API:
+ *   initSentry()          — start Sentry (idempotent)
+ *   stopSentry()          — stop Sentry for this session
+ *   applyAnalytics(prefs) — start or stop both Sentry + Firebase based on prefs
+ *   logAppEvent(name, params) — fire a Firebase Analytics event (no-op if not consented)
  */
 
 import * as Sentry from "@sentry/react";
+import { logEvent } from "firebase/analytics";
+import { initFirebaseAnalytics, getFirebaseAnalytics } from "../firebase";
 
 let started = false;
 
@@ -41,12 +47,34 @@ export function initSentry() {
  * withdraws consent). Flushes/closes the Sentry client so nothing further is
  * transmitted without a page reload.
  */
-/** Start or stop analytics to match a saved preferences object. */
+/** Start or stop all analytics to match a saved preferences object. */
 export function applyAnalytics(prefs) {
   if (prefs && prefs.analytics) {
     initSentry();
+    initFirebaseAnalytics(); // consent granted — start Firebase Analytics
   } else {
     stopSentry();
+    // Firebase Analytics cannot be fully stopped once initialized in the same
+    // session, but we stop firing new events (logAppEvent no-ops when the
+    // analytics instance is null). A page reload ensures a clean state.
+  }
+}
+
+/**
+ * Fire a Firebase Analytics event — silently no-ops if analytics has not been
+ * initialized (i.e. user hasn't consented or browser doesn't support it).
+ *
+ * @param {string} eventName  - Firebase event name (use snake_case)
+ * @param {object} [params]   - Optional key/value parameters
+ */
+export function logAppEvent(eventName, params = {}) {
+  try {
+    const analyticsInstance = getFirebaseAnalytics();
+    if (analyticsInstance) {
+      logEvent(analyticsInstance, eventName, params);
+    }
+  } catch {
+    // Never let analytics errors surface to the user
   }
 }
 

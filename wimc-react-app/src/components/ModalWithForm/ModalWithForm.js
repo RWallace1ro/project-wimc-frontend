@@ -262,7 +262,7 @@ function ModalWithForm({
                   <span className="modal__agreement-text">
                     I am 13 or older and I agree to the{" "}
                     <a
-                      href="/project-wimc-frontend/terms-of-service"
+                      href={`${process.env.PUBLIC_URL || ""}/terms-of-service`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="modal__agreement-link"
@@ -271,7 +271,7 @@ function ModalWithForm({
                     </a>{" "}
                     and{" "}
                     <a
-                      href="/project-wimc-frontend/privacy-policy"
+                      href={`${process.env.PUBLIC_URL || ""}/privacy-policy`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="modal__agreement-link"

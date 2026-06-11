@@ -1138,30 +1138,6 @@
   margin: 0; */
 /* } */
 
-/* ── Responsive ──────────────────────────────────────────────── */
-/* @media (max-width: 480px) {
-  .usm-header,
-  .usm-body,
-  .usm-tabs {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .usm-modal {
-    border-radius: 14px;
-    max-height: 95vh;
-  }
-  .usm-tabs {
-    gap: 2px;
-  }
-  .usm-tab {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
-  .usm-bg-picker__presets {
-    gap: 4px;
-  }
-} */
-
 /* =============================================================================== */
 
 /* ── Delete timing choice (grace period vs immediate) ────────────────────────── */

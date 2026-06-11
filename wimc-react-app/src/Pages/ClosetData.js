@@ -1,4 +1,5 @@
 import { syncSetItem } from '../utils/syncStore';
+import { logAppEvent } from '../utils/analytics';
 import React, { useState, useEffect, useCallback } from "react";
 import ClosetSectionCard from "../components/ClosetSectionCard/ClosetSectionCard";
 import ClosetSectionModal from "../components/ClosetSectionModal/ClosetSectionModal";
@@ -214,6 +215,10 @@ function ClosetData({
       const url = item?.mediaThumb || item?.mediaUrl || item?.imageUrl || item;
       if (url) setClosetItems((prev) => [...prev, url]);
     }
+    logAppEvent("add_clothing_item", {
+      media_type: item?.mediaType || "image",
+      category: item?.category || "unknown",
+    });
     setIsAddModalOpen(false);
   };
 

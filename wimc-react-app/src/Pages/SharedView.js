@@ -305,7 +305,7 @@ export default function SharedView() {
         <div className="sv__login-prompt">
           <h2>🔐 Login Required</h2>
           <p>This shared content requires a WIMC account to view. Log in to continue.</p>
-          <a href="/" className="sv__login-btn">Log In to WIMC</a>
+          <a href={process.env.PUBLIC_URL || "/"} className="sv__login-btn">Log In to WIMC</a>
         </div>
       </div>
     );
@@ -365,7 +365,7 @@ export default function SharedView() {
       </div>
 
       <footer className="sv__footer">
-        <a href="/" className="sv__cta">Get WIMC — Organize your wardrobe 👗</a>
+        <a href={process.env.PUBLIC_URL || "/"} className="sv__cta">Get WIMC — Organize your wardrobe 👗</a>
         <p className="sv__cta-sub">Free wardrobe management for everyone</p>
       </footer>
     </div>

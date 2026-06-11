@@ -2,12 +2,13 @@
   background: #fff;
   border-radius: 12px;
   border: 1px solid #eee;
-  overflow: visible; /* ✅ changed from hidden so footer buttons aren't clipped */
+  overflow: visible;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  width: 200px;
+  width: 100%;
+  min-width: 0;           /* prevent grid-cell blowout on narrow screens */
   min-height: 250px;
   text-align: center;
   cursor: pointer;
@@ -154,4 +155,29 @@
 .closet-section-card__info {
   color: #666;
   font-size: 13px;
+}
+
+/* ── Share button ────────────────────────────────────────────────────────── */
+.closet-section-card__share-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 7px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+  min-height: unset;
+}
+.closet-section-card__share-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+.closet-section-card__share-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }

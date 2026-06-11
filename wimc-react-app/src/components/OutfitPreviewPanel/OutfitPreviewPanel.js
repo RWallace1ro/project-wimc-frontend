@@ -1352,11 +1352,11 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                       ✏️ Share + Edit
                     </button>
                   </div>
-                  <textarea
+                  <input
+                    type="text"
                     className="opp__share-note"
                     placeholder="Add a note for the recipient, when sharing (optional)…"
                     value={note}
-                    rows={2}
                     onChange={(e) => {
                       setNote(e.target.value);
                       commitHistory(selected, e.target.value);

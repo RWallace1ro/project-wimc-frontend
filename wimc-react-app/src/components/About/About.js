@@ -1,9 +1,20 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import "./About.css";
 
 function About() {
+  const navigate = useNavigate();
+
   return (
     <main className="about">
+      <button
+        className="about__back-btn"
+        onClick={() => navigate(-1)}
+        aria-label="Go back"
+      >
+        ← Back
+      </button>
+
       <section className="about__overlay">
         <header>
           <h1>About WIMC</h1>

@@ -1,4 +1,5 @@
 import { auth } from "../firebase";
+import { logAppEvent } from "./analytics";
 
 /**
  * POST to the Anthropic proxy Firebase Function with the current user's
@@ -10,8 +11,10 @@ import { auth } from "../firebase";
  * @param {object} body            - JSON body for the proxy (model, messages, …)
  * @param {object} [opts]
  * @param {AbortSignal} [opts.signal]
+ * @param {string}  [opts.feature] - Analytics label e.g. "ai_stylist" (optional)
  */
-export async function aiProxyFetch(body, { signal } = {}) {
+export async function aiProxyFetch(body, { signal, feature } = {}) {
+  logAppEvent("ai_feature_used", { feature: feature || "unknown" });
   const headers = { "Content-Type": "application/json" };
   try {
     const token = await auth.currentUser?.getIdToken();

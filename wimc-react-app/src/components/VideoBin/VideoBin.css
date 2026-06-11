@@ -4,6 +4,7 @@
   border: 1px solid #eee;
   border-radius: 12px;
   padding: 12px;
+  /* margin-top removed — parent flex gap: 20px handles spacing */
 }
 .video-bin__header {
   display: flex;
@@ -57,8 +58,8 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1401;
-  width: min(100vw - 32px, 1000px);
-  height: min(100vh - 32px, 780px);
+  width: min(100vw - 48px, 1200px);
+  height: min(100vh - 48px, 820px);
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
@@ -279,14 +280,14 @@
   gap: 6px;
 }
 .vb-card__section {
-  font-size: 11px;
+  font-size: 13px;
   color: #64748b;
   background: #f1f5f9;
   padding: 2px 6px;
   border-radius: 4px;
 }
 .vb-card__date {
-  font-size: 11px;
+  font-size: 13px;
   color: #94a3b8;
 }
 
@@ -518,6 +519,15 @@
 }
 
 @media (max-width: 600px) {
+  .vb-modal {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    transform: none;
+    border-radius: 0;
+    animation: none;
+  }
   .vb-grid {
     grid-template-columns: 1fr;
   }

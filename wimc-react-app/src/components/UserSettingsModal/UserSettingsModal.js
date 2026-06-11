@@ -308,7 +308,9 @@ export default function UserSettingsModal({
   const [pwSaving, setPwSaving] = useState(false);
 
   // Delete account fields
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  // deleteStep: "enter-password" → user types password to verify identity
+  //             "confirmed"      → reauthentication passed, show final delete button
+  const [deleteStep, setDeleteStep] = useState("enter-password");
   const [deletePassword, setDeletePassword] = useState("");
   const [deleteMsg, setDeleteMsg] = useState({ text: "", type: "" });
   const [isDeleting, setIsDeleting] = useState(false);
@@ -331,7 +333,7 @@ export default function UserSettingsModal({
       setCurrentPw("");
       setNewPw("");
       setConfirmPw("");
-      setDeleteConfirmText("");
+      setDeleteStep("enter-password");
       setDeletePassword("");
       setTab("profile");
     }
@@ -476,17 +478,13 @@ export default function UserSettingsModal({
     }
   };
 
-  // ── Delete Account ────────────────────────────────────────────────────────────
-  const handleDeleteAccount = async (e) => {
+  // ── Delete Account — Step 1: verify password via reauthentication ─────────────
+  const handleVerifyPassword = async (e) => {
     e.preventDefault();
     setDeleteMsg({ text: "", type: "" });
 
-    if (deleteConfirmText !== "DELETE") {
-      setDeleteMsg({ text: 'Please type DELETE (all caps) to confirm.', type: "error" });
-      return;
-    }
     if (!deletePassword) {
-      setDeleteMsg({ text: "Please enter your password to confirm.", type: "error" });
+      setDeleteMsg({ text: "Please enter your password to continue.", type: "error" });
       return;
     }
 
@@ -495,9 +493,36 @@ export default function UserSettingsModal({
       const user = auth.currentUser;
       if (!user || !user.email) throw new Error("Not signed in.");
 
-      // Re-authenticate before the destructive action
       const credential = EmailAuthProvider.credential(user.email, deletePassword);
       await reauthenticateWithCredential(user, credential);
+
+      // Password verified — advance to the final confirmation step.
+      setDeleteMsg({ text: "Password verified. Confirm below to proceed.", type: "success" });
+      setDeleteStep("confirmed");
+    } catch (err) {
+      if (
+        err.code === "auth/wrong-password" ||
+        err.code === "auth/invalid-credential"
+      ) {
+        setDeleteMsg({ text: "Password is incorrect. Please try again.", type: "error" });
+      } else if (err.code === "auth/too-many-requests") {
+        setDeleteMsg({ text: "Too many attempts. Please try again later.", type: "error" });
+      } else {
+        setDeleteMsg({ text: "Could not verify password. Please try again.", type: "error" });
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // ── Delete Account — Step 2: actually delete (reauthentication already done) ──
+  const handleDeleteAccount = async (e) => {
+    e.preventDefault();
+    setDeleteMsg({ text: "", type: "" });
+    setIsDeleting(true);
+    try {
+      const user = auth.currentUser;
+      if (!user || !user.email) throw new Error("Not signed in.");
 
       if (deleteTiming === "grace") {
         // ── Soft delete: schedule erasure 14 days from now ──────────────────
@@ -520,16 +545,12 @@ export default function UserSettingsModal({
         onLogout?.();
       }
     } catch (err) {
-      if (
-        err.code === "auth/wrong-password" ||
-        err.code === "auth/invalid-credential"
-      ) {
-        setDeleteMsg({ text: "Password is incorrect.", type: "error" });
-      } else if (err.code === "auth/too-many-requests") {
-        setDeleteMsg({ text: "Too many attempts. Please try again later.", type: "error" });
-      } else if (err.code === "auth/requires-recent-login") {
+      if (err.code === "auth/requires-recent-login") {
+        // Session expired between steps — send back to password entry.
+        setDeleteStep("enter-password");
+        setDeletePassword("");
         setDeleteMsg({
-          text: "For your security, please sign out and back in, then try again.",
+          text: "Session expired. Please re-enter your password.",
           type: "error",
         });
       } else {
@@ -824,109 +845,138 @@ export default function UserSettingsModal({
 
           {/* ── Delete Account tab ── */}
           {tab === "delete" && (
-            <form className="usm-form usm-form--danger" onSubmit={handleDeleteAccount}>
-              <div className="usm-danger-zone">
-                <p className="usm-danger-zone__title">⚠️ Danger Zone</p>
-                <p className="usm-danger-zone__desc">
-                  Choose when your account and all its data should be deleted.
-                </p>
-              </div>
+            <>
+              {/* ── Step 1: enter password to verify identity ── */}
+              {deleteStep === "enter-password" && (
+                <form className="usm-form usm-form--danger" onSubmit={handleVerifyPassword}>
+                  <div className="usm-danger-zone">
+                    <p className="usm-danger-zone__title">⚠️ Danger Zone</p>
+                    <p className="usm-danger-zone__desc">
+                      To protect your account, please verify your password before
+                      proceeding with deletion.
+                    </p>
+                  </div>
 
-              {/* ── Timing choice ── */}
-              <div className="usm-field usm-delete-timing">
-                <label className="usm-delete-timing__option">
-                  <input
-                    type="radio"
-                    name="deleteTiming"
-                    value="grace"
-                    checked={deleteTiming === "grace"}
-                    onChange={() => setDeleteTiming("grace")}
-                  />
-                  <span className="usm-delete-timing__label">
-                    <strong>Schedule deletion in 14 days</strong>
-                    <span className="usm-delete-timing__sub">
-                      Your account stays active. You can log back in and cancel
-                      any time before the 14 days are up.
-                    </span>
-                  </span>
-                </label>
-                <label className="usm-delete-timing__option">
-                  <input
-                    type="radio"
-                    name="deleteTiming"
-                    value="immediate"
-                    checked={deleteTiming === "immediate"}
-                    onChange={() => setDeleteTiming("immediate")}
-                  />
-                  <span className="usm-delete-timing__label">
-                    <strong>Delete immediately</strong>
-                    <span className="usm-delete-timing__sub">
-                      Your profile, closet data, outfits, share links, and
-                      uploaded images are erased right now and <em>cannot be
-                      recovered</em>.
-                    </span>
-                  </span>
-                </label>
-              </div>
+                  {/* ── Timing choice ── */}
+                  <div className="usm-field usm-delete-timing">
+                    <label className="usm-delete-timing__option">
+                      <input
+                        type="radio"
+                        name="deleteTiming"
+                        value="grace"
+                        checked={deleteTiming === "grace"}
+                        onChange={() => setDeleteTiming("grace")}
+                      />
+                      <span className="usm-delete-timing__label">
+                        <strong>Schedule deletion in 14 days</strong>
+                        <span className="usm-delete-timing__sub">
+                          Your account stays active. You can log back in and cancel
+                          any time before the 14 days are up.
+                        </span>
+                      </span>
+                    </label>
+                    <label className="usm-delete-timing__option">
+                      <input
+                        type="radio"
+                        name="deleteTiming"
+                        value="immediate"
+                        checked={deleteTiming === "immediate"}
+                        onChange={() => setDeleteTiming("immediate")}
+                      />
+                      <span className="usm-delete-timing__label">
+                        <strong>Delete immediately</strong>
+                        <span className="usm-delete-timing__sub">
+                          Your profile, closet data, outfits, share links, and
+                          uploaded images are erased right now and <em>cannot be
+                          recovered</em>.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
 
-              <div className="usm-field">
-                <label className="usm-label" htmlFor="usm-delete-confirm">
-                  Type <strong>DELETE</strong> to confirm
-                </label>
-                <input
-                  id="usm-delete-confirm"
-                  className="usm-input usm-input--danger"
-                  type="text"
-                  value={deleteConfirmText}
-                  onChange={(e) => {
-                    setDeleteConfirmText(e.target.value);
-                    if (deleteMsg.text) setDeleteMsg({ text: "", type: "" });
-                  }}
-                  placeholder="DELETE"
-                  autoComplete="off"
-                />
-              </div>
+                  <div className="usm-field">
+                    <label className="usm-label" htmlFor="usm-delete-pw">
+                      Enter your password to continue
+                    </label>
+                    <input
+                      id="usm-delete-pw"
+                      className="usm-input usm-input--danger"
+                      type="password"
+                      value={deletePassword}
+                      onChange={(e) => {
+                        setDeletePassword(e.target.value);
+                        if (deleteMsg.text) setDeleteMsg({ text: "", type: "" });
+                      }}
+                      placeholder="Your current password"
+                      autoComplete="current-password"
+                    />
+                  </div>
 
-              <div className="usm-field">
-                <label className="usm-label" htmlFor="usm-delete-pw">
-                  Your current password
-                </label>
-                <input
-                  id="usm-delete-pw"
-                  className="usm-input usm-input--danger"
-                  type="password"
-                  value={deletePassword}
-                  onChange={(e) => {
-                    setDeletePassword(e.target.value);
-                    if (deleteMsg.text) setDeleteMsg({ text: "", type: "" });
-                  }}
-                  placeholder="Enter your password"
-                  autoComplete="current-password"
-                />
-              </div>
+                  {deleteMsg.text && (
+                    <p className={`usm-msg usm-msg--${deleteMsg.type}`} role="alert">
+                      {deleteMsg.text}
+                    </p>
+                  )}
 
-              {deleteMsg.text && (
-                <p className={`usm-msg usm-msg--${deleteMsg.type}`} role="alert">
-                  {deleteMsg.text}
-                </p>
+                  <div className="usm-footer">
+                    <button type="button" className="usm-btn" onClick={onClose}>
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="usm-btn usm-btn--delete"
+                      disabled={isDeleting || !deletePassword}
+                    >
+                      {isDeleting ? "Verifying…" : "Verify Password"}
+                    </button>
+                  </div>
+                </form>
               )}
 
-              <div className="usm-footer">
-                <button type="button" className="usm-btn" onClick={onClose}>
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="usm-btn usm-btn--delete"
-                  disabled={isDeleting || deleteConfirmText !== "DELETE" || !deletePassword}
-                >
-                  {isDeleting
-                    ? (deleteTiming === "grace" ? "Scheduling…" : "Deleting…")
-                    : (deleteTiming === "grace" ? "Schedule Deletion" : "Delete Now")
-                  }
-                </button>
-              </div>
-            </form>
+              {/* ── Step 2: password verified — show final delete confirmation ── */}
+              {deleteStep === "confirmed" && (
+                <form className="usm-form usm-form--danger" onSubmit={handleDeleteAccount}>
+                  <div className="usm-danger-zone">
+                    <p className="usm-danger-zone__title">⚠️ Confirm Deletion</p>
+                    <p className="usm-danger-zone__desc">
+                      {deleteTiming === "grace"
+                        ? "Your account will be scheduled for deletion in 14 days. You can cancel by logging back in."
+                        : "This will permanently erase your profile, closet data, outfits, share links, and uploaded images. This cannot be undone."}
+                    </p>
+                  </div>
+
+                  {deleteMsg.text && (
+                    <p className={`usm-msg usm-msg--${deleteMsg.type}`} role="alert">
+                      {deleteMsg.text}
+                    </p>
+                  )}
+
+                  <div className="usm-footer">
+                    <button
+                      type="button"
+                      className="usm-btn"
+                      onClick={() => {
+                        setDeleteStep("enter-password");
+                        setDeletePassword("");
+                        setDeleteMsg({ text: "", type: "" });
+                      }}
+                    >
+                      Go Back
+                    </button>
+                    <button
+                      type="submit"
+                      className="usm-btn usm-btn--delete"
+                      disabled={isDeleting}
+                    >
+                      {isDeleting
+                        ? (deleteTiming === "grace" ? "Scheduling…" : "Deleting…")
+                        : (deleteTiming === "grace" ? "Schedule Deletion" : "Delete Now")
+                      }
+                    </button>
+                  </div>
+                </form>
+              )}
+            </>
           )}
         </div>
       </div>

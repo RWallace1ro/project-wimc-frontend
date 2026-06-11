@@ -55,7 +55,7 @@ Please give me style feedback on this outfit!`;
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: userMsg }],
-      }, { signal: abortRef.current.signal });
+      }, { signal: abortRef.current.signal, feature: "ai_style_feedback" });
 
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
@@ -135,12 +135,12 @@ Please give me style feedback on this outfit!`;
           {/* Outfit description */}
           <div className="aisf-field">
             <label className="aisf-label">Describe your outfit</label>
-            <textarea
+            <input
+              type="text"
               className="aisf-textarea"
-              placeholder="e.g. White linen blouse, high-waisted navy trousers, nude heels, small gold hoop earrings…"
+              placeholder="e.g. White linen blouse, high-waisted navy trousers, nude heels…"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={3}
               disabled={streaming}
             />
           </div>

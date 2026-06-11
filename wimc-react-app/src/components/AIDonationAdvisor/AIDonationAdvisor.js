@@ -80,7 +80,7 @@ Please give me a personalised donation plan for my closet.`;
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: userMsg }],
-      }, { signal: abortRef.current.signal });
+      }, { signal: abortRef.current.signal, feature: "ai_donation_advisor" });
 
       if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();

@@ -159,6 +159,16 @@
 }
 .modal__web-note p:last-child { margin-bottom: 0; }
 
+/* "From Device" section label */
+.modal__source-label {
+  margin: 12px 0 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #555;
+}
+
 /* "From device" helper note */
 .modal__device-note {
   margin: 8px 0 0;

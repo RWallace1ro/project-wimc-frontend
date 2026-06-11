@@ -49,6 +49,45 @@
 .kcm-header__icon {
   font-size: 36px;
 }
+
+/* ── Child profile avatar ── */
+.kcm-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.kcm-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  display: block;
+}
+.kcm-avatar-edit-btn {
+  position: absolute;
+  bottom: 0;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #0f172a;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
+  font-size: 13px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s;
+  line-height: 1;
+  padding: 0;
+}
+.kcm-avatar-edit-btn:hover {
+  background: #fff;
+}
+.kcm-avatar-err {
+  font-size: 13px;
+  color: #fca5a5;
+}
 .kcm-header__title {
   margin: 0;
   font-size: 20px;
@@ -64,6 +103,21 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
+.kcm-header__bg-btn {
+  padding: 7px 13px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.kcm-header__bg-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 .kcm-header__add-btn {
   padding: 8px 16px;
@@ -118,4 +172,202 @@
   .kcm-header {
     flex-wrap: wrap;
   }
+}
+
+/* ── Background Picker Panel ─────────────────────────────────────────────── */
+.kcm-bg-picker {
+  background: #1e293b;
+  padding: 14px 18px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #334155;
+}
+
+.kcm-bg-picker__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.kcm-bg-picker__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e2e8f0;
+  flex: 1;
+}
+.kcm-bg-picker__saved {
+  font-size: 12px;
+  color: #4ade80;
+}
+.kcm-bg-picker__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kcm-bg-picker__reset {
+  padding: 4px 10px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.kcm-bg-picker__reset:hover {
+  background: rgba(255,255,255,0.18);
+}
+.kcm-bg-picker__close-btn {
+  background: rgba(255,255,255,0.12);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.kcm-bg-picker__close-btn:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+/* Tab switcher */
+.kcm-bg-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.kcm-bg-tab {
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: transparent;
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.kcm-bg-tab:hover {
+  background: rgba(255,255,255,0.1);
+  color: #e2e8f0;
+}
+.kcm-bg-tab.is-active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+
+/* Photo presets grid */
+.kcm-bg-presets {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.kcm-bg-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  padding: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.kcm-bg-preset:hover {
+  background: rgba(255,255,255,0.12);
+}
+.kcm-bg-preset.is-active {
+  border-color: #7c3aed;
+}
+.kcm-bg-preset__thumb {
+  width: 72px;
+  height: 48px;
+  border-radius: 5px;
+  background-size: cover;
+  background-position: center;
+}
+.kcm-bg-preset__thumb--upload {
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.08);
+  font-size: 20px;
+}
+.kcm-bg-preset__name {
+  font-size: 12px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.kcm-bg-preset__check {
+  font-size: 12px;
+  color: #a78bfa;
+  font-weight: 700;
+}
+
+/* Color palette */
+.kcm-color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.kcm-color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+  position: relative;
+  display: grid;
+  place-items: center;
+  transition: transform 0.1s, border-color 0.15s;
+}
+.kcm-color-swatch:hover {
+  transform: scale(1.12);
+}
+.kcm-color-swatch.is-active {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 2px #7c3aed;
+}
+.kcm-color-swatch__check {
+  font-size: 14px;
+  color: #7c3aed;
+  font-weight: 900;
+  text-shadow: 0 0 3px rgba(255,255,255,0.8);
+}
+
+.kcm-bg-err {
+  color: #f87171;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* ── Features row (OOTD · Travel Pack · Wish List · Donate Bin) ─────────── */
+.kcm-features {
+  margin-top: 28px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+.kcm-features__heading {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.kcm-features__panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+/* Ensure feature panels fill their grid cell width instead of
+   using any fixed pixel widths they might declare internally */
+.kcm-features__panels > * {
+  width: 100% !important;
+  min-width: 0;
 }

@@ -483,12 +483,12 @@ export default function WishList({ storageKey }) {
                   ✏️ Share + Edit
                 </button>
               </div>
-              <textarea
+              <input
+                type="text"
                 className="wish-modal__share-note"
                 placeholder="Add a note for the recipient, when sharing (optional)…"
                 value={shareNote}
                 onChange={(e) => setShareNote(e.target.value)}
-                rows={2}
               />
             </div>
 
@@ -618,10 +618,10 @@ export default function WishList({ storageKey }) {
                     onChange={(e) => setEditDraft((d) => ({ ...d, name: e.target.value }))}
                   />
                   <label className="wish-item-editor__label">Description</label>
-                  <textarea
+                  <input
+                    type="text"
                     className="wish-item-editor__textarea"
                     placeholder="Add a description, size, colour, or any notes…"
-                    rows={3}
                     value={editDraft.description}
                     onChange={(e) => setEditDraft((d) => ({ ...d, description: e.target.value }))}
                   />

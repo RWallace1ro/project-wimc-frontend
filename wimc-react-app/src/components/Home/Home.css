@@ -11,13 +11,32 @@
   background-color: #f0f0f0;
 }
 
+/* Groups the white box + tour button so they center as one unit.
+   margin-bottom pulls the pair slightly above true center, ensuring
+   the tour button below the box stays visible on all screen sizes. */
+.home__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+  margin-top: -40px; /* shift group up so the button below stays in view */
+}
+
 .home__content {
   background: rgba(255, 255, 255, 0.8);
   border-radius: 10px;
   padding: 50px 20px;
   text-align: center;
-  margin: 50px auto;
-  max-width: 900px;
+  width: 100%;
+}
+
+/* Tour button row — directly below the white box */
+.home__tour-below {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  width: 100%;
 }
 
 .home__header {
@@ -64,6 +83,26 @@
   background-color: #4cae4c;
 }
 
+.home__tour-btn {
+  padding: 12px 32px;
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+  border: 2px solid #7c3aed;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(6px);
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.home__tour-btn:hover {
+  background: #7c3aed;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
 .home__footer {
   font-size: 50px;
   font-weight: 700;
@@ -86,10 +125,19 @@
   visibility: hidden;
 }
 
-.door-container.active {
+/* Phase 1: make container visible with doors in CLOSED position */
+.door-container.is-visible {
   visibility: visible;
   background-image: url("../../assets/images/closet-interior-background.jpg");
-  transition: tranform 2s ease;
+}
+
+@keyframes door-open-left {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-100%); }
+}
+@keyframes door-open-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
 }
 
 .door-left,
@@ -97,7 +145,7 @@
   width: 50%;
   height: 100%;
   background-size: cover;
-  transition: transform 3s ease;
+  /* no CSS transition — we use animation so the from-keyframe is always honoured */
 }
 
 .door-left {
@@ -112,10 +160,55 @@
   background-position: right;
 }
 
-.door-container.active .door-left {
-  transform: translateX(-100%);
+/* Phase 2: animation starts from translateX(0) every time the class is added —
+   no race condition possible, no matter how fast the first render is. */
+.door-container.is-open .door-left {
+  animation: door-open-left 4000ms ease forwards;
 }
 
-.door-container.active .door-right {
-  transform: translateX(100%);
+.door-container.is-open .door-right {
+  animation: door-open-right 4000ms ease forwards;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .home__group {
+    margin-top: -20px; /* less shift on small screens — button stays visible */
+    padding: 0 12px;
+  }
+  .home__content {
+    padding: 28px 16px;
+    border-radius: 8px;
+  }
+  .home__title {
+    font-size: 1.6rem;
+  }
+  .home__description {
+    font-size: 17px;
+    padding: 10px 8px;
+    margin-top: 6px;
+  }
+  .home__actions {
+    margin-top: 14px;
+  }
+  .home__link {
+    width: 100%;
+    font-size: 1rem;
+  }
+  .home__tour-below {
+    margin-top: 14px;
+  }
+  .home__tour-btn {
+    font-size: 15px;
+    padding: 11px 24px;
+  }
+}
+
+@media (max-width: 380px) {
+  .home__title {
+    font-size: 1.35rem;
+  }
+  .home__description {
+    font-size: 15px;
+  }
 }

@@ -1,15 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
+import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./AIStylist.css";
 
-const SECTION_LABELS = [
-  "Dresses/Skirts",
-  "Shoes/Sneakers",
-  "Pants/Jeans",
-  "Tops",
-  "Bags/Accessories",
-  "Jackets/Coats",
-];
+const CLOSET_GENDER_KEY = "wimc_closet_gender";
+const SAVED_OUTFITS_KEY = "wimc_stylist_saved_outfits";
 
 const QUICK_PROMPTS = [
   "What should I wear to a job interview?",
@@ -22,66 +17,272 @@ const QUICK_PROMPTS = [
   "🌿 What are the current seasonal fashion trends?",
 ];
 
-export default function AIStylist({ isOpen, onClose, onAddToPlanner }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [streaming, setStreaming] = useState(false);
-  const [error, setError] = useState("");
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
-  const abortRef = useRef(null);
+function getClosetSections(gender) {
+  const p = gender === "male" ? "male-" : "";
+  return [
+    {
+      label: gender === "male" ? "Dress Shirts/Suits" : "Dresses/Skirts",
+      tag: gender === "male" ? "male-dress-shirts-suits" : "dresses-skirts",
+    },
+    { label: "Shoes/Sneakers",   tag: `${p}shoes-sneakers` },
+    { label: "Pants/Jeans",      tag: `${p}pants-jeans` },
+    { label: "Tops",             tag: `${p}tops` },
+    { label: "Bags/Accessories", tag: `${p}bags-accessories` },
+    { label: "Jackets/Coats",    tag: `${p}jackets-coats` },
+  ];
+}
 
-  // Scroll to bottom on new messages
+// Keywords that map to each base tag (without gender prefix)
+const SECTION_KEYWORDS = {
+  "dresses-skirts":   ["dress", "dresses", "skirt", "skirts", "gown"],
+  "shoes-sneakers":   ["shoe", "shoes", "sneaker", "sneakers", "boot", "boots", "heel", "heels", "loafer", "loafers", "sandal", "sandals"],
+  "pants-jeans":      ["pant", "pants", "jean", "jeans", "trouser", "trousers", "chino", "chinos", "legging", "leggings", "shorts"],
+  "tops":             ["top", "tops", "shirt", "shirts", "blouse", "blouses", "t-shirt", "tee", "tees", "sweater", "sweaters", "tank", "polo"],
+  "bags-accessories": ["bag", "bags", "handbag", "accessory", "accessories", "purse", "clutch", "belt", "belts", "scarf", "scarves", "hat", "hats"],
+  "jackets-coats":    ["jacket", "jackets", "coat", "coats", "blazer", "blazers", "cardigan", "cardigans", "hoodie", "hoodies", "vest", "vests"],
+  // male-specific
+  "male-dress-shirts-suits": ["suit", "suits", "dress shirt", "dress shirts", "blazer", "blazers", "tie", "ties"],
+};
+
+// Find which closet sections are mentioned in an AI message.
+// Strategy 1: parse [Section Name] brackets from ✨ outfit lines.
+// Strategy 2: broad keyword fallback for natural-language responses.
+function extractSections(text, gender) {
+  const sections = getClosetSections(gender);
+
+  // --- Strategy 1: bracket parsing on ✨ outfit lines ---
+  const outfitLines = text.match(/✨[^\n]*/g) || [];
+  if (outfitLines.length) {
+    const mentioned = new Set();
+    outfitLines.forEach((line) => {
+      (line.match(/\[([^\]]+)\]/g) || []).forEach((m) =>
+        mentioned.add(m.slice(1, -1).trim().toLowerCase())
+      );
+    });
+    if (mentioned.size >= 2) {
+      const bracketMatched = sections.filter((s) =>
+        [...mentioned].some((name) => name === s.label.toLowerCase())
+      );
+      if (bracketMatched.length >= 2) return bracketMatched;
+    }
+  }
+
+  // --- Strategy 2: exact label match (original) ---
+  const exactMatched = sections.filter((s) =>
+    new RegExp(s.label.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&"), "i").test(text)
+  );
+  if (exactMatched.length >= 2) return exactMatched;
+
+  // --- Strategy 3: keyword fallback ---
+  const words = text.toLowerCase();
+  return sections.filter((s) => {
+    const baseTag = s.tag.replace(/^male-/, "");
+    const keywords = SECTION_KEYWORDS[s.tag] || SECTION_KEYWORDS[baseTag] || [];
+    return keywords.some((kw) => {
+      // whole-word match to avoid "tops" matching "stop"
+      const re = new RegExp(`\\b${kw.replace(/[-]/g, "[-\\s]?")}s?\\b`);
+      return re.test(words);
+    });
+  });
+}
+
+export default function AIStylist({
+  isOpen,
+  onClose,
+  onAddToPlanner,
+  closetItems = [],
+  selectedTab = "",
+}) {
+  const [messages, setMessages]       = useState([]);
+  const [input, setInput]             = useState("");
+  const [streaming, setStreaming]     = useState(false);
+  const [error, setError]             = useState("");
+
+  // Outfit board state
+  const [sectionImages, setSectionImages] = useState({}); // { tag: [url,...] }
+  const [imgIndexes, setImgIndexes]       = useState({}); // { tag: idx }
+  const [openBoardId, setOpenBoardId]     = useState(null); // msg id with open board
+  const [buildingId, setBuildingId]       = useState(null); // msg id while AI picks items
+
+  // Saved outfits
+  const [savedOutfits, setSavedOutfits] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(SAVED_OUTFITS_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
+  const [savedOpen, setSavedOpen]   = useState(false);
+  const [saveFlashId, setSaveFlashId] = useState(null); // msg id that just saved
+
+  const bottomRef = useRef(null);
+  const inputRef  = useRef(null);
+  const abortRef  = useRef(null);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) setTimeout(() => inputRef.current?.focus(), 100);
   }, [isOpen]);
 
-  // Cleanup stream on close
   useEffect(() => {
     if (!isOpen) abortRef.current?.abort();
   }, [isOpen]);
 
-  const systemPrompt = `You are WIMC Stylist, a friendly and knowledgeable personal fashion assistant built into the "What's In My Closet" (WIMC) app.
+  // ── Outfit board helpers ─────────────────────────────────────────────────
+  // Cloudinary transform: small thumbnails for AI vision (saves tokens)
+  const thumbUrl = (url) => url.replace("/upload/", "/upload/w_400,c_limit,q_auto/");
 
-The user's closet contains items across these categories: ${SECTION_LABELS.join(", ")}.
+  // Ask Claude (vision) to pick the best item from each section to match the
+  // outfit suggestion. Returns { [tag]: index } or null on failure.
+  const aiPickItems = async (outfitText, sections, imagesByTag) => {
+    const MAX_PER_SECTION = 8;
+    const content = [];
+    const included = []; // [{tag, count}] in order sent
 
-Your role:
-- Suggest outfit combinations using items from the user's closet categories
-- Give practical, stylish advice tailored to the occasion, season, or destination they mention
-- When suggesting outfits, always reference the closet categories (e.g. "pair a Top with Pants/Jeans and Shoes/Sneakers")
-- Keep responses concise, warm, and actionable
-- If the user asks about packing or travel, focus on outfit combinations they can mix and match
-- Format outfit suggestions clearly, e.g.:
-  ✨ Outfit 1: [Top] + [Pants/Jeans] + [Shoes/Sneakers]
+    sections.forEach((s) => {
+      const urls = (imagesByTag[s.tag] || []).slice(0, MAX_PER_SECTION);
+      if (!urls.length) return;
+      included.push({ tag: s.tag, label: s.label, count: urls.length });
+      content.push({ type: "text", text: `Section "${s.label}" — ${urls.length} item${urls.length !== 1 ? "s" : ""}, numbered 1 to ${urls.length}:` });
+      urls.forEach((url) => {
+        content.push({ type: "image", source: { type: "url", url: thumbUrl(url) } });
+      });
+    });
+
+    if (!included.length) return null;
+
+    content.push({
+      type: "text",
+      text: `Outfit suggestion: "${outfitText}"
+
+Look at the closet item photos above. For each section, pick the ONE item (by its number, 1-based, in the order shown) that best matches this outfit suggestion in style, color, and occasion.
+
+Respond with ONLY a JSON object mapping section label to chosen item number, e.g. {"Tops": 2, "Pants/Jeans": 1}. No other text.`,
+    });
+
+    try {
+      const res = await aiProxyFetch(
+        {
+          model: "claude-sonnet-4-5",
+          max_tokens: 200,
+          messages: [{ role: "user", content }],
+        },
+        { feature: "ai_stylist_outfit_pick" }
+      );
+      const data = await res.json();
+      if (!res.ok) return null;
+      const text = data.content?.[0]?.text || "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) return null;
+      const picks = JSON.parse(jsonMatch[0]);
+      const indexes = {};
+      included.forEach(({ tag, label, count }) => {
+        const n = parseInt(picks[label], 10);
+        if (n >= 1 && n <= count) indexes[tag] = n - 1;
+      });
+      return Object.keys(indexes).length ? indexes : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleBuildOutfit = async (msgId, sections, outfitText) => {
+    if (openBoardId === msgId) { setOpenBoardId(null); return; }
+
+    setBuildingId(msgId);
+    try {
+      // Fetch images for sections we don't have yet
+      const missing = sections.filter((s) => sectionImages[s.tag] === undefined);
+      let imagesByTag = { ...sectionImages };
+      if (missing.length) {
+        const results = await Promise.all(
+          missing.map((s) => fetchImagesByTag(s.tag).then((urls) => ({ tag: s.tag, urls })))
+        );
+        results.forEach(({ tag, urls }) => { imagesByTag[tag] = urls; });
+        setSectionImages(imagesByTag);
+      }
+
+      // Ask the AI to pick specific items (falls back to first item per section)
+      const picks = await aiPickItems(outfitText, sections, imagesByTag);
+      if (picks) {
+        setImgIndexes((prev) => ({ ...prev, ...picks }));
+      }
+      setOpenBoardId(msgId);
+    } finally {
+      setBuildingId(null);
+    }
+  };
+
+  const cycleImg = (tag, dir, total) => {
+    setImgIndexes((prev) => ({
+      ...prev,
+      [tag]: ((prev[tag] || 0) + dir + total) % total,
+    }));
+  };
+
+  // ── Saved outfits ────────────────────────────────────────────────────────
+  const persistOutfits = (list) => {
+    setSavedOutfits(list);
+    try { localStorage.setItem(SAVED_OUTFITS_KEY, JSON.stringify(list)); } catch {}
+  };
+
+  const saveOutfit = (msgId, sections) => {
+    const items = sections
+      .map((s) => {
+        const imgs = sectionImages[s.tag] || [];
+        const idx  = imgIndexes[s.tag] || 0;
+        return imgs.length ? { label: s.label, tag: s.tag, url: imgs[idx] } : null;
+      })
+      .filter(Boolean);
+    if (!items.length) return;
+    const outfit = {
+      id: Date.now(),
+      date: new Date().toLocaleDateString(),
+      items,
+    };
+    persistOutfits([outfit, ...savedOutfits]);
+    setSaveFlashId(msgId);
+    setTimeout(() => setSaveFlashId(null), 2000);
+  };
+
+  const deleteOutfit = (id) => {
+    persistOutfits(savedOutfits.filter((o) => o.id !== id));
+  };
+
+  // ── System prompt ────────────────────────────────────────────────────────
+  const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
+  const sectionLabels = getClosetSections(gender).map((s) => s.label);
+
+  const closetContext = closetItems.length > 0
+    ? `The user currently has ${closetItems.length} item${closetItems.length !== 1 ? "s" : ""}${selectedTab ? ` in their "${selectedTab}" section` : " in their closet"}. Reference this section and suggest complementary categories.`
+    : `The user's closet may be empty or not yet loaded. Give general outfit advice and encourage adding items.`;
+
+  const systemPrompt = `You are WIMC Stylist, a friendly personal fashion assistant in the "What's In My Closet" app.
+
+The user's closet has these sections: ${sectionLabels.join(", ")}.
+${closetContext}
+
+Rules:
+- Suggest outfit combinations using the exact section names above
+- Format EVERY outfit suggestion exactly like this (use exact section names in brackets):
+  ✨ Outfit 1: [Tops] + [Pants/Jeans] + [Shoes/Sneakers]
   ✨ Outfit 2: [Dresses/Skirts] + [Bags/Accessories] + [Jackets/Coats]
+- Keep responses concise, warm, and actionable
+- For seasonal colors: provide Pantone palette with names and hex codes
+- For trends: cover silhouettes, fabrics, patterns, key pieces, tied back to the user's closet sections
+- Name specific trends (e.g. "quiet luxury", "coastal grandmother") and explain them plainly`;
 
-Seasonal Colors & Trends:
-- When asked about colors of the season, provide the current season's Pantone and runway color palette with names, hex codes where helpful, and how to wear each color
-- When asked about seasonal trends, cover: silhouettes, fabrics, patterns, key pieces, and how to incorporate trends using items already in the user's closet categories
-- Always tie trend advice back to the user's existing closet so they can shop their own wardrobe first
-- Be specific: name actual trend names (e.g. "quiet luxury", "coastal grandmother", "dopamine dressing") and explain them in plain language
-- Include both high-fashion runway trends AND accessible everyday wearable versions`;
-
+  // ── Send message ─────────────────────────────────────────────────────────
   const sendMessage = async (text) => {
     const userText = (text || input).trim();
     if (!userText || streaming) return;
-
     setInput("");
     setError("");
-
-    const userMsg = { role: "user", content: userText, id: Date.now() };
-    const assistMsg = {
-      role: "assistant",
-      content: "",
-      id: Date.now() + 1,
-      streaming: true,
-    };
-
+    const userMsg  = { role: "user",      content: userText, id: Date.now() };
+    const assistMsg = { role: "assistant", content: "",       id: Date.now() + 1, streaming: true };
     setMessages((prev) => [...prev, userMsg, assistMsg]);
     setStreaming(true);
 
@@ -92,44 +293,34 @@ Seasonal Colors & Trends:
 
     try {
       abortRef.current = new AbortController();
-      const res = await aiProxyFetch({
-        model: "claude-sonnet-4-5",
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: history,
-      }, { signal: abortRef.current.signal });
-
+      const res = await aiProxyFetch(
+        { model: "claude-sonnet-4-5", max_tokens: 1000, system: systemPrompt, messages: history },
+        { signal: abortRef.current.signal, feature: "ai_stylist" }
+      );
       const data = await res.json();
-      if (!res.ok) {
-        const detail = data?.error?.message || data?.error || `HTTP ${res.status}`;
-        throw new Error(String(detail));
-      }
-      const text = data.content?.[0]?.text || "";
+      if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+      const reply = data.content?.[0]?.text || "";
+      // Set content AND streaming:false in one update to avoid batching race
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistMsg.id ? { ...m, content: text } : m,
-        ),
+        prev.map((m) => (m.id === assistMsg.id ? { ...m, content: reply, streaming: false } : m))
       );
     } catch (e) {
       if (e.name !== "AbortError") {
         setError(`Error: ${e.message}`);
         setMessages((prev) => prev.filter((m) => m.id !== assistMsg.id));
+      } else {
+        // AbortError: mark streaming done so cursor disappears
+        setMessages((prev) =>
+          prev.map((m) => (m.id === assistMsg.id ? { ...m, streaming: false } : m))
+        );
       }
     } finally {
       setStreaming(false);
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistMsg.id ? { ...m, streaming: false } : m,
-        ),
-      );
     }
   };
 
   const handleKey = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   const clearChat = () => {
@@ -137,48 +328,72 @@ Seasonal Colors & Trends:
     setMessages([]);
     setError("");
     setStreaming(false);
+    setOpenBoardId(null);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div
-      className="stylist-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <div className="stylist-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <aside className="stylist-panel" role="dialog" aria-label="AI Stylist">
+
         {/* Header */}
         <header className="stylist-header">
           <div className="stylist-header__left">
             <span className="stylist-header__icon">✨</span>
             <div>
               <h2 className="stylist-header__title">AI Stylist</h2>
-              <p className="stylist-header__sub">
-                Your personal fashion assistant
-              </p>
+              <p className="stylist-header__sub">Your personal fashion assistant</p>
             </div>
           </div>
           <div className="stylist-header__actions">
-            {messages.length > 0 && (
+            {savedOutfits.length > 0 && (
               <button
-                className="stylist-header__btn"
-                onClick={clearChat}
-                title="Clear chat"
-              >
-                🗑️
-              </button>
+                className={`stylist-header__btn${savedOpen ? " is-active" : ""}`}
+                onClick={() => setSavedOpen((v) => !v)}
+                title="Saved outfits"
+              >👗</button>
             )}
-            <button
-              className="stylist-header__btn"
-              onClick={onClose}
-              aria-label="Close"
-            >
-              ✕
-            </button>
+            {messages.length > 0 && (
+              <button className="stylist-header__btn" onClick={clearChat} title="Clear chat">🗑️</button>
+            )}
+            <button className="stylist-header__btn" onClick={onClose} aria-label="Close">✕</button>
           </div>
         </header>
+
+        {/* Saved outfits drawer */}
+        {savedOpen && (
+          <div className="stylist-saved">
+            <div className="stylist-saved__head">
+              <h3 className="stylist-saved__title">Saved Outfits ({savedOutfits.length})</h3>
+              <button className="stylist-saved__close" onClick={() => setSavedOpen(false)}>✕</button>
+            </div>
+            {savedOutfits.length === 0 ? (
+              <p className="stylist-saved__empty">No saved outfits yet.</p>
+            ) : (
+              savedOutfits.map((o) => (
+                <div key={o.id} className="stylist-saved__outfit">
+                  <div className="stylist-saved__meta">
+                    <span className="stylist-saved__date">{o.date}</span>
+                    <button
+                      className="stylist-saved__delete"
+                      onClick={() => deleteOutfit(o.id)}
+                      aria-label="Delete outfit"
+                    >🗑️</button>
+                  </div>
+                  <div className="stylist-saved__imgs">
+                    {o.items.map((it) => (
+                      <div key={it.tag} className="stylist-saved__item">
+                        <img src={it.url} alt={it.label} className="stylist-saved__img" />
+                        <span className="stylist-saved__label">{it.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         {/* Messages */}
         <div className="stylist-messages">
@@ -186,51 +401,105 @@ Seasonal Colors & Trends:
             <div className="stylist-welcome">
               <p className="stylist-welcome__text">
                 Hi! I'm your AI Stylist 👗 Ask me anything about your wardrobe —
-                outfits for occasions, capsule wardrobes, travel packing, and
-                more.
+                outfits for occasions, capsule wardrobes, travel packing, and more.
               </p>
               <div className="stylist-prompts">
                 {QUICK_PROMPTS.map((p) => (
-                  <button
-                    key={p}
-                    className="stylist-prompt"
-                    onClick={() => sendMessage(p)}
-                  >
-                    {p}
-                  </button>
+                  <button key={p} className="stylist-prompt" onClick={() => sendMessage(p)}>{p}</button>
                 ))}
               </div>
             </div>
           )}
 
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`stylist-msg stylist-msg--${msg.role}`}
-            >
-              <div className="stylist-msg__bubble">
-                {msg.content ||
-                  (msg.streaming ? (
-                    <span className="stylist-cursor">▋</span>
-                  ) : (
-                    ""
-                  ))}
-              </div>
-              {/* Add to Planner button on assistant messages */}
-              {msg.role === "assistant" &&
-                !msg.streaming &&
-                msg.content &&
-                onAddToPlanner && (
-                  <button
-                    className="stylist-msg__action"
-                    onClick={() => onAddToPlanner(msg.content)}
-                    title="Send this suggestion to Outfit Planner"
-                  >
-                    📅 Add to Planner
-                  </button>
+          {messages.map((msg) => {
+            const outfitSections =
+              msg.role === "assistant" && !msg.streaming && msg.content
+                ? extractSections(msg.content, gender)
+                : [];
+            const hasOutfit = outfitSections.length >= 2;
+
+            return (
+              <div key={msg.id} className={`stylist-msg stylist-msg--${msg.role}`}>
+                <div className="stylist-msg__bubble">
+                  {msg.content || (msg.streaming ? <span className="stylist-cursor">▋</span> : "")}
+                </div>
+
+                {/* Action row */}
+                {msg.role === "assistant" && !msg.streaming && msg.content && (
+                  <div className="stylist-msg__actions">
+                    {hasOutfit && (
+                      <button
+                        className={`stylist-msg__action stylist-msg__action--outfit${openBoardId === msg.id ? " is-open" : ""}`}
+                        onClick={() => handleBuildOutfit(msg.id, outfitSections, msg.content)}
+                        disabled={buildingId === msg.id}
+                      >
+                        {buildingId === msg.id
+                          ? "✨ Selecting items…"
+                          : openBoardId === msg.id
+                          ? "✕ Close Outfit"
+                          : "👗 Build This Outfit"}
+                      </button>
+                    )}
+                    {onAddToPlanner && (
+                      <button
+                        className="stylist-msg__action"
+                        onClick={() => onAddToPlanner(msg.content)}
+                        title="Send to Outfit Planner"
+                      >
+                        📅 Add to Planner
+                      </button>
+                    )}
+                  </div>
                 )}
-            </div>
-          ))}
+
+                {/* Outfit image board */}
+                {openBoardId === msg.id && (
+                  <div className="stylist-outfit-board">
+                    {outfitSections.map((s) => {
+                      const imgs = sectionImages[s.tag] || [];
+                      const idx  = imgIndexes[s.tag] || 0;
+                      return (
+                        <div key={s.tag} className="stylist-outfit-card">
+                          <p className="stylist-outfit-card__label">{s.label}</p>
+                          {imgs.length > 0 ? (
+                            <>
+                              <img
+                                src={imgs[idx]}
+                                alt={s.label}
+                                className="stylist-outfit-card__img"
+                              />
+                              {imgs.length > 1 && (
+                                <>
+                                  <button
+                                    className="stylist-outfit-card__prev"
+                                    onClick={() => cycleImg(s.tag, -1, imgs.length)}
+                                    aria-label={`Previous ${s.label}`}
+                                  >‹</button>
+                                  <button
+                                    className="stylist-outfit-card__next"
+                                    onClick={() => cycleImg(s.tag,  1, imgs.length)}
+                                    aria-label={`Next ${s.label}`}
+                                  >›</button>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <div className="stylist-outfit-card__empty">No items yet</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    <button
+                      className={`stylist-outfit-save${saveFlashId === msg.id ? " is-saved" : ""}`}
+                      onClick={() => saveOutfit(msg.id, outfitSections)}
+                    >
+                      {saveFlashId === msg.id ? "✓ Outfit Saved!" : "💾 Save This Outfit"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {error && <p className="stylist-error">{error}</p>}
           <div ref={bottomRef} />
@@ -238,14 +507,14 @@ Seasonal Colors & Trends:
 
         {/* Input */}
         <footer className="stylist-footer">
-          <textarea
+          <input
             ref={inputRef}
+            type="text"
             className="stylist-input"
             placeholder="Ask your stylist anything…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            rows={2}
             disabled={streaming}
           />
           <button

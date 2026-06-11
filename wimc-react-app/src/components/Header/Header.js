@@ -1,13 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import ClosetTabs from "../ClosetTabs/ClosetTabs";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ReactComponent as HomeIcon } from "../../assets/images/home-icon.svg";
-import WeatherModal from "../WeatherModal/WeatherModal";
-import TryOnStudio from "../TryOnStudio/TryOnStudio";
-import AIStylist from "../AIStylist/AIStylist";
-import UserSettingsModal from "../UserSettingsModal/UserSettingsModal";
-import WIMCTourVideo, { useWIMCTour } from "../WIMCTourVideo/WIMCTourVideo";
+import { useWIMCTour } from "../WIMCTourVideo/useTour";
 import "./Header.css";
+
+// Heavy modal components — lazy loaded so they don't bloat the initial bundle.
+// Each only downloads when the user first opens it.
+const WeatherModal      = lazy(() => import("../WeatherModal/WeatherModal"));
+const TryOnStudio       = lazy(() => import("../TryOnStudio/TryOnStudio"));
+const AIStylist         = lazy(() => import("../AIStylist/AIStylist"));
+const UserSettingsModal = lazy(() => import("../UserSettingsModal/UserSettingsModal"));
+const WIMCTourVideo     = lazy(() => import("../WIMCTourVideo/WIMCTourVideo"));
 
 function Header({
   userName,
@@ -21,6 +25,7 @@ function Header({
   onDeletionScheduled,
   handleSelectTab,
   selectedTab,
+  closetItems,
 }) {
   const [currentUserName, setCurrentUserName] = useState(userName);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
@@ -184,18 +189,20 @@ function Header({
         </div>
       </header>
 
-      <WeatherModal isOpen={isWeatherOpen} onClose={() => setIsWeatherOpen(false)} />
-      <TryOnStudio isOpen={isTryOnOpen} onClose={() => setIsTryOnOpen(false)} initialImageUrl={null} initialSection={null} />
-      <AIStylist isOpen={isStylistOpen} onClose={() => setIsStylistOpen(false)} />
-      <UserSettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        userData={userData || { userName: currentUserName, email: "", avatarUrl: currentAvatarUrl }}
-        onUserUpdate={handleSettingsUpdate}
-        onLogout={onLogoutClick}
-        onDeletionScheduled={() => { setIsSettingsOpen(false); onDeletionScheduled?.(); }}
-      />
-      <WIMCTourVideo isOpen={isTourOpen} onClose={closeTour} autoPlay={true} />
+      <Suspense fallback={null}>
+        <WeatherModal isOpen={isWeatherOpen} onClose={() => setIsWeatherOpen(false)} />
+        <TryOnStudio isOpen={isTryOnOpen} onClose={() => setIsTryOnOpen(false)} initialImageUrl={null} initialSection={null} />
+        <AIStylist isOpen={isStylistOpen} onClose={() => setIsStylistOpen(false)} closetItems={closetItems} selectedTab={selectedTab} />
+        <UserSettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          userData={userData || { userName: currentUserName, email: "", avatarUrl: currentAvatarUrl }}
+          onUserUpdate={handleSettingsUpdate}
+          onLogout={onLogoutClick}
+          onDeletionScheduled={() => { setIsSettingsOpen(false); onDeletionScheduled?.(); }}
+        />
+        <WIMCTourVideo isOpen={isTourOpen} onClose={closeTour} autoPlay={true} />
+      </Suspense>
     </>
   );
 }

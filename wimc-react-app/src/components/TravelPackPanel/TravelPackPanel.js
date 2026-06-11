@@ -497,12 +497,12 @@ export default function TravelPackPanel({
                   ✨ AI Pack
                 </button>
               </div>
-              <textarea
+              <input
+                type="text"
                 className="tp__share-note"
                 placeholder="Add a note for the recipient, when sharing (optional)…"
                 value={shareNote}
                 onChange={(e) => setShareNote(e.target.value)}
-                rows={2}
               />
             </div>
 

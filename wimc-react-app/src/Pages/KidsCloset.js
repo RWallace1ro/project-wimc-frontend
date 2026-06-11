@@ -2,7 +2,7 @@ import { syncSetItem } from '../utils/syncStore';
 ﻿import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { uploadImage, uploadRawJSON } from "../utils/CloudinaryAPI";
-import { appShareUrl, createCollabDoc, shareAppLink } from "../utils/shareUtils";
+import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../utils/shareUtils";
 import { useBackground } from "../context/BackgroundContext";
 import KidsClosetModal from "../components/KidsClosetModal/KidsClosetModal";
 import KidsProfileModal from "../components/KidsProfileModal/KidsProfileModal";

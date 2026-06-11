@@ -1,6 +1,7 @@
 import { syncSetItem } from '../../utils/syncStore';
 import React, {
   useEffect,
+  useRef,
   useState,
   useMemo,
   useCallback,
@@ -58,6 +59,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
   const [allVideos, setAllVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [playingUrl, setPlayingUrl] = useState(null);
+  const playerVideoRef = useRef(null);
   const [editingUrl, setEditingUrl] = useState(null);
   const [editValue, setEditValue] = useState("");
   const [meta, setMeta] = useState(loadMeta);
@@ -133,6 +135,16 @@ export default function VideoBin({ videos: propVideos = [] }) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [isOpen, playingUrl]);
+
+  // Safari blocks autoPlay on unmuted video — call .play() programmatically
+  // so the user gesture on the thumbnail button is honoured across all browsers.
+  useEffect(() => {
+    if (!playingUrl || !playerVideoRef.current) return;
+    playerVideoRef.current.play().catch(() => {
+      // Play blocked (e.g. Safari strict autoplay policy) — video shows with
+      // controls so the user can tap the native play button.
+    });
+  }, [playingUrl]);
 
   // ── Title editing ─────────────────────────────────────────────────────────
   const startEdit = (url, currentTitle) => {
@@ -480,10 +492,11 @@ export default function VideoBin({ videos: propVideos = [] }) {
                     </div>
                   </div>
                   <video
+                    ref={playerVideoRef}
                     className="vb-player__video"
                     src={playingUrl}
                     controls
-                    autoPlay
+                    playsInline
                     poster={playingVideo?.poster || ""}
                   />
                   <div className="vb-player__info">

@@ -3,9 +3,10 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter as Router } from "react-router-dom";
 import * as Sentry from "@sentry/react";
 import App from "./components/App/App";
-import { unregister as unregisterSW } from "./serviceWorkerRegistration";
-import { initSentry } from "./utils/analytics";
+import { register as registerSW } from "./serviceWorkerRegistration";
+import { initSentry, logAppEvent } from "./utils/analytics";
 import { hasAnalyticsConsent } from "./utils/consent";
+import { initFirebaseAnalytics } from "./firebase";
 import "./index.css";
 
 // ── Sentry error monitoring (consent-gated) ──────────────────────────────────
@@ -15,6 +16,10 @@ import "./index.css";
 // at the moment the user accepts, so it also starts within the same session.
 if (hasAnalyticsConsent()) {
   initSentry();
+  initFirebaseAnalytics().then(() => {
+    // Fire a page_view on initial load so Firebase Analytics captures the session
+    logAppEvent("page_view", { page_location: window.location.href });
+  });
 }
 
 // ── App ──────────────────────────────────────────────────────────────────────
@@ -37,6 +42,17 @@ root.render(
   </React.StrictMode>
 );
 
-// Unregister any lingering/old service worker so every new deploy takes effect
-// immediately on the next load (no stale cached pages, no manual cache clearing).
-unregisterSW();
+// ── Service Worker (PWA / offline support) ───────────────────────────────────
+// Registers a service worker that caches static assets for offline use.
+// Uses network-first for HTML (so deploys always show fresh content) and
+// cache-first for hashed JS/CSS (content-hash names auto-invalidate on deploy).
+registerSW({
+  onUpdate: () => {
+    // A new version of the app has been downloaded. The SW activates immediately
+    // (skipWaiting is set), so the next navigation will load fresh content.
+    // No action needed — new pages are served automatically.
+  },
+  onSuccess: () => {
+    // App shell cached successfully — app is ready for offline use.
+  },
+});

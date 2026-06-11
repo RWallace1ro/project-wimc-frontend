@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   uploadVideo,
-  uploadRawJSON,
   fetchImagesByTag,
 } from "../../utils/CloudinaryAPI";
 import AIStyleFeedback from "../AIStyleFeedback/AIStyleFeedback";
@@ -124,6 +123,7 @@ export default function TryOnStudio({
       startCamera(facingMode);
     }
     if (mode === "upload") stopCamera();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, mode, facingMode, previewUrl]);
 
   const switchCamera = () => {

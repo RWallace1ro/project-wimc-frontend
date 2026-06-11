@@ -76,7 +76,7 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
         max_tokens: 1000,
         system: systemPrompt,
         messages: [{ role: "user", content: userMsg }],
-      }, { signal: abortRef.current.signal });
+      }, { signal: abortRef.current.signal, feature: "ai_packing_assistant" });
 
       if (!res.ok) throw new Error(`API error ${res.status}`);
 

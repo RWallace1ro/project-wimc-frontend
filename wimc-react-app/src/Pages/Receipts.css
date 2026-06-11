@@ -4,6 +4,7 @@
   background-size: cover;
   background-position: center;
   padding: 28px 24px;
+  overflow-x: hidden;
   box-sizing: border-box;
 }
 
@@ -357,6 +358,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  position: relative; /* needed for multi-badge absolute positioning */
 }
 .receipt-card__img {
   width: 100%;
@@ -415,14 +417,14 @@
 /* Card actions (return + delete) */
 .receipt-card__actions {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 4px;
+  right: 4px;
   display: flex;
   gap: 4px;
 }
 .receipt-card__return-btn {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
@@ -431,7 +433,7 @@
   font-size: 13px;
   display: grid;
   place-items: center;
-  opacity: 0.5;
+  opacity: 0.85;
   transition: opacity 0.15s, background 0.15s;
 }
 .receipt-card__return-btn:hover {
@@ -443,8 +445,8 @@
   background: #dcfce7;
 }
 .receipt-card__delete {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
@@ -453,6 +455,7 @@
   font-size: 16px;
   display: grid;
   place-items: center;
+  opacity: 1;
 }
 .receipt-card__delete:hover {
   background: #fef2f2;
@@ -542,10 +545,13 @@
 
 .receipts-modal__form {
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
 }
 
 /* Upload toggle */
@@ -671,6 +677,9 @@
   grid-column: 1 / -1;
 }
 .receipts-input {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 9px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
@@ -683,7 +692,13 @@
   border-color: #0f172a;
 }
 .receipts-textarea {
-  resize: vertical;
+  resize: none;          /* prevent horizontal drag-resize */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-height: 64px;
 }
 
 .receipts-modal__footer {
@@ -792,10 +807,13 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  touch-action: pan-y;
+  overscroll-behavior-x: none;
 }
 
 /* Edit form inside view modal */
@@ -805,6 +823,7 @@
   border-bottom: 1px solid #e5e7eb;
   background: #fff;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Edit button */
@@ -832,10 +851,12 @@
 }
 .receipts-view-img {
   width: 100%;
+  max-width: 100%;       /* prevent natural image width from overflowing */
   max-height: 360px;
   object-fit: contain;
   border-radius: 10px;
   background: #f8fafc;
+  display: block;
 }
 .receipts-view-pdf {
   display: block;
@@ -1005,4 +1026,313 @@
   .receipts-page__header {
     flex-direction: column;
   }
+}
+
+/* ── Multi-photo upload strip ─────────────────────────────────────────────── */
+.receipts-files-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 0 6px;
+}
+.receipts-files-strip--edit {
+  padding: 0 0 10px;
+}
+
+/* Individual file chip (thumbnail + number + remove button) */
+.receipts-file-chip {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  overflow: visible;
+  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
+}
+.receipts-file-chip__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 7px;
+  display: block;
+}
+.receipts-file-chip__pdf {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  background: #f8fafc;
+  border-radius: 7px;
+}
+/* Photo number badge — bottom-left corner */
+.receipts-file-chip__num {
+  position: absolute;
+  bottom: 3px;
+  left: 5px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 4px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+/* Remove button — top-right corner */
+.receipts-file-chip__remove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  z-index: 2;
+}
+.receipts-file-chip__remove:hover {
+  background: #dc2626;
+}
+
+/* "Add another" upload area — smaller, dashed border */
+.receipts-upload-area--add-more {
+  min-height: 70px;
+  border-style: dashed;
+  border-color: #a78bfa;
+  background: #faf5ff;
+  padding: 12px 16px;
+}
+.receipts-upload-area--add-more p {
+  font-weight: 600;
+  color: #6d28d9;
+}
+
+/* ── iOS long-receipt scan tip ────────────────────────────────────────────── */
+.receipts-scan-tip {
+  font-size: 12px;
+  color: #0369a1;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.receipts-scan-tip__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0284c7;
+  margin: 0 0 4px;
+}
+
+/* ── Multi-photo badge on receipt card ────────────────────────────────────── */
+.receipt-card__multi-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.60);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 2px 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── Photo gallery in view modal ─────────────────────────────────────────── */
+.receipts-view-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+.receipts-view-gallery-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+.receipts-view-gallery-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6d28d9;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+
+/* ── Notes button (replaces inline textarea) ─────────────────────────────── */
+.receipts-notes-btn {
+  width: 100%;
+  min-height: 56px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.receipts-notes-btn:hover {
+  border-color: #a78bfa;
+}
+.receipts-notes-btn:empty::before,
+.receipts-notes-btn[data-empty]::before {
+  content: "Tap to add notes…";
+  color: #94a3b8;
+}
+
+/* ── Notes panel — sits INSIDE .receipts-modal (position:fixed), so these use
+   position:absolute. This prevents stacking two fixed elements which causes the
+   iOS layout-viewport expansion bug. ────────────────────────────────────────── */
+.receipts-notes-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 10;
+  border-radius: 14px;   /* match parent rounded corners */
+}
+.receipts-notes-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  width: calc(100% - 48px);
+  max-width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+.receipts-notes-modal__body {
+  padding: 16px;
+}
+.receipts-notes-modal__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  color: #1e293b;
+  outline: none;
+  background: #f8fafc;
+}
+.receipts-notes-modal__input:focus {
+  border-color: #7c3aed;
+  background: #fff;
+}
+.receipts-notes-modal__footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 10px 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* ── Delete confirmation dialog ──────────────────────────────────────────── */
+.receipts-delete-confirm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1601;
+  width: min(100vw - 48px, 320px);
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  padding: 24px 20px 16px;
+  text-align: center;
+}
+.receipts-delete-confirm__msg {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 6px;
+}
+.receipts-delete-confirm__sub {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 20px;
+}
+.receipts-delete-confirm__btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+/* ── Edit mode "Add / Replace Photos" button ─────────────────────────────── */
+/* "+ Add Another Photo" button in add-receipt form (shown after first photo) */
+.receipts-add-photo-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #faf5ff;
+  color: #6d28d9;
+  border: 2px dashed #a78bfa;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  margin-top: 6px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.receipts-add-photo-btn:hover {
+  background: #f3e8ff;
+  border-color: #7c3aed;
+}
+
+.receipts-edit-add-photo-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  background: #faf5ff;
+  color: #6d28d9;
+  border: 2px dashed #a78bfa;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 14px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.receipts-edit-add-photo-btn:hover:not(:disabled) {
+  background: #f3e8ff;
+  border-color: #7c3aed;
+}
+.receipts-edit-add-photo-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

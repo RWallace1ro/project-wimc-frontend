@@ -43,6 +43,24 @@ function save(data) {
   } catch {}
 }
 
+// True on phones/tablets (coarse/touch pointer = finger).
+// Laptops — even touch-screen ones — report pointer:fine because the primary
+// input is a mouse/trackpad, so this correctly hides Camera on all laptops.
+const isTouchDevice =
+  typeof window !== "undefined" &&
+  window.matchMedia("(pointer: coarse)").matches;
+
+// iOS Safari/Chrome bug: typing in a fixed-position modal expands the layout
+// viewport width permanently. After the keyboard dismisses, reset the viewport
+// by forcing the page back to x=0 and clearing any inline width the browser set.
+// Returns an array of file objects for a receipt.
+// Supports new multi-photo receipts (files[]) and old single-file receipts (fileUrl).
+function getReceiptFiles(r) {
+  if (r.files && r.files.length > 0) return r.files;
+  if (r.fileUrl) return [{ url: r.fileUrl, type: r.fileType || "image", name: r.fileName || "" }];
+  return [];
+}
+
 export default function Receipts() {
   const navigate = useNavigate();
   const [receipts, setReceipts] = useState(load);
@@ -53,7 +71,7 @@ export default function Receipts() {
   const [viewReceipt, setViewReceipt] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState(null);
-  const [uploadType, setUploadType] = useState("photo"); // photo|pdf
+  const [uploadType, setUploadType] = useState("file");
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState("");
   const [actionToast, setActionToast] = useState(""); // feedback message
@@ -65,6 +83,14 @@ export default function Receipts() {
   const [syncing, setSyncing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
+  // Custom delete confirmation (replaces window.confirm which is blocked on mobile)
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  // Notes modal state
+  const [notesModalOpen, setNotesModalOpen] = useState(false);
+  const [notesModalTarget, setNotesModalTarget] = useState("add"); // "add" | "edit"
+  const [notesModalDraft, setNotesModalDraft] = useState("");
+
+
 
   // Add form
   const [form, setForm] = useState({
@@ -77,10 +103,14 @@ export default function Receipts() {
     fileUrl: "",
     fileType: "",
     fileName: "",
+    files: [],           // multi-photo array: [{url, type, name}, …]
   });
 
-  const photoRef = useRef(null);
-  const pdfRef = useRef(null);
+  const photoRef    = useRef(null);
+  const fileRef     = useRef(null);
+  const pdfRef      = useRef(null);
+  const editFileRef = useRef(null);   // single file input for edit-mode uploads
+  const [editUploading, setEditUploading] = useState(false);
 
   useEffect(() => {
     save(receipts);
@@ -88,18 +118,28 @@ export default function Receipts() {
 
   const setField = (k, v) => setForm((p) => ({ ...p, [k]: v }));
 
-  // ── File upload ───────────────────────────────────────────────────────────
+  // ── File upload (add mode — appends to form.files array) ────────────────
   const handleFile = async (e, type) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset so the same file can be chosen again for subsequent additions
+    e.target.value = "";
     setUploading(true);
     setUploadErr("");
     try {
       const res = await uploadReceipt(file);
       if (res?.secure_url) {
-        setField("fileUrl", res.secure_url);
-        setField("fileType", type === "pdf" ? "pdf" : "image");
-        setField("fileName", file.name);
+        const entry = { url: res.secure_url, type: type === "pdf" ? "pdf" : "image", name: file.name };
+        setForm((prev) => {
+          const newFiles = [...prev.files, entry];
+          return {
+            ...prev,
+            files:    newFiles,
+            fileUrl:  newFiles[0].url,
+            fileType: newFiles[0].type,
+            fileName: newFiles[0].name,
+          };
+        });
       } else {
         setUploadErr("Upload failed. Please try again.");
       }
@@ -110,59 +150,118 @@ export default function Receipts() {
     }
   };
 
+  // Remove one file from the add-form strip
+  const handleRemoveFile = (idx) => {
+    setForm((prev) => {
+      const newFiles = prev.files.filter((_, i) => i !== idx);
+      return {
+        ...prev,
+        files:    newFiles,
+        fileUrl:  newFiles[0]?.url  || "",
+        fileType: newFiles[0]?.type || "",
+        fileName: newFiles[0]?.name || "",
+      };
+    });
+  };
+
+  // ── File upload (edit mode — appends to editForm.files array) ────────────
+  const handleEditFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setEditUploading(true);
+    try {
+      const res = await uploadReceipt(file);
+      if (res?.secure_url) {
+        const type = file.type === "application/pdf" ? "pdf" : "image";
+        const entry = { url: res.secure_url, type, name: file.name };
+        setEditForm((prev) => {
+          const newFiles = [...(prev.files || []), entry];
+          return {
+            ...prev,
+            files:    newFiles,
+            fileUrl:  newFiles[0].url,
+            fileType: newFiles[0].type,
+            fileName: newFiles[0].name,
+          };
+        });
+      } else {
+        showToast("❌ Upload failed. Please try again.");
+      }
+    } catch {
+      showToast("❌ Upload failed. Please try again.");
+    } finally {
+      setEditUploading(false);
+    }
+  };
+
+  // Remove one file from the edit-form strip
+  const handleRemoveEditFile = (idx) => {
+    setEditForm((prev) => {
+      const newFiles = (prev.files || []).filter((_, i) => i !== idx);
+      return {
+        ...prev,
+        files:    newFiles,
+        fileUrl:  newFiles[0]?.url  || "",
+        fileType: newFiles[0]?.type || "",
+        fileName: newFiles[0]?.name || "",
+      };
+    });
+  };
+
   // ── Save receipt ──────────────────────────────────────────────────────────
   const handleSave = (e) => {
     e.preventDefault();
-    if (!form.store.trim() && !form.fileUrl) {
+    if (!form.store.trim() && !form.files.length && !form.fileUrl) {
       setUploadErr("Please add a store name or upload a receipt file.");
       return;
     }
     const newReceipt = {
       id: uid(),
       createdAt: new Date().toISOString(),
-      store: form.store.trim(),
-      amount: form.amount.trim(),
-      date: form.date,
+      store:    form.store.trim(),
+      amount:   form.amount.trim(),
+      date:     form.date,
       category: form.category,
-      notes: form.notes.trim(),
-      isGift: form.isGift,
-      fileUrl: form.fileUrl,
-      fileType: form.fileType,
-      fileName: form.fileName,
+      notes:    form.notes.trim(),
+      isGift:   form.isGift,
+      files:    form.files,
+      // Legacy single-file fields (first photo) kept for backward compat
+      fileUrl:  form.files[0]?.url  || form.fileUrl,
+      fileType: form.files[0]?.type || form.fileType,
+      fileName: form.files[0]?.name || form.fileName,
     };
     setReceipts((prev) => [newReceipt, ...prev]);
     setForm({
-      store: "",
-      amount: "",
-      date: "",
-      category: "Other",
-      notes: "",
-      isGift: false,
-      fileUrl: "",
-      fileType: "",
-      fileName: "",
+      store: "", amount: "", date: "", category: "Other",
+      notes: "", isGift: false,
+      fileUrl: "", fileType: "", fileName: "",
+      files: [],
     });
     setUploadErr("");
     setIsAddOpen(false);
   };
 
-  const handleDelete = (id) => {
-    if (!window.confirm("Delete this receipt?")) return;
-    setReceipts((prev) => prev.filter((r) => r.id !== id));
+  const handleDelete = (id) => setDeleteConfirmId(id);
+  const confirmDelete = () => {
+    setReceipts((prev) => prev.filter((r) => r.id !== deleteConfirmId));
+    setDeleteConfirmId(null);
+    if (viewReceipt?.id === deleteConfirmId) setViewReceipt(null);
   };
 
   // ── Edit receipt ──────────────────────────────────────────────────────────
   const startEdit = (receipt) => {
     setEditForm({
-      store: receipt.store || "",
-      amount: receipt.amount || "",
-      date: receipt.date || "",
+      store:    receipt.store    || "",
+      amount:   receipt.amount   || "",
+      date:     receipt.date     || "",
       category: receipt.category || "Other",
-      notes: receipt.notes || "",
-      isGift: receipt.isGift || false,
-      fileUrl: receipt.fileUrl || "",
+      notes:    receipt.notes    || "",
+      isGift:   receipt.isGift   || false,
+      fileUrl:  receipt.fileUrl  || "",
       fileType: receipt.fileType || "",
       fileName: receipt.fileName || "",
+      files:    receipt.files    || [],   // multi-photo array
     });
     setIsEditing(true);
   };
@@ -170,21 +269,23 @@ export default function Receipts() {
   const setEditField = (k, v) => setEditForm((p) => ({ ...p, [k]: v }));
 
   const handleSaveEdit = () => {
-    if (!editForm.store.trim() && !editForm.fileUrl) {
+    const editFiles = editForm.files || [];
+    if (!editForm.store.trim() && !editFiles.length && !editForm.fileUrl) {
       showToast("Please add a store name or upload a receipt file.");
       return;
     }
     const updated = {
       ...viewReceipt,
-      store: editForm.store.trim(),
-      amount: editForm.amount.trim(),
-      date: editForm.date,
+      store:    editForm.store.trim(),
+      amount:   editForm.amount.trim(),
+      date:     editForm.date,
       category: editForm.category,
-      notes: editForm.notes.trim(),
-      isGift: editForm.isGift,
-      fileUrl: editForm.fileUrl,
-      fileType: editForm.fileType,
-      fileName: editForm.fileName,
+      notes:    editForm.notes.trim(),
+      isGift:   editForm.isGift,
+      files:    editFiles,
+      fileUrl:  editFiles[0]?.url  || editForm.fileUrl,
+      fileType: editFiles[0]?.type || editForm.fileType,
+      fileName: editFiles[0]?.name || editForm.fileName,
     };
     setReceipts((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
     setViewReceipt(updated);
@@ -523,19 +624,26 @@ export default function Receipts() {
               className="receipt-card"
               onClick={() => setViewReceipt(r)}
             >
-              {/* Thumbnail */}
+              {/* Thumbnail — uses first file; shows "+N more" badge when multi-photo */}
               <div className="receipt-card__thumb">
-                {r.fileUrl && r.fileType === "image" ? (
-                  <img
-                    src={r.fileUrl}
-                    alt={r.store || "receipt"}
-                    className="receipt-card__img"
-                  />
-                ) : r.fileType === "pdf" ? (
-                  <div className="receipt-card__pdf-icon">📄</div>
-                ) : (
-                  <div className="receipt-card__no-img">🧾</div>
-                )}
+                {(() => {
+                  const files = getReceiptFiles(r);
+                  const first = files[0];
+                  return (
+                    <>
+                      {first?.type === "image" ? (
+                        <img src={first.url} alt={r.store || "receipt"} className="receipt-card__img" />
+                      ) : first?.type === "pdf" ? (
+                        <div className="receipt-card__pdf-icon">📄</div>
+                      ) : (
+                        <div className="receipt-card__no-img">🧾</div>
+                      )}
+                      {files.length > 1 && (
+                        <div className="receipt-card__multi-badge">+{files.length - 1} more</div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
               {/* Returned badge */}
               {r.returned && (
@@ -609,11 +717,14 @@ export default function Receipts() {
             </header>
 
             <form className="receipts-modal__form" onSubmit={handleSave}>
-              {/* Upload type toggle */}
+              {/* Upload type toggle — Camera tab removed; camera is accessible
+                  via "📷 Camera / Files" which opens the native picker where
+                  "Take Photo" is the first option. capture="environment" is not
+                  used because it causes an iOS viewport-expansion bug. */}
               <div className="receipts-upload-toggle">
                 {[
-                  { val: "photo", label: "📷 Photo / Screenshot" },
-                  { val: "pdf", label: "📄 PDF" },
+                  { val: "file", label: isTouchDevice ? "📷 Camera / Files" : "📁 From Files" },
+                  { val: "pdf",  label: "📄 PDF" },
                 ].map(({ val, label }) => (
                   <button
                     key={val}
@@ -626,58 +737,116 @@ export default function Receipts() {
                 ))}
               </div>
 
-              {/* Upload area */}
-              {uploadType === "photo" && (
-                <div
-                  className="receipts-upload-area"
-                  onClick={() => photoRef.current?.click()}
-                >
-                  {form.fileUrl ? (
-                    <img
-                      src={form.fileUrl}
-                      alt="receipt"
-                      className="receipts-upload-preview"
-                    />
-                  ) : (
+              {/* Upload area — Camera / Files (gallery, Downloads, Documents, camera) */}
+              {uploadType === "file" && (
+                <>
+                  {/* iOS scan tip — shown before first upload */}
+                  {form.files.length === 0 && isTouchDevice && (
+                    <div className="receipts-scan-tip">
+                      <p className="receipts-scan-tip__label">🍎 iOS Scan Tip</p>
+                      📏 <strong>Long receipt?</strong> On iPhone, open the <strong>Files app</strong>, tap <strong>…</strong> → <strong>Scan Documents</strong> to scan the full length in one go, then upload it here.
+                    </div>
+                  )}
+                  {form.files.length > 0 && (
+                    <div className="receipts-files-strip">
+                      {form.files.map((f, idx) => (
+                        <div key={idx} className="receipts-file-chip">
+                          {f.type === "image" ? (
+                            <img src={f.url} alt={`File ${idx + 1}`} className="receipts-file-chip__img" />
+                          ) : (
+                            <div className="receipts-file-chip__pdf">📄</div>
+                          )}
+                          <span className="receipts-file-chip__num">{idx + 1}</span>
+                          <button
+                            type="button"
+                            className="receipts-file-chip__remove"
+                            onClick={() => handleRemoveFile(idx)}
+                            aria-label={`Remove file ${idx + 1}`}
+                          >✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {form.files.length > 0 && (
+                    <button
+                      type="button"
+                      className="receipts-add-photo-btn"
+                      onClick={() => fileRef.current?.click()}
+                    >
+                      📷 + Add Another Photo
+                    </button>
+                  )}
+                  <div
+                    className={`receipts-upload-area${form.files.length > 0 ? " receipts-upload-area--add-more" : ""}`}
+                    onClick={() => fileRef.current?.click()}
+                    style={form.files.length > 0 ? { display: "none" } : {}}
+                  >
                     <>
-                      <p>📷 Tap to take a photo or choose from library</p>
+                      <p>{isTouchDevice ? "📷 Take a photo or choose a file" : "📁 Choose a file from your device"}</p>
                       <p className="receipts-upload-hint">
-                        Supports JPG, PNG, HEIC, WebP
+                        {isTouchDevice
+                          ? "Opens camera or photo library — JPG, PNG, HEIC, PDF"
+                          : "Photos, screenshots, or PDFs — from your gallery, Downloads, or Documents"}
                       </p>
                     </>
-                  )}
-                  <input
-                    ref={photoRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    style={{ display: "none" }}
-                    onChange={(e) => handleFile(e, "image")}
-                  />
-                </div>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*,application/pdf"
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        const type = file?.type === "application/pdf" ? "pdf" : "image";
+                        handleFile(e, type);
+                      }}
+                    />
+                  </div>
+                </>
               )}
 
+              {/* Upload area — PDF */}
               {uploadType === "pdf" && (
-                <div
-                  className="receipts-upload-area"
-                  onClick={() => pdfRef.current?.click()}
-                >
-                  {form.fileName ? (
-                    <p>📄 {form.fileName}</p>
-                  ) : (
-                    <>
-                      <p>📄 Tap to select a PDF receipt</p>
-                      <p className="receipts-upload-hint">Supports PDF files</p>
-                    </>
+                <>
+                  {form.files.length > 0 && (
+                    <div className="receipts-files-strip">
+                      {form.files.map((f, idx) => (
+                        <div key={idx} className="receipts-file-chip">
+                          <div className="receipts-file-chip__pdf">📄</div>
+                          <span className="receipts-file-chip__num">{idx + 1}</span>
+                          <button
+                            type="button"
+                            className="receipts-file-chip__remove"
+                            onClick={() => handleRemoveFile(idx)}
+                            aria-label={`Remove PDF ${idx + 1}`}
+                          >✕</button>
+                        </div>
+                      ))}
+                    </div>
                   )}
-                  <input
-                    ref={pdfRef}
-                    type="file"
-                    accept="application/pdf,image/*"
-                    style={{ display: "none" }}
-                    onChange={(e) => handleFile(e, "pdf")}
-                  />
-                </div>
+                  <div
+                    className={`receipts-upload-area${form.files.length > 0 ? " receipts-upload-area--add-more" : ""}`}
+                    onClick={() => pdfRef.current?.click()}
+                  >
+                    {form.files.length > 0 ? (
+                      <>
+                        <p>📄 Add another PDF</p>
+                        <p className="receipts-upload-hint">Add more pages of this receipt</p>
+                      </>
+                    ) : (
+                      <>
+                        <p>📄 Tap to select a PDF receipt</p>
+                        <p className="receipts-upload-hint">Supports PDF files only</p>
+                      </>
+                    )}
+                    <input
+                      ref={pdfRef}
+                      type="file"
+                      accept="application/pdf"
+                      style={{ display: "none" }}
+                      onChange={(e) => handleFile(e, "pdf")}
+                    />
+                  </div>
+                </>
               )}
 
               {uploading && <p className="receipts-uploading">Uploading…</p>}
@@ -732,13 +901,13 @@ export default function Receipts() {
                 </div>
                 <div className="receipts-field receipts-field--full">
                   <label>Notes</label>
-                  <textarea
-                    className="receipts-input receipts-textarea"
-                    rows={2}
-                    placeholder="e.g. Size 8, blue, on sale…"
-                    value={form.notes}
-                    onChange={(e) => setField("notes", e.target.value)}
-                  />
+                  <button
+                    type="button"
+                    className="receipts-notes-btn"
+                    onClick={() => { setNotesModalTarget("add"); setNotesModalDraft(form.notes); setNotesModalOpen(true); }}
+                  >
+                    {form.notes ? form.notes : "Tap to add notes…"}
+                  </button>
                 </div>
                 <div className="receipts-field receipts-field--full">
                   <label className="receipts-gift-label">
@@ -770,6 +939,37 @@ export default function Receipts() {
                 </button>
               </div>
             </form>
+            {/* ── Notes panel (absolute inside this modal — avoids double fixed) ── */}
+            {notesModalOpen && notesModalTarget === "add" && (
+              <>
+                <div className="receipts-notes-overlay" onClick={() => setNotesModalOpen(false)} />
+                <div className="receipts-notes-modal" role="dialog" aria-label="Add Notes">
+                  <header className="receipts-modal__head">
+                    <h2 className="receipts-modal__title">📝 Notes</h2>
+                    <button className="receipts-modal__close" onClick={() => setNotesModalOpen(false)}>×</button>
+                  </header>
+                  <div className="receipts-notes-modal__body">
+                    <input
+                      type="text"
+                      className="receipts-notes-modal__input"
+                      placeholder="e.g. Size 8, blue, on sale…"
+                      value={notesModalDraft}
+                      onChange={(e) => setNotesModalDraft(e.target.value)}
+                    />
+                  </div>
+                  <div className="receipts-notes-modal__footer">
+                    <button className="receipts-btn" onClick={() => setNotesModalOpen(false)}>Cancel</button>
+                    <button
+                      className="receipts-btn receipts-btn--save"
+                      onClick={() => {
+                        setField("notes", notesModalDraft);
+                        setNotesModalOpen(false);
+                      }}
+                    >Done</button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </>
       )}
@@ -843,23 +1043,31 @@ export default function Receipts() {
 
             {/* Scrollable receipt details */}
             <div className="receipts-modal__view-body">
-              {viewReceipt.fileUrl && viewReceipt.fileType === "image" && (
-                <img
-                  src={viewReceipt.fileUrl}
-                  alt="receipt"
-                  className="receipts-view-img"
-                />
-              )}
-              {viewReceipt.fileType === "pdf" && (
-                <a
-                  href={viewReceipt.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="receipts-view-pdf"
-                >
-                  📄 Open PDF Receipt
-                </a>
-              )}
+              {/* Photo/PDF gallery — supports multi-photo and legacy single-file receipts */}
+              {(() => {
+                const files = getReceiptFiles(viewReceipt);
+                if (!files.length) return null;
+                return (
+                  <div className="receipts-view-gallery">
+                    {files.map((f, idx) => (
+                      <div key={idx} className="receipts-view-gallery-item">
+                        {files.length > 1 && (
+                          <p className="receipts-view-gallery-label">
+                            Photo {idx + 1} of {files.length}
+                          </p>
+                        )}
+                        {f.type === "image" ? (
+                          <img src={f.url} alt={`Receipt photo ${idx + 1}`} className="receipts-view-img" />
+                        ) : (
+                          <a href={f.url} target="_blank" rel="noopener noreferrer" className="receipts-view-pdf">
+                            📄 Open PDF{files.length > 1 ? ` (page ${idx + 1})` : " Receipt"}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               <div className="receipts-view-meta">
                 {viewReceipt.store && (
                   <div><strong>Store:</strong> {viewReceipt.store}</div>
@@ -887,11 +1095,47 @@ export default function Receipts() {
               {actionToast && (
                 <div className="receipts-action-toast">{actionToast}</div>
               )}
-            </div>
 
-            {/* ── Edit form (shown when isEditing) ── */}
-            {isEditing && editForm && (
+              {/* ── Edit form — lives inside the scrollable view body so the
+                  modal layout stays stable and doesn't jump/dance ── */}
+              {isEditing && editForm && (
               <div className="receipts-edit-body">
+                {/* Photo/file strip for editing */}
+                {(editForm.files || []).length > 0 && (
+                  <div className="receipts-files-strip receipts-files-strip--edit">
+                    {(editForm.files || []).map((f, idx) => (
+                      <div key={idx} className="receipts-file-chip">
+                        {f.type === "image" ? (
+                          <img src={f.url} alt={`Photo ${idx + 1}`} className="receipts-file-chip__img" />
+                        ) : (
+                          <div className="receipts-file-chip__pdf">📄</div>
+                        )}
+                        <span className="receipts-file-chip__num">{idx + 1}</span>
+                        <button
+                          type="button"
+                          className="receipts-file-chip__remove"
+                          onClick={() => handleRemoveEditFile(idx)}
+                          aria-label={`Remove photo ${idx + 1}`}
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className="receipts-edit-add-photo-btn"
+                  onClick={() => editFileRef.current?.click()}
+                  disabled={editUploading}
+                >
+                  {editUploading ? "Uploading…" : "📷 Add / Replace Photos"}
+                </button>
+                <input
+                  ref={editFileRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  style={{ display: "none" }}
+                  onChange={handleEditFile}
+                />
                 <div className="receipts-fields">
                   <div className="receipts-field">
                     <label>Store / Retailer</label>
@@ -938,13 +1182,13 @@ export default function Receipts() {
                   </div>
                   <div className="receipts-field receipts-field--full">
                     <label>Notes</label>
-                    <textarea
-                      className="receipts-input receipts-textarea"
-                      rows={2}
-                      placeholder="e.g. Size 8, blue, on sale…"
-                      value={editForm.notes}
-                      onChange={(e) => setEditField("notes", e.target.value)}
-                    />
+                    <button
+                      type="button"
+                      className="receipts-notes-btn"
+                      onClick={() => { setNotesModalTarget("edit"); setNotesModalDraft(editForm.notes); setNotesModalOpen(true); }}
+                    >
+                      {editForm.notes ? editForm.notes : "Tap to add notes…"}
+                    </button>
                   </div>
                   <div className="receipts-field receipts-field--full">
                     <label className="receipts-gift-label">
@@ -959,7 +1203,9 @@ export default function Receipts() {
                   </div>
                 </div>
               </div>
-            )}
+              )}
+
+            </div>
 
             {/* Sticky footer */}
             <div className="receipts-view-footer">
@@ -1016,6 +1262,52 @@ export default function Receipts() {
                   </button>
                 </>
               )}
+            </div>
+            {/* ── Notes panel (absolute inside this modal — avoids double fixed) ── */}
+            {notesModalOpen && notesModalTarget === "edit" && (
+              <>
+                <div className="receipts-notes-overlay" onClick={() => setNotesModalOpen(false)} />
+                <div className="receipts-notes-modal" role="dialog" aria-label="Edit Notes">
+                  <header className="receipts-modal__head">
+                    <h2 className="receipts-modal__title">📝 Notes</h2>
+                    <button className="receipts-modal__close" onClick={() => setNotesModalOpen(false)}>×</button>
+                  </header>
+                  <div className="receipts-notes-modal__body">
+                    <input
+                      type="text"
+                      className="receipts-notes-modal__input"
+                      placeholder="e.g. Size 8, blue, on sale…"
+                      value={notesModalDraft}
+                      onChange={(e) => setNotesModalDraft(e.target.value)}
+                    />
+                  </div>
+                  <div className="receipts-notes-modal__footer">
+                    <button className="receipts-btn" onClick={() => setNotesModalOpen(false)}>Cancel</button>
+                    <button
+                      className="receipts-btn receipts-btn--save"
+                      onClick={() => {
+                        setEditField("notes", notesModalDraft);
+                        setNotesModalOpen(false);
+                      }}
+                    >Done</button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ── Delete confirmation (replaces window.confirm — blocked on mobile) ── */}
+      {deleteConfirmId && (
+        <>
+          <div className="receipts-overlay" onClick={() => setDeleteConfirmId(null)} style={{ zIndex: 1600 }} />
+          <div className="receipts-delete-confirm" role="dialog" aria-label="Confirm Delete">
+            <p className="receipts-delete-confirm__msg">🗑️ Delete this receipt?</p>
+            <p className="receipts-delete-confirm__sub">This cannot be undone.</p>
+            <div className="receipts-delete-confirm__btns">
+              <button className="receipts-btn" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+              <button className="receipts-btn receipts-btn--delete" onClick={confirmDelete}>Delete</button>
             </div>
           </div>
         </>
