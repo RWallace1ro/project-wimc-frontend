@@ -467,6 +467,18 @@
   font-size: 11px;
   color: #6d28d9;
   font-weight: 600;
+  flex-shrink: 0;
+}
+.stylist-saved__request {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: #475569;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 8px;
 }
 .stylist-saved__delete {
   border: none;

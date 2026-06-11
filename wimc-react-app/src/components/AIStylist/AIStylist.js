@@ -238,9 +238,20 @@ Respond with ONLY a JSON object mapping section label to chosen item number, e.g
       })
       .filter(Boolean);
     if (!items.length) return;
+
+    // The user request that led to this suggestion = nearest user message
+    // before the assistant message being saved.
+    let request = "";
+    const msgIdx = messages.findIndex((m) => m.id === msgId);
+    for (let i = msgIdx - 1; i >= 0; i--) {
+      if (messages[i].role === "user") { request = messages[i].content; break; }
+    }
+
     const outfit = {
       id: Date.now(),
       date: new Date().toLocaleDateString(),
+      request,
+      gender: localStorage.getItem(CLOSET_GENDER_KEY) || "female",
       items,
     };
     persistOutfits([outfit, ...savedOutfits]);
@@ -252,8 +263,16 @@ Respond with ONLY a JSON object mapping section label to chosen item number, e.g
     persistOutfits(savedOutfits.filter((o) => o.id !== id));
   };
 
+  // Gender of a saved outfit. Older saves have no gender field — infer it
+  // from the item tags (male sections use the "male-" tag prefix).
+  const outfitGender = (o) =>
+    o.gender || (o.items?.some((it) => (it.tag || "").startsWith("male-")) ? "male" : "female");
+
   // ── System prompt ────────────────────────────────────────────────────────
   const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
+
+  // Saved outfits shown in the drawer: only the current gender's
+  const visibleOutfits = savedOutfits.filter((o) => outfitGender(o) === gender);
   const sectionLabels = getClosetSections(gender).map((s) => s.label);
 
   const closetContext = closetItems.length > 0
@@ -347,12 +366,12 @@ Rules:
             </div>
           </div>
           <div className="stylist-header__actions">
-            {savedOutfits.length > 0 && (
+            {visibleOutfits.length > 0 && (
               <button
                 className={`stylist-header__btn${savedOpen ? " is-active" : ""}`}
                 onClick={() => setSavedOpen((v) => !v)}
                 title="Saved outfits"
-              >👗</button>
+              >{gender === "male" ? "👔" : "👗"}</button>
             )}
             {messages.length > 0 && (
               <button className="stylist-header__btn" onClick={clearChat} title="Clear chat">🗑️</button>
@@ -365,16 +384,21 @@ Rules:
         {savedOpen && (
           <div className="stylist-saved">
             <div className="stylist-saved__head">
-              <h3 className="stylist-saved__title">Saved Outfits ({savedOutfits.length})</h3>
+              <h3 className="stylist-saved__title">Saved Outfits ({visibleOutfits.length})</h3>
               <button className="stylist-saved__close" onClick={() => setSavedOpen(false)}>✕</button>
             </div>
-            {savedOutfits.length === 0 ? (
+            {visibleOutfits.length === 0 ? (
               <p className="stylist-saved__empty">No saved outfits yet.</p>
             ) : (
-              savedOutfits.map((o) => (
+              visibleOutfits.map((o) => (
                 <div key={o.id} className="stylist-saved__outfit">
                   <div className="stylist-saved__meta">
                     <span className="stylist-saved__date">{o.date}</span>
+                    {o.request && (
+                      <span className="stylist-saved__request" title={o.request}>
+                        {o.request}
+                      </span>
+                    )}
                     <button
                       className="stylist-saved__delete"
                       onClick={() => deleteOutfit(o.id)}
