@@ -21,9 +21,22 @@ service cloud.firestore {
       allow read: if true;
 
       // Only a signed-in user can create a share, and they must stamp
-      // themselves as the owner.
+      // themselves as the owner. Payload must match the exact shape written
+      // by createCollabDoc (shareUtils.js) with sane size limits.
       allow create: if request.auth != null
-                    && request.resource.data.ownerId == request.auth.uid;
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.keys().hasOnly(
+                         ['type', 'data', 'ownerId', 'ownerName',
+                          'createdAt', 'anyoneCanEdit', 'checkedItems'])
+                    && request.resource.data.type is string
+                    && request.resource.data.type.size() <= 50
+                    && request.resource.data.ownerName is string
+                    && request.resource.data.ownerName.size() <= 100
+                    && request.resource.data.createdAt is string
+                    && request.resource.data.createdAt.size() <= 40
+                    && request.resource.data.anyoneCanEdit is bool
+                    && request.resource.data.checkedItems is map
+                    && request.resource.data.checkedItems.size() == 0;
 
       // Collaborative editing is limited to toggling checkboxes (checkedItems)
       // and only when the share opted in via anyoneCanEdit. No other field can

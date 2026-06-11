@@ -9,7 +9,10 @@
  *   CLOUDINARY_API_SECRET — firebase functions:secrets:set CLOUDINARY_API_SECRET
  */
 
-const functions = require("firebase-functions");
+// v1 API import (firebase-functions v5+ defaults the top-level export to v2;
+// staying on v1 keeps existing function URLs — v2 would mint new Cloud Run
+// URLs and break the client's REACT_APP_*_URL env vars).
+const functions = require("firebase-functions/v1");
 const crypto = require("crypto");
 const admin = require("firebase-admin");
 

@@ -1,0 +1,12 @@
+{
+  "name": "wimc-functions",
+  "version": "1.0.0",
+  "description": "Firebase Cloud Functions for WIMC — Anthropic proxy and Cloudinary signing",
+  "engines": { "node": "22" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^7.0.0"
+  },
+  "private": true
+}
