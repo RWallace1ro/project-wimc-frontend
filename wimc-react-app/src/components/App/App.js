@@ -205,18 +205,21 @@ function AppInner() {
 
   const handleSignUp = async (userCredentials) => {
     setSignUpError("");
+    // Mobile keyboards add trailing spaces and capitalize the first letter —
+    // normalize so the account email is always clean and consistent.
+    const cleanEmail = (userCredentials.email || "").trim().toLowerCase();
     try {
       // Do NOT auto-navigate to /home — the user must verify their email first.
       pendingNavRef.current = null;
       const { user } = await createUserWithEmailAndPassword(
         auth,
-        userCredentials.email,
+        cleanEmail,
         userCredentials.password
       );
       await updateProfile(user, { displayName: userCredentials.username });
       const profile = {
         userName: userCredentials.username,
-        email: userCredentials.email,
+        email: cleanEmail,
         avatarUrl: userCredentials.avatarUrl || DEFAULT_AVATAR,
         createdAt: new Date().toISOString(),
       };
@@ -243,7 +246,7 @@ function AppInner() {
     setLoginError("");
     try {
       pendingNavRef.current = "/home"; // navigate after auth state confirms
-      await signInWithEmailAndPassword(auth, data.email, data.password);
+      await signInWithEmailAndPassword(auth, (data.email || "").trim().toLowerCase(), data.password);
       logAppEvent("login", { method: "email" });
       setLoginData({ email: "", password: "" });
       setIsLoginModalOpen(false);
@@ -276,7 +279,7 @@ function AppInner() {
 
   // Send a password-reset email. Throws on error so the modal can react.
   const handleForgotPassword = async (email) => {
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(auth, (email || "").trim().toLowerCase());
   };
 
   // Called after user schedules a 14-day deletion — re-reads the profile so
