@@ -73,7 +73,7 @@ function ClosetSectionModal({
     ? getBackground(LABEL_TO_TAG[sectionName] || null)
     : null;
 
-  const tag = useMemo(() => {
+  const sectionTag = useMemo(() => {
     if (tagProp) return tagProp;
     if (!sectionName) return "";
     const s = String(sectionName);
@@ -81,6 +81,41 @@ function ClosetSectionModal({
       ? s.replace(/\s+/g, "-").toLowerCase()
       : s.toLowerCase();
   }, [sectionName, tagProp]);
+
+  // ── Bags/Accessories sub-sections ─────────────────────────────────────────
+  // The Bags/Accessories card is split into three full-view sub-collections.
+  // "Bags" keeps the original section tag so existing items appear there;
+  // Accessories and Fragrance get their own tags (male- prefix preserved).
+  const isBagsSection = /(^|-)bags-accessories$/.test(sectionTag);
+  const malePrefix = sectionTag.startsWith("male-") ? "male-" : "";
+  const subSections = useMemo(
+    () =>
+      isBagsSection
+        ? [
+            { label: "👜 Bags",        plain: "Bags",        tag: sectionTag },
+            { label: "💍 Accessories", plain: "Accessories", tag: `${malePrefix}accessories` },
+            { label: "🌸 Fragrance",   plain: "Fragrance",   tag: `${malePrefix}fragrance` },
+          ]
+        : null,
+    [isBagsSection, sectionTag, malePrefix]
+  );
+  const [subTag, setSubTag] = useState(null);
+  useEffect(() => { setSubTag(null); }, [sectionTag, isOpen]);
+
+  // Effective tag all data operations key off (fetch, add, delete, move, pin)
+  const tag = isBagsSection && subTag ? subTag : sectionTag;
+
+  // Move targets: sibling sub-sections first (when in Bags/Accessories),
+  // then the other closet sections.
+  const moveTargets = useMemo(() => {
+    const subs = (subSections || [])
+      .filter((s) => s.tag !== tag)
+      .map((s) => ({ label: s.plain, tag: s.tag }));
+    const sections = allSections.filter(
+      (s) => s.tag !== tag && s.tag !== sectionTag
+    );
+    return [...subs, ...sections];
+  }, [subSections, allSections, tag, sectionTag]);
 
   // Derived views for the current section
   const items  = itemsByTag[tag]  || [];
@@ -184,7 +219,9 @@ function ClosetSectionModal({
   // ── Move / transfer ──────────────────────────────────────────────────────
   const handleMoveItem = async (url, destTag, resourceType = "image") => {
     const destLabel =
-      allSections.find((s) => s.tag === destTag)?.label || destTag;
+      moveTargets.find((s) => s.tag === destTag)?.label ||
+      allSections.find((s) => s.tag === destTag)?.label ||
+      destTag;
     if (
       !window.confirm(
         `Move this item to "${destLabel}"? It will be removed from the current section.`
@@ -321,6 +358,22 @@ function ClosetSectionModal({
           </nav>
         )}
 
+        {/* Bags/Accessories sub-sections — each occupies the full card view */}
+        {subSections && (
+          <nav className="csm-subnav" aria-label="Sub-section">
+            {subSections.map((s) => (
+              <button
+                key={s.tag}
+                className={`csm-subnav__pill${s.tag === tag ? " is-active" : ""}`}
+                onClick={() => setSubTag(s.tag === sectionTag ? null : s.tag)}
+                aria-current={s.tag === tag ? "true" : undefined}
+              >
+                {s.label}
+              </button>
+            ))}
+          </nav>
+        )}
+
         {/* Tabs */}
         <nav
           className="closet-section-modal__tabs"
@@ -365,7 +418,7 @@ function ClosetSectionModal({
             <section className="closet-section-modal__level closet-section-modal__level--dark">
               <div className="closet-section-modal__grid">
                 {items.map((url, i) => {
-                  const destOptions = allSections.filter((s) => s.tag !== tag);
+                  const destOptions = moveTargets;
                   const isBusy = deleting === url || moving === url;
                   return (
                     <figure
@@ -457,7 +510,7 @@ function ClosetSectionModal({
             <section className="closet-section-modal__level closet-section-modal__level--dark">
               <div className="closet-section-modal__grid">
                 {videos.map((vurl, i) => {
-                  const destOptions = allSections.filter((s) => s.tag !== tag);
+                  const destOptions = moveTargets;
                   const isBusy = deleting === vurl || moving === vurl;
                   return (
                     <figure

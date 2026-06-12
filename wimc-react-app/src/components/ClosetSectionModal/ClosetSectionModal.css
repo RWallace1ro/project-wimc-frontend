@@ -467,3 +467,37 @@
     padding: 8px;
   }
 }
+
+/* ── Bags/Accessories sub-section selector ── */
+.csm-subnav {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 6px;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.csm-subnav::-webkit-scrollbar {
+  display: none;
+}
+.csm-subnav__pill {
+  flex-shrink: 0;
+  padding: 7px 16px;
+  border: 1px solid #c4b5fd;
+  border-radius: 20px;
+  background: #faf5ff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6d28d9;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.csm-subnav__pill:hover {
+  background: #f3e8ff;
+}
+.csm-subnav__pill.is-active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
