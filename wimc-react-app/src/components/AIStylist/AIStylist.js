@@ -138,6 +138,20 @@ export default function AIStylist({
     } catch {}
   }, [isOpen]);
 
+  // One-time migration: outfits saved before cloud sync existed live only in
+  // this device's localStorage. Push them to Firestore once on mount.
+  // Safe because SyncProvider gates rendering until hydration completes, so
+  // localStorage already reflects the latest cloud state here.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SAVED_OUTFITS_KEY);
+      if (raw && JSON.parse(raw).length > 0) {
+        syncSetItem(SAVED_OUTFITS_KEY, raw);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!isOpen) abortRef.current?.abort();
   }, [isOpen]);
