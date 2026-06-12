@@ -103,6 +103,7 @@ function ClosetData({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [recentUpload, setRecentUpload] = useState(null); // {tag, url, mediaType, ts}
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
@@ -214,6 +215,15 @@ function ClosetData({
     } else {
       const url = item?.mediaThumb || item?.mediaUrl || item?.imageUrl || item;
       if (url) setClosetItems((prev) => [...prev, url]);
+    }
+    // Tell the section modal about the new item so it appears immediately
+    // (Cloudinary's tag-list CDN cache can lag for ~1 minute).
+    {
+      const url = item?.mediaUrl || item?.imageUrl || item?.mediaThumb;
+      const tag = (item?.category || "").trim().toLowerCase();
+      if (url && tag) {
+        setRecentUpload({ tag, url, mediaType: item?.mediaType || "image", ts: Date.now() });
+      }
     }
     logAppEvent("add_clothing_item", {
       media_type: item?.mediaType || "image",
@@ -348,6 +358,7 @@ function ClosetData({
           placeholderUrl={topsImg}
           onClose={handleModalClose}
           onAddItem={openAddForSection}
+          recentUpload={recentUpload}
           onSwitchSection={(tag) => setSelectedSection(tag)}
           allSections={closetSections.map((s) => ({
             label: sectionTagToDisplayName[s.name] || s.tag,

@@ -50,6 +50,9 @@ function ClosetSectionModal({
   allSections = [],
   /** Called with a section tag when the user picks a different section from within the modal */
   onSwitchSection,
+  /** {tag, url, mediaType, ts} — most recent upload; injected into the cache so
+   *  new items show immediately (Cloudinary's tag-list CDN cache lags ~1 min). */
+  recentUpload = null,
 }) {
   // ── Per-tag item cache ────────────────────────────────────────────────────
   // Keyed by section tag so switching sections never wipes fetched data and
@@ -101,6 +104,26 @@ function ClosetSectionModal({
   );
   const [subTag, setSubTag] = useState(null);
   useEffect(() => { setSubTag(null); }, [sectionTag, isOpen]);
+
+  // Inject freshly uploaded items into the per-tag cache so they appear
+  // without waiting for Cloudinary's stale CDN tag list (or a page refresh).
+  useEffect(() => {
+    if (!recentUpload?.url || !recentUpload?.tag) return;
+    const { tag: upTag, url, mediaType } = recentUpload;
+    if (mediaType === "video") {
+      setVideosByTag((prev) => {
+        const cur = prev[upTag];
+        if (cur === undefined || cur.includes(url)) return prev; // not cached yet / dup
+        return { ...prev, [upTag]: [...cur, url] };
+      });
+    } else {
+      setItemsByTag((prev) => {
+        const cur = prev[upTag];
+        if (cur === undefined || cur.includes(url)) return prev; // not cached yet / dup
+        return { ...prev, [upTag]: [url, ...cur] };
+      });
+    }
+  }, [recentUpload]);
 
   // Effective tag all data operations key off (fetch, add, delete, move, pin)
   const tag = isBagsSection && subTag ? subTag : sectionTag;
