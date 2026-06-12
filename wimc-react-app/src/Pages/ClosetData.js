@@ -359,10 +359,21 @@ function ClosetData({
           onClose={resetModals}
           onClothingAdded={handleAddClothing}
           initialCategory={selectedSection}
-          sections={closetSections.map((s) => ({
-            value: s.tag,
-            label: sectionTagToDisplayName[s.name] || sectionTagToDisplayName[s.tag] || s.tag,
-          }))}
+          sections={closetSections.flatMap((s) => {
+            const label =
+              sectionTagToDisplayName[s.name] || sectionTagToDisplayName[s.tag] || s.tag;
+            // Bags/Accessories is split into three sub-sections — expose each
+            // as its own category so uploads land in the right collection.
+            if (/(^|-)bags-accessories$/.test(s.tag)) {
+              const p = s.tag.startsWith("male-") ? "male-" : "";
+              return [
+                { value: s.tag,             label: "👜 Bags" },
+                { value: `${p}accessories`, label: "💍 Accessories" },
+                { value: `${p}fragrance`,   label: "🌸 Fragrance" },
+              ];
+            }
+            return [{ value: s.tag, label }];
+          })}
         />
       </section>
 
