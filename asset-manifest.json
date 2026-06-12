@@ -1,11 +1,11 @@
 {
   "files": {
     "main.css": "/project-wimc-frontend/static/css/main.05508652.css",
-    "main.js": "/project-wimc-frontend/static/js/main.769f52e3.js",
+    "main.js": "/project-wimc-frontend/static/js/main.15d27189.js",
     "static/css/136.d040447c.chunk.css": "/project-wimc-frontend/static/css/136.d040447c.chunk.css",
     "static/js/136.56073da5.chunk.js": "/project-wimc-frontend/static/js/136.56073da5.chunk.js",
     "static/css/839.bfa7f42d.chunk.css": "/project-wimc-frontend/static/css/839.bfa7f42d.chunk.css",
-    "static/js/839.73b8441d.chunk.js": "/project-wimc-frontend/static/js/839.73b8441d.chunk.js",
+    "static/js/839.e84a7a3f.chunk.js": "/project-wimc-frontend/static/js/839.e84a7a3f.chunk.js",
     "static/css/208.3a10a84b.chunk.css": "/project-wimc-frontend/static/css/208.3a10a84b.chunk.css",
     "static/js/208.f4b4442b.chunk.js": "/project-wimc-frontend/static/js/208.f4b4442b.chunk.js",
     "static/js/248.d4204662.chunk.js": "/project-wimc-frontend/static/js/248.d4204662.chunk.js",
@@ -36,8 +36,8 @@
     "static/css/320.1015bc44.chunk.css": "/project-wimc-frontend/static/css/320.1015bc44.chunk.css",
     "static/js/320.3e996292.chunk.js": "/project-wimc-frontend/static/js/320.3e996292.chunk.js",
     "static/css/2.ecfdd329.chunk.css": "/project-wimc-frontend/static/css/2.ecfdd329.chunk.css",
-    "static/css/938.a8cce825.chunk.css": "/project-wimc-frontend/static/css/938.a8cce825.chunk.css",
-    "static/js/938.2271f703.chunk.js": "/project-wimc-frontend/static/js/938.2271f703.chunk.js",
+    "static/css/938.b460ca0c.chunk.css": "/project-wimc-frontend/static/css/938.b460ca0c.chunk.css",
+    "static/js/938.faac5561.chunk.js": "/project-wimc-frontend/static/js/938.faac5561.chunk.js",
     "static/js/489.a617d546.chunk.js": "/project-wimc-frontend/static/js/489.a617d546.chunk.js",
     "static/media/bags-accessories.jpg": "/project-wimc-frontend/static/media/bags-accessories.260d0f1db7382f2ee855.jpg",
     "static/media/shoes-sneakers.jpg": "/project-wimc-frontend/static/media/shoes-sneakers.e36f69f59964a20eaa50.jpg",
@@ -50,11 +50,11 @@
     "index.html": "/project-wimc-frontend/index.html",
     "static/media/home-icon.svg": "/project-wimc-frontend/static/media/home-icon.590a91c51c7e28b5b3cc4d453f1e11ef.svg",
     "main.05508652.css.map": "/project-wimc-frontend/static/css/main.05508652.css.map",
-    "main.769f52e3.js.map": "/project-wimc-frontend/static/js/main.769f52e3.js.map",
+    "main.15d27189.js.map": "/project-wimc-frontend/static/js/main.15d27189.js.map",
     "136.d040447c.chunk.css.map": "/project-wimc-frontend/static/css/136.d040447c.chunk.css.map",
     "136.56073da5.chunk.js.map": "/project-wimc-frontend/static/js/136.56073da5.chunk.js.map",
     "839.bfa7f42d.chunk.css.map": "/project-wimc-frontend/static/css/839.bfa7f42d.chunk.css.map",
-    "839.73b8441d.chunk.js.map": "/project-wimc-frontend/static/js/839.73b8441d.chunk.js.map",
+    "839.e84a7a3f.chunk.js.map": "/project-wimc-frontend/static/js/839.e84a7a3f.chunk.js.map",
     "208.3a10a84b.chunk.css.map": "/project-wimc-frontend/static/css/208.3a10a84b.chunk.css.map",
     "208.f4b4442b.chunk.js.map": "/project-wimc-frontend/static/js/208.f4b4442b.chunk.js.map",
     "248.d4204662.chunk.js.map": "/project-wimc-frontend/static/js/248.d4204662.chunk.js.map",
@@ -85,12 +85,12 @@
     "320.1015bc44.chunk.css.map": "/project-wimc-frontend/static/css/320.1015bc44.chunk.css.map",
     "320.3e996292.chunk.js.map": "/project-wimc-frontend/static/js/320.3e996292.chunk.js.map",
     "2.ecfdd329.chunk.css.map": "/project-wimc-frontend/static/css/2.ecfdd329.chunk.css.map",
-    "938.a8cce825.chunk.css.map": "/project-wimc-frontend/static/css/938.a8cce825.chunk.css.map",
-    "938.2271f703.chunk.js.map": "/project-wimc-frontend/static/js/938.2271f703.chunk.js.map",
+    "938.b460ca0c.chunk.css.map": "/project-wimc-frontend/static/css/938.b460ca0c.chunk.css.map",
+    "938.faac5561.chunk.js.map": "/project-wimc-frontend/static/js/938.faac5561.chunk.js.map",
     "489.a617d546.chunk.js.map": "/project-wimc-frontend/static/js/489.a617d546.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.05508652.css",
-    "static/js/main.769f52e3.js"
+    "static/js/main.15d27189.js"
   ]
 }
