@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import {
   fetchImagesByTag,
   fetchVideosByTag,
@@ -105,6 +105,10 @@ function ClosetSectionModal({
   const [subTag, setSubTag] = useState(null);
   useEffect(() => { setSubTag(null); }, [sectionTag, isOpen]);
 
+  // Keep latest recentUpload available to the fetch effect without re-running it
+  const recentUploadRef = useRef(recentUpload);
+  useEffect(() => { recentUploadRef.current = recentUpload; }, [recentUpload]);
+
   // Inject freshly uploaded items into the per-tag cache so they appear
   // without waiting for Cloudinary's stale CDN tag list (or a page refresh).
   useEffect(() => {
@@ -161,9 +165,19 @@ function ClosetSectionModal({
           fetchVideosByTag(tag),
         ]);
         if (!cancelled) {
-          const ordered = applyStoredOrder(fetchedImages || [], tag);
+          let ordered = applyStoredOrder(fetchedImages || [], tag);
+          let vids = fetchedVideos || [];
+          // Merge a just-uploaded item the stale CDN list may not include yet
+          const ru = recentUploadRef.current;
+          if (ru?.tag === tag && ru?.url) {
+            if (ru.mediaType === "video" && !vids.includes(ru.url)) {
+              vids = [...vids, ru.url];
+            } else if (ru.mediaType !== "video" && !ordered.includes(ru.url)) {
+              ordered = [ru.url, ...ordered];
+            }
+          }
           setItemsByTag((prev) => ({ ...prev, [tag]: ordered }));
-          setVideosByTag((prev) => ({ ...prev, [tag]: fetchedVideos || [] }));
+          setVideosByTag((prev) => ({ ...prev, [tag]: vids }));
           // Load pinned card image for this tag
           const pinned = localStorage.getItem(getPinnedKey(tag));
           setPinnedUrl(pinned || null);
