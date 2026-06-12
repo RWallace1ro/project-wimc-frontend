@@ -208,7 +208,7 @@ function AddClothingModal({
   if (!isOpen) return null;
 
   return (
-    <section className="modal-overlay" onClick={handleOverlayClick}>
+    <section className="modal-overlay add-clothing-overlay" onClick={handleOverlayClick}>
       <div
         className="modal"
         ref={modalRef}

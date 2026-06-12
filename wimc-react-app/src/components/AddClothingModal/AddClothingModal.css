@@ -198,3 +198,9 @@
     margin: 0 auto;
   }
 }
+
+/* Add form opens ABOVE an open closet section card (card overlay = 9999/10000)
+   so the card stays visible underneath and shows the new item on upload. */
+.modal-overlay.add-clothing-overlay {
+  z-index: 10010;
+}

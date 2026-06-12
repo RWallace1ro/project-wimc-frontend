@@ -104,6 +104,7 @@ function ClosetData({
   const [selectedSection, setSelectedSection] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [recentUpload, setRecentUpload] = useState(null); // {tag, url, mediaType, ts}
+  const [addCategory, setAddCategory] = useState(null); // category for AddClothingModal
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
@@ -189,9 +190,11 @@ function ClosetData({
     }
   }, [isLoggedIn, selectedTab]);
 
+  // Add from inside an open section card: keep the card OPEN underneath so
+  // the user sees the new item appear in the grid without reopening it.
+  // selectedSection is left untouched (it may differ from the sub-section tag).
   const openAddForSection = (tag) => {
-    setIsModalOpen(false);
-    setSelectedSection(tag);
+    setAddCategory(tag);
     setIsAddModalOpen(true);
   };
   const handleCardClick = (section) => {
@@ -230,6 +233,7 @@ function ClosetData({
       category: item?.category || "unknown",
     });
     setIsAddModalOpen(false);
+    setAddCategory(null);
   };
 
   const handleTryOnFromCard = (section) => {
@@ -367,9 +371,9 @@ function ClosetData({
         />
         <AddClothingModal
           isOpen={isAddModalOpen}
-          onClose={resetModals}
+          onClose={() => { setIsAddModalOpen(false); setAddCategory(null); }}
           onClothingAdded={handleAddClothing}
-          initialCategory={selectedSection}
+          initialCategory={addCategory || selectedSection}
           sections={closetSections.flatMap((s) => {
             const label =
               sectionTagToDisplayName[s.name] || sectionTagToDisplayName[s.tag] || s.tag;
