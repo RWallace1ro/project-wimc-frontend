@@ -283,6 +283,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
   const [sectionThumbs, setSectionThumbs] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [recentUpload, setRecentUpload] = useState(null); // {tag, url, mediaType, ts}
   const [selectedSection, setSelectedSection] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -345,6 +346,8 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
       if (actualSection) {
         const tag = childTag(child.id, actualSection);
         setSectionThumbs((prev) => ({ ...prev, [tag]: url }));
+        // Also inject into the open section viewer's grid
+        setRecentUpload({ tag, url, mediaType: item?.mediaType || "image", ts: Date.now() });
       }
     }
     setIsAddOpen(false);
@@ -496,10 +499,11 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
           tag={selectedSection ? childTag(child.id, selectedSection) : undefined}
           onClose={() => { setIsModalOpen(false); setSelectedSection(null); }}
           onAddItem={() => {
-            // selectedSection is already the plain section tag (e.g. "tops")
-            setIsModalOpen(false);
+            // Keep the section card OPEN underneath — the Add form stacks on
+            // top and the new item appears in the grid as soon as it uploads.
             setIsAddOpen(true);
           }}
+          recentUpload={recentUpload}
           allSections={SECTIONS.map((s) => ({
             label: s.label,
             tag: childTag(child.id, s.tag), // e.g. "kid-abc123-tops"
