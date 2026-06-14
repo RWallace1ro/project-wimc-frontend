@@ -95,6 +95,7 @@ function Header({
       <button className="header__button header__button--tryon" onClick={() => { setIsTryOnOpen(true); setIsMobileMenuOpen(false); }}>🎬 Try On</button>
       <button className="header__button header__button--stylist" onClick={() => { setIsStylistOpen(true); setIsMobileMenuOpen(false); }}>✨ AI Stylist</button>
       <button className="header__button header__button--kids" onClick={() => { navigate("/kids-closet"); setIsMobileMenuOpen(false); }}>👶 Kids</button>
+      <button className="header__button header__button--pets" onClick={() => { navigate("/pet-closet"); setIsMobileMenuOpen(false); }}>🐾 Pets</button>
       <button className="header__button header__button--receipts" onClick={() => { navigate("/receipts"); setIsMobileMenuOpen(false); }}>🧾 Receipts</button>
       <button className="header__button header__button--tour" onClick={() => { openTour(); setIsMobileMenuOpen(false); }}>🎬 Tour</button>
       <button className="header__about-button" onClick={() => { navigate("/about"); setIsMobileMenuOpen(false); }}>About</button>

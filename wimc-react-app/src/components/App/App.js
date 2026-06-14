@@ -43,6 +43,7 @@ const ClosetData = React.lazy(() => import("../../Pages/ClosetData"));
 const About = React.lazy(() => import("../About/About"));
 const OutfitCardViewer = React.lazy(() => import("../../Pages/OutfitCardViewer"));
 const KidsCloset = React.lazy(() => import("../../Pages/KidsCloset"));
+const PetCloset = React.lazy(() => import("../../Pages/PetCloset"));
 const Receipts = React.lazy(() => import("../../Pages/Receipts"));
 const PrivacyPolicy = React.lazy(() => import("../../Pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("../../Pages/TermsOfService"));
@@ -525,6 +526,14 @@ function AppInner() {
                 element={
                   <ProtectedRoute isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
                     <KidsCloset />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/pet-closet"
+                element={
+                  <ProtectedRoute isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
+                    <PetCloset />
                   </ProtectedRoute>
                 }
               />

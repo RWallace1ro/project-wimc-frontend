@@ -67,10 +67,18 @@ export async function deleteAllUserData(uid) {
   // ── 1a. Profile avatar URL ──────────────────────────────────────────────────
   try {
     const profileSnap = await getDoc(doc(db, "users", uid));
-    const avatar = profileSnap.exists() ? profileSnap.data()?.avatarUrl : null;
+    const data = profileSnap.exists() ? profileSnap.data() : null;
+    const avatar = data?.avatarUrl;
     if (typeof avatar === "string") {
       (avatar.match(CLOUDINARY_URL_RE) || []).forEach((u) => urls.add(u));
     }
+    // Kids' + Pet profile photos live as fields on the user doc, not syncdata.
+    [...(data?.kidsProfiles || []), ...(data?.kidsDeleted || []),
+     ...(data?.petProfiles  || []), ...(data?.petDeleted  || [])].forEach((prof) => {
+      if (typeof prof?.photoUrl === "string") {
+        (prof.photoUrl.match(CLOUDINARY_URL_RE) || []).forEach((u) => urls.add(u));
+      }
+    });
   } catch {
     /* non-fatal */
   }

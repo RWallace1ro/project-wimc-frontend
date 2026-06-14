@@ -251,6 +251,13 @@
   background-color: #d97706;
 }
 
+.header__button--pets {
+  background-color: #14b8a6;
+}
+.header__button--pets:hover {
+  background-color: #0d9488;
+}
+
 .header__button--tour {
   background-color: #7c3aed;
 }
