@@ -84,8 +84,9 @@ export default function TravelPackPanel({
   tagPrefix = "",
   incomingItems = null,
   gender = "female",
+  sectionOptions = null,
 }) {
-  const SECTION_OPTIONS = getSectionOptions(gender);
+  const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
   // Child-specific localStorage key so each child has their own travel pack
   const lsKey = tagPrefix ? `wimc_travel_pack_${tagPrefix}_v2` : LS_KEY;
 
@@ -99,8 +100,8 @@ export default function TravelPackPanel({
   const [pickerSection, setPickerSection] = useState(SECTION_OPTIONS[0].value);
   // Reset picker section when gender changes so we never fetch the wrong tag
   useEffect(() => {
-    setPickerSection(getSectionOptions(gender)[0].value);
-  }, [gender]);
+    setPickerSection(SECTION_OPTIONS[0].value);
+  }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
@@ -388,6 +389,7 @@ export default function TravelPackPanel({
         <Lightbox images={lbImages} index={lbIndex} onClose={closeLightbox} onChange={setLbIndex} />
       )}
       <ClosetSearch
+        sectionOptions={sectionOptions}
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         target="pack"

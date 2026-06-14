@@ -90,8 +90,8 @@ function normalizeChoice(x, sectionHint) {
 }
 const keyOf = (it) => it.imageUrl || it.url || it.mediaUrl || it.name || "";
 
-export default function DonateBin({ tagPrefix = "", incomingItems = null, gender = "female" }) {
-  const SECTION_OPTIONS = getSectionOptions(gender);
+export default function DonateBin({ tagPrefix = "", incomingItems = null, gender = "female", sectionOptions = null }) {
+  const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
   // Child-specific localStorage keys so each child has their own donate bin data
   const lsDonateKey  = tagPrefix ? `wimc_donateItems_${tagPrefix}`  : "donateItems";
   const lsDonatedKey = tagPrefix ? `wimc_donatedItems_${tagPrefix}` : "donatedItems";
@@ -108,8 +108,8 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
   const [section, setSection] = useState(SECTION_OPTIONS[0].value);
   // Reset section when gender changes so we never fetch the wrong tag
   useEffect(() => {
-    setSection(getSectionOptions(gender)[0].value);
-  }, [gender]);
+    setSection(SECTION_OPTIONS[0].value);
+  }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
@@ -535,6 +535,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
         <Lightbox images={lbImages} index={lbIndex} onClose={closeLb} onChange={setLbIndex} />
       )}
       <ClosetSearch
+        sectionOptions={sectionOptions}
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         target="donate"

@@ -48,6 +48,10 @@ const SECTIONS = [
         a: "The Kids' Closet lets you create separate closet profiles for each child in your household. Each child gets their own six-section wardrobe, outfit planner, and donate bin — completely separate from the main closet.",
       },
       {
+        q: "What is the Pet Closet?",
+        a: "The Pet Closet lets you create a profile for each pet (dog, cat, or other) with their species, breed, weight, apparel size, and key measurements (back length, neck, and chest). Each pet gets its own wardrobe with pet-specific sections — Sweaters/Coats, Shirts/Tops, Costumes/Dresses, Bandanas/Bows, Booties/Paw Wear, and Collars/Harnesses — plus the outfit planner, travel pack, wish list, donate bin, and AI search, all kept separate from your main and kids' closets. You can share a pet's sizing info with sitters and family.",
+      },
+      {
         q: "Can I customize the look of each closet section?",
         a: "Yes. Each section card supports a custom background image so you can personalize the look of your wardrobe at a glance.",
       },

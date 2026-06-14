@@ -167,8 +167,10 @@ const IconPrint = (props) => (
   </svg>
 );
 
-export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", gender = "female", incomingItems = null }) {
-  const SECTION_OPTIONS = gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE;
+export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", gender = "female", incomingItems = null, sectionOptions = null }) {
+  // sectionOptions, when provided (e.g. Pet Closet), overrides the gender-based
+  // defaults so panels show custom labels while keeping standard underlying tags.
+  const SECTION_OPTIONS = sectionOptions || (gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE);
   // Child-specific LS keys — prevents main closet and kids closets sharing preview state
   const LS = buildLS(tagPrefix);
   // layout & doors
@@ -182,8 +184,8 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   const [section, setSection] = useState(SECTION_OPTIONS[0].value);
   // Reset section when gender changes so we never fetch the wrong tag
   useEffect(() => {
-    setSection((gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE)[0].value);
-  }, [gender]);
+    setSection(SECTION_OPTIONS[0].value);
+  }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
   const [choices, setChoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -936,6 +938,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
         target="preview"
         tagPrefix={tagPrefix}
         gender={gender}
+        sectionOptions={sectionOptions}
         onApplyItems={(items) => addMany(items, "merge")}
       />
       {isFloating && <div className="opp-backdrop" onClick={closePanel} />}

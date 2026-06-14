@@ -408,7 +408,7 @@ export default function PetCloset() {
         <div className="kids-card__name-group">
           <h2 className="kids-card__name">{p.name}</h2>
           <span className="kids-card__age-badge">
-            {speciesIcon(p.species)} {p.breed || p.species}{p.age ? ` · ${p.age}` : ""}
+            {speciesIcon(p.species)} {p.gender === "male" ? "♂" : "♀"} {p.breed || p.species}{p.age ? ` · ${p.age}` : ""}
           </span>
         </div>
       </div>

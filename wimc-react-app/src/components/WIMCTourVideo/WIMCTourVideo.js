@@ -12,7 +12,7 @@ const SLIDES = [
     subtitle: "What's In My Closet",
     tags: [
       "🔐 Secure Auth","👗 Smart Closet","✨ 5 AI Features","🎬 Try-On Studio",
-      "👶 Kids' Closet","🛒 Shopping List","📋 Wish List","🗑️ Donate Bin",
+      "👶 Kids' Closet","🐾 Pet Closet","🛒 Shopping List","📋 Wish List","🗑️ Donate Bin",
       "🌤️ Weather","⚙️ Settings","🔍 Closet Search","👔 Outfit Preview",
       "📅 Outfit Planner","✈️ Travel Pack","🧾 Receipts","📹 Video Bin",
     ],
@@ -119,6 +119,17 @@ const SLIDES = [
     featureIcons: ["👶","📏","👗","♻️","📤","📷"],
   },
   {
+    id: "pets",
+    label: "Pet Closet",
+    dur: 9,
+    icon: "🐾",
+    title: "Pet Closet",
+    type: "feature",
+    mockupTitle: "🐾 Pet Closet",
+    features: ["Dog, Cat & Other profiles","Apparel size + back/neck/chest","Pet-specific wardrobe sections","Outfit planner, travel pack & more","14-day soft delete & restore","Share sizing with sitters & family"],
+    featureIcons: ["🐕","📏","🧥","📅","♻️","📤"],
+  },
+  {
     id: "receipts-weather",
     label: "Receipts & Weather",
     dur: 9,
@@ -149,6 +160,7 @@ const TAG_TO_SLIDE = {
   "✨ 5 AI Features": "ai",
   "🎬 Try-On Studio": "tryon",
   "👶 Kids' Closet":  "kids",
+  "🐾 Pet Closet":    "pets",
   "🛒 Shopping List": "shopping",
   "📋 Wish List":     "donate-wishlist",
   "🗑️ Donate Bin":    "donate-wishlist",
@@ -181,6 +193,7 @@ const SCRIPTS = [
   "The Donate Bin lets you collect items for donation with an AI advisor to help you decide what to let go. The Wish List stores items you want with URL previews and priority notes — shareable via link.",
   "The Shopping List has three built-in categories plus unlimited custom ones with over 300 emoji to choose from. Use four AI modes to suggest items, analyze your budget, or prioritize your list.",
   "Kids' Closet lets you manage clothing profiles for each child, with US and EU sizing shown side by side. Deleted profiles stay recoverable for 14 days.",
+  "The Pet Closet gives each pet its own profile and wardrobe — track species, breed, apparel size, and key measurements like back, neck, and chest, with pet-specific sections like Sweaters, Bandanas, and Collars. Share sizing with sitters and family.",
   "The Receipts page stores all your shopping receipts by photo, PDF, or email, filterable by store and category. The Weather panel in the header gives you a current forecast plus 7-day outlook to plan your outfits.",
   "Settings gives you full control over your profile, password, and app appearance. The AI Stylist is available right from the header for instant style advice. That's WIMC — your complete wardrobe companion!",
 ];

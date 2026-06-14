@@ -90,20 +90,29 @@ function normalizeForPanels(url, sectionTag) {
 }
 
 // ── Step 1: identify sections from query ─────────────────────────────────────
-async function identifySections(query, gender = "female") {
-  // Only offer the categories that exist for THIS closet's gender, so the AI
-  // never returns a section that doesn't apply (e.g. Dresses for a male closet).
-  const firstCat = gender === "male"
-    ? "- Dress Shirts/Suits (tag: dress-shirts-suits)"
-    : "- Dresses/Skirts (tag: dresses-skirts)";
-  const systemPrompt = `You are WIMC's Natural Language Closet Search assistant.
-The user's closet has these categories:
-${firstCat}
+async function identifySections(query, gender = "female", sectionOptions = null) {
+  // Only offer the categories that exist for THIS closet, so the AI never
+  // returns a section that doesn't apply. sectionOptions (e.g. Pet Closet)
+  // overrides the gender-based default list with custom labels.
+  let categoryList;
+  if (sectionOptions && sectionOptions.length) {
+    categoryList = sectionOptions
+      .map((o) => `- ${o.label.replace(/^[^\w]+\s*/, "")} (tag: ${o.value})`)
+      .join("\n");
+  } else {
+    const firstCat = gender === "male"
+      ? "- Dress Shirts/Suits (tag: dress-shirts-suits)"
+      : "- Dresses/Skirts (tag: dresses-skirts)";
+    categoryList = `${firstCat}
 - Shoes/Sneakers (tag: shoes-sneakers)
 - Pants/Jeans (tag: pants-jeans)
 - Tops (tag: tops)
 - Bags/Accessories (tag: bags-accessories)
-- Jackets/Coats (tag: jackets-coats)
+- Jackets/Coats (tag: jackets-coats)`;
+  }
+  const systemPrompt = `You are WIMC's Natural Language Closet Search assistant.
+The user's closet has these categories:
+${categoryList}
 
 Give a short, friendly 1-2 sentence response, then identify which categories are relevant.
 Return a JSON block at the END: {"sections": ["tops"]}
@@ -195,6 +204,7 @@ export default function ClosetSearch({
   target = null,  // "preview"|"planner"|"pack"|"donate"|null
   tagPrefix = "", // Kids Closet: "kid-{id}" or main male closet: "male"
   gender = "female", // restricts the AI to this closet's sections
+  sectionOptions = null, // Pet Closet: custom [{value,label}] section list
 }) {
   const [query, setQuery] = useState("");
   const [resultText, setResultText] = useState("");
@@ -228,7 +238,7 @@ export default function ClosetSearch({
 
     try {
       // Step 1 — identify relevant sections
-      const { text, sections: secs } = await identifySections(q, gender);
+      const { text, sections: secs } = await identifySections(q, gender, sectionOptions);
       setResultText(text);
       setSections(secs);
       setStreaming(false);

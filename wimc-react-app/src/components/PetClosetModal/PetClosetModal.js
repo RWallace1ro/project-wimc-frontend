@@ -303,6 +303,11 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
   if (!pet) return null;
 
   const speciesIcon = SPECIES_ICONS[pet.species] || "🐾";
+  const petGender = pet.gender || "female";
+  const genderIcon = petGender === "male" ? "♂" : "♀";
+  // Pet-twist section labels with standard underlying tags (gender-agnostic —
+  // pet apparel categories are the same regardless of the pet's sex).
+  const SECTION_OPTIONS = SECTIONS.map((s) => ({ value: s.tag, label: s.label }));
 
   return (
     <div
@@ -348,7 +353,7 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
             <div>
               <h2 className="kcm-header__title">{pet.name}'s Closet</h2>
               <p className="kcm-header__sub">
-                {speciesIcon} {pet.breed || pet.species}
+                {speciesIcon} {genderIcon} {pet.breed || pet.species}
                 {pet.age ? ` · ${pet.age}` : ""}
                 {pet.weight ? ` · ${pet.weight}` : ""}
                 &nbsp;|&nbsp; 🧥 {pet.apparelSize || "—"}
@@ -407,14 +412,17 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
           </div>
 
           {/* ── Features row ── */}
+          {/* sectionOptions = pet-twist labels (with standard tags) so every
+              panel shows pet section names; petGender flows through for
+              consistency with the pet's gender choice. */}
           <div className="kcm-features">
             <h3 className="kcm-features__heading">Features</h3>
             <div className="kcm-features__panels">
-              <OutfitPreviewPanel tagPrefix={`pet-${pet.id}`} gender="female" incomingItems={petPreviewIncoming} />
-              <OutfitPlanner      tagPrefix={`pet-${pet.id}`} gender="female" incomingItems={petPlannerIncoming} />
-              <TravelPackPanel    tagPrefix={`pet-${pet.id}`} gender="female" incomingItems={petPackIncoming} />
+              <OutfitPreviewPanel tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPreviewIncoming} />
+              <OutfitPlanner      tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPlannerIncoming} />
+              <TravelPackPanel    tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPackIncoming} />
               <WishList           storageKey={`pet-${pet.id}-wishlist`} />
-              <DonateBin          tagPrefix={`pet-${pet.id}`} gender="female" incomingItems={petDonateIncoming} />
+              <DonateBin          tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petDonateIncoming} />
             </div>
           </div>
         </div>
@@ -444,7 +452,8 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
           onClose={() => setIsSearchOpen(false)}
           onApplyItems={handlePetApplyItems}
           tagPrefix={`pet-${pet.id}`}
-          gender="female"
+          gender={petGender}
+          sectionOptions={SECTION_OPTIONS}
         />
 
         {/* ── Add clothing ── */}
