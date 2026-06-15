@@ -6,9 +6,11 @@
  *
  *   1. Cloudinary images/videos — gathered from the user's own Firestore data
  *      (their syncdata values + profile avatar) and deleted via the signed
- *      deleteCloudinaryAsset function. Cloudinary is keyed by shared SECTION
- *      tags (not per-user), so we cannot delete "by tag" — we delete exactly the
- *      assets this user references, which are their own unique uploads.
+ *      deleteCloudinaryAsset function. The MAIN closet uses shared SECTION tags
+ *      (common across all users), so we can only delete the assets this user
+ *      references. KIDS & PET closets use per-profile-unique tags
+ *      (kid-{id}-… / pet-{id}-…), so those are fetched BY TAG and deleted in
+ *      full — the same complete cleanup, applied to every kid & pet item.
  *   2. Firestore syncdata subcollection — deleting the parent users/{uid} doc
  *      does NOT cascade to subcollections, so each doc must be removed.
  *   3. sharedContent docs this user owns (their public share links).
@@ -41,7 +43,17 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { deleteImage, deleteVideo } from "./CloudinaryAPI";
+import { deleteImage, deleteVideo, fetchImagesByTag, fetchVideosByTag } from "./CloudinaryAPI";
+
+// Section keys used by every closet. Kids/Pet closets prefix these with a
+// per-profile id (kid-{id}-... / pet-{id}-...) so the resulting tags are unique
+// to one user — safe to fetch & delete by tag (unlike the shared main-closet
+// tags, which are common across all users).
+const SECTION_KEYS = [
+  "dresses-skirts", "dress-shirts-suits", "shoes-sneakers",
+  "pants-jeans", "tops", "bags-accessories", "jackets-coats",
+  "accessories", "fragrance", // bags-card sub-sections
+];
 
 // Matches any Cloudinary delivery URL (image or video, with or without
 // transformation/version segments). Bounded by quote/space/backslash so it
@@ -63,6 +75,7 @@ export async function deleteAllUserData(uid) {
   if (!uid) return result;
 
   const urls = new Set();
+  let kidPetProfiles = [];
 
   // ── 1a. Profile avatar URL ──────────────────────────────────────────────────
   try {
@@ -73,14 +86,40 @@ export async function deleteAllUserData(uid) {
       (avatar.match(CLOUDINARY_URL_RE) || []).forEach((u) => urls.add(u));
     }
     // Kids' + Pet profile photos live as fields on the user doc, not syncdata.
-    [...(data?.kidsProfiles || []), ...(data?.kidsDeleted || []),
-     ...(data?.petProfiles  || []), ...(data?.petDeleted  || [])].forEach((prof) => {
+    kidPetProfiles = [
+      ...(data?.kidsProfiles || []).map((p) => ({ ...p, _prefix: "kid" })),
+      ...(data?.kidsDeleted  || []).map((p) => ({ ...p, _prefix: "kid" })),
+      ...(data?.petProfiles  || []).map((p) => ({ ...p, _prefix: "pet" })),
+      ...(data?.petDeleted   || []).map((p) => ({ ...p, _prefix: "pet" })),
+    ];
+    kidPetProfiles.forEach((prof) => {
       if (typeof prof?.photoUrl === "string") {
         (prof.photoUrl.match(CLOUDINARY_URL_RE) || []).forEach((u) => urls.add(u));
       }
     });
   } catch {
     /* non-fatal */
+  }
+
+  // ── 1a-ii. Kids/Pet closet items — fetch by per-profile tag ─────────────────
+  // These tags (kid-{id}-tops, pet-{id}-jackets-coats, …) are unique to this
+  // user, so a tag fetch returns ONLY their uploads — same complete cleanup the
+  // main closet gets via referenced URLs, applied to every kid & pet item.
+  try {
+    const tagJobs = [];
+    kidPetProfiles.forEach((prof) => {
+      if (!prof?.id) return;
+      SECTION_KEYS.forEach((sec) => {
+        const tag = `${prof._prefix}-${prof.id}-${sec}`;
+        tagJobs.push(
+          fetchImagesByTag(tag).then((arr) => (arr || []).forEach((u) => urls.add(u))).catch(() => {}),
+          fetchVideosByTag(tag).then((arr) => (arr || []).forEach((u) => urls.add(u))).catch(() => {}),
+        );
+      });
+    });
+    await Promise.all(tagJobs);
+  } catch {
+    /* non-fatal — fall back to whatever URLs we already collected */
   }
 
   // ── 1b. Image/video URLs embedded in syncdata values ────────────────────────

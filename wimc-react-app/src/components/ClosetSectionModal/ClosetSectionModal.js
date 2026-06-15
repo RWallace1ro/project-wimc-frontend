@@ -88,19 +88,24 @@ function ClosetSectionModal({
   // ── Bags/Accessories sub-sections ─────────────────────────────────────────
   // The Bags/Accessories card is split into three full-view sub-collections.
   // "Bags" keeps the original section tag so existing items appear there;
-  // Accessories and Fragrance get their own tags (male- prefix preserved).
+  // Accessories and Fragrance get their own tags. The prefix is everything
+  // before "bags-accessories" so per-closet scoping is preserved:
+  //   "bags-accessories"          → accessories / fragrance        (main, female)
+  //   "male-bags-accessories"     → male-accessories / …           (main, male)
+  //   "kid-abc-bags-accessories"  → kid-abc-accessories / …        (kids)
+  //   "pet-xyz-bags-accessories"  → pet-xyz-accessories / …        (pets)
   const isBagsSection = /(^|-)bags-accessories$/.test(sectionTag);
-  const malePrefix = sectionTag.startsWith("male-") ? "male-" : "";
+  const subPrefix = sectionTag.replace(/bags-accessories$/, "");
   const subSections = useMemo(
     () =>
       isBagsSection
         ? [
             { label: "👜 Bags",        plain: "Bags",        tag: sectionTag },
-            { label: "💍 Accessories", plain: "Accessories", tag: `${malePrefix}accessories` },
-            { label: "🌸 Fragrance",   plain: "Fragrance",   tag: `${malePrefix}fragrance` },
+            { label: "💍 Accessories", plain: "Accessories", tag: `${subPrefix}accessories` },
+            { label: "🌸 Fragrance",   plain: "Fragrance",   tag: `${subPrefix}fragrance` },
           ]
         : null,
-    [isBagsSection, sectionTag, malePrefix]
+    [isBagsSection, sectionTag, subPrefix]
   );
   const [subTag, setSubTag] = useState(null);
   useEffect(() => { setSubTag(null); }, [sectionTag, isOpen]);
