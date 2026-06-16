@@ -3,6 +3,7 @@ import ClosetTabs from "../ClosetTabs/ClosetTabs";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ReactComponent as HomeIcon } from "../../assets/images/home-icon.svg";
 import { useWIMCTour } from "../WIMCTourVideo/useTour";
+import { useTier } from "../../context/TierContext";
 import "./Header.css";
 
 // Heavy modal components — lazy loaded so they don't bloat the initial bundle.
@@ -43,6 +44,7 @@ function Header({
 
   const navigate = useNavigate();
   const location = useLocation();
+  const { requirePro } = useTier();
 
   useEffect(() => { setCurrentUserName(userName); }, [userName]);
   useEffect(() => { setCurrentAvatarUrl(avatarUrl); }, [avatarUrl]);
@@ -94,8 +96,8 @@ function Header({
       <button className="header__button header__button--weather" onClick={() => { setIsWeatherOpen(true); setIsMobileMenuOpen(false); }}>🌤️ Weather</button>
       <button className="header__button header__button--tryon" onClick={() => { setIsTryOnOpen(true); setIsMobileMenuOpen(false); }}>🎬 Try On</button>
       <button className="header__button header__button--stylist" onClick={() => { setIsStylistOpen(true); setIsMobileMenuOpen(false); }}>✨ AI Stylist</button>
-      <button className="header__button header__button--kids" onClick={() => { navigate("/kids-closet"); setIsMobileMenuOpen(false); }}>👶 Kids</button>
-      <button className="header__button header__button--pets" onClick={() => { navigate("/pet-closet"); setIsMobileMenuOpen(false); }}>🐾 Pets</button>
+      <button className="header__button header__button--kids" onClick={() => { if (!requirePro("Kids' Closet")) return; navigate("/kids-closet"); setIsMobileMenuOpen(false); }}>👶 Kids</button>
+      <button className="header__button header__button--pets" onClick={() => { if (!requirePro("Pet Closet")) return; navigate("/pet-closet"); setIsMobileMenuOpen(false); }}>🐾 Pets</button>
       <button className="header__button header__button--receipts" onClick={() => { navigate("/receipts"); setIsMobileMenuOpen(false); }}>🧾 Receipts</button>
       <button className="header__button header__button--tour" onClick={() => { openTour(); setIsMobileMenuOpen(false); }}>🎬 Tour</button>
       <button className="header__about-button" onClick={() => { navigate("/about"); setIsMobileMenuOpen(false); }}>About</button>

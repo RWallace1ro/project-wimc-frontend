@@ -36,6 +36,7 @@ import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { ClosetProvider } from "../../context/ClosetContext";
 import { BackgroundProvider } from "../../context/BackgroundContext";
 import { SyncProvider } from "../../context/SyncContext";
+import { TierProvider } from "../../context/TierContext";
 import "./App.css";
 
 const Home = React.lazy(() => import("../../components/Home/Home"));
@@ -454,6 +455,7 @@ function AppInner() {
   return (
     <ClosetProvider>
       <BackgroundProvider>
+      <TierProvider uid={isLoggedIn ? userData.uid : null}>
       <SyncProvider uid={isLoggedIn ? userData.uid : null}>
         <main className="app">
           {isLoggedIn && userData?.pendingDeletion && (
@@ -584,6 +586,7 @@ function AppInner() {
           />
         </main>
       </SyncProvider>
+      </TierProvider>
       </BackgroundProvider>
     </ClosetProvider>
   );

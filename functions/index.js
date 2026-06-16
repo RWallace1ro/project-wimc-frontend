@@ -36,8 +36,9 @@ function getAdminDb() {
 }
 
 // Per-user daily cap on AI proxy calls (resets at UTC midnight). Prevents a
-// single account from running up the Anthropic bill.
-const AI_DAILY_LIMIT = 50;
+// single account from running up the Anthropic bill. The cap is tier-based —
+// the ladder the pricing page advertises (Free 3 / Pro 10 / Pro+AI 50).
+const AI_LIMITS = { free: 3, pro: 10, pro_ai: 50 };
 
 // Set permissive CORS headers on every response so the browser never blocks
 // the preflight. Allow the Authorization header so the client can send the
@@ -65,17 +66,20 @@ async function verifyUser(req) {
 // { allowed, count }. Resets the counter when the UTC date changes.
 async function checkAndIncrementUsage(uid) {
   const adminDb = getAdminDb();
-  const ref = adminDb.collection("aiUsage").doc(uid);
+  const usageRef = adminDb.collection("aiUsage").doc(uid);
+  const userRef  = adminDb.collection("users").doc(uid);
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
   return adminDb.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    const data = snap.exists ? snap.data() : {};
+    const [usageSnap, userSnap] = await Promise.all([tx.get(usageRef), tx.get(userRef)]);
+    const data = usageSnap.exists ? usageSnap.data() : {};
+    const tier = (userSnap.exists && userSnap.data().tier) || "free";
+    const limit = AI_LIMITS[tier] ?? AI_LIMITS.free;
     const count = data.date === today ? (data.count || 0) : 0;
-    if (count >= AI_DAILY_LIMIT) {
-      return { allowed: false, count };
+    if (count >= limit) {
+      return { allowed: false, count, limit, tier };
     }
-    tx.set(ref, { date: today, count: count + 1, updatedAt: Date.now() });
-    return { allowed: true, count: count + 1 };
+    tx.set(usageRef, { date: today, count: count + 1, updatedAt: Date.now() });
+    return { allowed: true, count: count + 1, limit, tier };
   });
 }
 
@@ -101,12 +105,15 @@ exports.anthropicProxy = functions
       return;
     }
 
-    // ── Per-user daily rate limit ─────────────────────────────────────────────
+    // ── Per-user daily rate limit (tier-based) ────────────────────────────────
     try {
-      const { allowed, count } = await checkAndIncrementUsage(uid);
+      const { allowed, count, limit, tier } = await checkAndIncrementUsage(uid);
       if (!allowed) {
+        const upgradeHint = tier === "pro_ai"
+          ? "Please try again tomorrow."
+          : "Upgrade your plan for more daily AI requests, or try again tomorrow.";
         res.status(429).json({
-          error: `You've reached today's limit of ${AI_DAILY_LIMIT} AI requests. Please try again tomorrow.`,
+          error: `You've reached today's limit of ${limit} AI requests. ${upgradeHint}`,
         });
         return;
       }
