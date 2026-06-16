@@ -835,15 +835,29 @@ export default function Receipts() {
                     ) : (
                       <>
                         <p>📄 Tap to select a PDF receipt</p>
-                        <p className="receipts-upload-hint">Supports PDF files only</p>
+                        <p className="receipts-upload-hint">
+                          {isTouchDevice
+                            ? "Pick a PDF from Browse/Files — or snap the receipt with your camera"
+                            : "Supports PDF files only"}
+                        </p>
                       </>
                     )}
+                    {/* On touch devices, broaden accept so iOS opens the full
+                        action sheet (Photo Library / Take Photo / Browse Files)
+                        instead of jumping straight into a Files-only view that
+                        hides PDFs stored elsewhere. handleFile auto-detects the
+                        actual type, so a picked image is still categorized as a
+                        photo and a PDF as a PDF. */}
                     <input
                       ref={pdfRef}
                       type="file"
-                      accept="application/pdf"
+                      accept={isTouchDevice ? "image/*,application/pdf" : "application/pdf"}
                       style={{ display: "none" }}
-                      onChange={(e) => handleFile(e, "pdf")}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        const type = file?.type === "application/pdf" ? "pdf" : "image";
+                        handleFile(e, type);
+                      }}
                     />
                   </div>
                 </>
