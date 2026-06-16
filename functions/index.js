@@ -1,12 +1,18 @@
 /**
  * WIMC Firebase Cloud Functions
  *
- * anthropicProxy  — Secure server-side proxy for Anthropic API calls.
- * cloudinarySign  — Generates a signed upload signature for Cloudinary.
+ * anthropicProxy        — Secure server-side proxy for Anthropic API calls.
+ * cloudinarySign        — Generates a signed upload signature for Cloudinary.
+ * deleteCloudinaryAsset — Signed delete of a Cloudinary asset.
+ * createCheckoutSession — Starts a Stripe Checkout for a subscription.
+ * createPortalSession   — Opens the Stripe customer billing portal.
+ * stripeWebhook         — Signature-verified Stripe webhook → sets user tier.
  *
  * Secrets:
  *   ANTHROPIC_API_KEY     — firebase functions:secrets:set ANTHROPIC_API_KEY
  *   CLOUDINARY_API_SECRET — firebase functions:secrets:set CLOUDINARY_API_SECRET
+ *   STRIPE_SECRET_KEY     — firebase functions:secrets:set STRIPE_SECRET_KEY
+ *   STRIPE_WEBHOOK_SECRET — firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
  */
 
 // v1 API import (firebase-functions v5+ defaults the top-level export to v2;
@@ -241,4 +247,193 @@ exports.cloudinarySign = functions
       .digest("hex");
 
     res.json({ timestamp, signature });
+  });
+
+// ── Stripe billing ────────────────────────────────────────────────────────────
+//
+// Secrets:
+//   STRIPE_SECRET_KEY     — firebase functions:secrets:set STRIPE_SECRET_KEY
+//   STRIPE_WEBHOOK_SECRET — firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+//
+// Flow: client calls createCheckoutSession → redirects to Stripe Checkout →
+// on success Stripe calls stripeWebhook → we set the user's tier in Firestore.
+// createPortalSession lets a subscriber manage/cancel (used in Step 27).
+
+// Public app base for post-checkout redirects (GitHub Pages project path).
+const APP_URL = "https://rwallace1ro.github.io/project-wimc-frontend";
+
+// Maps each Stripe Price ID → the tier it grants. These are the TEST-mode price
+// IDs; when going live, replace with the live price IDs (same tier values).
+const TIER_BY_PRICE = {
+  price_1Tj1CCFHY9B8ibv95O493fUs: "pro",     // Pro monthly  $4.99
+  price_1Tj1ELFHY9B8ibv92n4w5g3a: "pro",     // Pro annual   $39.99
+  price_1Tj1mMFHY9B8ibv9pYRXcjvl: "pro_ai",  // Pro+AI monthly $7.99
+  price_1Tj1XlFHY9B8ibv9Ibg8vtEx: "pro_ai",  // Pro+AI annual  $79.99
+};
+
+// Lazy Stripe client (secret is only bound at runtime via runWith).
+let _stripe = null;
+function getStripe() {
+  if (!_stripe) _stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+  return _stripe;
+}
+
+// Return the user's existing Stripe customer id, creating one if needed.
+async function getOrCreateCustomer(uid) {
+  const adminDb = getAdminDb();
+  const ref = adminDb.collection("users").doc(uid);
+  const snap = await ref.get();
+  const data = snap.exists ? snap.data() : {};
+  if (data.stripeCustomerId) return data.stripeCustomerId;
+
+  // Look up the user's email from Auth for the Stripe customer record.
+  let email;
+  try { email = (await admin.auth().getUser(uid)).email; } catch { /* optional */ }
+
+  const customer = await getStripe().customers.create({
+    email,
+    metadata: { firebaseUID: uid },
+  });
+  await ref.set({ stripeCustomerId: customer.id }, { merge: true });
+  return customer.id;
+}
+
+// ── Create Checkout Session ───────────────────────────────────────────────────
+exports.createCheckoutSession = functions
+  .runWith({ secrets: ["STRIPE_SECRET_KEY"] })
+  .https.onRequest(async (req, res) => {
+    setCORS(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST")    { res.status(405).send("Method Not Allowed"); return; }
+
+    const uid = await verifyUser(req);
+    if (!uid) { res.status(401).json({ error: "Please sign in to subscribe." }); return; }
+
+    const { priceId } = req.body || {};
+    if (!priceId || !TIER_BY_PRICE[priceId]) {
+      res.status(400).json({ error: "Unknown or missing price." });
+      return;
+    }
+
+    try {
+      const customerId = await getOrCreateCustomer(uid);
+      const session = await getStripe().checkout.sessions.create({
+        mode: "subscription",
+        customer: customerId,
+        line_items: [{ price: priceId, quantity: 1 }],
+        client_reference_id: uid,
+        // Stamp uid on the subscription so later webhook events (updates,
+        // cancellations) can resolve the user even without the checkout session.
+        subscription_data: { metadata: { firebaseUID: uid } },
+        allow_promotion_codes: true,
+        success_url: `${APP_URL}/home?checkout=success`,
+        cancel_url: `${APP_URL}/pricing?checkout=cancel`,
+      });
+      res.json({ url: session.url });
+    } catch (err) {
+      console.error("createCheckoutSession error:", err);
+      res.status(500).json({ error: "Could not start checkout. Please try again." });
+    }
+  });
+
+// ── Customer Portal (Step 27 — manage/cancel subscription) ────────────────────
+exports.createPortalSession = functions
+  .runWith({ secrets: ["STRIPE_SECRET_KEY"] })
+  .https.onRequest(async (req, res) => {
+    setCORS(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST")    { res.status(405).send("Method Not Allowed"); return; }
+
+    const uid = await verifyUser(req);
+    if (!uid) { res.status(401).json({ error: "Please sign in." }); return; }
+
+    try {
+      const adminDb = getAdminDb();
+      const snap = await adminDb.collection("users").doc(uid).get();
+      const customerId = snap.exists ? snap.data().stripeCustomerId : null;
+      if (!customerId) { res.status(400).json({ error: "No subscription found." }); return; }
+
+      const portal = await getStripe().billingPortal.sessions.create({
+        customer: customerId,
+        return_url: `${APP_URL}/home`,
+      });
+      res.json({ url: portal.url });
+    } catch (err) {
+      console.error("createPortalSession error:", err);
+      res.status(500).json({ error: "Could not open the billing portal." });
+    }
+  });
+
+// ── Stripe Webhook (signature-verified) ───────────────────────────────────────
+// Updates users/{uid} subscription state. Stripe (not a browser) calls this, so
+// no CORS. Signature verification requires the RAW body (req.rawBody).
+exports.stripeWebhook = functions
+  .runWith({ secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] })
+  .https.onRequest(async (req, res) => {
+    const stripe = getStripe();
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.rawBody,
+        req.get("stripe-signature"),
+        process.env.STRIPE_WEBHOOK_SECRET,
+      );
+    } catch (err) {
+      console.error("stripeWebhook signature verification failed:", err.message);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+      return;
+    }
+
+    const adminDb = getAdminDb();
+
+    // Resolve the firebase uid + tier from a subscription object.
+    const applySubscription = async (sub) => {
+      const uid = sub.metadata?.firebaseUID;
+      if (!uid) return;
+      const priceId = sub.items?.data?.[0]?.price?.id;
+      const active = sub.status === "active" || sub.status === "trialing";
+      const tier = active ? (TIER_BY_PRICE[priceId] || "free") : "free";
+      await adminDb.collection("users").doc(uid).set({
+        tier,
+        subscriptionStatus: sub.status,
+        stripeSubscriptionId: sub.id,
+        stripePriceId: priceId || null,
+        currentPeriodEnd: sub.current_period_end
+          ? new Date(sub.current_period_end * 1000).toISOString()
+          : null,
+        subscriptionUpdatedAt: new Date().toISOString(),
+      }, { merge: true });
+    };
+
+    try {
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object;
+          const uid = session.client_reference_id;
+          if (session.subscription && uid) {
+            const sub = await stripe.subscriptions.retrieve(session.subscription);
+            // Ensure the uid is on the subscription metadata for future events.
+            if (!sub.metadata?.firebaseUID) {
+              await stripe.subscriptions.update(sub.id, { metadata: { firebaseUID: uid } });
+              sub.metadata = { ...(sub.metadata || {}), firebaseUID: uid };
+            }
+            await applySubscription(sub);
+          }
+          break;
+        }
+        case "customer.subscription.created":
+        case "customer.subscription.updated":
+        case "customer.subscription.deleted": {
+          await applySubscription(event.data.object);
+          break;
+        }
+        default:
+          // ignore other event types
+          break;
+      }
+      res.json({ received: true });
+    } catch (err) {
+      console.error("stripeWebhook handler error:", err);
+      res.status(500).send("Webhook handler error");
+    }
   });

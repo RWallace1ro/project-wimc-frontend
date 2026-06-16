@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { startCheckout } from "../utils/billing";
 import "./Pricing.css";
 
 const PAYMENTS_ENABLED = process.env.REACT_APP_PAYMENTS_ENABLED === "true";
+
+// Stripe Price IDs come from env so test↔live can be swapped without code edits.
+const PRICE_IDS = {
+  "pro-monthly":    process.env.REACT_APP_PRICE_PRO_MONTHLY,
+  "pro-annual":     process.env.REACT_APP_PRICE_PRO_ANNUAL,
+  "pro-ai-monthly": process.env.REACT_APP_PRICE_PROAI_MONTHLY,
+  "pro-ai-annual":  process.env.REACT_APP_PRICE_PROAI_ANNUAL,
+};
 
 /* ── Plan definitions ── */
 const MONTHLY_PLANS = [
@@ -141,8 +150,10 @@ function Feature({ text, check }) {
 }
 
 /* ── Single pricing card ── */
-function PlanCard({ plan, currentPlanId, isLoggedIn }) {
+function PlanCard({ plan, currentPlanId, isLoggedIn, onRequireLogin }) {
   const isCurrent = isLoggedIn && currentPlanId === plan.id;
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
 
   let btnLabel = plan.btnLabel;
   let btnStyle = plan.btnStyle;
@@ -156,11 +167,21 @@ function PlanCard({ plan, currentPlanId, isLoggedIn }) {
     btnLabel = plan.id === "free" ? plan.btnLabel : "Coming Soon";
     btnDisabled = plan.id !== "free";
   }
+  if (busy) btnLabel = "Redirecting…";
 
-  function handleClick() {
-    if (!PAYMENTS_ENABLED || plan.id === "free") return;
-    // TODO: initiate Stripe Checkout with plan.priceId
-    console.log("Stripe checkout for:", plan.priceId);
+  async function handleClick() {
+    if (!PAYMENTS_ENABLED || plan.id === "free" || busy) return;
+    if (!isLoggedIn) { onRequireLogin?.(); return; }
+    const priceId = PRICE_IDS[plan.id];
+    if (!priceId) { setErr("This plan isn't available yet."); return; }
+    setErr("");
+    setBusy(true);
+    try {
+      await startCheckout(priceId); // redirects to Stripe on success
+    } catch (e) {
+      setErr(e.message || "Could not start checkout.");
+      setBusy(false);
+    }
   }
 
   return (
@@ -198,12 +219,13 @@ function PlanCard({ plan, currentPlanId, isLoggedIn }) {
 
       <button
         className={`pricing-card__btn pricing-card__btn--${btnStyle}`}
-        disabled={btnDisabled}
+        disabled={btnDisabled || busy}
         onClick={handleClick}
         aria-label={btnLabel}
       >
         {btnLabel}
       </button>
+      {err && <p className="pricing-card__error">{err}</p>}
     </div>
   );
 }
@@ -250,6 +272,7 @@ export default function Pricing({ isLoggedIn }) {
                 plan={plan}
                 currentPlanId={currentPlanId}
                 isLoggedIn={isLoggedIn}
+                onRequireLogin={() => navigate("/")}
               />
             ))}
           </div>
@@ -265,6 +288,7 @@ export default function Pricing({ isLoggedIn }) {
                 plan={plan}
                 currentPlanId={currentPlanId}
                 isLoggedIn={isLoggedIn}
+                onRequireLogin={() => navigate("/")}
               />
             ))}
           </div>
