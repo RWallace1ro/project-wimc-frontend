@@ -140,11 +140,11 @@ export default function WIMCAssistant() {
                       stroke="#1e293b" strokeWidth="1.4" strokeLinecap="round" />
               </g>
 
-              {/* Left arm (static) */}
-              <path d="M12 31c-3 1-4.2 3-4.2 6.2"
+              {/* Left arm (reaches out to the side to catch & lift the hanger) */}
+              <path className="wa-bot__arm" d="M12 31c-3 1-4.2 3-4.2 6.2"
                     stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" />
-              {/* Right arm (reaches out to the side to catch & lift the hanger) */}
-              <path className="wa-bot__arm" d="M32 31c3 1 4.2 3 4.2 6.2"
+              {/* Right arm (static) */}
+              <path d="M32 31c3 1 4.2 3 4.2 6.2"
                     stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" />
 
               {/* Hanger — drawn last so it stays in full view (on top of the bot).
