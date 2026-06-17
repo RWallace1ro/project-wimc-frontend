@@ -143,6 +143,20 @@
 .wa-header__icon { font-size: 24px; }
 .wa-header__title { margin: 0; font-size: 16px; font-weight: 700; }
 .wa-header__sub { margin: 0; font-size: 12px; opacity: 0.85; }
+.wa-header__actions { display: flex; align-items: center; gap: 8px; }
+.wa-header__btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wa-header__btn:hover { background: rgba(255, 255, 255, 0.25); }
 .wa-header__close {
   background: rgba(255, 255, 255, 0.15);
   border: none;
@@ -152,6 +166,7 @@
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
+  flex-shrink: 0;
 }
 .wa-header__close:hover { background: rgba(255, 255, 255, 0.25); }
 

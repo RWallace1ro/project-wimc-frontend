@@ -103,6 +103,17 @@ export default function WIMCAssistant() {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
+  // End the current conversation: stop any in-flight reply and reset to the
+  // welcome screen + quick questions (no app refresh needed).
+  const newChat = () => {
+    abortRef.current?.abort();
+    setMessages([]);
+    setInput("");
+    setError("");
+    setStreaming(false);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
   return (
     <>
       {/* Floating launcher */}
@@ -158,7 +169,18 @@ export default function WIMCAssistant() {
                 <p className="wa-header__sub">Ask me how to use the app</p>
               </div>
             </div>
-            <button className="wa-header__close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
+            <div className="wa-header__actions">
+              {messages.length > 0 && (
+                <button
+                  className="wa-header__btn"
+                  onClick={newChat}
+                  title="End conversation / new chat"
+                >
+                  🔄 New chat
+                </button>
+              )}
+              <button className="wa-header__close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
+            </div>
           </header>
 
           <div className="wa-messages">
