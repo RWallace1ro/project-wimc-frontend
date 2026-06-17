@@ -12,9 +12,9 @@ const SLIDES = [
     title: "WIMC™",
     subtitle: "What's In My Closet",
     tags: [
-      "🔐 Secure Auth","👗 Smart Closet","✨ 5 AI Features","🎬 Try-On Studio",
+      "🔐 Secure Auth","👗👔 Smart Closet","✨ 5 AI Features","🎬 Try-On Studio",
       "👶 Kids' Closet","🐾 Pet Closet","🛒 Shopping List","📋 Wish List","🗑️ Donate Bin",
-      "🌤️ Weather","⚙️ Settings","🔍 Closet Search","👔 Outfit Preview",
+      "🌤️ Weather","⚙️ Settings","🔍 Closet Search","👗👔 Outfit Preview",
       "📅 Outfit Planner","✈️ Travel Pack","🧾 Receipts","📹 Video Bin",
     ],
     features: [],
@@ -157,7 +157,7 @@ const SLIDES = [
 // Maps each welcome-slide tag label → the slide id it should jump to
 const TAG_TO_SLIDE = {
   "🔐 Secure Auth":   "auth",
-  "👗 Smart Closet":  "closet",
+  "👗👔 Smart Closet":  "closet",
   "✨ 5 AI Features": "ai",
   "🎬 Try-On Studio": "tryon",
   "👶 Kids' Closet":  "kids",
@@ -168,7 +168,7 @@ const TAG_TO_SLIDE = {
   "🌤️ Weather":       "receipts-weather",
   "⚙️ Settings":      "settings",
   "🔍 Closet Search": "search",
-  "👔 Outfit Preview":"planning",
+  "👗👔 Outfit Preview":"planning",
   "📅 Outfit Planner":"planning",
   "✈️ Travel Pack":   "planning",
   "🧾 Receipts":      "receipts-weather",
