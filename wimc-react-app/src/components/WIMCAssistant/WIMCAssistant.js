@@ -140,20 +140,20 @@ export default function WIMCAssistant() {
 
               {/* Antenna + head/body */}
               <g className="wa-bot__body">
-                <line x1="22" y1="19" x2="22" y2="22" stroke="#fff" strokeWidth="1.4" />
-                <rect x="11" y="22" width="22" height="19" rx="7" fill="#fff" />
-                <circle cx="18" cy="30" r="1.8" fill="#0f172a" />
-                <circle cx="26" cy="30" r="1.8" fill="#0f172a" />
+                <line x1="22" y1="19" x2="22" y2="22" stroke="#c4b5fd" strokeWidth="1.4" />
+                <rect x="11" y="22" width="22" height="19" rx="7" fill="#c4b5fd" />
+                <circle cx="18" cy="30" r="1.8" fill="#1e293b" />
+                <circle cx="26" cy="30" r="1.8" fill="#1e293b" />
                 <path d="M18.5 34.5c1.6 1.5 5.4 1.5 7 0"
-                      stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" />
+                      stroke="#1e293b" strokeWidth="1.4" strokeLinecap="round" />
               </g>
 
               {/* Left arm (static) */}
               <path d="M12 31c-3 1-4.2 3-4.2 6.2"
-                    stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                    stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" />
               {/* Right arm (reaches down to catch the hanger, lifts it back) */}
               <path className="wa-bot__arm" d="M32 31c3 1 4.2 3 4.2 6.2"
-                    stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+                    stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" />
             </svg>
           </span>
         )}

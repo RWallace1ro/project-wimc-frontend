@@ -33,7 +33,9 @@
   height: 46px;
   display: block;
   overflow: visible;
-  /* gentle whole-body idle + a small reach when catching the hanger */
+  /* pivots from the feet so the lean toward the hanger looks natural */
+  transform-box: fill-box;
+  transform-origin: 50% 95%;
   animation: wa-bot-bob 6s ease-in-out infinite;
 }
 /* Chat badge pinned to the upper-right of the bot */
@@ -66,40 +68,47 @@
   8%   { transform: rotate(13deg) translateY(0); }
   18%  { transform: rotate(-11deg) translateY(0); }
   28%  { transform: rotate(6deg)  translateY(0); }
-  36%  { transform: rotate(0deg)  translateY(0); }
-  /* slips and drops to where the arm waits */
-  46%  { transform: rotate(22deg) translateY(20px); }
-  54%  { transform: rotate(18deg) translateY(22px); }
-  /* held low for a beat */
-  62%  { transform: rotate(8deg)  translateY(22px); }
-  /* carried back up and placed on the hook */
-  72%  { transform: rotate(0deg)  translateY(0); }
+  34%  { transform: rotate(0deg)  translateY(0); }
+  /* slips and drops to where the hand waits */
+  44%  { transform: rotate(24deg) translateY(22px); }
+  54%  { transform: rotate(18deg) translateY(24px); }
+  /* held low while the hand grips it */
+  64%  { transform: rotate(10deg) translateY(24px); }
+  /* lifted back up... */
+  74%  { transform: rotate(4deg)  translateY(10px); }
+  /* ...and set onto the hook */
+  82%  { transform: rotate(0deg)  translateY(0); }
   /* settles into a gentle swing again */
-  82%  { transform: rotate(9deg)  translateY(0); }
-  92%  { transform: rotate(-6deg) translateY(0); }
+  90%  { transform: rotate(8deg)  translateY(0); }
+  96%  { transform: rotate(-5deg) translateY(0); }
   100% { transform: rotate(0deg)  translateY(0); }
 }
 
 @keyframes wa-arm {
   /* resting by the side */
-  0%, 36% { transform: rotate(0deg); }
-  /* reaches down/in to catch the falling hanger */
-  46%     { transform: rotate(-38deg); }
-  54%     { transform: rotate(-46deg); }
-  /* holds it low */
-  62%     { transform: rotate(-46deg); }
-  /* lifts it back up to the hook, then returns to rest */
-  72%     { transform: rotate(0deg); }
+  0%, 34% { transform: rotate(0deg); }
+  /* big reach down/in toward the falling hanger */
+  44%     { transform: rotate(48deg); }
+  54%     { transform: rotate(56deg); }
+  /* grips it low */
+  64%     { transform: rotate(56deg); }
+  /* sweeps the hanger up high to set it on the hook (very visible) */
+  74%     { transform: rotate(-30deg); }
+  82%     { transform: rotate(-58deg); }
+  /* lowers back to rest */
+  90%     { transform: rotate(-12deg); }
   100%    { transform: rotate(0deg); }
 }
 
 @keyframes wa-bot-bob {
-  0%, 40% { transform: translateY(0); }
-  /* tiny lean as it works */
-  50%     { transform: translateY(1px); }
-  66%     { transform: translateY(-1.5px); }
-  74%     { transform: translateY(0); }
-  100%    { transform: translateY(0); }
+  0%, 34% { transform: translateY(0) rotate(0deg); }
+  /* leans toward the hanger to pick it up */
+  46%     { transform: translateY(1px) rotate(9deg); }
+  64%     { transform: translateY(1px) rotate(9deg); }
+  /* straightens up as it sets the hanger back */
+  80%     { transform: translateY(-1px) rotate(-4deg); }
+  90%     { transform: translateY(0) rotate(0deg); }
+  100%    { transform: translateY(0) rotate(0deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
