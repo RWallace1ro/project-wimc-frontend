@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { syncSetItem } from "../../utils/syncStore";
 import "./WIMCTourVideo.css";
  
 // ── Slide data ────────────────────────────────────────────────────────────────
@@ -738,7 +739,9 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
     stopPlayback();
     stopSpeech();
     clearTimeout(typeRef.current);
-    localStorage.setItem(LS_SEEN_KEY, "true");
+    // Persist to the account (syncs across devices) so the onboarding tour
+    // auto-shows only once per user, not once per device.
+    syncSetItem(LS_SEEN_KEY, "true");
     onClose?.();
   };
 

@@ -20,7 +20,8 @@ import {
 
 // ── Keys that are device-local and should NOT be synced ──────────────────────
 const NO_SYNC = new Set([
-  "wimc_tour_seen",     // "have you seen the tour" flag — per device
+  // wimc_tour_seen is now synced so the onboarding tour auto-shows once per
+  // ACCOUNT (every new sign-up sees it once, across all their devices).
   "wimc_local_outfits", // legacy local backup
 ]);
 
