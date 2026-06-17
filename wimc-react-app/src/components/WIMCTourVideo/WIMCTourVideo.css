@@ -886,7 +886,9 @@
 /* ── Lobby screen ─────────────────────────────────────── */
 .tour-lobby {
   flex: 1;
+  min-height: 0; /* lets this flex child actually scroll instead of overflowing */
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   align-items: center;
