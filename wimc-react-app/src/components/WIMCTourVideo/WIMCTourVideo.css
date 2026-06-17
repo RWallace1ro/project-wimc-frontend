@@ -1043,3 +1043,14 @@
     display: none; /* hidden on very small screens — lobby version still works */
   }
 }
+
+/* Lobby voice-settings note */
+.tour-lobby-voicenote {
+  margin: 14px auto 0;
+  max-width: 460px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #94a3b8;
+  text-align: center;
+}
+.tour-lobby-icon { letter-spacing: 2px; }

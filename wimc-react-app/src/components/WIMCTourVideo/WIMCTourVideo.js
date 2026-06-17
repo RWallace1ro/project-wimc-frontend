@@ -8,7 +8,7 @@ const SLIDES = [
     id: "welcome",
     label: "Welcome",
     dur: 8,
-    icon: "👗",
+    icon: "👗👔",
     title: "WIMC™",
     subtitle: "What's In My Closet",
     tags: [
@@ -28,8 +28,8 @@ const SLIDES = [
     title: "Authentication",
     type: "feature",
     mockupTitle: "WIMC™ — Sign In",
-    features: ["Sign Up & Login flow","SHA-256 password hashing","Secure localStorage session","Avatar photo upload","Edit profile in Settings","Password change + strength meter"],
-    featureIcons: ["✅","🔑","💾","📷","✏️","🔄"],
+    features: ["Sign Up & Login flow","Firebase Authentication","Email verification & password reset","Avatar photo upload","Edit profile in Settings","Password change + strength meter"],
+    featureIcons: ["✅","🔑","📧","📷","✏️","🔄"],
   },
   {
     id: "closet",
@@ -39,8 +39,8 @@ const SLIDES = [
     title: "Smart Closet",
     type: "feature",
     mockupTitle: "My Closet",
-    features: ["6 clothing categories","Images & video uploads","Cloudinary media storage","Per-section custom backgrounds","Color palette + photo presets","Try-On button per section","AI Natural Language Search"],
-    featureIcons: ["📦","🖼️","☁️","🎨","🌈","🎬","🔍"],
+    features: ["6 clothing categories","Bags · Accessories · Fragrance","Images & video uploads","Per-section custom backgrounds","Color palette + photo presets","Try-On button per section","AI Natural Language Search"],
+    featureIcons: ["📦","👜","🖼️","🎨","🌈","🎬","🔍"],
   },
   {
     id: "search",
@@ -61,8 +61,8 @@ const SLIDES = [
     title: "Planning Tools",
     type: "feature",
     mockupTitle: "Outfit Preview + Planner",
-    features: ["Outfit Preview Panel","Drag-and-drop reordering","Favorites & saved looks","Share & print outfit","7-day Outfit Planner","Travel Pack Panel","AI Packing Assistant","Export / import plans"],
-    featureIcons: ["👁️","↕️","⭐","🔗","📅","✈️","🧳","📤"],
+    features: ["Outfit Preview Panel","Tap to select items","Favorites & saved looks","Share & print outfit","7-day Outfit Planner","Travel Pack Panel","AI Packing Assistant","Export / import plans"],
+    featureIcons: ["👁️","👆","⭐","🔗","📅","✈️","🧳","📤"],
   },
   {
     id: "ai",
@@ -148,9 +148,9 @@ const SLIDES = [
     icon: "⚙️",
     title: "Settings & More",
     type: "feature",
-    mockupTitle: "⚙️ Settings · ✨ AI Stylist",
-    features: ["Edit profile & upload avatar","Password + strength meter","Page & card backgrounds","AI Stylist — full chat interface","Secure account deletion flow","Built with React + Cloudinary"],
-    featureIcons: ["🖼️","🔒","🎨","✨","🔐","🚀"],
+    mockupTitle: "⚙️ Settings · 💬 Assistant",
+    features: ["Edit profile & upload avatar","Password + strength meter","Page & card backgrounds","Manage subscription (Pro / Pro + AI)","WIMC Assistant help bot on every page","Secure account deletion flow"],
+    featureIcons: ["🖼️","🔒","🎨","💳","💬","🔐"],
   },
 ];
 
@@ -185,18 +185,18 @@ const SPEED_OPTIONS = [
 
 const SCRIPTS = [
   "Welcome to WIMC — What's In My Closet! This is your complete AI-powered wardrobe manager. From smart closets and outfit planning to kids' closets, shopping lists, weather, and more — let me show you everything.",
-  "WIMC starts with secure authentication. Sign up or log in — all passwords are protected with SHA-256 hashing. Upload a profile photo and update your account anytime from Settings.",
-  "Your closet is organized into six smart categories. Upload photos and videos, stored securely in the cloud. Customize each section's background with photo presets or a full color palette.",
+  "WIMC starts with secure authentication powered by Firebase. Sign up or log in, verify your email, and reset your password anytime. Upload a profile photo and update your account from Settings.",
+  "Your closet is organized into six smart categories. The Bags and Accessories card even splits into Bags, Accessories, and Fragrance. Upload photos and videos to the cloud, and customize each section's background with photo presets or a color palette.",
   "Use Closet Search to find any item instantly with AI Natural Language Search. Search across all categories, filter by color, type, or season, and open any item directly from results.",
-  "The Outfit Preview Panel lets you build looks with drag-and-drop. Save favorites, share outfits, and plan your entire week with the Outfit Planner. The Travel Pack Panel helps you pack smarter with AI assistance.",
-  "WIMC has five AI features built in — an AI Stylist, Natural Language Search, a Smart Donation Advisor, AI Style Feedback after try-ons, and a full AI Shopping Assistant.",
+  "The Outfit Preview Panel lets you build looks by tapping items to select them. Save favorites, share outfits, and plan your entire week with the Outfit Planner. The Travel Pack Panel helps you pack smarter with AI assistance.",
+  "WIMC has five AI features built in — an AI Stylist that can build a full outfit from your own closet, Natural Language Search, a Smart Donation Advisor, AI Style Feedback after try-ons, and a full AI Shopping Assistant. Your plan sets how many AI requests you get each day.",
   "The Try-On Studio lets you record outfit videos using your front or rear camera. After recording, get personalized AI Style Feedback covering what works, style tips, and how to complete the look.",
   "The Donate Bin lets you collect items for donation with an AI advisor to help you decide what to let go. The Wish List stores items you want with URL previews and priority notes — shareable via link.",
   "The Shopping List has three built-in categories plus unlimited custom ones with over 300 emoji to choose from. Use four AI modes to suggest items, analyze your budget, or prioritize your list.",
   "Kids' Closet lets you manage clothing profiles for each child, with US and EU sizing shown side by side. Deleted profiles stay recoverable for 14 days.",
   "The Pet Closet gives each pet its own profile and wardrobe — track species, breed, apparel size, and key measurements like back, neck, and chest, with pet-specific sections like Sweaters, Bandanas, and Collars. Share sizing with sitters and family.",
   "The Receipts page stores all your shopping receipts by photo, PDF, or email, filterable by store and category. The Weather panel in the header gives you a current forecast plus 7-day outlook to plan your outfits.",
-  "Settings gives you full control over your profile, password, and app appearance. The AI Stylist is available right from the header for instant style advice. That's WIMC — your complete wardrobe companion!",
+  "Settings gives you full control over your profile, password, and app appearance, and lets you manage your subscription. And the WIMC Assistant — the little chat bubble on every page — answers your how-to questions anytime. That's WIMC, your complete wardrobe companion!",
 ];
  
 const TOTAL_DUR = SLIDES.reduce((a, s) => a + s.dur, 0);
@@ -772,7 +772,7 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
         {tourPhase === "lobby" && (
           <div className="tour-lobby">
             <div className="tour-lobby-hero">
-              <div className="tour-lobby-icon">👗</div>
+              <div className="tour-lobby-icon">👗👔</div>
               <div className="tour-lobby-title">WIMC™</div>
               <div className="tour-lobby-sub">What's In My Closet — Feature Tour</div>
             </div>
@@ -820,6 +820,15 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
             >
               ▶ Start Tour from Beginning
             </button>
+
+            <p className="tour-lobby-voicenote">
+              🔊 The guide's voice uses your device's built-in text-to-speech, so
+              it sounds different on each device. For the most natural voice,
+              install a "Natural" / "Neural" voice in your system settings
+              (e.g. Windows: Settings → Time &amp; Language → Speech; iPhone:
+              Settings → Accessibility → Spoken Content → Voices). You can also
+              mute narration anytime with the 🔊 button during the tour.
+            </p>
           </div>
         )}
 
