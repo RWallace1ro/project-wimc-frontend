@@ -388,6 +388,11 @@ export default function WeatherModal({ isOpen, onClose }) {
                   <div className="weather-today__info">
                     <div className="weather-today__temp">{tempF}°F</div>
                     <div className="weather-today__label">{todayWmo.label}</div>
+                    <div className="weather-today__highlow">
+                      H: {Math.round(dy.temperature_2m_max[0])}°
+                      &nbsp;&nbsp;
+                      L: {Math.round(dy.temperature_2m_min[0])}°
+                    </div>
                     <div className="weather-today__meta">
                       Feels like {feelF}°F &nbsp;·&nbsp; 💧 {humidity}% humidity &nbsp;·&nbsp; 💨 {wind} mph
                     </div>

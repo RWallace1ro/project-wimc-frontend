@@ -22,10 +22,13 @@ export async function aiProxyFetch(body, { signal, feature } = {}) {
   } catch {
     // No token (signed out) — the server will reject with 401.
   }
+  // Send the feature label so the server can apply feature-specific rate limits
+  // (e.g. the WIMC Assistant help bot has its own generous cap). The server
+  // strips this field before forwarding to Anthropic.
   const init = {
     method: "POST",
     headers,
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, feature }),
   };
   if (signal) init.signal = signal;
   return fetch(process.env.REACT_APP_ANTHROPIC_PROXY_URL, init);

@@ -20,6 +20,65 @@
 .wa-fab:hover { transform: scale(1.06); background: #1e293b; }
 .wa-fab.is-open { background: #7c3aed; }
 
+/* ── Bot personality: swinging hanger that drops & gets picked back up ── */
+.wa-fab__face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+}
+.wa-fab__emoji {
+  font-size: 24px;
+  /* tiny "reach up" bob when the hanger is being picked back up */
+  animation: wa-bot-bob 6s ease-in-out infinite;
+}
+/* Wrapper statically centers the hanger above the bot; inner element animates */
+.wa-fab__hanger-wrap {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.wa-fab__hanger {
+  display: block;
+  transform-origin: top center;
+  animation: wa-hanger 6s ease-in-out infinite;
+}
+
+@keyframes wa-hanger {
+  /* gentle swing */
+  0%   { transform: rotate(0deg)   translateY(0); opacity: 1; }
+  9%   { transform: rotate(15deg)  translateY(0); opacity: 1; }
+  19%  { transform: rotate(-12deg) translateY(0); opacity: 1; }
+  29%  { transform: rotate(7deg)   translateY(0); opacity: 1; }
+  37%  { transform: rotate(0deg)   translateY(0); opacity: 1; }
+  /* it slips and falls */
+  46%  { transform: rotate(38deg)  translateY(42px); opacity: 0; }
+  /* gone for a beat while the bot reaches for it */
+  60%  { transform: rotate(38deg)  translateY(42px); opacity: 0; }
+  /* picked back up to the top */
+  69%  { transform: rotate(0deg)   translateY(0); opacity: 1; }
+  /* and swinging again */
+  80%  { transform: rotate(11deg)  translateY(0); opacity: 1; }
+  90%  { transform: rotate(-8deg)  translateY(0); opacity: 1; }
+  100% { transform: rotate(0deg)   translateY(0); opacity: 1; }
+}
+
+@keyframes wa-bot-bob {
+  0%, 45%   { transform: translateY(0); }
+  /* little upward reach as it catches the hanger */
+  60%       { transform: translateY(-2px); }
+  69%       { transform: translateY(0); }
+  100%      { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wa-fab__hanger,
+  .wa-fab__emoji { animation: none; }
+}
+
 /* Chat panel */
 .wa-panel {
   position: fixed;

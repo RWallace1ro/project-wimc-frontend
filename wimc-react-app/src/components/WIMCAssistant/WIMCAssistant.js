@@ -112,7 +112,22 @@ export default function WIMCAssistant() {
         aria-label={open ? "Close help assistant" : "Open help assistant"}
         title="WIMC Assistant — Help"
       >
-        {open ? "✕" : "💬"}
+        {open ? "✕" : (
+          <span className="wa-fab__face">
+            {/* A little hanger swings, drops, and gets picked back up — for character */}
+            <span className="wa-fab__hanger-wrap" aria-hidden="true">
+              <span className="wa-fab__hanger">
+                <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
+                  <path d="M11 1.5c-1.4 0-1.9 1.6-.6 2.4.5.3.6.6.6 1.1"
+                        stroke="#fff" strokeWidth="1.3" strokeLinecap="round" />
+                  <path d="M11 5 3.5 12.5h15L11 5Z"
+                        stroke="#fff" strokeWidth="1.3" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </span>
+            <span className="wa-fab__emoji">💬</span>
+          </span>
+        )}
       </button>
 
       {open && (

@@ -40,6 +40,12 @@ function getAdminDb() {
 // the ladder the pricing page advertises (Free 3 / Pro 10 / Pro+AI 50).
 const AI_LIMITS = { free: 3, pro: 10, pro_ai: 50 };
 
+// The WIMC Assistant (in-app help bot) is exempt from the tier AI ladder so
+// support is always available — but it gets its own generous daily cap (tracked
+// separately) to bound abuse.
+const HELP_FEATURE = "wimc_assistant";
+const HELP_DAILY_LIMIT = 40;
+
 // Set permissive CORS headers on every response so the browser never blocks
 // the preflight. Allow the Authorization header so the client can send the
 // Firebase ID token used for per-user rate limiting.
@@ -83,6 +89,23 @@ async function checkAndIncrementUsage(uid) {
   });
 }
 
+// Separate daily counter for the help assistant (not tied to the tier ladder).
+async function checkAndIncrementHelp(uid) {
+  const adminDb = getAdminDb();
+  const ref = adminDb.collection("aiHelpUsage").doc(uid);
+  const today = new Date().toISOString().slice(0, 10);
+  return adminDb.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const data = snap.exists ? snap.data() : {};
+    const count = data.date === today ? (data.count || 0) : 0;
+    if (count >= HELP_DAILY_LIMIT) {
+      return { allowed: false, count, limit: HELP_DAILY_LIMIT };
+    }
+    tx.set(ref, { date: today, count: count + 1, updatedAt: Date.now() });
+    return { allowed: true, count: count + 1, limit: HELP_DAILY_LIMIT };
+  });
+}
+
 // ── Anthropic proxy ───────────────────────────────────────────────────────────
 exports.anthropicProxy = functions
   .runWith({ secrets: ["ANTHROPIC_API_KEY"] })
@@ -105,16 +128,27 @@ exports.anthropicProxy = functions
       return;
     }
 
-    // ── Per-user daily rate limit (tier-based) ────────────────────────────────
+    // The client tags each call with a feature label. Strip it before
+    // forwarding (Anthropic would reject an unknown field) and use it to pick
+    // the rate-limit bucket: the help bot has its own counter, exempt from the
+    // tier AI ladder.
+    const { feature, ...anthropicBody } = req.body || {};
+    const isHelp = feature === HELP_FEATURE;
+
+    // ── Per-user daily rate limit ─────────────────────────────────────────────
     try {
-      const { allowed, count, limit, tier } = await checkAndIncrementUsage(uid);
+      const { allowed, count, limit, tier } = isHelp
+        ? await checkAndIncrementHelp(uid)
+        : await checkAndIncrementUsage(uid);
       if (!allowed) {
-        const upgradeHint = tier === "pro_ai"
-          ? "Please try again tomorrow."
-          : "Upgrade your plan for more daily AI requests, or try again tomorrow.";
-        res.status(429).json({
-          error: `You've reached today's limit of ${limit} AI requests. ${upgradeHint}`,
-        });
+        const msg = isHelp
+          ? `You've reached today's limit of ${limit} help questions. Please try again tomorrow.`
+          : `You've reached today's limit of ${limit} AI requests. ${
+              tier === "pro_ai"
+                ? "Please try again tomorrow."
+                : "Upgrade your plan for more daily AI requests, or try again tomorrow."
+            }`;
+        res.status(429).json({ error: msg });
         return;
       }
       res.set("X-AI-Usage", String(count));
@@ -132,7 +166,7 @@ exports.anthropicProxy = functions
           "x-api-key": process.env.ANTHROPIC_API_KEY,
           "anthropic-version": "2023-06-01",
         },
-        body: JSON.stringify({ ...req.body, stream: false }),
+        body: JSON.stringify({ ...anthropicBody, stream: false }),
       });
       const data = await upstream.json();
       res.status(upstream.status).json(data);
