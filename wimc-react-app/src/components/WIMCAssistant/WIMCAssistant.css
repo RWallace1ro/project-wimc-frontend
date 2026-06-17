@@ -1,0 +1,194 @@
+/* Floating launcher button */
+.wa-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1400;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: #0f172a;
+  color: #fff;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  display: grid;
+  place-items: center;
+  transition: transform 0.15s, background 0.15s;
+}
+.wa-fab:hover { transform: scale(1.06); background: #1e293b; }
+.wa-fab.is-open { background: #7c3aed; }
+
+/* Chat panel */
+.wa-panel {
+  position: fixed;
+  bottom: 88px;
+  right: 20px;
+  z-index: 1400;
+  width: min(100vw - 32px, 380px);
+  height: min(100vh - 130px, 560px);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: waIn 0.18s ease both;
+}
+@keyframes waIn {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* Header */
+.wa-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  color: #fff;
+  flex-shrink: 0;
+}
+.wa-header__left { display: flex; align-items: center; gap: 10px; }
+.wa-header__icon { font-size: 24px; }
+.wa-header__title { margin: 0; font-size: 16px; font-weight: 700; }
+.wa-header__sub { margin: 0; font-size: 12px; opacity: 0.85; }
+.wa-header__close {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+.wa-header__close:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* Messages */
+.wa-messages {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #f8f9ff;
+}
+
+.wa-welcome { display: flex; flex-direction: column; gap: 12px; }
+.wa-welcome__text {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+}
+.wa-prompts { display: flex; flex-direction: column; gap: 6px; }
+.wa-prompt {
+  text-align: left;
+  padding: 9px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: #4f46e5;
+}
+.wa-prompt:hover { background: #eef2ff; border-color: #c7d2fe; }
+
+.wa-msg { display: flex; }
+.wa-msg--user { justify-content: flex-end; }
+.wa-msg--assistant { justify-content: flex-start; }
+.wa-msg__bubble {
+  max-width: 88%;
+  padding: 9px 13px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.wa-msg--user .wa-msg__bubble {
+  background: #7c3aed;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.wa-msg--assistant .wa-msg__bubble {
+  background: #fff;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+.wa-cursor { display: inline-block; animation: waBlink 0.8s infinite; }
+@keyframes waBlink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+.wa-error { font-size: 12.5px; color: #b91c1c; text-align: center; margin: 0; }
+
+/* Footer input */
+.wa-footer {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+  flex-shrink: 0;
+}
+.wa-input {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+}
+.wa-input:focus { border-color: #7c3aed; }
+.wa-send {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.wa-send:hover { background: #6d28d9; }
+.wa-send:disabled { background: #c4b5fd; cursor: not-allowed; }
+
+.wa-footnote {
+  margin: 0;
+  padding: 0 12px 10px;
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  background: #fff;
+}
+.wa-link {
+  border: none;
+  background: none;
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+/* Mobile: full-width panel above the FAB */
+@media (max-width: 480px) {
+  .wa-panel {
+    right: 8px;
+    left: 8px;
+    width: auto;
+    bottom: 84px;
+    height: min(100vh - 120px, 540px);
+  }
+  .wa-fab { bottom: 16px; right: 16px; }
+}

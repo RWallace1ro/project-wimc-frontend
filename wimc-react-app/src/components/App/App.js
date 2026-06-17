@@ -53,6 +53,7 @@ const Pricing = React.lazy(() => import("../../Pages/Pricing"));
 const SharedView = React.lazy(() => import("../../Pages/SharedView"));
 const AuthAction = React.lazy(() => import("../../Pages/AuthAction"));
 const NotFound = React.lazy(() => import("../../Pages/NotFound"));
+const WIMCAssistant = React.lazy(() => import("../WIMCAssistant/WIMCAssistant"));
 
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
@@ -571,6 +572,11 @@ function AppInner() {
             </React.Suspense>
           </section>
           <Footer />
+          {isLoggedIn && (
+            <React.Suspense fallback={null}>
+              <WIMCAssistant />
+            </React.Suspense>
+          )}
           <CookieConsent />
           <CookiePreferences />
           <ModalWithForm
