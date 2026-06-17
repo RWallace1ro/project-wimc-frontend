@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { startCheckout } from "../utils/billing";
+import { useTier } from "../context/TierContext";
 import "./Pricing.css";
 
 const PAYMENTS_ENABLED = process.env.REACT_APP_PAYMENTS_ENABLED === "true";
@@ -232,9 +233,21 @@ function PlanCard({ plan, currentPlanId, isLoggedIn, onRequireLogin }) {
 /* ── Page ── */
 export default function Pricing({ isLoggedIn }) {
   const navigate = useNavigate();
+  const { tier, priceId } = useTier();
 
-  // TODO: fetch currentPlanId from Firestore /customers/{uid}/subscriptions when payments go live
-  const currentPlanId = isLoggedIn ? "free" : null;
+  // Determine the user's current plan card from their live subscription.
+  // Prefer an exact price→plan match (knows monthly vs annual); fall back to
+  // the tier's monthly card if the price isn't recognized.
+  const planIdByPrice = Object.fromEntries(
+    Object.entries(PRICE_IDS).map(([planId, pid]) => [pid, planId])
+  );
+  let currentPlanId = null;
+  if (isLoggedIn) {
+    if (priceId && planIdByPrice[priceId]) currentPlanId = planIdByPrice[priceId];
+    else if (tier === "pro") currentPlanId = "pro-monthly";
+    else if (tier === "pro_ai") currentPlanId = "pro-ai-monthly";
+    else currentPlanId = "free";
+  }
 
   return (
     <main className="pricing-page">

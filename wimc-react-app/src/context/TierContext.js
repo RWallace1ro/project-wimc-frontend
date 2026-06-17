@@ -21,6 +21,7 @@ import UpgradeModal from "../components/UpgradeModal/UpgradeModal";
 
 const TierContext = createContext({
   tier: "free",
+  priceId: null,
   ready: false,
   isPro: false,
   isProAI: false,
@@ -68,21 +69,24 @@ function tierMeets(tier, required) {
 
 export function TierProvider({ uid, children }) {
   const [tier, setTier] = useState("free");
+  const [priceId, setPriceId] = useState(null);
   const [ready, setReady] = useState(false);
   const [modal, setModal] = useState({ open: false, feature: "", requiredTier: "pro" });
 
   useEffect(() => {
-    if (!uid) { setTier("free"); setReady(true); return; }
+    if (!uid) { setTier("free"); setPriceId(null); setReady(true); return; }
     setReady(false);
     const ref = doc(db, "users", uid);
     const unsub = onSnapshot(
       ref,
       (snap) => {
-        const t = snap.exists() ? snap.data().tier : "free";
+        const d = snap.exists() ? snap.data() : {};
+        const t = d.tier;
         setTier(t === "pro" || t === "pro_ai" ? t : "free");
+        setPriceId(d.stripePriceId || null);
         setReady(true);
       },
-      () => { setTier("free"); setReady(true); }, // offline / rules → assume free
+      () => { setTier("free"); setPriceId(null); setReady(true); }, // offline → free
     );
     return () => unsub();
   }, [uid]);
@@ -102,7 +106,7 @@ export function TierProvider({ uid, children }) {
   const requireProAI = useCallback((feature) => gate("pro_ai", feature), [gate]);
 
   return (
-    <TierContext.Provider value={{ tier, ready, isPro, isProAI, requirePro, requireProAI }}>
+    <TierContext.Provider value={{ tier, priceId, ready, isPro, isProAI, requirePro, requireProAI }}>
       {children}
       <UpgradeModal
         open={modal.open}
