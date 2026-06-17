@@ -130,14 +130,6 @@ export default function WIMCAssistant() {
             {/* A little robot whose arm catches the dropped hanger and lifts it
                 back into place — gives the bot some character. */}
             <svg className="wa-bot" viewBox="0 0 44 50" fill="none" aria-hidden="true">
-              {/* Hanger — swings, drops, is carried back up */}
-              <g className="wa-bot__hanger">
-                <path d="M22 6c-1.5 0-2 1.7-.6 2.5.5.3.6.6.6 1.1"
-                      stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
-                <path d="M22 9.6 14.5 16.5h15L22 9.6Z"
-                      stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" />
-              </g>
-
               {/* Antenna + head/body */}
               <g className="wa-bot__body">
                 <line x1="22" y1="19" x2="22" y2="22" stroke="#c4b5fd" strokeWidth="1.4" />
@@ -151,9 +143,18 @@ export default function WIMCAssistant() {
               {/* Left arm (static) */}
               <path d="M12 31c-3 1-4.2 3-4.2 6.2"
                     stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" />
-              {/* Right arm (reaches down to catch the hanger, lifts it back) */}
+              {/* Right arm (reaches out to the side to catch & lift the hanger) */}
               <path className="wa-bot__arm" d="M32 31c3 1 4.2 3 4.2 6.2"
                     stroke="#c4b5fd" strokeWidth="1.8" strokeLinecap="round" />
+
+              {/* Hanger — drawn last so it stays in full view (on top of the bot).
+                  Falls out to the side, is held beside the bot, then lifted back. */}
+              <g className="wa-bot__hanger">
+                <path d="M22 6c-1.5 0-2 1.7-.6 2.5.5.3.6.6.6 1.1"
+                      stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M22 9.6 14.5 16.5h15L22 9.6Z"
+                      stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" />
+              </g>
             </svg>
           </span>
         )}
