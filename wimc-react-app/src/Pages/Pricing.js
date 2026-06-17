@@ -243,10 +243,17 @@ export default function Pricing({ isLoggedIn }) {
   );
   let currentPlanId = null;
   if (isLoggedIn) {
-    if (priceId && planIdByPrice[priceId]) currentPlanId = planIdByPrice[priceId];
-    else if (tier === "pro") currentPlanId = "pro-monthly";
-    else if (tier === "pro_ai") currentPlanId = "pro-ai-monthly";
-    else currentPlanId = "free";
+    // Tier is the source of truth. A stale stripePriceId can linger after a
+    // downgrade/cancel, so only consult it to refine WHICH paid card is current.
+    if (tier === "free") {
+      currentPlanId = "free";
+    } else if (priceId && planIdByPrice[priceId]) {
+      currentPlanId = planIdByPrice[priceId];
+    } else if (tier === "pro") {
+      currentPlanId = "pro-monthly";
+    } else if (tier === "pro_ai") {
+      currentPlanId = "pro-ai-monthly";
+    }
   }
 
   return (
