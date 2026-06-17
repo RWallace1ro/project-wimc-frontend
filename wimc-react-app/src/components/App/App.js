@@ -36,7 +36,7 @@ import { uploadImage, fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { ClosetProvider } from "../../context/ClosetContext";
 import { BackgroundProvider } from "../../context/BackgroundContext";
 import { SyncProvider } from "../../context/SyncContext";
-import { TierProvider } from "../../context/TierContext";
+import { TierProvider, useTier } from "../../context/TierContext";
 import "./App.css";
 
 const Home = React.lazy(() => import("../../components/Home/Home"));
@@ -67,6 +67,16 @@ function ProtectedRoute({ isLoggedIn, onLoginRequired, children }) {
     }
   }, [isLoggedIn, onLoginRequired]);
   if (!isLoggedIn) return <Navigate to="/" replace />;
+  return children;
+}
+
+// Blocks direct-URL access to a Pro-only page for Free users. Waits for the
+// tier to load, then redirects non-Pro users to /pricing (the header already
+// shows the upgrade modal; this covers users typing the URL directly).
+function ProRoute({ children }) {
+  const { isPro, ready } = useTier();
+  if (!ready) return null; // brief — tier snapshot resolving
+  if (!isPro) return <Navigate to="/pricing" replace />;
   return children;
 }
 
@@ -527,7 +537,7 @@ function AppInner() {
                 path="/kids-closet"
                 element={
                   <ProtectedRoute isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
-                    <KidsCloset />
+                    <ProRoute><KidsCloset /></ProRoute>
                   </ProtectedRoute>
                 }
               />
@@ -535,7 +545,7 @@ function AppInner() {
                 path="/pet-closet"
                 element={
                   <ProtectedRoute isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
-                    <PetCloset />
+                    <ProRoute><PetCloset /></ProRoute>
                   </ProtectedRoute>
                 }
               />

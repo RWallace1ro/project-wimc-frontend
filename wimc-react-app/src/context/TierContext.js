@@ -32,6 +32,33 @@ export function useTier() {
   return useContext(TierContext);
 }
 
+/**
+ * ProGate — wraps an inline feature panel. For users who lack the required tier
+ * it renders the panel dimmed + non-interactive with a "🔒 Pro" badge; the
+ * first click opens the upgrade modal instead of activating the panel. Users
+ * who meet the tier get the panel untouched.
+ */
+export function ProGate({ feature, requiredTier = "pro", children }) {
+  const { isPro, isProAI, requirePro, requireProAI } = useTier();
+  const allowed = requiredTier === "pro_ai" ? isProAI : isPro;
+  if (allowed) return children;
+
+  const gate = requiredTier === "pro_ai" ? requireProAI : requirePro;
+  const badge = requiredTier === "pro_ai" ? "🔒 Pro + AI" : "🔒 Pro";
+  return (
+    <div
+      className="pro-gate"
+      role="button"
+      tabIndex={0}
+      onClickCapture={(e) => { e.preventDefault(); e.stopPropagation(); gate(feature); }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); gate(feature); } }}
+    >
+      <div className="pro-gate__content" aria-hidden="true">{children}</div>
+      <span className="pro-gate__badge">{badge}</span>
+    </div>
+  );
+}
+
 // pro_ai satisfies pro; pro satisfies pro; free satisfies neither.
 function tierMeets(tier, required) {
   if (required === "pro_ai") return tier === "pro_ai";

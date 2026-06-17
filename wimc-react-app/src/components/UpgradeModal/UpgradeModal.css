@@ -81,3 +81,30 @@
   color: #fff;
 }
 .upgrade-modal__btn--primary:hover { background: #6d28d9; }
+
+/* ── ProGate (locked inline feature panel) ── */
+.pro-gate {
+  position: relative;
+  cursor: pointer;
+  border-radius: 12px;
+}
+.pro-gate__content {
+  opacity: 0.5;
+  filter: grayscale(0.4);
+  pointer-events: none;
+  user-select: none;
+}
+.pro-gate__badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  background: #7c3aed;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+  pointer-events: none;
+}

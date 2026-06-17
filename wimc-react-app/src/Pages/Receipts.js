@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { uploadReceipt, uploadRawJSON } from "../utils/CloudinaryAPI";
 import { shareItemImage, shareAppLink } from "../utils/shareUtils";
+import { useTier } from "../context/TierContext";
 import "./Receipts.css";
 
 const LS_KEY = "wimc_receipts";
@@ -63,6 +64,7 @@ function getReceiptFiles(r) {
 
 export default function Receipts() {
   const navigate = useNavigate();
+  const { requirePro } = useTier();
   const [receipts, setReceipts] = useState(load);
   const [filter, setFilter] = useState("All");
   const [returnFilter, setReturnFilter] = useState("All Purchases");
@@ -408,6 +410,7 @@ export default function Receipts() {
 
   // ── Backup / Restore (cross-device sync) ─────────────────────────────────
   const handleBackup = async () => {
+    if (!requirePro("Receipts backup & restore")) return; // Pro feature
     if (!receipts.length) {
       setSyncMsg("❌ No receipts to back up.");
       return;
@@ -436,6 +439,7 @@ export default function Receipts() {
   };
 
   const handleRestore = async () => {
+    if (!requirePro("Receipts backup & restore")) return; // Pro feature
     if (!restoreUrl.trim()) return;
     setRestoring(true);
     setSyncMsg("");

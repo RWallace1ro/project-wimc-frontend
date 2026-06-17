@@ -9,6 +9,7 @@ import ShoppingList from "../components/ShoppingList/ShoppingList";
 import AddClothingModal from "../components/AddClothingModal/AddClothingModal";
 import { fetchImagesByTag, fetchVideosByTag } from "../utils/CloudinaryAPI";
 import VideoBin from "../components/VideoBin/VideoBin";
+import { ProGate } from "../context/TierContext";
 import OutfitPreviewPanel from "../components/OutfitPreviewPanel/OutfitPreviewPanel";
 import OutfitPlanner from "../components/OutfitPlanner/OutfitPlanner";
 import TravelPackPanel from "../components/TravelPackPanel/TravelPackPanel";
@@ -286,35 +287,41 @@ function ClosetData({
         <aside className="closet-data__side-left">
           <OutfitPreviewPanel onSelectionChange={setPreviewSelection} gender={gender} tagPrefix={genderPrefix} incomingItems={previewIncoming} />
           <aside className="closet-data__side-container">
-            <OutfitPlanner
-              weekPlan={weekPlan}
-              onChange={setWeekPlan}
-              currentPreview={previewSelection}
-              incomingItems={plannerIncoming}
-              gender={gender}
-              tagPrefix={genderPrefix}
-            />
-            <TravelPackPanel
-              currentPreview={previewSelection}
-              incomingItems={packIncoming}
-              gender={gender}
-              tagPrefix={genderPrefix}
-              onSyncToPlanner={(day, items) => {
-                setWeekPlan((prev) => {
-                  const seen = new Set();
-                  const uniq = [...(prev[day] || []), ...items].filter((it) => {
-                    const key =
-                      it.mediaUrl || it.imageUrl || JSON.stringify(it);
-                    if (seen.has(key)) return false;
-                    seen.add(key);
-                    return true;
+            <ProGate feature="Outfit of the Day planner">
+              <OutfitPlanner
+                weekPlan={weekPlan}
+                onChange={setWeekPlan}
+                currentPreview={previewSelection}
+                incomingItems={plannerIncoming}
+                gender={gender}
+                tagPrefix={genderPrefix}
+              />
+            </ProGate>
+            <ProGate feature="Travel Pack Planner">
+              <TravelPackPanel
+                currentPreview={previewSelection}
+                incomingItems={packIncoming}
+                gender={gender}
+                tagPrefix={genderPrefix}
+                onSyncToPlanner={(day, items) => {
+                  setWeekPlan((prev) => {
+                    const seen = new Set();
+                    const uniq = [...(prev[day] || []), ...items].filter((it) => {
+                      const key =
+                        it.mediaUrl || it.imageUrl || JSON.stringify(it);
+                      if (seen.has(key)) return false;
+                      seen.add(key);
+                      return true;
+                    });
+                    return { ...prev, [day]: uniq };
                   });
-                  return { ...prev, [day]: uniq };
-                });
-              }}
-            />
+                }}
+              />
+            </ProGate>
           </aside>
-          <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} gender={gender} tagPrefix={genderPrefix} />
+          <ProGate feature="Donate Bin">
+            <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} gender={gender} tagPrefix={genderPrefix} />
+          </ProGate>
         </aside>
 
         <div className="closet-data__cards-container">
@@ -352,7 +359,9 @@ function ClosetData({
         <aside className="closet-data__side-right">
           <WishList userId="123" />
           <ShoppingList />
-          <VideoBin videos={sectionVideos} />
+          <ProGate feature="Video Bin">
+            <VideoBin videos={sectionVideos} />
+          </ProGate>
         </aside>
 
         <ClosetSectionModal
