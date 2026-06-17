@@ -20,7 +20,7 @@
 .wa-fab:hover { transform: scale(1.06); background: #1e293b; }
 .wa-fab.is-open { background: #7c3aed; }
 
-/* ── Bot personality: swinging hanger that drops & gets picked back up ── */
+/* ── Bot personality: robot catches the dropped hanger & lifts it back ── */
 .wa-fab__face {
   position: relative;
   display: grid;
@@ -28,55 +28,84 @@
   width: 100%;
   height: 100%;
 }
-.wa-fab__emoji {
-  font-size: 24px;
-  /* tiny "reach up" bob when the hanger is being picked back up */
+.wa-bot {
+  width: 40px;
+  height: 46px;
+  display: block;
+  overflow: visible;
+  /* gentle whole-body idle + a small reach when catching the hanger */
   animation: wa-bot-bob 6s ease-in-out infinite;
 }
-/* Wrapper statically centers the hanger above the bot; inner element animates */
-.wa-fab__hanger-wrap {
+/* Chat badge pinned to the upper-right of the bot */
+.wa-fab__badge {
   position: absolute;
-  top: -7px;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
+  top: 2px;
+  right: 4px;
+  font-size: 13px;
+  line-height: 1;
+  z-index: 2;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
-.wa-fab__hanger {
-  display: block;
+
+/* Hanger pivots from its hook (top-center of its own box) */
+.wa-bot__hanger {
+  transform-box: fill-box;
   transform-origin: top center;
   animation: wa-hanger 6s ease-in-out infinite;
 }
+/* Right arm pivots from the shoulder (top-left of its own box) */
+.wa-bot__arm {
+  transform-box: fill-box;
+  transform-origin: 0% 0%;
+  animation: wa-arm 6s ease-in-out infinite;
+}
 
 @keyframes wa-hanger {
-  /* gentle swing */
-  0%   { transform: rotate(0deg)   translateY(0); opacity: 1; }
-  9%   { transform: rotate(15deg)  translateY(0); opacity: 1; }
-  19%  { transform: rotate(-12deg) translateY(0); opacity: 1; }
-  29%  { transform: rotate(7deg)   translateY(0); opacity: 1; }
-  37%  { transform: rotate(0deg)   translateY(0); opacity: 1; }
-  /* it slips and falls */
-  46%  { transform: rotate(38deg)  translateY(42px); opacity: 0; }
-  /* gone for a beat while the bot reaches for it */
-  60%  { transform: rotate(38deg)  translateY(42px); opacity: 0; }
-  /* picked back up to the top */
-  69%  { transform: rotate(0deg)   translateY(0); opacity: 1; }
-  /* and swinging again */
-  80%  { transform: rotate(11deg)  translateY(0); opacity: 1; }
-  90%  { transform: rotate(-8deg)  translateY(0); opacity: 1; }
-  100% { transform: rotate(0deg)   translateY(0); opacity: 1; }
+  /* gentle swing on the hook */
+  0%   { transform: rotate(0deg)  translateY(0); }
+  8%   { transform: rotate(13deg) translateY(0); }
+  18%  { transform: rotate(-11deg) translateY(0); }
+  28%  { transform: rotate(6deg)  translateY(0); }
+  36%  { transform: rotate(0deg)  translateY(0); }
+  /* slips and drops to where the arm waits */
+  46%  { transform: rotate(22deg) translateY(20px); }
+  54%  { transform: rotate(18deg) translateY(22px); }
+  /* held low for a beat */
+  62%  { transform: rotate(8deg)  translateY(22px); }
+  /* carried back up and placed on the hook */
+  72%  { transform: rotate(0deg)  translateY(0); }
+  /* settles into a gentle swing again */
+  82%  { transform: rotate(9deg)  translateY(0); }
+  92%  { transform: rotate(-6deg) translateY(0); }
+  100% { transform: rotate(0deg)  translateY(0); }
+}
+
+@keyframes wa-arm {
+  /* resting by the side */
+  0%, 36% { transform: rotate(0deg); }
+  /* reaches down/in to catch the falling hanger */
+  46%     { transform: rotate(-38deg); }
+  54%     { transform: rotate(-46deg); }
+  /* holds it low */
+  62%     { transform: rotate(-46deg); }
+  /* lifts it back up to the hook, then returns to rest */
+  72%     { transform: rotate(0deg); }
+  100%    { transform: rotate(0deg); }
 }
 
 @keyframes wa-bot-bob {
-  0%, 45%   { transform: translateY(0); }
-  /* little upward reach as it catches the hanger */
-  60%       { transform: translateY(-2px); }
-  69%       { transform: translateY(0); }
-  100%      { transform: translateY(0); }
+  0%, 40% { transform: translateY(0); }
+  /* tiny lean as it works */
+  50%     { transform: translateY(1px); }
+  66%     { transform: translateY(-1.5px); }
+  74%     { transform: translateY(0); }
+  100%    { transform: translateY(0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wa-fab__hanger,
-  .wa-fab__emoji { animation: none; }
+  .wa-bot,
+  .wa-bot__hanger,
+  .wa-bot__arm { animation: none; }
 }
 
 /* Chat panel */

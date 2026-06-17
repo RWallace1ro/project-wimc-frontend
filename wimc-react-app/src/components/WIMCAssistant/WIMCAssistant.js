@@ -114,18 +114,36 @@ export default function WIMCAssistant() {
       >
         {open ? "✕" : (
           <span className="wa-fab__face">
-            {/* A little hanger swings, drops, and gets picked back up — for character */}
-            <span className="wa-fab__hanger-wrap" aria-hidden="true">
-              <span className="wa-fab__hanger">
-                <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
-                  <path d="M11 1.5c-1.4 0-1.9 1.6-.6 2.4.5.3.6.6.6 1.1"
-                        stroke="#fff" strokeWidth="1.3" strokeLinecap="round" />
-                  <path d="M11 5 3.5 12.5h15L11 5Z"
-                        stroke="#fff" strokeWidth="1.3" strokeLinejoin="round" />
-                </svg>
-              </span>
-            </span>
-            <span className="wa-fab__emoji">💬</span>
+            {/* Chat badge stays visible at the upper-right of the bot */}
+            <span className="wa-fab__badge" aria-hidden="true">💬</span>
+            {/* A little robot whose arm catches the dropped hanger and lifts it
+                back into place — gives the bot some character. */}
+            <svg className="wa-bot" viewBox="0 0 44 50" fill="none" aria-hidden="true">
+              {/* Hanger — swings, drops, is carried back up */}
+              <g className="wa-bot__hanger">
+                <path d="M22 6c-1.5 0-2 1.7-.6 2.5.5.3.6.6.6 1.1"
+                      stroke="#fff" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M22 9.6 14.5 16.5h15L22 9.6Z"
+                      stroke="#fff" strokeWidth="1.4" strokeLinejoin="round" />
+              </g>
+
+              {/* Antenna + head/body */}
+              <g className="wa-bot__body">
+                <line x1="22" y1="19" x2="22" y2="22" stroke="#fff" strokeWidth="1.4" />
+                <rect x="11" y="22" width="22" height="19" rx="7" fill="#fff" />
+                <circle cx="18" cy="30" r="1.8" fill="#0f172a" />
+                <circle cx="26" cy="30" r="1.8" fill="#0f172a" />
+                <path d="M18.5 34.5c1.6 1.5 5.4 1.5 7 0"
+                      stroke="#0f172a" strokeWidth="1.4" strokeLinecap="round" />
+              </g>
+
+              {/* Left arm (static) */}
+              <path d="M12 31c-3 1-4.2 3-4.2 6.2"
+                    stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+              {/* Right arm (reaches down to catch the hanger, lifts it back) */}
+              <path className="wa-bot__arm" d="M32 31c3 1 4.2 3 4.2 6.2"
+                    stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
           </span>
         )}
       </button>
