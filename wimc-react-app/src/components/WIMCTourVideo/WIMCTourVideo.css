@@ -225,13 +225,75 @@
   z-index: 10;
 }
 .tour-avatar-wrap {
-  width: 60px;
-  height: 72px;
+  width: 96px;
+  height: 116px;
   flex-shrink: 0;
 }
 .tour-avatar-svg {
-  width: 60px;
-  height: 72px;
+  width: 96px;
+  height: 116px;
+  overflow: visible;
+}
+
+/* ── Presenter robot motion ──────────────────────────────────────────────── */
+/* Whole-body gentle sway */
+.tour-bot__body {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: tour-bot-sway 6s ease-in-out infinite;
+}
+/* Head glances up-right at the video, then back to the audience */
+.tour-bot__head {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: tour-bot-look 8s ease-in-out infinite;
+}
+/* Pupils shift with the glance */
+.tour-bot__pupils {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: tour-bot-pupils 8s ease-in-out infinite;
+}
+/* Eyelids blink */
+.tour-bot__lid {
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+  transform: scaleY(0);
+  animation: tour-bot-blink 4.4s ease-in-out infinite;
+}
+
+@keyframes tour-bot-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(-1.6deg); }
+}
+@keyframes tour-bot-look {
+  0%, 22%  { transform: rotate(0deg) translateX(0); }   /* facing audience */
+  32%      { transform: rotate(7deg) translateX(1px); } /* turn to the video */
+  56%      { transform: rotate(7deg) translateX(1px); } /* observing */
+  66%, 100%{ transform: rotate(0deg) translateX(0); }   /* back to audience */
+}
+@keyframes tour-bot-pupils {
+  0%, 22%  { transform: translate(0, 0); }
+  32%      { transform: translate(3px, -1px); }  /* look up-right at video */
+  56%      { transform: translate(3px, -1px); }
+  66%, 100%{ transform: translate(0, 0); }
+}
+@keyframes tour-bot-blink {
+  0%, 90%  { transform: scaleY(0); }   /* eyes open */
+  94%      { transform: scaleY(1); }   /* shut */
+  98%      { transform: scaleY(0); }   /* open */
+  100%     { transform: scaleY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-bot__body,
+  .tour-bot__head,
+  .tour-bot__pupils,
+  .tour-bot__lid { animation: none; }
+}
+
+@media (max-width: 600px) {
+  .tour-avatar-wrap, .tour-avatar-svg { width: 72px; height: 88px; }
 }
 
 .tour-caption {

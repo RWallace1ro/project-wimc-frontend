@@ -203,92 +203,62 @@ const TOTAL_DUR = SLIDES.reduce((a, s) => a + s.dur, 0);
  
 // ── Avatar SVG — caramel-skinned female ──────────────────────────────────────
 function Avatar({ talking }) {
-  const skin   = "#c68642";
-  const skinDk = "#a8692a";
-  const hair   = "#1c0f00";
-  const hairHi = "#3d1f00";
- 
+  // Purple presenter robot — matches the help-bot palette. It periodically
+  // glances up-right at the video and back to the audience, sways gently, and
+  // blinks. The mouth opens while `talking`.
+  const body   = "#c4b5fd";
+  const bodyDk = "#a78bfa";
+  const face   = "#1e293b";
+
   return (
-    <svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg" className="tour-avatar-svg">
-      {/* ── Light background panel so hair reads against it ── */}
-      <rect x="8" y="4" width="64" height="72" rx="12" fill="#2a3a5c" opacity="0.85"/>
- 
-      {/* ── Shoulders / blouse (blue) ── */}
-      <path d="M14 90 Q14 72 26 68 Q33 65 40 65 Q47 65 54 68 Q66 72 66 90 Z" fill="#1d4ed8"/>
-      {/* Subtle collar */}
-      <path d="M35 65 Q40 70 45 65" stroke="#60a5fa" strokeWidth="1" fill="none" strokeLinecap="round"/>
- 
-      {/* ── Neck ── */}
-      <path d="M35 54 Q35 65 40 66 Q45 65 45 54 Z" fill={skin}/>
- 
-      {/* ── Head — smooth ellipse, no rect artifacts ── */}
-      <ellipse cx="40" cy="38" rx="18" ry="20" fill={skin}/>
- 
-      {/* ── Ear lobes (behind hair side panels) ── */}
-      <ellipse cx="22" cy="42" rx="3" ry="3.5" fill={skin}/>
-      <ellipse cx="58" cy="42" rx="3" ry="3.5" fill={skin}/>
-      {/* Inner ear shadow */}
-      <ellipse cx="22.5" cy="42" rx="1.8" ry="2.2" fill={skinDk} opacity="0.5"/>
-      <ellipse cx="57.5" cy="42" rx="1.8" ry="2.2" fill={skinDk} opacity="0.5"/>
- 
-      {/* ── Hair — drawn IN LAYERS, crown first, then sides, NO path crossing the face ── */}
-      {/* Crown / top */}
-      <ellipse cx="40" cy="19" rx="18" ry="8" fill={hair}/>
-      {/* Left side panel — stays behind/outside the face, ends ~y=55 */}
-      <path d="M22 22 Q16 30 16 44 Q16 54 22 57 Q26 58 27 54 Q24 46 25 30 Z" fill={hair}/>
-      {/* Right side panel */}
-      <path d="M58 22 Q64 30 64 44 Q64 54 58 57 Q54 58 53 54 Q56 46 55 30 Z" fill={hair}/>
-      {/* Hair bottom hem — behind neck, above shoulders */}
-      <path d="M22 57 Q31 62 40 62 Q49 62 58 57 Q56 54 53 54 Q47 56 40 57 Q33 56 27 54 Q24 54 22 57 Z" fill={hair}/>
-      {/* Hair highlight on crown */}
-      <ellipse cx="37" cy="15" rx="7" ry="2.5" fill={hairHi} opacity="0.6"/>
- 
-      {/* ── Subtle facial shading (jaw/temple) ── */}
-      <ellipse cx="24" cy="44" rx="4" ry="6" fill={skinDk} opacity="0.18"/>
-      <ellipse cx="56" cy="44" rx="4" ry="6" fill={skinDk} opacity="0.18"/>
-      <ellipse cx="40" cy="50" rx="8" ry="4" fill={skinDk} opacity="0.12"/>
- 
-      {/* ── Eyebrows — natural, not too heavy ── */}
-      <path d="M30.5 29.5 Q34 27.5 37.5 28.5" stroke={hair} strokeWidth="1.4" fill="none" strokeLinecap="round"/>
-      <path d="M42.5 28.5 Q46 27.5 49.5 29.5" stroke={hair} strokeWidth="1.4" fill="none" strokeLinecap="round"/>
- 
-      {/* ── Eyes — iris + pupil + white ── */}
-      {/* Whites */}
-      <ellipse cx="34" cy="35" rx="3.4" ry="2.6" fill="#f5f0e8"/>
-      <ellipse cx="46" cy="35" rx="3.4" ry="2.6" fill="#f5f0e8"/>
-      {/* Iris — warm brown */}
-      <ellipse cx="34" cy="35.2" rx="2.1" ry="2.1" fill="#5c3310"/>
-      <ellipse cx="46" cy="35.2" rx="2.1" ry="2.1" fill="#5c3310"/>
-      {/* Pupil */}
-      <ellipse cx="34" cy="35.2" rx="1.1" ry="1.1" fill="#1a0800"/>
-      <ellipse cx="46" cy="35.2" rx="1.1" ry="1.1" fill="#1a0800"/>
-      {/* Eye shine */}
-      <ellipse cx="34.8" cy="34.3" rx="0.7" ry="0.7" fill="#fff" opacity="0.9"/>
-      <ellipse cx="46.8" cy="34.3" rx="0.7" ry="0.7" fill="#fff" opacity="0.9"/>
-      {/* Upper lid line */}
-      <path d="M30.6 33.5 Q34 32.2 37.4 33.5" stroke="#2a1500" strokeWidth="0.8" fill="none" strokeLinecap="round"/>
-      <path d="M42.6 33.5 Q46 32.2 49.4 33.5" stroke="#2a1500" strokeWidth="0.8" fill="none" strokeLinecap="round"/>
- 
-      {/* ── Nose — subtle bridge + nostrils ── */}
-      <path d="M40 38 L39.5 43" stroke={skinDk} strokeWidth="0.8" fill="none" strokeLinecap="round" opacity="0.5"/>
-      <path d="M37.5 43.5 Q38.5 45 40 44.5 Q41.5 45 42.5 43.5" stroke={skinDk} strokeWidth="1" fill="none" strokeLinecap="round"/>
- 
-      {/* ── Mouth — natural width, thinner lips, muted rose ── */}
-      {/* Upper lip */}
-      <path d="M34 47.5 Q37 46.5 40 47 Q43 46.5 46 47.5" stroke="#9b6b5a" strokeWidth="1" fill="none" strokeLinecap="round"/>
-      {/* Lower lip — subtle curve, changes slightly when talking */}
-      <path
-        d={talking ? "M34 47.5 Q40 51.5 46 47.5" : "M34 47.5 Q40 50 46 47.5"}
-        stroke="#9b6b5a" strokeWidth="1.2" fill="none" strokeLinecap="round"
-      />
-      {/* Lip center line */}
-      <path d="M34 47.5 Q40 48.2 46 47.5" stroke="#7a4f40" strokeWidth="0.6" fill="none" strokeLinecap="round"/>
- 
-      {/* ── Gold stud earrings at earlobe ── */}
-      <circle cx="22" cy="46" r="2" fill="#f59e0b"/>
-      <circle cx="22" cy="46" r="1" fill="#fde68a"/>
-      <circle cx="58" cy="46" r="2" fill="#f59e0b"/>
-      <circle cx="58" cy="46" r="1" fill="#fde68a"/>
+    <svg viewBox="0 0 80 96" xmlns="http://www.w3.org/2000/svg" className="tour-avatar-svg tour-bot">
+      {/* Backing panel for contrast */}
+      <rect x="5" y="8" width="70" height="82" rx="16" fill="#2a2150" opacity="0.5" />
+
+      {/* Body sways as a whole */}
+      <g className="tour-bot__body">
+        {/* Torso */}
+        <rect x="23" y="60" width="34" height="32" rx="12" fill={bodyDk} />
+        <rect x="31" y="69" width="18" height="12" rx="5" fill={body} opacity="0.85" />
+        {/* Arms */}
+        <path d="M23 67 q-7 2 -8.5 12" stroke={bodyDk} strokeWidth="5" strokeLinecap="round" fill="none" />
+        <path d="M57 67 q7 2 8.5 12" stroke={bodyDk} strokeWidth="5" strokeLinecap="round" fill="none" />
+
+        {/* Head turns toward the video and back */}
+        <g className="tour-bot__head">
+          {/* Antenna */}
+          <line x1="40" y1="15" x2="40" y2="22" stroke={body} strokeWidth="2" strokeLinecap="round" />
+          <circle cx="40" cy="12.5" r="2.8" fill={body} />
+          {/* Head shell */}
+          <rect x="19" y="22" width="42" height="35" rx="14" fill={body} />
+          {/* Ears */}
+          <rect x="15" y="35" width="4.5" height="10" rx="2.2" fill={bodyDk} />
+          <rect x="60.5" y="35" width="4.5" height="10" rx="2.2" fill={bodyDk} />
+
+          {/* Eye whites */}
+          <ellipse cx="32" cy="38" rx="5.2" ry="5.6" fill="#fff" />
+          <ellipse cx="48" cy="38" rx="5.2" ry="5.6" fill="#fff" />
+          {/* Pupils shift to "look" around */}
+          <g className="tour-bot__pupils">
+            <circle cx="32" cy="38.5" r="2.6" fill={face} />
+            <circle cx="48" cy="38.5" r="2.6" fill={face} />
+            <circle cx="33.1" cy="37" r="0.9" fill="#fff" />
+            <circle cx="49.1" cy="37" r="0.9" fill="#fff" />
+          </g>
+          {/* Eyelids drop to blink (same color as head; collapsed = invisible) */}
+          <rect className="tour-bot__lid" x="26.6" y="31.4" width="10.8" height="12" rx="5.4" fill={body} />
+          <rect className="tour-bot__lid" x="42.6" y="31.4" width="10.8" height="12" rx="5.4" fill={body} />
+
+          {/* Mouth — opens when talking */}
+          <path
+            d={talking ? "M34 49 Q40 53.5 46 49" : "M34 49 Q40 50.6 46 49"}
+            stroke={face} strokeWidth="1.8" fill="none" strokeLinecap="round"
+          />
+          {/* Cheeks */}
+          <circle cx="25.5" cy="45.5" r="2.1" fill="#f0abfc" opacity="0.5" />
+          <circle cx="54.5" cy="45.5" r="2.1" fill="#f0abfc" opacity="0.5" />
+        </g>
+      </g>
     </svg>
   );
 }
@@ -593,9 +563,10 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
     if (!window.speechSynthesis || mutedRef.current) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    utt.rate  = Math.min(2, 0.92 * speedRef.current);
-    utt.pitch = 1.1;
-    utt.volume = 1;
+    // Calmer, less animated delivery — slightly slower, neutral pitch & volume.
+    utt.rate  = Math.min(2, 0.86 * speedRef.current);
+    utt.pitch = 0.95;
+    utt.volume = 0.9;
     // Prefer a female English voice
     const voices = window.speechSynthesis.getVoices();
     const femaleVoice = voices.find(v =>
