@@ -563,17 +563,27 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
     if (!window.speechSynthesis || mutedRef.current) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
-    // Calmer, less animated delivery — slightly slower, neutral pitch & volume.
-    utt.rate  = Math.min(2, 0.86 * speedRef.current);
-    utt.pitch = 0.95;
+    // Soft, natural delivery — slower and gentle pitch.
+    utt.rate  = Math.min(2, 0.82 * speedRef.current);
+    utt.pitch = 0.9;
     utt.volume = 0.9;
-    // Prefer a female English voice
-    const voices = window.speechSynthesis.getVoices();
-    const femaleVoice = voices.find(v =>
-      v.lang.startsWith("en") && /female|woman|samantha|karen|victoria|moira|fiona|zira|susan|eva|allison|ava/i.test(v.name)
-    ) || voices.find(v => v.lang.startsWith("en") && v.name.toLowerCase().includes("google")) 
-      || voices.find(v => v.lang.startsWith("en"));
-    if (femaleVoice) utt.voice = femaleVoice;
+
+    // Pick the most human-sounding English voice available, in priority order.
+    const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith("en"));
+    const byName = (re) => voices.find(v => re.test(v.name));
+    const chosen =
+      // 1. Neural / "Natural" / "Online" voices — by far the most human
+      byName(/natural|neural|online/i) ||
+      // 2. Known high-quality named voices (Win / Mac / Chrome)
+      byName(/aria|jenny|michelle|ava|samantha|allison|joanna|sonia|libby/i) ||
+      // 3. Google's web voice (smoother than default system voices)
+      byName(/google us english/i) ||
+      byName(/google/i) ||
+      // 4. Any other female-ish English voice
+      byName(/female|woman|karen|victoria|moira|fiona|zira|susan|eva/i) ||
+      // 5. Fallback: first English voice
+      voices[0];
+    if (chosen) utt.voice = chosen;
     uttRef.current = utt;
     window.speechSynthesis.speak(utt);
   }, []);
