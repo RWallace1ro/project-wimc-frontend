@@ -1184,3 +1184,12 @@
   font-weight: 400;
   line-height: 1.4;
 }
+
+/* ── Subscription tab ── */
+.usm-subscription { padding: 4px 2px; }
+.usm-subscription__hint {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 4px 0 16px;
+}

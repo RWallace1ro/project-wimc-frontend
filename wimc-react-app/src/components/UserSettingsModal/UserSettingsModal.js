@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   reauthenticateWithCredential,
   EmailAuthProvider,
@@ -10,7 +11,11 @@ import { auth } from "../../firebase";
 import { uploadImage } from "../../utils/CloudinaryAPI";
 import { deleteAllUserData, scheduleDeletion } from "../../utils/accountDeletion";
 import { useBackground } from "../../context/BackgroundContext";
+import { useTier } from "../../context/TierContext";
+import { openBillingPortal } from "../../utils/billing";
 import "./UserSettingsModal.css";
+
+const TIER_LABELS = { free: "Free", pro: "Pro", pro_ai: "Pro + AI" };
 
 const DEFAULT_AVATAR =
   "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
@@ -288,6 +293,21 @@ export default function UserSettingsModal({
   onDeletionScheduled,
 }) {
   const [tab, setTab] = useState("profile");
+  const navigate = useNavigate();
+  const { tier } = useTier();
+  const [portalBusy, setPortalBusy] = useState(false);
+  const [portalErr, setPortalErr] = useState("");
+
+  const handleManageSubscription = async () => {
+    setPortalErr("");
+    setPortalBusy(true);
+    try {
+      await openBillingPortal(); // redirects to Stripe on success
+    } catch (e) {
+      setPortalErr(e.message || "Could not open the billing portal.");
+      setPortalBusy(false);
+    }
+  };
 
   // Profile fields
   const [userName, setUserName] = useState("");
@@ -618,6 +638,12 @@ export default function UserSettingsModal({
             🎨 Appearance
           </button>
           <button
+            className={`usm-tab ${tab === "subscription" ? "is-active" : ""}`}
+            onClick={() => setTab("subscription")}
+          >
+            💳 Subscription
+          </button>
+          <button
             className={`usm-tab usm-tab--danger ${tab === "delete" ? "is-active" : ""}`}
             onClick={() => setTab("delete")}
           >
@@ -840,6 +866,47 @@ export default function UserSettingsModal({
                   <BgPicker key={s.tag} targetKey={s.tag} label={s.label} />
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Subscription tab ── */}
+          {tab === "subscription" && (
+            <div className="usm-subscription">
+              <p className="usm-form__intro">
+                Your current plan:&nbsp;
+                <strong>WIMC {TIER_LABELS[tier] || "Free"}</strong>
+              </p>
+
+              {tier === "free" ? (
+                <>
+                  <p className="usm-subscription__hint">
+                    Upgrade to unlock Kids' &amp; Pet Closets, planners, more AI, and more.
+                  </p>
+                  <button
+                    type="button"
+                    className="usm-btn usm-btn--save"
+                    onClick={() => { onClose?.(); navigate("/pricing"); }}
+                  >
+                    ✨ See Plans
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="usm-subscription__hint">
+                    Update your payment method, switch plans, view invoices, or cancel —
+                    all in Stripe's secure billing portal.
+                  </p>
+                  <button
+                    type="button"
+                    className="usm-btn usm-btn--save"
+                    onClick={handleManageSubscription}
+                    disabled={portalBusy}
+                  >
+                    {portalBusy ? "Opening…" : "💳 Manage Subscription"}
+                  </button>
+                  {portalErr && <p className="usm-msg usm-msg--error">{portalErr}</p>}
+                </>
+              )}
             </div>
           )}
 
