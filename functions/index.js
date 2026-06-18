@@ -78,7 +78,13 @@ async function checkAndIncrementUsage(uid) {
   return adminDb.runTransaction(async (tx) => {
     const [usageSnap, userSnap] = await Promise.all([tx.get(usageRef), tx.get(userRef)]);
     const data = usageSnap.exists ? usageSnap.data() : {};
-    const tier = (userSnap.exists && userSnap.data().tier) || "free";
+    const userData = userSnap.exists ? userSnap.data() : {};
+    const tier = userData.tier || "free";
+    // Owner/dev bypass: set aiUnlimited:true on a user doc to skip the daily cap
+    // (does NOT change their tier, so feature-gating still tests normally).
+    if (userData.aiUnlimited === true) {
+      return { allowed: true, count: 0, limit: Infinity, tier };
+    }
     const limit = AI_LIMITS[tier] ?? AI_LIMITS.free;
     const count = data.date === today ? (data.count || 0) : 0;
     if (count >= limit) {
