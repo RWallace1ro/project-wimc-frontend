@@ -813,7 +813,7 @@
 }
 .sl-ai-input {
   flex: 1 1 auto;
-  min-width: 0; /* lets the input shrink instead of overflowing the row */
+  min-width: 0;
   box-sizing: border-box;
   padding: 8px 10px;
   border: 1.5px solid #ddd6fe;
@@ -2182,7 +2182,7 @@
 }
 .sl-ai-input {
   flex: 1 1 auto;
-  min-width: 0; /* lets the input shrink instead of overflowing the row */
+  min-width: 0;
   box-sizing: border-box;
   padding: 8px 10px;
   border: 1.5px solid #ddd6fe;
