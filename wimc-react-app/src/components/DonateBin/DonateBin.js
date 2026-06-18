@@ -650,7 +650,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                 💾 Saved Sets
               </button>
               <button
-                className="donate-section-pill donate-section-pill--action"
+                className="donate-section-pill donate-section-pill--search"
                 type="button"
                 onClick={() => setIsAdvisorOpen(true)}
               >

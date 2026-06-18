@@ -85,13 +85,36 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.tryon-ref__select {
-  width: 100%;
-  padding: 7px 10px;
+/* Scrollable list of section pills (replaces the native dropdown) */
+.tryon-ref__sections {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 168px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
+.tryon-ref__section-pill {
+  text-align: left;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 13px;
   background: #fff;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tryon-ref__section-pill:hover {
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+}
+.tryon-ref__section-pill.is-active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+  font-weight: 600;
 }
 .tryon-ref__preview {
   display: flex;

@@ -357,7 +357,12 @@ export default function ClosetSearch({
               <p className="cs-header__sub">Describe what you're looking for in plain English</p>
             </div>
           </div>
-          <button className="cs-close" onClick={onClose} aria-label="Close">×</button>
+          <div className="cs-header__actions">
+            {(query || hasResult || resultImages.length > 0) && (
+              <button className="cs-header__reset" onClick={reset} title="Start a new search">🔄 New</button>
+            )}
+            <button className="cs-close" onClick={onClose} aria-label="Close">×</button>
+          </div>
         </header>
 
         <div className="cs-body">

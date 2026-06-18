@@ -55,6 +55,20 @@
   font-size: 13px;
   opacity: 0.8;
 }
+.cs-header__actions { display: flex; align-items: center; gap: 8px; }
+.cs-header__reset {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cs-header__reset:hover { background: rgba(255, 255, 255, 0.25); }
 .cs-close {
   background: rgba(255, 255, 255, 0.15);
   border: none;
@@ -66,6 +80,7 @@
   cursor: pointer;
   display: grid;
   place-items: center;
+  flex-shrink: 0;
 }
 .cs-close:hover {
   background: rgba(255, 255, 255, 0.25);

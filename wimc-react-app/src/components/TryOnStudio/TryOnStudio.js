@@ -275,20 +275,20 @@ export default function TryOnStudio({
           {/* ── LEFT: Reference item ── */}
           <aside className="tryon-ref">
             <h3 className="tryon-ref__title">Reference Item</h3>
-            <select
-              className="tryon-ref__select"
-              value={section}
-              onChange={(e) => {
-                setSection(e.target.value);
-                setRefImage(null);
-              }}
-            >
+            <div className="tryon-ref__sections" role="listbox" aria-label="Reference section">
               {SECTION_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
+                <button
+                  key={o.value}
+                  type="button"
+                  role="option"
+                  aria-selected={section === o.value}
+                  className={`tryon-ref__section-pill${section === o.value ? " is-active" : ""}`}
+                  onClick={() => { setSection(o.value); setRefImage(null); }}
+                >
                   {o.label}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
 
             {refImage ? (
               <div className="tryon-ref__preview">
