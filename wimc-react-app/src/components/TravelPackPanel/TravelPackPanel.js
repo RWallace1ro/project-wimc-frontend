@@ -228,6 +228,26 @@ export default function TravelPackPanel({
     }));
   }
 
+  // Add real closet IMAGES chosen in the AI packing builder to the selected day.
+  // images: [{ url, section }]
+  function handleAIImages(images) {
+    if (!images?.length) return;
+    setPackPlan((prev) => {
+      const dayArr = prev[selectedDay];
+      const seen = new Set(dayArr.map((p) => p.mediaUrl || p.name));
+      const toAdd = images
+        .map((img) => normalizeMedia(img.url, img.section))
+        .filter(Boolean)
+        .filter((it) => {
+          const k = it.mediaUrl || it.name;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+      return { ...prev, [selectedDay]: [...dayArr, ...toAdd] };
+    });
+  }
+
   function addFromPreview() {
     if (!currentPreview?.length) return;
     const toAdd = currentPreview
@@ -722,7 +742,13 @@ export default function TravelPackPanel({
         isOpen={isAIPackOpen}
         onClose={() => setIsAIPackOpen(false)}
         onAddItem={handleAIItem}
+        onAddImages={handleAIImages}
+        onSaved={() => setIsAIPackOpen(false)}
         selectedDay={selectedDay}
+        sections={SECTION_OPTIONS.map((o) => ({
+          label: o.label,
+          tag: tagPrefix ? `${tagPrefix}-${o.value}` : o.value,
+        }))}
       />
     </>
   );

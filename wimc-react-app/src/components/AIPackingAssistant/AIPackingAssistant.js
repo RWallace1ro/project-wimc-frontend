@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
+import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./AIPackingAssistant.css";
 
 const TRIP_TYPES = [
@@ -13,21 +14,31 @@ const TRIP_TYPES = [
   "Cruise",
 ];
 
-const SECTION_LABELS = [
-  "Dresses/Skirts",
-  "Shoes/Sneakers",
-  "Pants/Jeans",
-  "Tops",
-  "Bags/Accessories",
-  "Jackets/Coats",
+// Default section labels (used for the prompt). The actual fetch tags come from
+// the `sections` prop so kids/pet/male closets resolve correctly.
+const DEFAULT_SECTIONS = [
+  { label: "Dresses/Skirts",   tag: "dresses-skirts" },
+  { label: "Shoes/Sneakers",   tag: "shoes-sneakers" },
+  { label: "Pants/Jeans",      tag: "pants-jeans" },
+  { label: "Tops",             tag: "tops" },
+  { label: "Bags/Accessories", tag: "bags-accessories" },
+  { label: "Jackets/Coats",    tag: "jackets-coats" },
 ];
+
+const isPhone = () =>
+  typeof window !== "undefined" && window.matchMedia("(max-width: 600px)").matches;
 
 export default function AIPackingAssistant({
   isOpen,
   onClose,
   onAddItem,
+  onAddImages,
+  onSaved,
   selectedDay,
+  sections = null,
 }) {
+  const SECTIONS = sections && sections.length ? sections : DEFAULT_SECTIONS;
+
   const [destination, setDestination] = useState("");
   const [tripType, setTripType] = useState("");
   const [days, setDays] = useState(3);
@@ -37,9 +48,16 @@ export default function AIPackingAssistant({
   const [generated, setGenerated] = useState(false);
   const abortRef = useRef(null);
 
+  // Visual builder state
+  const [building, setBuilding] = useState(false);
+  const [board, setBoard] = useState(null);        // [{label, tag, qty}]
+  const [sectionImages, setSectionImages] = useState({}); // { tag: [urls] }
+  const [imgIdx, setImgIdx] = useState({});        // { tag: index }
+  const [savedFlash, setSavedFlash] = useState(false);
+
   const systemPrompt = `You are a smart travel packing assistant for the WIMC (What's In My Closet) app.
 
-The user's closet has these categories: ${SECTION_LABELS.join(", ")}.
+The user's closet has these categories: ${SECTIONS.map((s) => s.label).join(", ")}.
 
 Your job:
 - Generate a practical, organised packing list based on the destination, trip type, and duration
@@ -65,6 +83,7 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
     setResponse("");
     setError("");
     setGenerated(false);
+    setBoard(null);
     setStreaming(true);
 
     const userMsg = `I'm going to ${destination.trim()} for ${days} day${days > 1 ? "s" : ""} on a ${tripType} trip. Generate a packing list from my closet.`;
@@ -92,6 +111,68 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
     }
   };
 
+  // Which closet sections the list references (+ a quantity if stated).
+  const detectSections = () => {
+    return SECTIONS.map((s) => {
+      const re = new RegExp(s.label.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&"), "i");
+      if (!re.test(response)) return null;
+      // Try to pull a quantity like "(3 items)" near the label
+      const qtyMatch = response.match(
+        new RegExp(`${s.label.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&")}[^\\n]*?\\((\\d+)`, "i")
+      );
+      return { label: s.label, tag: s.tag, qty: qtyMatch ? Number(qtyMatch[1]) : null };
+    }).filter(Boolean);
+  };
+
+  // Build a visual board: fetch closet images for each referenced section.
+  const buildVisual = async () => {
+    const secs = detectSections();
+    if (!secs.length) {
+      setError("Couldn't match the list to your closet sections.");
+      return;
+    }
+    setBuilding(true);
+    try {
+      const missing = secs.filter((s) => sectionImages[s.tag] === undefined);
+      const next = { ...sectionImages };
+      await Promise.all(
+        missing.map((s) =>
+          fetchImagesByTag(s.tag)
+            .then((urls) => { next[s.tag] = urls || []; })
+            .catch(() => { next[s.tag] = []; })
+        )
+      );
+      setSectionImages(next);
+      setBoard(secs);
+    } finally {
+      setBuilding(false);
+    }
+  };
+
+  const cycleImg = (tag, dir, total) => {
+    if (!total) return;
+    setImgIdx((prev) => ({ ...prev, [tag]: ((prev[tag] || 0) + dir + total) % total }));
+  };
+
+  // Add the currently-shown image from each section to the Travel Pack & save.
+  const addVisualToPack = () => {
+    if (!board) return;
+    const images = board
+      .map((s) => {
+        const imgs = sectionImages[s.tag] || [];
+        if (!imgs.length) return null;
+        return { url: imgs[imgIdx[s.tag] || 0], section: s.label };
+      })
+      .filter(Boolean);
+    if (images.length && onAddImages) onAddImages(images);
+    setSavedFlash(true);
+    setTimeout(() => {
+      setSavedFlash(false);
+      // On phone, return to the Travel Pack after saving.
+      if (isPhone()) (onSaved || onClose)?.();
+    }, 1200);
+  };
+
   // Parse response lines and add as text items to the Travel Pack
   const addAllToPack = () => {
     if (!response || !onAddItem) return;
@@ -101,16 +182,13 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
       .filter(
         (l) =>
           l &&
-          !l.startsWith("👕") &&
-          !l.startsWith("👖") &&
-          !l.startsWith("👗") &&
-          !l.startsWith("👟") &&
-          !l.startsWith("👜") &&
-          !l.startsWith("🧥") &&
+          !/^[👕👖👗👟👜🧥]/.test(l) &&
           !l.startsWith("Pro tip") &&
           l.length > 2,
       );
     lines.forEach((item) => onAddItem({ name: item, kind: "text" }));
+    setSavedFlash(true);
+    setTimeout(() => setSavedFlash(false), 1200);
   };
 
   const reset = () => {
@@ -122,6 +200,8 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
     setDestination("");
     setTripType("");
     setDays(3);
+    setBoard(null);
+    setImgIdx({});
   };
 
   if (!isOpen) return null;
@@ -129,32 +209,18 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
   return (
     <div
       className="aipa-overlay"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div
-        className="aipa-modal"
-        role="dialog"
-        aria-label="AI Packing Assistant"
-      >
+      <div className="aipa-modal" role="dialog" aria-label="AI Packing Assistant">
         <header className="aipa-header">
           <div className="aipa-header__left">
             <span className="aipa-header__icon">🧳</span>
             <div>
               <h2 className="aipa-header__title">AI Packing Assistant</h2>
-              <p className="aipa-header__sub">
-                Smart packing lists from your closet
-              </p>
+              <p className="aipa-header__sub">Smart packing lists from your closet</p>
             </div>
           </div>
-          <button
-            className="aipa-header__close"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
+          <button className="aipa-header__close" onClick={onClose} aria-label="Close">×</button>
         </header>
 
         <div className="aipa-body">
@@ -208,9 +274,7 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
                 {streaming ? "✨ Generating…" : "✨ Generate Packing List"}
               </button>
               {(response || error) && (
-                <button className="aipa-btn" onClick={reset}>
-                  🔄 Start Over
-                </button>
+                <button className="aipa-btn" onClick={reset}>🔄 Start Over</button>
               )}
             </div>
           </div>
@@ -223,22 +287,74 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
                   📋 Packing List — {destination} ({days}d, {tripType})
                 </h3>
                 {selectedDay && (
-                  <span className="aipa-result__day">
-                    Adding to: {selectedDay}
-                  </span>
+                  <span className="aipa-result__day">Adding to: {selectedDay}</span>
                 )}
               </div>
               <pre className="aipa-result__text">
                 {response}
                 {streaming && <span className="aipa-cursor">▋</span>}
               </pre>
-              {generated && onAddItem && (
-                <button
-                  className="aipa-btn aipa-btn--add"
-                  onClick={addAllToPack}
-                >
-                  ➕ Add All to Travel Pack
-                </button>
+
+              {/* Build & add actions */}
+              {generated && (
+                <div className="aipa-result__actions">
+                  {!board && (
+                    <button
+                      className="aipa-btn aipa-btn--build"
+                      onClick={buildVisual}
+                      disabled={building}
+                    >
+                      {building ? "✨ Building…" : "🧳 Build Visual List"}
+                    </button>
+                  )}
+                  {onAddItem && (
+                    <button className="aipa-btn aipa-btn--add" onClick={addAllToPack}>
+                      ➕ Add List (text)
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Visual board — pick the actual items to pack */}
+              {board && (
+                <div className="aipa-board">
+                  <p className="aipa-board__hint">
+                    Pick the items to pack — use ‹ › to swap, then save.
+                  </p>
+                  <div className="aipa-board__grid">
+                    {board.map((s) => {
+                      const imgs = sectionImages[s.tag] || [];
+                      const idx = imgIdx[s.tag] || 0;
+                      return (
+                        <div key={s.tag} className="aipa-board__card">
+                          <p className="aipa-board__label">
+                            {s.label}{s.qty ? ` · ${s.qty}` : ""}
+                          </p>
+                          {imgs.length > 0 ? (
+                            <>
+                              <img src={imgs[idx]} alt={s.label} className="aipa-board__img" />
+                              {imgs.length > 1 && (
+                                <div className="aipa-board__nav">
+                                  <button onClick={() => cycleImg(s.tag, -1, imgs.length)} aria-label="Previous">‹</button>
+                                  <span>{idx + 1}/{imgs.length}</span>
+                                  <button onClick={() => cycleImg(s.tag, 1, imgs.length)} aria-label="Next">›</button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="aipa-board__empty">No items yet</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    className={`aipa-btn aipa-btn--save${savedFlash ? " is-saved" : ""}`}
+                    onClick={addVisualToPack}
+                  >
+                    {savedFlash ? "✓ Saved to Travel Pack!" : "💾 Save to Travel Pack"}
+                  </button>
+                </div>
               )}
             </div>
           )}
