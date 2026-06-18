@@ -97,6 +97,14 @@
 .stylist-header__btn:hover {
   background: rgba(255, 255, 255, 0.25);
 }
+/* Labeled "New" button — wider than the icon buttons */
+.stylist-header__btn--new {
+  width: auto;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 
 /* Messages area */
 .stylist-messages {

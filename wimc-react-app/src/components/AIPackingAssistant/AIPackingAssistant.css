@@ -183,6 +183,8 @@
 .aipa-btn--generate:disabled {
   background: #7dd3fc;
   border-color: #7dd3fc;
+  color: #0c4a6e; /* readable text instead of washed-out white */
+  opacity: 1;
 }
 .aipa-btn--add {
   background: #22c55e;

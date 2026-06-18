@@ -399,7 +399,7 @@ Rules:
               >{gender === "male" ? "👔" : "👗"}</button>
             )}
             {messages.length > 0 && (
-              <button className="stylist-header__btn" onClick={clearChat} title="Clear chat">🗑️</button>
+              <button className="stylist-header__btn stylist-header__btn--new" onClick={clearChat} title="Start a new request">🔄 New</button>
             )}
             <button className="stylist-header__btn" onClick={onClose} aria-label="Close">✕</button>
           </div>

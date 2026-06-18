@@ -147,6 +147,13 @@
 .aida-btn--generate:hover {
   background: #16a34a;
 }
+/* Disabled state stays readable (the generic 0.45 opacity washed out the text) */
+.aida-btn--generate:disabled {
+  background: #86efac;
+  border-color: #86efac;
+  color: #14532d;
+  opacity: 1;
+}
 
 .aida-result {
   margin: 0;
