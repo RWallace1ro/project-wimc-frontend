@@ -274,7 +274,7 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
                 {streaming ? "✨ Generating…" : "✨ Generate Packing List"}
               </button>
               {(response || error) && (
-                <button className="aipa-btn" onClick={reset}>🔄 Start Over</button>
+                <button className="aipa-btn aipa-btn--new" onClick={reset}>🔄 New</button>
               )}
             </div>
           </div>
@@ -326,23 +326,22 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
                       const imgs = sectionImages[s.tag] || [];
                       const idx = imgIdx[s.tag] || 0;
                       return (
-                        <div key={s.tag} className="aipa-board__card">
-                          <p className="aipa-board__label">
+                        <div key={s.tag} className="aipa-ob-card">
+                          <p className="aipa-ob-card__label">
                             {s.label}{s.qty ? ` · ${s.qty}` : ""}
                           </p>
                           {imgs.length > 0 ? (
                             <>
-                              <img src={imgs[idx]} alt={s.label} className="aipa-board__img" />
+                              <img src={imgs[idx]} alt={s.label} className="aipa-ob-card__img" />
                               {imgs.length > 1 && (
-                                <div className="aipa-board__nav">
-                                  <button onClick={() => cycleImg(s.tag, -1, imgs.length)} aria-label="Previous">‹</button>
-                                  <span>{idx + 1}/{imgs.length}</span>
-                                  <button onClick={() => cycleImg(s.tag, 1, imgs.length)} aria-label="Next">›</button>
-                                </div>
+                                <>
+                                  <button className="aipa-ob-card__prev" onClick={() => cycleImg(s.tag, -1, imgs.length)} aria-label="Previous">‹</button>
+                                  <button className="aipa-ob-card__next" onClick={() => cycleImg(s.tag, 1, imgs.length)} aria-label="Next">›</button>
+                                </>
                               )}
                             </>
                           ) : (
-                            <div className="aipa-board__empty">No items yet</div>
+                            <div className="aipa-ob-card__empty">No items yet</div>
                           )}
                         </div>
                       );
