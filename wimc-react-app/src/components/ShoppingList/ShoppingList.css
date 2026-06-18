@@ -809,9 +809,12 @@
 .sl-ai-row {
   display: flex;
   gap: 6px;
+  width: 100%;
 }
 .sl-ai-input {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0; /* lets the input shrink instead of overflowing the row */
+  box-sizing: border-box;
   padding: 8px 10px;
   border: 1.5px solid #ddd6fe;
   border-radius: 8px;
@@ -2175,9 +2178,12 @@
 .sl-ai-row {
   display: flex;
   gap: 6px;
+  width: 100%;
 }
 .sl-ai-input {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 0; /* lets the input shrink instead of overflowing the row */
+  box-sizing: border-box;
   padding: 8px 10px;
   border: 1.5px solid #ddd6fe;
   border-radius: 8px;
