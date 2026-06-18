@@ -80,9 +80,11 @@ async function checkAndIncrementUsage(uid) {
     const data = usageSnap.exists ? usageSnap.data() : {};
     const userData = userSnap.exists ? userSnap.data() : {};
     const tier = userData.tier || "free";
-    // Owner/dev bypass: set aiUnlimited:true on a user doc to skip the daily cap
+    // Owner/dev bypass: set aiUnlimited on a user doc to skip the daily cap
     // (does NOT change their tier, so feature-gating still tests normally).
-    if (userData.aiUnlimited === true) {
+    // Accept boolean true OR the string "true" so a Firestore type mix-up
+    // doesn't silently disable the bypass.
+    if (userData.aiUnlimited === true || userData.aiUnlimited === "true") {
       return { allowed: true, count: 0, limit: Infinity, tier };
     }
     const limit = AI_LIMITS[tier] ?? AI_LIMITS.free;
