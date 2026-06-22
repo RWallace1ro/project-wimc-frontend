@@ -992,6 +992,14 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
           <AIDonationAdvisor
             isOpen={isAdvisorOpen}
             onClose={() => setIsAdvisorOpen(false)}
+            onSaved={() => setIsAdvisorOpen(false)}
+            sections={SECTION_OPTIONS.map((o) => ({
+              label: o.label,
+              tag: tagPrefix ? `${tagPrefix}-${o.value}` : o.value,
+            }))}
+            onAddImages={(images) =>
+              addSearchItems(images.map((i) => ({ mediaUrl: i.url, section: i.section })))
+            }
           />
         </>
       )}

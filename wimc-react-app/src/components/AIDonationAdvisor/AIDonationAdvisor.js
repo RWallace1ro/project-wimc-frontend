@@ -1,15 +1,21 @@
 import React, { useState, useRef } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
+import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import "./AIDonationAdvisor.css";
 
-const SECTIONS = [
-  "Dresses/Skirts",
-  "Shoes/Sneakers",
-  "Pants/Jeans",
-  "Tops",
-  "Bags/Accessories",
-  "Jackets/Coats",
+// Default section labels for the prompt. Actual fetch tags come from the
+// `sections` prop so kids/pet/male closets resolve correctly.
+const DEFAULT_SECTIONS = [
+  { label: "Dresses/Skirts",   tag: "dresses-skirts" },
+  { label: "Shoes/Sneakers",   tag: "shoes-sneakers" },
+  { label: "Pants/Jeans",      tag: "pants-jeans" },
+  { label: "Tops",             tag: "tops" },
+  { label: "Bags/Accessories", tag: "bags-accessories" },
+  { label: "Jackets/Coats",    tag: "jackets-coats" },
 ];
+
+const isPhone = () =>
+  typeof window !== "undefined" && window.matchMedia("(max-width: 600px)").matches;
 
 const QUESTIONS = [
   {
@@ -34,7 +40,9 @@ const QUESTIONS = [
   },
 ];
 
-export default function AIDonationAdvisor({ isOpen, onClose }) {
+export default function AIDonationAdvisor({ isOpen, onClose, sections = null, onAddImages, onSaved }) {
+  const SECTIONS = sections && sections.length ? sections : DEFAULT_SECTIONS;
+
   const [step, setStep] = useState("questions"); // "questions" | "result"
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState("");
@@ -42,11 +50,18 @@ export default function AIDonationAdvisor({ isOpen, onClose }) {
   const [error, setError] = useState("");
   const abortRef = useRef(null);
 
+  // Visual builder state
+  const [building, setBuilding] = useState(false);
+  const [board, setBoard] = useState(null);        // [{label, tag}]
+  const [sectionImages, setSectionImages] = useState({}); // { tag: [urls] }
+  const [imgIdx, setImgIdx] = useState({});        // { tag: index }
+  const [savedFlash, setSavedFlash] = useState(false);
+
   const allAnswered = QUESTIONS.every((q) => answers[q.id]);
 
   const systemPrompt = `You are WIMC's Smart Donation Advisor — a friendly, practical assistant that helps users declutter their wardrobe.
 
-The user's closet has these categories: ${SECTIONS.join(", ")}.
+The user's closet has these categories: ${SECTIONS.map((s) => s.label).join(", ")}.
 
 Based on their answers, give a personalised donation plan:
 1. Start with a brief, warm summary of what their answers suggest
@@ -93,6 +108,60 @@ Please give me a personalised donation plan for my closet.`;
     }
   };
 
+  // Which closet sections the plan references.
+  const detectSections = () =>
+    SECTIONS.filter((s) =>
+      new RegExp(s.label.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&"), "i").test(result)
+    );
+
+  // Build a visual board: fetch closet images for each referenced section.
+  const buildVisual = async () => {
+    const secs = detectSections();
+    if (!secs.length) {
+      setError("Couldn't match the plan to your closet sections.");
+      return;
+    }
+    setBuilding(true);
+    try {
+      const missing = secs.filter((s) => sectionImages[s.tag] === undefined);
+      const next = { ...sectionImages };
+      await Promise.all(
+        missing.map((s) =>
+          fetchImagesByTag(s.tag)
+            .then((urls) => { next[s.tag] = urls || []; })
+            .catch(() => { next[s.tag] = []; })
+        )
+      );
+      setSectionImages(next);
+      setBoard(secs);
+    } finally {
+      setBuilding(false);
+    }
+  };
+
+  const cycleImg = (tag, dir, total) => {
+    if (!total) return;
+    setImgIdx((prev) => ({ ...prev, [tag]: ((prev[tag] || 0) + dir + total) % total }));
+  };
+
+  // Add the currently-shown image from each section to the Donate Bin & save.
+  const addToDonateBin = () => {
+    if (!board) return;
+    const images = board
+      .map((s) => {
+        const imgs = sectionImages[s.tag] || [];
+        if (!imgs.length) return null;
+        return { url: imgs[imgIdx[s.tag] || 0], section: s.label };
+      })
+      .filter(Boolean);
+    if (images.length && onAddImages) onAddImages(images);
+    setSavedFlash(true);
+    setTimeout(() => {
+      setSavedFlash(false);
+      if (isPhone()) (onSaved || onClose)?.();
+    }, 1200);
+  };
+
   const reset = () => {
     abortRef.current?.abort();
     setStep("questions");
@@ -100,6 +169,8 @@ Please give me a personalised donation plan for my closet.`;
     setResult("");
     setError("");
     setStreaming(false);
+    setBoard(null);
+    setImgIdx({});
   };
 
   if (!isOpen) return null;
@@ -173,10 +244,59 @@ Please give me a personalised donation plan for my closet.`;
                 {streaming && <span className="aida-cursor">▋</span>}
               </pre>
               {error && <p className="aida-error">{error}</p>}
-              {!streaming && (
-                <button className="aida-btn" onClick={reset}>
-                  🔄 Start Over
-                </button>
+
+              {!streaming && result && (
+                <div className="aida-actions">
+                  {!board && (
+                    <button
+                      className="aida-btn aida-btn--build"
+                      onClick={buildVisual}
+                      disabled={building}
+                    >
+                      {building ? "✨ Building…" : "🗑️ Build Donation Set"}
+                    </button>
+                  )}
+                  <button className="aida-btn aida-btn--new" onClick={reset}>🔄 New</button>
+                </div>
+              )}
+
+              {/* Visual board — pick the actual items to donate */}
+              {board && (
+                <div className="aida-board">
+                  <p className="aida-board__hint">
+                    Pick the items to donate — use ‹ › to swap, then save.
+                  </p>
+                  <div className="aida-board__grid">
+                    {board.map((s) => {
+                      const imgs = sectionImages[s.tag] || [];
+                      const idx = imgIdx[s.tag] || 0;
+                      return (
+                        <div key={s.tag} className="aida-ob-card">
+                          <p className="aida-ob-card__label">{s.label}</p>
+                          {imgs.length > 0 ? (
+                            <>
+                              <img src={imgs[idx]} alt={s.label} className="aida-ob-card__img" />
+                              {imgs.length > 1 && (
+                                <>
+                                  <button className="aida-ob-card__prev" onClick={() => cycleImg(s.tag, -1, imgs.length)} aria-label="Previous">‹</button>
+                                  <button className="aida-ob-card__next" onClick={() => cycleImg(s.tag, 1, imgs.length)} aria-label="Next">›</button>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <div className="aida-ob-card__empty">No items yet</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    className={`aida-btn aida-btn--save${savedFlash ? " is-saved" : ""}`}
+                    onClick={addToDonateBin}
+                  >
+                    {savedFlash ? "✓ Added to Donate Bin!" : "💾 Save to Donate Bin"}
+                  </button>
+                </div>
               )}
             </>
           )}
