@@ -6,6 +6,8 @@ import {
   fetchImagesByTag,
   fetchVideosByTag,
   videoPoster,
+  deleteImage,
+  deleteVideo,
 } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
@@ -470,6 +472,50 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
       setDonatedSharing(false);
     }
   }
+
+  // ── Confirm donated items physically left the closet → delete their images ──
+  const [removingFromCloset, setRemovingFromCloset] = useState(false);
+  const [removeMsg, setRemoveMsg] = useState("");
+  const CLOUDINARY_RE = /res\.cloudinary\.com/;
+
+  // Items still in the closet (have a Cloudinary url, not yet removed)
+  const removableDonated = donatedItems.filter(
+    (it) => !it.removedFromCloset && CLOUDINARY_RE.test(it.imageUrl || it.url || "")
+  );
+
+  const confirmRemovedFromCloset = async () => {
+    if (!removableDonated.length || removingFromCloset) return;
+    if (!window.confirm(
+      `Remove ${removableDonated.length} donated item${removableDonated.length !== 1 ? "s" : ""} from your closet?\n\n` +
+      `This permanently deletes their photos from your closet sections (they stay in this donated list as a record). This can't be undone.`
+    )) return;
+
+    setRemovingFromCloset(true);
+    setRemoveMsg("");
+    let ok = 0;
+    for (const it of removableDonated) {
+      const url = it.imageUrl || it.url;
+      try {
+        if (/\/video\/upload\//.test(url)) await deleteVideo(url);
+        else await deleteImage(url);
+        ok += 1;
+      } catch {
+        /* best-effort — keep going */
+      }
+    }
+    // Mark all removable items as removed from the closet
+    const removedKeys = new Set(removableDonated.map((it) => keyOf(it)));
+    setDonatedItems((prev) => {
+      const updated = prev.map((it) =>
+        removedKeys.has(keyOf(it)) ? { ...it, removedFromCloset: true } : it
+      );
+      try { syncSetItem(lsDonatedKey, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    setRemovingFromCloset(false);
+    setRemoveMsg(`✅ Removed ${ok} item${ok !== 1 ? "s" : ""} from your closet.`);
+    setTimeout(() => setRemoveMsg(""), 4000);
+  };
 
   const sectionLabel = useMemo(
     () => SECTION_OPTIONS.find((o) => o.value === section)?.label || "",
@@ -955,6 +1001,27 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                     )}
                   </div>
                 )}
+
+                {/* Confirm the donated items have physically left the closet —
+                    deletes their photos from the closet sections. */}
+                {donatedItems.length > 0 && (
+                  <div className="donate-remove-bar">
+                    {removableDonated.length > 0 ? (
+                      <button
+                        className="donate-remove-btn"
+                        onClick={confirmRemovedFromCloset}
+                        disabled={removingFromCloset}
+                      >
+                        {removingFromCloset
+                          ? "Removing…"
+                          : `🧹 Confirm removed from closet (${removableDonated.length})`}
+                      </button>
+                    ) : (
+                      <span className="donate-remove-done">✓ All donated items removed from your closet</span>
+                    )}
+                    {removeMsg && <span className="donate-remove-msg">{removeMsg}</span>}
+                  </div>
+                )}
                 <div className="opp-saved__content">
                   {!donatedItems || !donatedItems.length ? (
                     <div className="opp__empty" style={{ padding: 12 }}>
@@ -968,15 +1035,22 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                             const donatedImgs = donatedItems.filter(x => x.imageUrl || x.url).map(x => ({ src: x.imageUrl || x.url, alt: x.name || "" }));
                             const imgIdx = donatedItems.filter(x => x.imageUrl || x.url).indexOf(it);
                             return (
-                            <img
+                            <span
                               key={(it.imageUrl || it.url || "donated") + i}
-                              className="opp__look-thumb"
-                              src={it.imageUrl || it.url}
-                              alt={it.name || "donated"}
-                              title="Click to enlarge"
-                              style={{ cursor: "zoom-in" }}
-                              onClick={() => openLb(donatedImgs, Math.max(0, imgIdx))}
-                            />
+                              className={`donate-thumb-wrap${it.removedFromCloset ? " is-removed" : ""}`}
+                            >
+                              <img
+                                className="opp__look-thumb"
+                                src={it.imageUrl || it.url}
+                                alt={it.name || "donated"}
+                                title={it.removedFromCloset ? "Removed from your closet" : "Click to enlarge"}
+                                style={{ cursor: "zoom-in" }}
+                                onClick={() => openLb(donatedImgs, Math.max(0, imgIdx))}
+                              />
+                              {it.removedFromCloset && (
+                                <span className="donate-thumb-badge" title="Removed from your closet">✓</span>
+                              )}
+                            </span>
                             );
                           })}
                         </div>
