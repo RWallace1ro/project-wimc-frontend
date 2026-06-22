@@ -55,6 +55,7 @@ export default function AIDonationAdvisor({ isOpen, onClose, sections = null, on
   const [board, setBoard] = useState(null);        // [{label, tag}]
   const [sectionImages, setSectionImages] = useState({}); // { tag: [urls] }
   const [imgIdx, setImgIdx] = useState({});        // { tag: index }
+  const [picked, setPicked] = useState({});        // { [url]: sectionLabel } — chosen to donate
   const [savedFlash, setSavedFlash] = useState(false);
 
   const allAnswered = QUESTIONS.every((q) => answers[q.id]);
@@ -144,17 +145,23 @@ Please give me a personalised donation plan for my closet.`;
     setImgIdx((prev) => ({ ...prev, [tag]: ((prev[tag] || 0) + dir + total) % total }));
   };
 
-  // Add the currently-shown image from each section to the Donate Bin & save.
+  // Toggle whether a specific image is selected for donation.
+  const togglePick = (url, sectionLabel) => {
+    setPicked((prev) => {
+      const next = { ...prev };
+      if (next[url]) delete next[url];
+      else next[url] = sectionLabel;
+      return next;
+    });
+  };
+
+  const pickedCount = Object.keys(picked).length;
+
+  // Save all selected items to the Donate Bin.
   const addToDonateBin = () => {
-    if (!board) return;
-    const images = board
-      .map((s) => {
-        const imgs = sectionImages[s.tag] || [];
-        if (!imgs.length) return null;
-        return { url: imgs[imgIdx[s.tag] || 0], section: s.label };
-      })
-      .filter(Boolean);
-    if (images.length && onAddImages) onAddImages(images);
+    const images = Object.entries(picked).map(([url, section]) => ({ url, section }));
+    if (!images.length) return;
+    if (onAddImages) onAddImages(images);
     setSavedFlash(true);
     setTimeout(() => {
       setSavedFlash(false);
@@ -171,6 +178,7 @@ Please give me a personalised donation plan for my closet.`;
     setStreaming(false);
     setBoard(null);
     setImgIdx({});
+    setPicked({});
   };
 
   if (!isOpen) return null;
@@ -264,18 +272,30 @@ Please give me a personalised donation plan for my closet.`;
               {board && (
                 <div className="aida-board">
                   <p className="aida-board__hint">
-                    Pick the items to donate — use ‹ › to swap, then save.
+                    Tap the ✓ on each item you want to donate — swap with ‹ › to
+                    pick more, then save.
                   </p>
                   <div className="aida-board__grid">
                     {board.map((s) => {
                       const imgs = sectionImages[s.tag] || [];
                       const idx = imgIdx[s.tag] || 0;
+                      const curUrl = imgs[idx];
+                      const isPicked = curUrl && !!picked[curUrl];
                       return (
-                        <div key={s.tag} className="aida-ob-card">
+                        <div key={s.tag} className={`aida-ob-card${isPicked ? " is-picked" : ""}`}>
                           <p className="aida-ob-card__label">{s.label}</p>
                           {imgs.length > 0 ? (
                             <>
                               <img src={imgs[idx]} alt={s.label} className="aida-ob-card__img" />
+                              {/* Selection toggle — confirms this item for donation */}
+                              <button
+                                className={`aida-ob-card__pick${isPicked ? " is-on" : ""}`}
+                                onClick={() => togglePick(curUrl, s.label)}
+                                aria-pressed={isPicked}
+                                title={isPicked ? "Selected to donate — tap to remove" : "Select this item to donate"}
+                              >
+                                {isPicked ? "✓" : "+"}
+                              </button>
                               {imgs.length > 1 && (
                                 <>
                                   <button className="aida-ob-card__prev" onClick={() => cycleImg(s.tag, -1, imgs.length)} aria-label="Previous">‹</button>
@@ -293,8 +313,13 @@ Please give me a personalised donation plan for my closet.`;
                   <button
                     className={`aida-btn aida-btn--save${savedFlash ? " is-saved" : ""}`}
                     onClick={addToDonateBin}
+                    disabled={pickedCount === 0}
                   >
-                    {savedFlash ? "✓ Added to Donate Bin!" : "💾 Save to Donate Bin"}
+                    {savedFlash
+                      ? "✓ Added to Donate Bin!"
+                      : pickedCount > 0
+                      ? `💾 Save ${pickedCount} item${pickedCount !== 1 ? "s" : ""} to Donate Bin`
+                      : "Select items to donate"}
                   </button>
                 </div>
               )}

@@ -301,3 +301,40 @@
 }
 .aida-btn--save:hover { background: #15803d; }
 .aida-btn--save.is-saved { background: #166534; border-color: #166534; }
+
+/* Selection toggle on each donation image */
+.aida-ob-card__pick {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 4;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: rgba(15, 23, 42, 0.55);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+.aida-ob-card__pick.is-on {
+  background: #16a34a;
+  border-color: #fff;
+}
+.aida-ob-card.is-picked {
+  outline: 3px solid #16a34a;
+  outline-offset: -3px;
+}
+.aida-btn--save:disabled {
+  opacity: 1;
+  background: #cbd5e1;
+  border-color: #cbd5e1;
+  color: #475569;
+  cursor: not-allowed;
+}
