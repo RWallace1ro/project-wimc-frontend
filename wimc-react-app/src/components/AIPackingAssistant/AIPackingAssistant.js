@@ -53,6 +53,7 @@ export default function AIPackingAssistant({
   const [board, setBoard] = useState(null);        // [{label, tag, qty}]
   const [sectionImages, setSectionImages] = useState({}); // { tag: [urls] }
   const [imgIdx, setImgIdx] = useState({});        // { tag: index }
+  const [picked, setPicked] = useState({});        // { [url]: sectionLabel } — chosen to pack
   const [savedFlash, setSavedFlash] = useState(false);
 
   const systemPrompt = `You are a smart travel packing assistant for the WIMC (What's In My Closet) app.
@@ -154,17 +155,23 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
     setImgIdx((prev) => ({ ...prev, [tag]: ((prev[tag] || 0) + dir + total) % total }));
   };
 
-  // Add the currently-shown image from each section to the Travel Pack & save.
+  // Toggle whether a specific image is selected to pack.
+  const togglePick = (url, sectionLabel) => {
+    setPicked((prev) => {
+      const next = { ...prev };
+      if (next[url]) delete next[url];
+      else next[url] = sectionLabel;
+      return next;
+    });
+  };
+
+  const pickedCount = Object.keys(picked).length;
+
+  // Add all selected images to the Travel Pack & save.
   const addVisualToPack = () => {
-    if (!board) return;
-    const images = board
-      .map((s) => {
-        const imgs = sectionImages[s.tag] || [];
-        if (!imgs.length) return null;
-        return { url: imgs[imgIdx[s.tag] || 0], section: s.label };
-      })
-      .filter(Boolean);
-    if (images.length && onAddImages) onAddImages(images);
+    const images = Object.entries(picked).map(([url, section]) => ({ url, section }));
+    if (!images.length) return;
+    if (onAddImages) onAddImages(images);
     setSavedFlash(true);
     setTimeout(() => {
       setSavedFlash(false);
@@ -202,6 +209,7 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
     setDays(3);
     setBoard(null);
     setImgIdx({});
+    setPicked({});
   };
 
   if (!isOpen) return null;
@@ -319,20 +327,31 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
               {board && (
                 <div className="aipa-board">
                   <p className="aipa-board__hint">
-                    Pick the items to pack — use ‹ › to swap, then save.
+                    Tap the ✓ on each item you want to pack — swap with ‹ › to
+                    pick more, then save.
                   </p>
                   <div className="aipa-board__grid">
                     {board.map((s) => {
                       const imgs = sectionImages[s.tag] || [];
                       const idx = imgIdx[s.tag] || 0;
+                      const curUrl = imgs[idx];
+                      const isPicked = curUrl && !!picked[curUrl];
                       return (
-                        <div key={s.tag} className="aipa-ob-card">
+                        <div key={s.tag} className={`aipa-ob-card${isPicked ? " is-picked" : ""}`}>
                           <p className="aipa-ob-card__label">
                             {s.label}{s.qty ? ` · ${s.qty}` : ""}
                           </p>
                           {imgs.length > 0 ? (
                             <>
                               <img src={imgs[idx]} alt={s.label} className="aipa-ob-card__img" />
+                              <button
+                                className={`aipa-ob-card__pick${isPicked ? " is-on" : ""}`}
+                                onClick={() => togglePick(curUrl, s.label)}
+                                aria-pressed={isPicked}
+                                title={isPicked ? "Selected to pack — tap to remove" : "Select this item to pack"}
+                              >
+                                {isPicked ? "✓" : "+"}
+                              </button>
                               {imgs.length > 1 && (
                                 <>
                                   <button className="aipa-ob-card__prev" onClick={() => cycleImg(s.tag, -1, imgs.length)} aria-label="Previous">‹</button>
@@ -350,8 +369,13 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
                   <button
                     className={`aipa-btn aipa-btn--save${savedFlash ? " is-saved" : ""}`}
                     onClick={addVisualToPack}
+                    disabled={pickedCount === 0}
                   >
-                    {savedFlash ? "✓ Saved to Travel Pack!" : "💾 Save to Travel Pack"}
+                    {savedFlash
+                      ? "✓ Saved to Travel Pack!"
+                      : pickedCount > 0
+                      ? `💾 Save ${pickedCount} item${pickedCount !== 1 ? "s" : ""} to Travel Pack`
+                      : "Select items to pack"}
                   </button>
                 </div>
               )}
