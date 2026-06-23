@@ -18,9 +18,28 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const LS_KEY = "wimc_shopping_list_v1";
+const FEEDBACK_KEY = "wimc_shopping_ai_feedback_v1";
 
 function uid() {
   return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+}
+
+// ── Convert AI results into readable text so they can be saved & re-read ──
+function budgetToText(d) {
+  const parts = [];
+  if (d.estimatedTotal) parts.push(`Estimated total: ${d.estimatedTotal}`);
+  if (d.savingsTip) parts.push(`💡 ${d.savingsTip}`);
+  if (d.priority?.length) parts.push(`🎯 Buy first:\n${d.priority.map((x) => `• ${x}`).join("\n")}`);
+  if (d.canSkip?.length) parts.push(`⏭ Can skip for now:\n${d.canSkip.map((x) => `• ${x}`).join("\n")}`);
+  if (d.tips?.length) parts.push(`📋 Tips:\n${d.tips.map((x) => `• ${x}`).join("\n")}`);
+  return parts.join("\n\n");
+}
+
+function prioritizeToText(items) {
+  const lbl = { high: "🔴 High", medium: "🟡 Medium", low: "🟢 Low" };
+  return items
+    .map((it, i) => `#${i + 1} ${it.name} — ${lbl[it.priority] || it.priority}\n   ${it.reason || ""}`.trimEnd())
+    .join("\n");
 }
 
 // ── AI call via Anthropic API ─────────────────────────────────────────────────
@@ -602,14 +621,52 @@ function AddCategoryModal({ onAdd, onClose }) {
 
 // ── AI Panel ──────────────────────────────────────────────────────────────────
 function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
-  const [mode, setMode] = useState("suggest"); // suggest | chat | budget | prioritize
+  const [mode, setMode] = useState("suggest"); // suggest | chat | budget | prioritize | saved
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [chatHistory, setChatHistory] = useState([]);
   const chatEndRef = useRef(null);
 
+  // ── Saved AI feedback (persists across categories & sessions) ──
+  const [savedFeedback, setSavedFeedback] = useState([]);
+  const [savedMsg, setSavedMsg] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FEEDBACK_KEY);
+      setSavedFeedback(raw ? JSON.parse(raw) : []);
+    } catch {
+      setSavedFeedback([]);
+    }
+  }, []);
+
+  const persistFeedback = (list) => {
+    setSavedFeedback(list);
+    try { syncSetItem(FEEDBACK_KEY, JSON.stringify(list)); } catch {}
+  };
+
   const activeCat = categories.find((c) => c.id === activeCatId);
+
+  const saveFeedback = (kind, content) => {
+    if (!content) return;
+    const entry = {
+      id: uid(),
+      catId: activeCatId,
+      catLabel: activeCat?.label || "",
+      catEmoji: activeCat?.emoji || "",
+      kind,
+      ts: Date.now(),
+      content,
+    };
+    persistFeedback([entry, ...savedFeedback].slice(0, 100));
+    setSavedMsg("✅ Feedback saved");
+    setTimeout(() => setSavedMsg(""), 1800);
+  };
+
+  const deleteFeedback = (id) =>
+    persistFeedback(savedFeedback.filter((f) => f.id !== id));
+
   const catItems = items.filter(
     (i) => i.categoryId === activeCatId && !i.checked,
   );
@@ -800,6 +857,11 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
           { id: "chat", label: "💬 Chat", title: "Ask anything" },
           { id: "budget", label: "💰 Budget", title: "Budget analysis" },
           { id: "prioritize", label: "🎯 Prioritize", title: "Rank your list" },
+          {
+            id: "saved",
+            label: `📁 Saved${savedFeedback.length ? ` (${savedFeedback.length})` : ""}`,
+            title: "Your saved AI feedback (all categories)",
+          },
         ].map((m) => (
           <button
             key={m.id}
@@ -866,6 +928,15 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
                     <span className="sl-chat-msg__avatar">✨</span>
                   )}
                   <div className="sl-chat-msg__bubble">{msg.content}</div>
+                  {msg.role === "assistant" && msg.content && (
+                    <button
+                      className="sl-chat-msg__save"
+                      onClick={() => saveFeedback("chat", msg.content)}
+                      title="Save this answer to your saved feedback"
+                    >
+                      💾 Save
+                    </button>
+                  )}
                   {msg.addedItems?.length > 0 && (
                     <div className="sl-chat-msg__added">
                       ✓ Added {msg.addedItems.length} item
@@ -886,6 +957,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
               )}
               <div ref={chatEndRef} />
             </div>
+            {savedMsg && <span className="sl-save-fb__msg">{savedMsg}</span>}
             <div className="sl-ai-row">
               <input
                 className="sl-ai-input"
@@ -934,7 +1006,18 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
             {catItems.length === 0 && (
               <p className="sl-ai-warn">Add some items to your list first.</p>
             )}
-            {result?.type === "budget" && <BudgetResults data={result.data} />}
+            {result?.type === "budget" && (
+              <>
+                <BudgetResults data={result.data} />
+                <button
+                  className="sl-btn sl-btn--sm sl-save-fb"
+                  onClick={() => saveFeedback("budget", budgetToText(result.data))}
+                >
+                  💾 Save feedback
+                </button>
+                {savedMsg && <span className="sl-save-fb__msg">{savedMsg}</span>}
+              </>
+            )}
           </div>
         )}
 
@@ -968,7 +1051,56 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
               <p className="sl-ai-warn">Add some items to your list first.</p>
             )}
             {result?.type === "prioritize" && (
-              <PrioritizeResults items={result.items} />
+              <>
+                <PrioritizeResults items={result.items} />
+                <button
+                  className="sl-btn sl-btn--sm sl-save-fb"
+                  onClick={() => saveFeedback("prioritize", prioritizeToText(result.items))}
+                >
+                  💾 Save feedback
+                </button>
+                {savedMsg && <span className="sl-save-fb__msg">{savedMsg}</span>}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Saved feedback (all categories) ── */}
+        {mode === "saved" && (
+          <div className="sl-ai-section">
+            {savedFeedback.length === 0 ? (
+              <p className="sl-ai-hint">
+                No saved feedback yet. Run 💰 Budget, 🎯 Prioritize, or 💬 Chat,
+                then tap <strong>💾 Save feedback</strong> to keep it here —
+                across all your categories.
+              </p>
+            ) : (
+              <div className="sl-saved-fb">
+                {savedFeedback.map((f) => (
+                  <div key={f.id} className="sl-saved-fb__card">
+                    <div className="sl-saved-fb__head">
+                      <span className="sl-saved-fb__cat">
+                        {f.catEmoji} {f.catLabel}
+                      </span>
+                      <span className="sl-saved-fb__kind">
+                        {f.kind === "budget" ? "💰 Budget" : f.kind === "prioritize" ? "🎯 Prioritize" : "💬 Chat"}
+                      </span>
+                      <span className="sl-saved-fb__date">
+                        {new Date(f.ts).toLocaleDateString()}
+                      </span>
+                      <button
+                        className="sl-saved-fb__del"
+                        onClick={() => deleteFeedback(f.id)}
+                        title="Delete saved feedback"
+                        aria-label="Delete saved feedback"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                    <pre className="sl-saved-fb__body">{f.content}</pre>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
