@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { aiProxyFetch } from "../../utils/aiProxy";
+import { syncSetItem } from "../../utils/syncStore";
 import "./ClosetSearch.css";
 
 const SECTIONS = [
@@ -220,6 +221,28 @@ export default function ClosetSearch({
   const abortRef = useRef(null);
   const inputRef = useRef(null);
 
+  // ── Saved searches (persist results so they can be reopened later) ──
+  // Scope per closet so kids/pet/main closets keep their own saved searches.
+  const savedKey = `wimc_saved_searches:${tagPrefix || gender || "main"}`;
+  const [savedSearches, setSavedSearches] = useState([]);
+  const [showSaved, setShowSaved] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+    try {
+      const raw = localStorage.getItem(savedKey);
+      setSavedSearches(raw ? JSON.parse(raw) : []);
+    } catch {
+      setSavedSearches([]);
+    }
+  }, [isOpen, savedKey]);
+
+  const persistSaved = (list) => {
+    setSavedSearches(list);
+    try { syncSetItem(savedKey, JSON.stringify(list)); } catch {}
+  };
+
   const hasResult = !!resultText;
   const hasImages = resultImages.length > 0;
   const selectedCount = selected.size;
@@ -318,6 +341,35 @@ export default function ClosetSearch({
     setTimeout(() => setApplyFeedback(""), 2500);
   }, [resultImages, selected, onApplyItems]);
 
+  // Save the current results (query + matched images) so they can be reopened.
+  const saveCurrentSearch = () => {
+    if (!resultImages.length) return;
+    const entry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      query: (query || resultText || "Search").trim().slice(0, 80),
+      ts: Date.now(),
+      items: resultImages.map(({ url, sectionTag }) => ({ url, sectionTag })),
+    };
+    persistSaved([entry, ...savedSearches].slice(0, 50));
+    setSaveMsg("✅ Search saved");
+    setTimeout(() => setSaveMsg(""), 2000);
+  };
+
+  // Reopen a saved search — load its images back into the results grid.
+  const openSaved = (s) => {
+    setQuery(s.query || "");
+    setResultText(`Saved search: "${s.query}"`);
+    setSections([]);
+    setNoMatches(false);
+    setResultImages(s.items || []);
+    setSelected(new Set((s.items || []).map((x) => x.url)));
+    setError("");
+    setShowSaved(false);
+  };
+
+  const deleteSaved = (id) =>
+    persistSaved(savedSearches.filter((s) => s.id !== id));
+
   const reset = () => {
     abortRef.current?.abort();
     setQuery("");
@@ -358,6 +410,13 @@ export default function ClosetSearch({
             </div>
           </div>
           <div className="cs-header__actions">
+            <button
+              className="cs-header__reset"
+              onClick={() => setShowSaved((v) => !v)}
+              title="View your saved searches"
+            >
+              📁 Saved{savedSearches.length ? ` (${savedSearches.length})` : ""}
+            </button>
             {(query || hasResult || resultImages.length > 0) && (
               <button className="cs-header__reset" onClick={reset} title="Start a new search">🔄 New</button>
             )}
@@ -366,6 +425,47 @@ export default function ClosetSearch({
         </header>
 
         <div className="cs-body">
+          {/* Saved searches drawer */}
+          {showSaved && (
+            <div className="cs-saved">
+              <p className="cs-saved__title">📁 Saved Searches</p>
+              {savedSearches.length === 0 ? (
+                <p className="cs-saved__empty">
+                  No saved searches yet. Run a search, then tap 💾 Save to keep
+                  the results here.
+                </p>
+              ) : (
+                <ul className="cs-saved__list">
+                  {savedSearches.map((s) => (
+                    <li key={s.id} className="cs-saved__item">
+                      <button
+                        className="cs-saved__open"
+                        onClick={() => openSaved(s)}
+                        title="Reopen this search"
+                      >
+                        <span className="cs-saved__q">{s.query}</span>
+                        <span className="cs-saved__meta">
+                          {(s.items || []).length} item
+                          {(s.items || []).length !== 1 ? "s" : ""}
+                          {" · "}
+                          {new Date(s.ts).toLocaleDateString()}
+                        </span>
+                      </button>
+                      <button
+                        className="cs-saved__del"
+                        onClick={() => deleteSaved(s.id)}
+                        title="Delete saved search"
+                        aria-label="Delete saved search"
+                      >
+                        🗑️
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
           {/* Search input */}
           <div className="cs-search-row">
             <input
@@ -457,6 +557,13 @@ export default function ClosetSearch({
                     <div className="cs-results-actions">
                       <button className="cs-mini-btn" onClick={selectAll}>Select All</button>
                       <button
+                        className="cs-mini-btn cs-mini-btn--save"
+                        onClick={saveCurrentSearch}
+                        title="Save these results to reopen later"
+                      >
+                        💾 Save
+                      </button>
+                      <button
                         className="cs-mini-btn cs-mini-btn--danger"
                         onClick={removeSelected}
                         disabled={selectedCount === 0}
@@ -466,6 +573,7 @@ export default function ClosetSearch({
                       </button>
                     </div>
                   </div>
+                  {saveMsg && <p className="cs-apply-feedback">{saveMsg}</p>}
 
                   <div className="cs-image-grid">
                     {resultImages.map(({ url, sectionTag }, i) => {
