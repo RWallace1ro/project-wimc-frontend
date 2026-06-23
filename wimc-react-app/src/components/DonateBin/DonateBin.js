@@ -517,6 +517,17 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
     setTimeout(() => setRemoveMsg(""), 4000);
   };
 
+  // Remove a single item from the donated list (changed their mind). This only
+  // removes the donated record — it does not touch the closet photo.
+  const removeDonatedItem = (it) => {
+    const k = keyOf(it);
+    setDonatedItems((prev) => {
+      const updated = prev.filter((x) => keyOf(x) !== k);
+      try { syncSetItem(lsDonatedKey, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
   const sectionLabel = useMemo(
     () => SECTION_OPTIONS.find((o) => o.value === section)?.label || "",
     [section],
@@ -1050,6 +1061,14 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                               {it.removedFromCloset && (
                                 <span className="donate-thumb-badge" title="Removed from your closet">✓</span>
                               )}
+                              <button
+                                className="donate-thumb-del"
+                                onClick={(e) => { e.stopPropagation(); removeDonatedItem(it); }}
+                                title="Remove from donated list (changed my mind)"
+                                aria-label="Remove from donated list"
+                              >
+                                🗑️
+                              </button>
                             </span>
                             );
                           })}

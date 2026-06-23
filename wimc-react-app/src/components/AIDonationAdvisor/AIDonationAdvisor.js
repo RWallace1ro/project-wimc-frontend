@@ -205,9 +205,14 @@ Please give me a personalised donation plan for my closet.`;
               </p>
             </div>
           </div>
-          <button className="aida-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <div className="aida-header__actions">
+            {step === "result" && (
+              <button className="aida-header__new" onClick={reset} title="Start a new plan">
+                🔄 New
+              </button>
+            )}
+            <button className="aida-close" onClick={onClose} aria-label="Close">×</button>
+          </div>
         </header>
 
         <div className="aida-body">
@@ -253,18 +258,15 @@ Please give me a personalised donation plan for my closet.`;
               </pre>
               {error && <p className="aida-error">{error}</p>}
 
-              {!streaming && result && (
+              {!streaming && result && !board && (
                 <div className="aida-actions">
-                  {!board && (
-                    <button
-                      className="aida-btn aida-btn--build"
-                      onClick={buildVisual}
-                      disabled={building}
-                    >
-                      {building ? "✨ Building…" : "🗑️ Build Donation Set"}
-                    </button>
-                  )}
-                  <button className="aida-btn aida-btn--new" onClick={reset}>🔄 New</button>
+                  <button
+                    className="aida-btn aida-btn--build"
+                    onClick={buildVisual}
+                    disabled={building}
+                  >
+                    {building ? "✨ Building…" : "🗑️ Build Donation Set"}
+                  </button>
                 </div>
               )}
 
