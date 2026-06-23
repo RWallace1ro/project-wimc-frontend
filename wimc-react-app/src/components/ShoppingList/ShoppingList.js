@@ -49,7 +49,7 @@ async function callAI(messages, systemPrompt) {
     max_tokens: 1000,
     system: systemPrompt,
     messages,
-  });
+  }, { feature: "ai_shopping_assistant" });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data?.error || `AI request failed (${res.status})`);

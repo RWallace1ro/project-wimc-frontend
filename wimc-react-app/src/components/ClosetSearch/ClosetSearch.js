@@ -59,7 +59,7 @@ async function postProxy(body, retries = 2) {
   let lastErr;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await aiProxyFetch(body);
+      const res = await aiProxyFetch(body, { feature: "ai_closet_search" });
       const data = await res.json();
       if (!res.ok) {
         // Retry on server/rate errors; throw immediately on client errors
