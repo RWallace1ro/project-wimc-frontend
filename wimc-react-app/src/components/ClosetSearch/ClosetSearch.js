@@ -73,11 +73,17 @@ async function postProxy(body, retries = 2) {
       const res = await aiProxyFetch(body, { feature: "ai_closet_search" });
       const data = await res.json();
       if (!res.ok) {
-        // Retry on server/rate errors; throw immediately on client errors
-        if (res.status >= 500 || res.status === 429) {
-          lastErr = new Error(data?.error?.message || `HTTP ${res.status}`);
+        // The server sends `error` as a friendly string (e.g. the daily-limit
+        // notice). Surface that rather than a bare "HTTP 429".
+        const msg =
+          (typeof data?.error === "string" ? data.error : data?.error?.message) ||
+          `HTTP ${res.status}`;
+        // Only retry transient 5xx errors. A 429 (limit) or other 4xx won't
+        // succeed on retry, so fail fast with the server's message.
+        if (res.status >= 500) {
+          lastErr = new Error(msg);
         } else {
-          throw new Error(data?.error?.message || `HTTP ${res.status}`);
+          throw new Error(msg);
         }
       } else {
         return data;
@@ -303,7 +309,7 @@ export default function ClosetSearch({
       // Show a clear message when the vision model found no genuine matches
       setNoMatches(matched.length === 0 && !errored);
     } catch (e) {
-      if (e.name !== "AbortError") setError(`Error: ${e.message}`);
+      if (e.name !== "AbortError") setError(e.message || "Something went wrong. Please try again.");
     } finally {
       setStreaming(false);
       setLoadingImages(false);

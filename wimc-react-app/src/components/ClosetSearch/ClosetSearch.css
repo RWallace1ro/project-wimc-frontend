@@ -344,7 +344,7 @@
   grid-template-columns: repeat(3, 1fr);
   align-content: start;
   gap: 10px;                      /* clear ≥5px separation between images */
-  max-height: 420px;
+  max-height: 60vh;               /* taller area; scrolls when more rows */
   overflow-y: auto;               /* vertical scrolling */
   -webkit-overflow-scrolling: touch;
   border: 1px solid #e2e8f0;
@@ -359,6 +359,9 @@
   overflow: hidden;
   cursor: pointer;
   background: #1a1a2e;
+  /* Uniform portrait cells so rows never collapse; the whole image is shown
+     (contained, never cropped) regardless of its source dimensions. */
+  aspect-ratio: 3 / 4;
   transition: border-color 0.15s, transform 0.15s;
 }
 .cs-image-tile:hover {
@@ -370,7 +373,8 @@
 }
 .cs-image-tile__img {
   width: 100%;
-  height: auto;                   /* natural aspect ratio — entire image shows */
+  height: 100%;
+  object-fit: contain;            /* entire image visible, never cropped */
   display: block;
 }
 .cs-image-tile__check {
@@ -470,10 +474,6 @@
 @media (max-width: 600px) {
   .cs-image-grid {
     grid-template-columns: repeat(2, 1fr);
-    grid-auto-rows: 160px;
-  }
-  .cs-image-tile {
-    height: 160px;
   }
   .cs-apply-btn {
     width: 100%;
