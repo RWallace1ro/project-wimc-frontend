@@ -339,13 +339,13 @@
 }
 
 /* ── Image results grid ── */
-/* 3-column grid that scrolls vertically. Each cell sizes to its image's
-   natural height (align-items:start, so cells don't stretch), showing the
-   full length of every image. */
+/* 3-column grid that scrolls vertically. Uniform fixed row height (grid honors
+   grid-auto-rows reliably) so rows never overlap; each image is shown in full
+   inside its cell via object-fit:contain (never cropped). */
 .cs-image-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  align-items: start;
+  grid-auto-rows: 280px;
   align-content: start;
   gap: 10px;
   max-height: 60vh;
@@ -359,6 +359,7 @@
 }
 .cs-image-tile {
   position: relative;
+  height: 100%;
   border: 2px solid transparent;
   border-radius: 8px;
   overflow: hidden;
@@ -375,7 +376,8 @@
 }
 .cs-image-tile__img {
   width: 100%;
-  height: auto;                   /* natural ratio — full length of each image */
+  height: 100%;
+  object-fit: contain;            /* whole image visible inside the cell */
   display: block;
 }
 .cs-image-tile__check {
@@ -475,6 +477,7 @@
 @media (max-width: 600px) {
   .cs-image-grid {
     grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 240px;
   }
   .cs-apply-btn {
     width: 100%;
