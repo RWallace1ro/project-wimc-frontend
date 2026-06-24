@@ -624,14 +624,24 @@ export default function ClosetSearch({
                         <div
                           key={url + i}
                           className={`cs-image-tile${isSelected ? " is-selected" : ""}`}
-                          onClick={() => toggleSelect(url)}
                         >
+                          {/* Click the image to expand it (like the closet cards) */}
                           <img
                             className="cs-image-tile__img"
                             src={toThumb(url)}
                             alt={sec?.label || sectionTag}
+                            onClick={() => setLightboxIdx(i)}
+                            title="Click to enlarge"
                           />
-                          <div className="cs-image-tile__check">{isSelected ? "✓" : ""}</div>
+                          {/* Checkmark — click to select / deselect for Save & Apply */}
+                          <button
+                            className="cs-image-tile__check"
+                            onClick={(e) => { e.stopPropagation(); toggleSelect(url); }}
+                            title={isSelected ? "Selected — click to deselect" : "Click to select"}
+                            aria-pressed={isSelected}
+                          >
+                            {isSelected ? "✓" : ""}
+                          </button>
                           {/* Trash-can — remove this item from results */}
                           <button
                             className="cs-image-tile__remove"
@@ -640,15 +650,6 @@ export default function ClosetSearch({
                             aria-label="Remove from results"
                           >
                             🗑️
-                          </button>
-                          {/* Zoom — open the full image larger */}
-                          <button
-                            className="cs-image-tile__zoom"
-                            onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
-                            title="View larger"
-                            aria-label="View larger"
-                          >
-                            🔍
                           </button>
                           {sec && (
                             <div className="cs-image-tile__label">{sec.emoji} {sec.label}</div>

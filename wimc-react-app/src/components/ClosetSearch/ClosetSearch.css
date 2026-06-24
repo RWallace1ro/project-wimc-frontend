@@ -326,30 +326,6 @@
   background: rgba(185, 28, 28, 0.85);
 }
 
-/* Zoom — open the image larger (bottom-left, clear of check & label) */
-.cs-image-tile__zoom {
-  position: absolute;
-  bottom: 5px;
-  left: 5px;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-size: 13px;
-  line-height: 1;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  z-index: 2;
-  transition: background 0.15s;
-}
-.cs-image-tile__zoom:hover {
-  background: rgba(0, 0, 0, 0.8);
-}
-
 /* ── Fullscreen lightbox (mirrors the closet section cards) ── */
 .cs-lightbox {
   position: fixed;
@@ -503,25 +479,30 @@
   height: 100%;
   object-fit: contain;            /* whole image visible inside the cell */
   display: block;
+  cursor: pointer;                /* click to enlarge */
 }
 .cs-image-tile__check {
   position: absolute;
   top: 5px;
   right: 5px;
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
   border-radius: 50%;
-  background: #007bff;
+  border: 2px solid #fff;
+  background: rgba(0, 0, 0, 0.45);  /* always visible so users can select */
   color: #fff;
   font-size: 13px;
   font-weight: 700;
   display: grid;
   place-items: center;
-  opacity: 0;
-  transition: opacity 0.15s;
+  cursor: pointer;
+  z-index: 2;
+  transition: background 0.15s;
 }
 .cs-image-tile.is-selected .cs-image-tile__check {
-  opacity: 1;
+  background: #007bff;
+  border-color: #fff;
 }
 .cs-image-tile__label {
   position: absolute;
