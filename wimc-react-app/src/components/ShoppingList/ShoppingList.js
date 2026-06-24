@@ -52,9 +52,23 @@ async function callAI(messages, systemPrompt) {
   }, { feature: "ai_shopping_assistant" });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data?.error || `AI request failed (${res.status})`);
+    // Carry the server's friendly message (e.g. the daily-limit notice) and
+    // status so callers can show it instead of a generic error.
+    const err = new Error(
+      (typeof data?.error === "string" ? data.error : data?.error?.message) ||
+        `AI request failed (${res.status})`,
+    );
+    err.isApi = true;
+    err.status = res.status;
+    throw err;
   }
   return data.content?.find((b) => b.type === "text")?.text || "";
+}
+
+// When the failure came from the server (auth/limit/etc.), show its message —
+// it already explains limits and suggests upgrading. Otherwise show a fallback.
+function aiErrMsg(e, fallback) {
+  return e?.isApi && e.message ? e.message : fallback;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -694,10 +708,10 @@ No markdown, no explanation, just the JSON array.`,
       );
       const parsed = JSON.parse(raw.trim());
       setResult({ type: "suggest", items: parsed });
-    } catch {
+    } catch (e) {
       setResult({
         type: "error",
-        message: "Couldn't generate suggestions. Please try again.",
+        message: aiErrMsg(e, "Couldn't generate suggestions. Please try again."),
       });
     } finally {
       setLoading(false);
@@ -724,10 +738,10 @@ No markdown, no explanation, just the JSON.`,
       );
       const parsed = JSON.parse(raw.trim());
       setResult({ type: "budget", data: parsed });
-    } catch {
+    } catch (e) {
       setResult({
         type: "error",
-        message: "Couldn't analyze budget. Please try again.",
+        message: aiErrMsg(e, "Couldn't analyze budget. Please try again."),
       });
     } finally {
       setLoading(false);
@@ -754,10 +768,10 @@ No markdown, no explanation, just the JSON array.`,
       );
       const parsed = JSON.parse(raw.trim());
       setResult({ type: "prioritize", items: parsed });
-    } catch {
+    } catch (e) {
       setResult({
         type: "error",
-        message: "Couldn't prioritize. Please try again.",
+        message: aiErrMsg(e, "Couldn't prioritize. Please try again."),
       });
     } finally {
       setLoading(false);
@@ -806,12 +820,12 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
           })),
         );
       }
-    } catch {
+    } catch (e) {
       setChatHistory([
         ...newHistory,
         {
           role: "assistant",
-          content: "Sorry, I couldn't process that. Please try again.",
+          content: aiErrMsg(e, "Sorry, I couldn't process that. Please try again."),
         },
       ]);
     } finally {

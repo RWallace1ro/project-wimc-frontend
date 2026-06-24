@@ -53,6 +53,17 @@ function toThumb(url) {
   return url?.replace("/upload/", "/upload/f_auto,q_auto,w_400,c_limit/") || url;
 }
 
+// Drop exact-duplicate images (same Cloudinary URL) so a single item never
+// shows more than once. Different photos / colours keep their own URL.
+function dedupeByUrl(arr) {
+  const seen = new Set();
+  return arr.filter((x) => {
+    if (seen.has(x.url)) return false;
+    seen.add(x.url);
+    return true;
+  });
+}
+
 // POST to the Anthropic proxy with automatic retry on transient failures.
 // Fixes the "had to click 2–3 times" issue when the first request hiccups.
 async function postProxy(body, retries = 2) {
@@ -277,7 +288,7 @@ export default function ClosetSearch({
         );
       });
       const nested = await Promise.all(fetchPromises);
-      const flat = nested.flat();
+      const flat = dedupeByUrl(nested.flat());
       setLoadingImages(false);
 
       if (!flat.length) return;
@@ -356,15 +367,17 @@ export default function ClosetSearch({
   };
 
   // Reopen a saved search — load its images back into the results grid.
+  // Keep the Saved drawer open so the results appear right below it and the
+  // user can pick another saved search without re-opening the drawer.
   const openSaved = (s) => {
+    const items = dedupeByUrl(s.items || []);
     setQuery(s.query || "");
     setResultText(`Saved search: "${s.query}"`);
     setSections([]);
     setNoMatches(false);
-    setResultImages(s.items || []);
-    setSelected(new Set((s.items || []).map((x) => x.url)));
+    setResultImages(items);
+    setSelected(new Set(items.map((x) => x.url)));
     setError("");
-    setShowSaved(false);
   };
 
   const deleteSaved = (id) =>
