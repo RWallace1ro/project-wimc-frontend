@@ -244,6 +244,7 @@ export default function ClosetSearch({
   const [savedSearches, setSavedSearches] = useState([]);
   const [showSaved, setShowSaved] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
+  const [lightboxIdx, setLightboxIdx] = useState(-1); // -1 = closed
 
   useEffect(() => {
     if (!isOpen) return;
@@ -259,6 +260,27 @@ export default function ClosetSearch({
     setSavedSearches(list);
     try { syncSetItem(savedKey, JSON.stringify(list)); } catch {}
   };
+
+  // ── Lightbox navigation (scroll through all result images) ──
+  const lbClose = useCallback(() => setLightboxIdx(-1), []);
+  const lbPrev = useCallback(
+    () => setLightboxIdx((i) => (i > 0 ? i - 1 : resultImages.length - 1)),
+    [resultImages.length],
+  );
+  const lbNext = useCallback(
+    () => setLightboxIdx((i) => (i < resultImages.length - 1 ? i + 1 : 0)),
+    [resultImages.length],
+  );
+  useEffect(() => {
+    if (lightboxIdx < 0) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") lbClose();
+      if (e.key === "ArrowLeft") lbPrev();
+      if (e.key === "ArrowRight") lbNext();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [lightboxIdx, lbClose, lbPrev, lbNext]);
 
   const hasResult = !!resultText;
   const hasImages = resultImages.length > 0;
@@ -619,6 +641,15 @@ export default function ClosetSearch({
                           >
                             🗑️
                           </button>
+                          {/* Zoom — open the full image larger */}
+                          <button
+                            className="cs-image-tile__zoom"
+                            onClick={(e) => { e.stopPropagation(); setLightboxIdx(i); }}
+                            title="View larger"
+                            aria-label="View larger"
+                          >
+                            🔍
+                          </button>
                           {sec && (
                             <div className="cs-image-tile__label">{sec.emoji} {sec.label}</div>
                           )}
@@ -652,6 +683,45 @@ export default function ClosetSearch({
           {error && <p className="cs-error">{error}</p>}
         </div>
       </div>
+
+      {/* ── Fullscreen viewer (matches the closet section cards) ── */}
+      {lightboxIdx >= 0 && resultImages[lightboxIdx] && (
+        <div
+          className="cs-lightbox"
+          onClick={lbClose}
+          role="dialog"
+          aria-label="Fullscreen image viewer"
+        >
+          <button className="cs-lightbox__close" onClick={lbClose} aria-label="Close fullscreen view">✕</button>
+          <span className="cs-lightbox__counter">
+            {lightboxIdx + 1} / {resultImages.length}
+          </span>
+          {resultImages.length > 1 && (
+            <button
+              className="cs-lightbox__nav cs-lightbox__nav--prev"
+              onClick={(e) => { e.stopPropagation(); lbPrev(); }}
+              aria-label="Previous image"
+            >
+              ‹
+            </button>
+          )}
+          <img
+            src={resultImages[lightboxIdx].url}
+            alt={`fullscreen-${lightboxIdx}`}
+            className="cs-lightbox__img"
+            onClick={(e) => e.stopPropagation()}
+          />
+          {resultImages.length > 1 && (
+            <button
+              className="cs-lightbox__nav cs-lightbox__nav--next"
+              onClick={(e) => { e.stopPropagation(); lbNext(); }}
+              aria-label="Next image"
+            >
+              ›
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
