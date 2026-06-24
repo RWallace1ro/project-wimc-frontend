@@ -339,12 +339,12 @@
 }
 
 /* ── Image results grid ── */
+/* Masonry columns: each image keeps its natural ratio and shows at full
+   length down its column; the container scrolls vertically. */
 .cs-image-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-content: start;
-  gap: 10px;                      /* clear ≥5px separation between images */
-  max-height: 60vh;               /* taller area; scrolls when more rows */
+  column-count: 3;
+  column-gap: 10px;
+  max-height: 60vh;
   overflow-y: auto;               /* vertical scrolling */
   -webkit-overflow-scrolling: touch;
   border: 1px solid #e2e8f0;
@@ -354,6 +354,11 @@
 }
 .cs-image-tile {
   position: relative;
+  display: block;
+  width: 100%;
+  margin: 0 0 10px;               /* vertical gap between stacked images */
+  break-inside: avoid;            /* never split a tile across columns */
+  -webkit-column-break-inside: avoid;
   border: 2px solid transparent;
   border-radius: 8px;
   overflow: hidden;
@@ -370,12 +375,7 @@
 }
 .cs-image-tile__img {
   width: 100%;
-  /* Uniform portrait box reserved on the image itself — works even before the
-     image loads, so tiles never collapse. Whole image shown, never cropped. */
-  aspect-ratio: 3 / 4;
-  height: auto;
-  object-fit: contain;
-  background: #1a1a2e;
+  height: auto;                   /* natural ratio — full length of each image */
   display: block;
 }
 .cs-image-tile__check {
@@ -474,7 +474,7 @@
 
 @media (max-width: 600px) {
   .cs-image-grid {
-    grid-template-columns: repeat(2, 1fr);
+    column-count: 2;
   }
   .cs-apply-btn {
     width: 100%;

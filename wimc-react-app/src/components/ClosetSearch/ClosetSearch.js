@@ -608,7 +608,6 @@ export default function ClosetSearch({
                             className="cs-image-tile__img"
                             src={toThumb(url)}
                             alt={sec?.label || sectionTag}
-                            loading="lazy"
                           />
                           <div className="cs-image-tile__check">{isSelected ? "✓" : ""}</div>
                           {/* Trash-can — remove this item from results */}
