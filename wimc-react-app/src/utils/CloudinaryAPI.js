@@ -1,5 +1,6 @@
 import { Cloudinary } from "@cloudinary/url-gen";
 import { auth } from "../firebase";
+import { sectionTagsWithSubs } from "./closetSubsections";
 
 // Build request headers with the current user's Firebase ID token so the
 // cloudinarySign / deleteCloudinaryAsset functions can require authentication.
@@ -164,6 +165,21 @@ export const fetchImagesByTag = async (tag) => {
     console.error("Error fetching images by tag:", error);
     return [];
   }
+};
+
+// Fetch all images for a section, merging its sub-section tags so items sorted
+// into sub-sections (e.g. Skirts under Dresses/Skirts) are never missed.
+// Returns a deduped array of URLs — same shape as fetchImagesByTag.
+export const fetchImagesForSection = async (sectionTag) => {
+  const tags = sectionTagsWithSubs(sectionTag);
+  if (tags.length <= 1) return fetchImagesByTag(sectionTag);
+  const lists = await Promise.all(tags.map((t) => fetchImagesByTag(t)));
+  const seen = new Set();
+  const out = [];
+  for (const url of lists.flat()) {
+    if (url && !seen.has(url)) { seen.add(url); out.push(url); }
+  }
+  return out;
 };
 
 // ===== Delete helpers =====

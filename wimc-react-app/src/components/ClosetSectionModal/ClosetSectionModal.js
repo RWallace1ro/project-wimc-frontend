@@ -9,6 +9,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
 import { syncSetItem } from "../../utils/syncStore";
+import { getSubSections } from "../../utils/closetSubsections";
 import "./ClosetSectionModal.css";
 
 function getPinnedKey(tag)  { return `wimc_card_image_${tag}`; }
@@ -85,28 +86,12 @@ function ClosetSectionModal({
       : s.toLowerCase();
   }, [sectionName, tagProp]);
 
-  // ── Bags/Accessories sub-sections ─────────────────────────────────────────
-  // The Bags/Accessories card is split into three full-view sub-collections.
-  // "Bags" keeps the original section tag so existing items appear there;
-  // Accessories and Fragrance get their own tags. The prefix is everything
-  // before "bags-accessories" so per-closet scoping is preserved:
-  //   "bags-accessories"          → accessories / fragrance        (main, female)
-  //   "male-bags-accessories"     → male-accessories / …           (main, male)
-  //   "kid-abc-bags-accessories"  → kid-abc-accessories / …        (kids)
-  //   "pet-xyz-bags-accessories"  → pet-xyz-accessories / …        (pets)
-  const isBagsSection = /(^|-)bags-accessories$/.test(sectionTag);
-  const subPrefix = sectionTag.replace(/bags-accessories$/, "");
-  const subSections = useMemo(
-    () =>
-      isBagsSection
-        ? [
-            { label: "👜 Bags",        plain: "Bags",        tag: sectionTag },
-            { label: "💍 Accessories", plain: "Accessories", tag: `${subPrefix}accessories` },
-            { label: "🌸 Fragrance",   plain: "Fragrance",   tag: `${subPrefix}fragrance` },
-          ]
-        : null,
-    [isBagsSection, sectionTag, subPrefix]
-  );
+  // ── Sub-sections ──────────────────────────────────────────────────────────
+  // Every card is split into fixed full-view sub-collections (e.g. Dresses /
+  // Skirts). The FIRST sub-section keeps the card's original tag so existing
+  // items appear there; the rest get their own tags. Per-closet scoping
+  // (male-/kid-/pet- prefixes) is handled inside getSubSections.
+  const subSections = useMemo(() => getSubSections(sectionTag), [sectionTag]);
   const [subTag, setSubTag] = useState(null);
   useEffect(() => { setSubTag(null); }, [sectionTag, isOpen]);
 
@@ -135,7 +120,7 @@ function ClosetSectionModal({
   }, [recentUpload]);
 
   // Effective tag all data operations key off (fetch, add, delete, move, pin)
-  const tag = isBagsSection && subTag ? subTag : sectionTag;
+  const tag = subTag || sectionTag;
 
   // Move targets: sibling sub-sections first (when in Bags/Accessories),
   // then the other closet sections.
@@ -400,7 +385,7 @@ function ClosetSectionModal({
           </nav>
         )}
 
-        {/* Bags/Accessories sub-sections — each occupies the full card view */}
+        {/* Sub-sections — each occupies the full card view */}
         {subSections && (
           <nav className="csm-subnav" aria-label="Sub-section">
             {subSections.map((s) => (

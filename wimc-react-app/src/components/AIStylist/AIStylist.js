@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
-import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
 import "./AIStylist.css";
 
@@ -224,7 +224,7 @@ Respond with ONLY a JSON object mapping section label to chosen item number, e.g
       let imagesByTag = { ...sectionImages };
       if (missing.length) {
         const results = await Promise.all(
-          missing.map((s) => fetchImagesByTag(s.tag).then((urls) => ({ tag: s.tag, urls })))
+          missing.map((s) => fetchImagesForSection(s.tag).then((urls) => ({ tag: s.tag, urls })))
         );
         results.forEach(({ tag, urls }) => { imagesByTag[tag] = urls; });
         setSectionImages(imagesByTag);

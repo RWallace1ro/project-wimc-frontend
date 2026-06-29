@@ -1,7 +1,7 @@
 import { syncSetItem } from '../../utils/syncStore';
 ﻿import React, { useEffect, useRef, useState } from "react";
 import {
-  fetchImagesByTag,
+  fetchImagesForSection,
   fetchVideosByTag,
   uploadRawJSON,
   videoPoster,
@@ -318,7 +318,7 @@ export default function OutfitPlanner({
       setChoicesError("");
       try {
         const effectiveSection = tagPrefix ? `${tagPrefix}-${pickerSection}` : pickerSection;
-        const imgs = await fetchImagesByTag(effectiveSection);
+        const imgs = await fetchImagesForSection(effectiveSection);
         const vids = await fetchVideosByTag(effectiveSection);
         const norm = [
           ...(imgs || []).map((u) => normalizeMedia(u, pickerSection)),

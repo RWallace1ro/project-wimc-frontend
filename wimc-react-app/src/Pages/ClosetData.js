@@ -17,6 +17,7 @@ import TryOnStudio from "../components/TryOnStudio/TryOnStudio";
 import BackgroundPicker from "../components/BackgroundPicker/BackgroundPicker";
 import ClosetSearch from "../components/ClosetSearch/ClosetSearch";
 import { useBackground } from "../context/BackgroundContext";
+import { getSubSections } from "../utils/closetSubsections";
 import "./ClosetData.css";
 
 import dressesSkirtsImg from "../assets/images/dresses-skirts.jpg";
@@ -386,16 +387,11 @@ function ClosetData({
           sections={closetSections.flatMap((s) => {
             const label =
               sectionTagToDisplayName[s.name] || sectionTagToDisplayName[s.tag] || s.tag;
-            // Bags/Accessories is split into three sub-sections — expose each
-            // as its own category so uploads land in the right collection.
-            if (/(^|-)bags-accessories$/.test(s.tag)) {
-              const p = s.tag.startsWith("male-") ? "male-" : "";
-              return [
-                { value: s.tag,             label: "👜 Bags" },
-                { value: `${p}accessories`, label: "💍 Accessories" },
-                { value: `${p}fragrance`,   label: "🌸 Fragrance" },
-              ];
-            }
+            // Each card is split into sub-sections — expose each as its own
+            // upload target so items land in the right collection. The first
+            // sub-section keeps the card's own tag.
+            const subs = getSubSections(s.tag);
+            if (subs) return subs.map((sub) => ({ value: sub.tag, label: sub.label }));
             return [{ value: s.tag, label }];
           })}
         />

@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import { syncSetItem } from "../../utils/syncStore";
+import { sectionTagsWithSubs } from "../../utils/closetSubsections";
 import "./ClosetSearch.css";
 
 const SECTIONS = [
@@ -307,12 +308,16 @@ export default function ClosetSearch({
 
       if (!secs.length) return;
 
-      // Step 2 — fetch all images from matched sections
+      // Step 2 — fetch all images from matched sections (incl. their
+      // sub-sections, so items sorted into sub-sections are still found).
       setLoadingImages(true);
       const fetchPromises = secs.map((sectionTag) => {
         const effectiveTag = tagPrefix ? `${tagPrefix}-${sectionTag}` : sectionTag;
-        return fetchImagesByTag(effectiveTag).then((urls) =>
-          (urls || []).map((url) => ({ url, sectionTag }))
+        const tags = sectionTagsWithSubs(effectiveTag);
+        return Promise.all(
+          tags.map((t) => fetchImagesByTag(t).catch(() => []))
+        ).then((lists) =>
+          lists.flat().map((url) => ({ url, sectionTag }))
         );
       });
       const nested = await Promise.all(fetchPromises);

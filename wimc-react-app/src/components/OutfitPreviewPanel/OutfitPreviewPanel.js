@@ -1,7 +1,7 @@
 import { syncSetItem } from '../../utils/syncStore';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  fetchImagesByTag,
+  fetchImagesForSection,
   fetchVideosByTag,
   uploadRawJSON,
   videoPoster,
@@ -457,7 +457,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
       setError("");
       try {
         const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
-        const imgs = await fetchImagesByTag(effectiveSection);
+        const imgs = await fetchImagesForSection(effectiveSection);
         const vids = await fetchVideosByTag(effectiveSection);
         const norm = [
           ...(imgs || []).map((u) => normalizeMedia(u, section)),

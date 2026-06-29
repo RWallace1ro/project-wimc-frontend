@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
-import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import "./AIPackingAssistant.css";
 
 const TRIP_TYPES = [
@@ -138,7 +138,7 @@ At the end, add a short "Pro tip:" relevant to the destination or trip type.`;
       const next = { ...sectionImages };
       await Promise.all(
         missing.map((s) =>
-          fetchImagesByTag(s.tag)
+          fetchImagesForSection(s.tag)
             .then((urls) => { next[s.tag] = urls || []; })
             .catch(() => { next[s.tag] = []; })
         )

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
-import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import "./AIDonationAdvisor.css";
 
 // Default section labels for the prompt. Actual fetch tags come from the
@@ -128,7 +128,7 @@ Please give me a personalised donation plan for my closet.`;
       const next = { ...sectionImages };
       await Promise.all(
         missing.map((s) =>
-          fetchImagesByTag(s.tag)
+          fetchImagesForSection(s.tag)
             .then((urls) => { next[s.tag] = urls || []; })
             .catch(() => { next[s.tag] = []; })
         )

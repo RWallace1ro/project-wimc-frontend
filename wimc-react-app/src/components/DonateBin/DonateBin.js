@@ -3,7 +3,7 @@ import { syncSetItem, syncRemoveItem } from '../../utils/syncStore';
 import AIDonationAdvisor from "../AIDonationAdvisor/AIDonationAdvisor";
 import {
   uploadRawJSON,
-  fetchImagesByTag,
+  fetchImagesForSection,
   fetchVideosByTag,
   videoPoster,
   deleteImage,
@@ -221,7 +221,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
       setChoicesError("");
       try {
         const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
-        const imgs = await fetchImagesByTag(effectiveSection);
+        const imgs = await fetchImagesForSection(effectiveSection);
         const vids = await fetchVideosByTag(effectiveSection);
         const norm = [
           ...(imgs || []).map((u) => normalizeChoice(u, section)),
