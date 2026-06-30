@@ -9,7 +9,7 @@ import ShoppingList from "../components/ShoppingList/ShoppingList";
 import AddClothingModal from "../components/AddClothingModal/AddClothingModal";
 import { fetchImagesByTag, fetchVideosByTag } from "../utils/CloudinaryAPI";
 import VideoBin from "../components/VideoBin/VideoBin";
-import { ProGate } from "../context/TierContext";
+import { ProGate, useTier } from "../context/TierContext";
 import OutfitPreviewPanel from "../components/OutfitPreviewPanel/OutfitPreviewPanel";
 import OutfitPlanner from "../components/OutfitPlanner/OutfitPlanner";
 import TravelPackPanel from "../components/TravelPackPanel/TravelPackPanel";
@@ -143,6 +143,8 @@ function ClosetData({
     () => localStorage.getItem(CLOSET_GENDER_KEY) || "female"
   );
 
+  const { requirePro } = useTier();
+
   const handleGenderChange = (g) => {
     setGender(g);
     syncSetItem(CLOSET_GENDER_KEY, g);
@@ -239,6 +241,7 @@ function ClosetData({
   };
 
   const handleTryOnFromCard = (section) => {
+    if (!requirePro("Try-On Studio")) return; // Pro feature
     setTryOnImageUrl(closetItems.find((url) => url.includes(section)) || null);
     setTryOnSection(section);
     setIsTryOnOpen(true);

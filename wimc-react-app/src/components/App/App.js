@@ -554,7 +554,7 @@ function AppInner() {
                 path="/receipts"
                 element={
                   <ProtectedRoute isLoggedIn={isLoggedIn} onLoginRequired={() => setIsLoginModalOpen(true)}>
-                    <Receipts />
+                    <ProRoute><Receipts /></ProRoute>
                   </ProtectedRoute>
                 }
               />
