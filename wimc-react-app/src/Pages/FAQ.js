@@ -8,7 +8,7 @@ const SECTIONS = [
     items: [
       {
         q: "What is What's in My Closet (WIMC)?",
-        a: "What's in My Closet is a personal wardrobe management app that lets you photograph, organize, and plan outfits from your clothing collection. It includes AI-powered styling advice, a travel packing planner, a donation manager, a wish list, a shopping list, and more — all in one place.",
+        a: "What's in My Closet is a personal wardrobe management app that lets you photograph, organize, and plan outfits from your clothing collection. It includes AI-powered styling advice, a Try-On Studio for recording outfit videos with AI style feedback, a travel packing planner, a donation manager, a wish list, a shopping list, and more — all in one place.",
       },
       {
         q: "Do I need an account to use the app?",
