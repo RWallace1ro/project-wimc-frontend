@@ -54,6 +54,9 @@ function ClosetSectionModal({
   /** {tag, url, mediaType, ts} — most recent upload; injected into the cache so
    *  new items show immediately (Cloudinary's tag-list CDN cache lags ~1 min). */
   recentUpload = null,
+  /** "male" | "female" — picks the correct sub-section set (esp. for kids,
+   *  whose tags don't encode gender). */
+  gender = "female",
 }) {
   // ── Per-tag item cache ────────────────────────────────────────────────────
   // Keyed by section tag so switching sections never wipes fetched data and
@@ -91,7 +94,7 @@ function ClosetSectionModal({
   // Skirts). The FIRST sub-section keeps the card's original tag so existing
   // items appear there; the rest get their own tags. Per-closet scoping
   // (male-/kid-/pet- prefixes) is handled inside getSubSections.
-  const subSections = useMemo(() => getSubSections(sectionTag), [sectionTag]);
+  const subSections = useMemo(() => getSubSections(sectionTag, gender), [sectionTag, gender]);
   const [subTag, setSubTag] = useState(null);
   useEffect(() => { setSubTag(null); }, [sectionTag, isOpen]);
 

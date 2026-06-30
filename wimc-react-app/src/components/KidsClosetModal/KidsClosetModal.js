@@ -4,6 +4,7 @@ import { useBackground } from "../../context/BackgroundContext";
 import ClosetSectionCard from "../ClosetSectionCard/ClosetSectionCard";
 import ClosetSectionModal from "../ClosetSectionModal/ClosetSectionModal";
 import AddClothingModal from "../AddClothingModal/AddClothingModal";
+import { getSubSectionDefs } from "../../utils/closetSubsections";
 import OutfitPreviewPanel from "../OutfitPreviewPanel/OutfitPreviewPanel";
 import OutfitPlanner from "../OutfitPlanner/OutfitPlanner";
 import TravelPackPanel from "../TravelPackPanel/TravelPackPanel";
@@ -504,6 +505,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
             setIsAddOpen(true);
           }}
           recentUpload={recentUpload}
+          gender={child?.gender || "female"}
           allSections={SECTIONS.map((s) => ({
             label: s.label,
             tag: childTag(child.id, s.tag), // e.g. "kid-abc123-tops"
@@ -534,7 +536,19 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
           onClothingAdded={handleAddClothing}
           initialCategory={selectedSection || ""}
           tagPrefix={`kid-${child.id}`}
-          sections={SECTIONS.map((s) => ({ value: s.tag, label: s.label }))}
+          sections={SECTIONS.flatMap((s) => {
+            // Expand each card into its sub-sections so uploads can target one.
+            // Values are the un-prefixed sub-tag (slug, or the card's own tag
+            // for the first one); AddClothingModal prepends `tagPrefix`.
+            const defs = getSubSectionDefs(s.tag, {
+              gender: child?.gender || "female",
+              kind: "kid",
+            });
+            if (defs) {
+              return defs.map((d) => ({ value: d.slug || s.tag, label: d.label }));
+            }
+            return [{ value: s.tag, label: s.label }];
+          })}
         />
       </div>
     </div>

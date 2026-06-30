@@ -374,6 +374,7 @@ function ClosetData({
           onAddItem={openAddForSection}
           recentUpload={recentUpload}
           onSwitchSection={(tag) => setSelectedSection(tag)}
+          gender={gender}
           allSections={closetSections.map((s) => ({
             label: sectionTagToDisplayName[s.name] || s.tag,
             tag: s.tag,
@@ -390,7 +391,7 @@ function ClosetData({
             // Each card is split into sub-sections — expose each as its own
             // upload target so items land in the right collection. The first
             // sub-section keeps the card's own tag.
-            const subs = getSubSections(s.tag);
+            const subs = getSubSections(s.tag, gender);
             if (subs) return subs.map((sub) => ({ value: sub.tag, label: sub.label }));
             return [{ value: s.tag, label }];
           })}
