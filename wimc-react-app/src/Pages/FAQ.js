@@ -20,7 +20,7 @@ const SECTIONS = [
       },
       {
         q: "How do I add items to my closet?",
-        a: "Open any closet section card (e.g. Tops, Dresses/Skirts) and tap '+ Add'. You can upload a photo or video directly from your device. Items are stored securely and appear in that section immediately.",
+        a: "Open any closet section card (e.g. Tops, Dresses/Skirts), choose the sub-section you want (e.g. T-Shirts under Tops), and tap '+ Add'. You can upload a photo or video directly from your device, capture one with your camera, or paste an image link from the web. Items are stored securely and appear in that sub-section immediately.",
       },
     ],
   },
@@ -29,7 +29,11 @@ const SECTIONS = [
     items: [
       {
         q: "What closet sections are available?",
-        a: "Your main closet is divided into six sections: Tops, Pants/Jeans, Dresses/Skirts, Shoes/Sneakers, Bags/Accessories, and Jackets/Coats. Each section stores both photos and videos of your items.",
+        a: "Your main closet is divided into six sections: Tops, Pants/Jeans, Dresses/Skirts, Shoes/Sneakers, Bags/Accessories, and Jackets/Coats. The sections adjust to your selected closet style (e.g. the men's closet shows Button-Ups/Dress Clothes). Each section stores both photos and videos of your items.",
+      },
+      {
+        q: "What are sub-sections?",
+        a: "Every section card is split into sub-sections so you can organize at a finer level — for example, Tops includes Shirts, T-Shirts, and Sweaters; Shoes/Sneakers includes Sneakers, Heels, and Sandals/Slides. Tap a sub-section pill at the top of a section to view or add items there. The sub-sections are tailored to each closet (women's, men's, and each child's). When the feature first appears, your existing items show under the first sub-section — just use the Move button to sort them into the right one.",
       },
       {
         q: "Can I upload videos of my clothing items?",
@@ -94,6 +98,22 @@ const SECTIONS = [
         a: "The AI Packing Assistant integrates with the Travel Pack Planner to suggest what to pack based on your trip details (destination, duration, occasion). It pulls from your closet categories to create practical, mix-and-match packing lists.",
       },
       {
+        q: "What is AI Closet Search?",
+        a: "AI Closet Search lets you search your wardrobe in plain English — for example, 'a casual outfit for the weekend' or 'show me my black dresses.' It identifies the right sections and uses AI vision to surface the matching items. You can save searches to revisit later and tap any image to view it full-screen.",
+      },
+      {
+        q: "What is AI Style Feedback?",
+        a: "After you record or upload a try-on video in the Try-On Studio, AI Style Feedback gives you personalized coaching — what's working, style tips, and how to complete the look. The Try-On Studio is a Pro feature.",
+      },
+      {
+        q: "What is the WIMC Assistant?",
+        a: "The WIMC Assistant is a floating help chatbot (the robot button) available on every signed-in page. Ask it how any feature works and it will guide you. It has its own daily limit, separate from the styling AI tools.",
+      },
+      {
+        q: "How many AI requests do I get?",
+        a: "AI usage is set by your plan and resets daily: Free includes 3 AI requests per day, Pro includes 10 per day, and Pro + AI includes 50 per day. This pool covers the AI Stylist, Packing Assistant, Donation Advisor, Closet Search, and Style Feedback. If you reach your limit, you can upgrade for more or wait until the next day.",
+      },
+      {
         q: "Is my data used to train the AI?",
         a: "No. Conversations with the AI Stylist and other AI features are not used to train AI models. Your closet data remains private to your account.",
       },
@@ -117,15 +137,23 @@ const SECTIONS = [
     ],
   },
   {
-    heading: "Weather & Video",
+    heading: "Try-On, Receipts, Weather & Video",
     items: [
+      {
+        q: "What is the Try-On Studio?",
+        a: "The Try-On Studio (🎬 Try On) lets you record an outfit video using your front or rear camera, or upload one. Each video can be saved to your Video Bin, and you can request AI Style Feedback on it. The Try-On Studio is a Pro feature.",
+      },
+      {
+        q: "What is the Receipts tracker?",
+        a: "The Receipts tracker (🧾 Receipts) lets you store purchase receipts as photos, PDFs, or notes, filter them by category or return status, mark items as returned, and back up or restore your receipts across devices. Receipts is a Pro feature.",
+      },
       {
         q: "What is the Weather feature?",
         a: "The Weather modal shows the current conditions and a 7-day forecast for your location (or any city you search). It includes outfit suggestions based on the temperature and conditions so you can dress appropriately.",
       },
       {
         q: "What is the Video Bin?",
-        a: "The Video Bin is a dedicated space for styling videos, haul videos, or any wardrobe-related video content you want to keep alongside your closet. Videos are stored securely and can be played directly in the app.",
+        a: "The Video Bin is a dedicated space for styling videos, haul videos, or try-on recordings you want to keep alongside your closet. Videos are stored securely and can be played directly in the app. The Video Bin is a Pro feature.",
       },
     ],
   },
@@ -138,7 +166,7 @@ const SECTIONS = [
       },
       {
         q: "Can I delete my account?",
-        a: "Yes. To request account deletion and removal of all associated data, contact us at support@gingerfaithllc.com. We will process your request within 7 business days.",
+        a: "Yes. Tap your profile icon in the header, open User Settings, and go to the Delete Account tab. After you confirm (by typing DELETE and re-entering your password), your account and all associated data — closet photos and videos, saved plans, and profile — are permanently removed. If you'd prefer we handle it, email support@gingerfaithllc.com.",
       },
       {
         q: "How do I update my profile information?",
@@ -151,11 +179,15 @@ const SECTIONS = [
     items: [
       {
         q: "Is WIMC free to use?",
-        a: "WIMC offers a free tier with access to core closet organization features. A Pro subscription unlocks all features including AI tools, the Kids' Closet, Travel Pack Planner, Donate Bin, Wish List, Video Bin, and unlimited uploads.",
+        a: "Yes — the Free plan includes all six closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist (3 requests per day). Upgrading unlocks unlimited uploads and the Pro features below.",
+      },
+      {
+        q: "What are the plans and what's included?",
+        a: "There are three plans. Free ($0): core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro ($4.99/mo or $39.99/yr): everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Receipts tracker, and 10 AI requests/day. Pro + AI ($7.99/mo or $79.99/yr): everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features.",
       },
       {
         q: "How much does the Pro plan cost?",
-        a: "The Pro plan is $4.99 per month. Full subscription details and billing will be available shortly — stay tuned for the official launch announcement.",
+        a: "Pro is $4.99 per month (or $39.99 per year), and Pro + AI is $7.99 per month (or $79.99 per year). You can manage or change your plan anytime from the Billing portal in your account settings.",
       },
       {
         q: "How do I cancel my subscription?",
