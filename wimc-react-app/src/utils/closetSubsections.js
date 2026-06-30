@@ -79,8 +79,9 @@ const KID_FEMALE = {
     { label: "🩳 Skirts",  plain: "Skirts",  slug: "skirts" },
   ],
   "shoes-sneakers": [
-    { label: "👞 Shoes",    plain: "Shoes",    slug: null },
-    { label: "👟 Sneakers", plain: "Sneakers", slug: "sneakers" },
+    { label: "👞 Shoes",          plain: "Shoes",          slug: null },
+    { label: "👟 Sneakers",       plain: "Sneakers",       slug: "sneakers" },
+    { label: "🩴 Sandals/Slides", plain: "Sandals/Slides", slug: "sandals-slides" },
   ],
   "pants-jeans": [
     { label: "👖 Pants", plain: "Pants", slug: null },
@@ -108,8 +109,9 @@ const KID_MALE = {
     { label: "👔 Dress Shirts", plain: "Dress Shirts", slug: "dress-shirts" },
   ],
   "shoes-sneakers": [
-    { label: "👞 Shoes",    plain: "Shoes",    slug: null },
-    { label: "👟 Sneakers", plain: "Sneakers", slug: "sneakers" },
+    { label: "👞 Shoes",          plain: "Shoes",          slug: null },
+    { label: "👟 Sneakers",       plain: "Sneakers",       slug: "sneakers" },
+    { label: "🩴 Sandals/Slides", plain: "Sandals/Slides", slug: "sandals-slides" },
   ],
   "pants-jeans": [
     { label: "👖 Pants", plain: "Pants", slug: null },
