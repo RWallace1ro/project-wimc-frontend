@@ -44,16 +44,16 @@ import {
   where,
 } from "firebase/firestore";
 import { deleteImage, deleteVideo, fetchImagesByTag, fetchVideosByTag } from "./CloudinaryAPI";
+import { BASE_SLUGS, ALL_SUBSECTION_SLUGS } from "./closetSubsections";
 
-// Section keys used by every closet. Kids/Pet closets prefix these with a
-// per-profile id (kid-{id}-... / pet-{id}-...) so the resulting tags are unique
-// to one user — safe to fetch & delete by tag (unlike the shared main-closet
-// tags, which are common across all users).
-const SECTION_KEYS = [
-  "dresses-skirts", "dress-shirts-suits", "shoes-sneakers",
-  "pants-jeans", "tops", "bags-accessories", "jackets-coats",
-  "accessories", "fragrance", // bags-card sub-sections
-];
+// Section keys used by every closet, INCLUDING every sub-section slug (e.g.
+// "skirts", "sneakers", "t-shirts") so items sorted into a sub-section are
+// still found and deleted. Kids/Pet closets prefix these with a per-profile id
+// (kid-{id}-... / pet-{id}-...) so the resulting tags are unique to one user —
+// safe to fetch & delete by tag (unlike the shared main-closet tags, which are
+// common across all users). Derived from closetSubsections.js so this list
+// can never drift out of sync when a sub-section is added/renamed.
+const SECTION_KEYS = [...BASE_SLUGS, ...ALL_SUBSECTION_SLUGS];
 
 // Matches any Cloudinary delivery URL (image or video, with or without
 // transformation/version segments). Bounded by quote/space/backslash so it

@@ -1,12 +1,13 @@
 /**
  * WIMC Firebase Cloud Functions
  *
- * anthropicProxy        — Secure server-side proxy for Anthropic API calls.
- * cloudinarySign        — Generates a signed upload signature for Cloudinary.
- * deleteCloudinaryAsset — Signed delete of a Cloudinary asset.
- * createCheckoutSession — Starts a Stripe Checkout for a subscription.
- * createPortalSession   — Opens the Stripe customer billing portal.
- * stripeWebhook         — Signature-verified Stripe webhook → sets user tier.
+ * anthropicProxy            — Secure server-side proxy for Anthropic API calls.
+ * cloudinarySign            — Generates a signed upload signature for Cloudinary.
+ * deleteCloudinaryAsset     — Signed delete of a Cloudinary asset.
+ * createCheckoutSession     — Starts a Stripe Checkout for a subscription.
+ * createPortalSession       — Opens the Stripe customer billing portal.
+ * stripeWebhook             — Signature-verified Stripe webhook → sets user tier.
+ * finalizeScheduledDeletions — Daily job: completes 14-day-grace account deletions.
  *
  * Secrets:
  *   ANTHROPIC_API_KEY     — firebase functions:secrets:set ANTHROPIC_API_KEY
@@ -485,4 +486,271 @@ exports.stripeWebhook = functions
       console.error("stripeWebhook handler error:", err);
       res.status(500).send("Webhook handler error");
     }
+  });
+
+// ── Scheduled account deletion finalizer ──────────────────────────────────────
+//
+// Completes the 14-day "grace period" account deletion started by the client's
+// scheduleDeletion(uid) (src/utils/accountDeletion.js). That function only sets
+// { pendingDeletion: true, deletionDate } on the user's profile doc — this job
+// is the "Phase B" piece that actually erases the account once the date passes.
+//
+// Mirrors deleteAllUserData(uid) in accountDeletion.js almost line-for-line
+// (same URL-collection strategy, same section tags, same best-effort deletes),
+// but runs server-side with the Admin SDK so it works with no user signed in.
+
+// Public Cloudinary identifiers — NOT secrets. They're already embedded in the
+// client bundle (REACT_APP_CLOUD_NAME / REACT_APP_CLOUDINARY_API_KEY).
+const CLOUDINARY_CLOUD_NAME = "djoh2vfhd";
+const CLOUDINARY_API_KEY = "258382581976839";
+
+// Every base closet-card tag + every sub-section slug across all 4 gender/age
+// profiles (adult/kid × female/male). Kids/Pet closets prefix these with a
+// per-profile id (kid-{id}-… / pet-{id}-…), making the resulting tag unique to
+// one user — safe to fetch & delete by tag. KEEP IN SYNC with
+// wimc-react-app/src/utils/closetSubsections.js (BASE_SLUGS + ALL_SUBSECTION_SLUGS).
+const KID_PET_SECTION_KEYS = [
+  // base cards
+  "dresses-skirts", "dress-shirts-suits", "shoes-sneakers",
+  "pants-jeans", "tops", "bags-accessories", "jackets-coats",
+  // sub-section slugs (union of every profile)
+  "skirts", "sneakers", "heels", "sandals-slides", "jeans",
+  "shirts", "t-shirts", "suits", "sweaters", "dress-shirts", "coats",
+  "accessories", "fragrance",
+];
+
+// Matches any Cloudinary delivery URL (image or video). Same pattern as the
+// client's accountDeletion.js.
+const FINALIZE_CLOUDINARY_URL_RE =
+  /https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/(?:image|video)\/upload\/[^\s"'\\)]+/g;
+
+// Shared app-default asset that belongs to everyone — never delete it.
+const FINALIZE_PROTECTED_URLS = new Set([
+  "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg",
+]);
+
+// Extract a Cloudinary public_id from a delivery URL (ported from
+// CloudinaryAPI.js's extractPublicId so the server deletes the exact same
+// asset the client would have).
+function extractPublicIdServer(url) {
+  if (!url || !url.includes("/upload/")) return "";
+  const afterUpload = url.split("/upload/")[1];
+  if (!afterUpload) return "";
+  const segments = afterUpload.split("/");
+  const publicIdParts = [];
+  let foundContent = false;
+  for (const seg of segments) {
+    if (!foundContent) {
+      if (/^v\d+$/.test(seg)) continue;
+      if (
+        seg.includes(",") ||
+        /^(f_|q_|w_|h_|c_|e_|l_|so_|du_|fl_|r_|b_|bo_|co_|dpr_|g_|o_|p_|pg_|t_|x_|y_|z_|ar_|aspect_ratio_)/.test(seg)
+      ) continue;
+      foundContent = true;
+    }
+    publicIdParts.push(seg);
+  }
+  const withExt = publicIdParts.join("/");
+  return withExt.replace(/\.[^./?]+(\?.*)?$/, "");
+}
+
+// Delete one Cloudinary asset directly via the Admin API (no self-HTTP round
+// trip — this runs server-side with the secret already in-process).
+async function deleteCloudinaryAssetServer(url) {
+  const publicId = extractPublicIdServer(url);
+  if (!publicId) throw new Error("Could not extract public_id");
+  const resourceType = url.includes("/video/upload/") ? "video" : "image";
+  const timestamp = Math.round(Date.now() / 1000);
+  const stringToSign =
+    `public_id=${publicId}&timestamp=${timestamp}` + process.env.CLOUDINARY_API_SECRET;
+  const signature = crypto.createHash("sha1").update(stringToSign).digest("hex");
+
+  const form = new URLSearchParams();
+  form.append("public_id", publicId);
+  form.append("api_key", CLOUDINARY_API_KEY);
+  form.append("timestamp", String(timestamp));
+  form.append("signature", signature);
+
+  const endpoint = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/${resourceType}/destroy`;
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: form.toString(),
+  });
+  if (!res.ok) throw new Error(`Cloudinary destroy failed (${res.status})`);
+  return res.json();
+}
+
+// Fetch the public (unsigned) Cloudinary tag-list JSON — same endpoint the
+// client's fetchImagesByTag/fetchVideosByTag use.
+async function fetchTagListServer(tag, resourceType) {
+  const url = `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/${resourceType}/list/${tag}.json`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.resources || []).map(
+      (item) =>
+        `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/${resourceType}/upload/v${item.version}/${item.public_id}.${item.format}`,
+    );
+  } catch {
+    return [];
+  }
+}
+
+// Fully erase one account's data (Cloudinary + Firestore). Does NOT delete the
+// Auth user — the caller does that last, after this succeeds. Every step is
+// best-effort: a single failure never aborts the whole erasure.
+async function finalizeOneAccountData(uid) {
+  const adminDb = getAdminDb();
+  const urls = new Set();
+  let kidPetProfiles = [];
+
+  // 1a. Profile avatar + kid/pet profile photos
+  try {
+    const profileSnap = await adminDb.collection("users").doc(uid).get();
+    const data = profileSnap.exists ? profileSnap.data() : null;
+    if (typeof data?.avatarUrl === "string") {
+      (data.avatarUrl.match(FINALIZE_CLOUDINARY_URL_RE) || []).forEach((u) => urls.add(u));
+    }
+    kidPetProfiles = [
+      ...(data?.kidsProfiles || []).map((p) => ({ ...p, _prefix: "kid" })),
+      ...(data?.kidsDeleted  || []).map((p) => ({ ...p, _prefix: "kid" })),
+      ...(data?.petProfiles  || []).map((p) => ({ ...p, _prefix: "pet" })),
+      ...(data?.petDeleted   || []).map((p) => ({ ...p, _prefix: "pet" })),
+    ];
+    kidPetProfiles.forEach((prof) => {
+      if (typeof prof?.photoUrl === "string") {
+        (prof.photoUrl.match(FINALIZE_CLOUDINARY_URL_RE) || []).forEach((u) => urls.add(u));
+      }
+    });
+  } catch (e) {
+    console.error(`finalizeOneAccountData(${uid}) profile read failed:`, e);
+  }
+
+  // 1b. Kids/Pet closet items — fetch by per-profile tag (unique to this user)
+  try {
+    const tagJobs = [];
+    kidPetProfiles.forEach((prof) => {
+      if (!prof?.id) return;
+      KID_PET_SECTION_KEYS.forEach((sec) => {
+        const tag = `${prof._prefix}-${prof.id}-${sec}`;
+        tagJobs.push(
+          fetchTagListServer(tag, "image").then((arr) => arr.forEach((u) => urls.add(u))),
+          fetchTagListServer(tag, "video").then((arr) => arr.forEach((u) => urls.add(u))),
+        );
+      });
+    });
+    await Promise.all(tagJobs);
+  } catch (e) {
+    console.error(`finalizeOneAccountData(${uid}) kid/pet tag fetch failed:`, e);
+  }
+
+  // 1c. Image/video URLs embedded in syncdata values
+  let syncSnap = null;
+  try {
+    syncSnap = await adminDb.collection("users").doc(uid).collection("syncdata").get();
+    syncSnap.forEach((d) => {
+      const v = d.data()?.value;
+      if (typeof v === "string") {
+        (v.match(FINALIZE_CLOUDINARY_URL_RE) || []).forEach((u) => urls.add(u));
+      }
+    });
+  } catch (e) {
+    console.error(`finalizeOneAccountData(${uid}) syncdata read failed:`, e);
+  }
+
+  // 2. Delete the Cloudinary assets (best-effort)
+  for (const url of urls) {
+    if (FINALIZE_PROTECTED_URLS.has(url)) continue;
+    try {
+      await deleteCloudinaryAssetServer(url);
+    } catch (e) {
+      console.error(`finalizeOneAccountData(${uid}) asset delete failed for ${url}:`, e.message);
+    }
+  }
+
+  // 3. Delete syncdata docs
+  if (syncSnap) {
+    for (const d of syncSnap.docs) {
+      try { await d.ref.delete(); } catch { /* best-effort */ }
+    }
+  }
+
+  // 4. Delete share links this user owns
+  try {
+    const sharesSnap = await adminDb.collection("sharedContent").where("ownerId", "==", uid).get();
+    for (const d of sharesSnap.docs) {
+      try { await d.ref.delete(); } catch { /* best-effort */ }
+    }
+  } catch (e) {
+    console.error(`finalizeOneAccountData(${uid}) sharedContent cleanup failed:`, e);
+  }
+
+  // 5. Delete usage-counter docs tied to this uid (aiUsage/aiHelpUsage)
+  try {
+    await adminDb.collection("aiUsage").doc(uid).delete();
+  } catch { /* best-effort */ }
+  try {
+    await adminDb.collection("aiHelpUsage").doc(uid).delete();
+  } catch { /* best-effort */ }
+
+  // 6. Delete the profile doc itself
+  try {
+    await adminDb.collection("users").doc(uid).delete();
+  } catch (e) {
+    console.error(`finalizeOneAccountData(${uid}) profile doc delete failed:`, e);
+  }
+}
+
+// Runs once a day. Finds accounts whose 14-day grace period has elapsed and
+// completes the erasure (Cloudinary + Firestore + the Auth user itself).
+// Queries only on the equality filter (pendingDeletion == true) — no composite
+// Firestore index required — then filters the (small) result set by date in
+// memory.
+exports.finalizeScheduledDeletions = functions
+  .runWith({ secrets: ["CLOUDINARY_API_SECRET"] })
+  .pubsub.schedule("every 24 hours")
+  .onRun(async () => {
+    const adminDb = getAdminDb();
+    const nowIso = new Date().toISOString();
+
+    let snap;
+    try {
+      snap = await adminDb.collection("users").where("pendingDeletion", "==", true).get();
+    } catch (e) {
+      console.error("finalizeScheduledDeletions: query failed:", e);
+      return null;
+    }
+
+    const due = snap.docs.filter((d) => {
+      const dd = d.data()?.deletionDate;
+      return typeof dd === "string" && dd <= nowIso;
+    });
+
+    console.log(`finalizeScheduledDeletions: ${due.length} account(s) due out of ${snap.size} pending`);
+
+    for (const docSnap of due) {
+      const uid = docSnap.id;
+      try {
+        // Re-check freshness right before erasing — catches a last-second
+        // cancelDeletion() that happened after the query ran.
+        const fresh = await adminDb.collection("users").doc(uid).get();
+        const freshData = fresh.exists ? fresh.data() : null;
+        if (!freshData?.pendingDeletion) {
+          console.log(`finalizeScheduledDeletions: ${uid} was cancelled — skipping`);
+          continue;
+        }
+
+        await finalizeOneAccountData(uid);
+        await admin.auth().deleteUser(uid);
+        console.log(`finalizeScheduledDeletions: erased ${uid}`);
+      } catch (e) {
+        // A failed account never blocks the rest of the batch. It stays
+        // pendingDeletion=true and is retried on the next daily run.
+        console.error(`finalizeScheduledDeletions: failed for ${uid}:`, e);
+      }
+    }
+
+    return null;
   });

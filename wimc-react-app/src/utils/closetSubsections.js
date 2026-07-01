@@ -136,6 +136,21 @@ const KID_MALE = {
 const PROFILES = [ADULT_FEMALE, ADULT_MALE, KID_FEMALE, KID_MALE];
 const BASE_SLUGS = Array.from(new Set(PROFILES.flatMap((p) => Object.keys(p))));
 
+// Every sub-section slug across all 4 profiles (excludes the null "main tag"
+// entries). Single source of truth for anything that needs to enumerate every
+// possible Cloudinary tag a closet card could use — e.g. account deletion.
+export const ALL_SUBSECTION_SLUGS = Array.from(
+  new Set(
+    PROFILES.flatMap((p) => Object.values(p)).flatMap((defs) =>
+      defs.map((d) => d.slug).filter(Boolean),
+    ),
+  ),
+);
+
+// Every base card slug (dresses-skirts, tops, …) — the plain section tags
+// before any sub-section suffix.
+export { BASE_SLUGS };
+
 // Split a full section tag into its base slug + per-closet prefix.
 function splitSectionTag(sectionTag = "") {
   for (const base of BASE_SLUGS) {
