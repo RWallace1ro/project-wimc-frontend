@@ -116,6 +116,26 @@
   color: #fff;
   font-weight: 600;
 }
+
+/* Sub-section row — smaller, muted secondary filter, wraps horizontally
+   under the main (vertical) section list. */
+.tryon-ref__sections--sub {
+  flex-direction: row;
+  flex-wrap: wrap;
+  max-height: none;
+  margin-top: -2px;
+  margin-bottom: 4px;
+}
+.tryon-ref__section-pill--sub {
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #64748b;
+}
+.tryon-ref__section-pill--sub.is-active {
+  background: #475569;
+  border-color: #475569;
+  color: #fff;
+}
 .tryon-ref__preview {
   display: flex;
   flex-direction: column;

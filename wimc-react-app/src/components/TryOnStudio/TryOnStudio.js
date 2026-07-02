@@ -2,12 +2,23 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   uploadVideo,
   fetchImagesByTag,
+  fetchImagesForSection,
 } from "../../utils/CloudinaryAPI";
+import { getSubSections } from "../../utils/closetSubsections";
 import AIStyleFeedback from "../AIStyleFeedback/AIStyleFeedback";
 import "./TryOnStudio.css";
 
-const SECTION_OPTIONS = [
+const SECTION_OPTIONS_FEMALE = [
   { value: "dresses-skirts", label: "Dresses/Skirts" },
+  { value: "shoes-sneakers", label: "Shoes/Sneakers" },
+  { value: "pants-jeans", label: "Pants/Jeans" },
+  { value: "tops", label: "Tops" },
+  { value: "bags-accessories", label: "Bags/Accessories" },
+  { value: "jackets-coats", label: "Jackets/Coats" },
+];
+
+const SECTION_OPTIONS_MALE = [
+  { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
   { value: "shoes-sneakers", label: "Shoes/Sneakers" },
   { value: "pants-jeans", label: "Pants/Jeans" },
   { value: "tops", label: "Tops" },
@@ -20,13 +31,34 @@ export default function TryOnStudio({
   onClose,
   initialImageUrl = null,
   initialSection = null,
+  gender = "female",
 }) {
+  // gender-aware section list + the male- tag prefix used everywhere else
+  const SECTION_OPTIONS = gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE;
+  const tagPrefix = gender === "male" ? "male-" : "";
+
   // Reference item
   const [section, setSection] = useState(
     initialSection || SECTION_OPTIONS[0].value,
   );
+  // Reset the picked section whenever gender changes AFTER mount, so we never
+  // fetch a stale tag from the other closet. Skips the initial mount so an
+  // explicit initialSection (e.g. "Try On" launched from a specific card)
+  // isn't immediately clobbered by this.
+  const skipFirstGenderReset = useRef(true);
+  useEffect(() => {
+    if (skipFirstGenderReset.current) { skipFirstGenderReset.current = false; return; }
+    setSection(SECTION_OPTIONS[0].value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gender]);
   const [sectionItems, setSectionItems] = useState([]);
   const [sectionLoading, setSectionLoading] = useState(false);
+  // Sub-section within the current section card (e.g. Skirts under
+  // Dresses/Skirts). null = "All" — every sub-section merged together.
+  const [subSection, setSubSection] = useState(null);
+  const effectiveSection = `${tagPrefix}${section}`;
+  const subSections = getSubSections(effectiveSection, gender);
+  useEffect(() => { setSubSection(null); }, [section, gender]);
   const [refImage, setRefImage] = useState(initialImageUrl);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
@@ -71,19 +103,34 @@ export default function TryOnStudio({
   useEffect(() => {
     if (isOpen) {
       setRefImage(initialImageUrl);
-      if (initialSection) setSection(initialSection);
+      if (initialSection) {
+        // initialSection may arrive already gender-prefixed (e.g. "male-tops",
+        // since it's the card's own full tag) — strip it so `section` always
+        // holds the bare slug matching SECTION_OPTIONS values.
+        const bare = tagPrefix && initialSection.startsWith(tagPrefix)
+          ? initialSection.slice(tagPrefix.length)
+          : initialSection;
+        setSection(bare);
+      }
     }
-  }, [isOpen, initialImageUrl, initialSection]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialImageUrl, initialSection, tagPrefix]);
 
   // ── Load section images for reference picker ─────────────────────────────
   useEffect(() => {
     if (!isOpen) return;
     setSectionLoading(true);
-    fetchImagesByTag(section)
+    // A specific sub-section fetches just that tag; "All" merges every
+    // sub-section together via fetchImagesForSection.
+    const fetch = subSection
+      ? fetchImagesByTag(subSection)
+      : fetchImagesForSection(effectiveSection);
+    fetch
       .then((imgs) => setSectionItems(imgs || []))
       .catch(() => setSectionItems([]))
       .finally(() => setSectionLoading(false));
-  }, [isOpen, section]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, section, subSection, tagPrefix]);
 
   // ── Camera helpers ───────────────────────────────────────────────────────
   const startCamera = useCallback(
@@ -283,12 +330,38 @@ export default function TryOnStudio({
                   role="option"
                   aria-selected={section === o.value}
                   className={`tryon-ref__section-pill${section === o.value ? " is-active" : ""}`}
-                  onClick={() => { setSection(o.value); setRefImage(null); }}
+                  onClick={() => { setSection(o.value); setSubSection(null); setRefImage(null); }}
                 >
                   {o.label}
                 </button>
               ))}
             </div>
+
+            {subSections && (
+              <div className="tryon-ref__sections tryon-ref__sections--sub" role="listbox" aria-label="Reference sub-section">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={!subSection}
+                  className={`tryon-ref__section-pill tryon-ref__section-pill--sub${!subSection ? " is-active" : ""}`}
+                  onClick={() => { setSubSection(null); setRefImage(null); }}
+                >
+                  All
+                </button>
+                {subSections.map((s) => (
+                  <button
+                    key={s.tag}
+                    type="button"
+                    role="option"
+                    aria-selected={subSection === s.tag}
+                    className={`tryon-ref__section-pill tryon-ref__section-pill--sub${subSection === s.tag ? " is-active" : ""}`}
+                    onClick={() => { setSubSection(s.tag); setRefImage(null); }}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {refImage ? (
               <div className="tryon-ref__preview">

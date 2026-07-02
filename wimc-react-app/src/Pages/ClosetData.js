@@ -406,6 +406,7 @@ function ClosetData({
         onClose={() => setIsTryOnOpen(false)}
         initialImageUrl={tryOnImageUrl}
         initialSection={tryOnSection}
+        gender={gender}
       />
 
       <BackgroundPicker
