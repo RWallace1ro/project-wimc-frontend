@@ -365,6 +365,22 @@
   color: #fff;
   font-weight: 600;
 }
+
+/* Sub-section row — smaller, muted secondary filter */
+.donate-section-strip--sub {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.donate-section-pill--sub {
+  height: 24px;
+  padding: 3px 11px;
+  font-size: 11px;
+  color: #64748b;
+}
+.donate-section-pill--sub.is-active {
+  background: #475569;
+  border-color: #475569;
+}
 .donate-section-pill--action {
   background: #f8fafc;
   border-color: #cbd5e1;

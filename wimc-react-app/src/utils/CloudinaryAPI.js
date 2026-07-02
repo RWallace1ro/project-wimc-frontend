@@ -314,3 +314,17 @@ export const fetchVideosByTag = async (tag) => {
     return [];
   }
 };
+
+// Fetch all videos for a section, merging its sub-section tags — the video
+// counterpart to fetchImagesForSection, same reasoning.
+export const fetchVideosForSection = async (sectionTag) => {
+  const tags = sectionTagsWithSubs(sectionTag);
+  if (tags.length <= 1) return fetchVideosByTag(sectionTag);
+  const lists = await Promise.all(tags.map((t) => fetchVideosByTag(t)));
+  const seen = new Set();
+  const out = [];
+  for (const url of lists.flat()) {
+    if (url && !seen.has(url)) { seen.add(url); out.push(url); }
+  }
+  return out;
+};

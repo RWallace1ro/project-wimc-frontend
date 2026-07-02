@@ -197,6 +197,22 @@
   font-weight: 600;
 }
 
+/* Sub-section row — smaller, muted secondary filter */
+.planner__section-strip--sub {
+  margin-top: -4px;
+  margin-bottom: 6px;
+}
+.planner__section-tab--sub {
+  padding: 3px 9px;
+  font-size: 11px;
+  color: #64748b;
+}
+.planner__section-tab--sub.is-active {
+  background: #475569;
+  border-color: #475569;
+  color: #fff;
+}
+
 /* Apply day label */
 .planner__apply-day {
   font-size: 12px;

@@ -3,9 +3,12 @@ import { syncSetItem } from '../../utils/syncStore';
 import {
   fetchImagesForSection,
   fetchVideosByTag,
+  fetchVideosForSection,
+  fetchImagesByTag,
   uploadRawJSON,
   videoPoster,
 } from "../../utils/CloudinaryAPI";
+import { getSubSections } from "../../utils/closetSubsections";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
@@ -117,6 +120,13 @@ export default function OutfitPlanner({
   useEffect(() => {
     setPickerSection(SECTION_OPTIONS[0].value);
   }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sub-section within the current picker card (e.g. Skirts under
+  // Dresses/Skirts). null = "All" — every sub-section merged together.
+  const [pickerSubSection, setPickerSubSection] = useState(null);
+  const pickerEffectiveSection = tagPrefix ? `${tagPrefix}-${pickerSection}` : pickerSection;
+  const pickerSubSections = getSubSections(pickerEffectiveSection, gender);
+  useEffect(() => { setPickerSubSection(null); }, [pickerSection, gender]);
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
@@ -317,9 +327,9 @@ export default function OutfitPlanner({
       setChoicesLoading(true);
       setChoicesError("");
       try {
-        const effectiveSection = tagPrefix ? `${tagPrefix}-${pickerSection}` : pickerSection;
-        const imgs = await fetchImagesForSection(effectiveSection);
-        const vids = await fetchVideosByTag(effectiveSection);
+        const [imgs, vids] = pickerSubSection
+          ? await Promise.all([fetchImagesByTag(pickerSubSection), fetchVideosByTag(pickerSubSection)])
+          : await Promise.all([fetchImagesForSection(pickerEffectiveSection), fetchVideosForSection(pickerEffectiveSection)]);
         const norm = [
           ...(imgs || []).map((u) => normalizeMedia(u, pickerSection)),
           ...(vids || []).map((u) =>
@@ -344,7 +354,7 @@ export default function OutfitPlanner({
     return () => {
       ignore = true;
     };
-  }, [floating, doors.opening, pickerSection]);
+  }, [floating, doors.opening, pickerSection, pickerSubSection]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function addChoiceToDay(it, day) {
     const norm = normalizeMedia(it, it?.section);
@@ -583,6 +593,25 @@ export default function OutfitPlanner({
                   </button>
                 ))}
               </div>
+              {pickerSubSections && (
+                <div className="planner__section-strip planner__section-strip--sub">
+                  <button
+                    className={`planner__section-tab planner__section-tab--sub${!pickerSubSection ? " is-active" : ""}`}
+                    onClick={() => setPickerSubSection(null)}
+                  >
+                    All
+                  </button>
+                  {pickerSubSections.map((s) => (
+                    <button
+                      key={s.tag}
+                      className={`planner__section-tab planner__section-tab--sub${pickerSubSection === s.tag ? " is-active" : ""}`}
+                      onClick={() => setPickerSubSection(s.tag)}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <p className="planner__picker-tip">
                 Click an item to add to <strong>{selectedDay}</strong>
               </p>

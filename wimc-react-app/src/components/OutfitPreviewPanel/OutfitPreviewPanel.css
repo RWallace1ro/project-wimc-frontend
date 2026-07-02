@@ -168,6 +168,24 @@
   font-weight: 600;
 }
 
+/* Sub-section row — smaller, muted so it reads as a secondary filter under
+   the main section strip. */
+.opp__section-strip--sub {
+  background: #f8fafc;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.opp__section-pill--sub {
+  height: 24px;
+  padding: 3px 11px;
+  font-size: 11px;
+  color: #64748b;
+}
+.opp__section-pill--sub.is-active {
+  background: #475569;
+  border-color: #475569;
+}
+
 /* Open body — fills remaining space below the section strip */
 .opp__body {
   display: flex;

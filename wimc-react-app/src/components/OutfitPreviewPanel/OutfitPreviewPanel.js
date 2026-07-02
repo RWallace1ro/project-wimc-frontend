@@ -3,9 +3,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchImagesForSection,
   fetchVideosByTag,
+  fetchVideosForSection,
+  fetchImagesByTag,
   uploadRawJSON,
   videoPoster,
 } from "../../utils/CloudinaryAPI";
+import { getSubSections } from "../../utils/closetSubsections";
 import "./OutfitPreviewPanel.css";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
@@ -186,6 +189,13 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   useEffect(() => {
     setSection(SECTION_OPTIONS[0].value);
   }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sub-section within the current section card (e.g. Skirts under
+  // Dresses/Skirts). null = "All" — every sub-section merged together.
+  const [subSection, setSubSection] = useState(null);
+  const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
+  const subSections = getSubSections(effectiveSection, gender);
+  useEffect(() => { setSubSection(null); }, [section, gender]);
   const [choices, setChoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -456,9 +466,11 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
       setLoading(true);
       setError("");
       try {
-        const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
-        const imgs = await fetchImagesForSection(effectiveSection);
-        const vids = await fetchVideosByTag(effectiveSection);
+        // A specific sub-section fetches just that tag; "All" merges every
+        // sub-section together (fetchImagesForSection/fetchVideosForSection).
+        const [imgs, vids] = subSection
+          ? await Promise.all([fetchImagesByTag(subSection), fetchVideosByTag(subSection)])
+          : await Promise.all([fetchImagesForSection(effectiveSection), fetchVideosForSection(effectiveSection)]);
         const norm = [
           ...(imgs || []).map((u) => normalizeMedia(u, section)),
           ...(vids || []).map((u) =>
@@ -483,7 +495,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
       ignore = true;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, section]);
+  }, [isOpen, section, subSection, tagPrefix]);
 
   // share row auto-scroll
   useEffect(() => {
@@ -1225,6 +1237,29 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                 💾 Saved Looks
               </button>
             </div>
+
+            {/* ── Sub-section pills — narrow the current card down ── */}
+            {subSections && (
+              <div className="opp__section-strip opp__section-strip--sub">
+                <button
+                  className={"opp__section-pill opp__section-pill--sub" + (!subSection ? " is-active" : "")}
+                  type="button"
+                  onClick={() => setSubSection(null)}
+                >
+                  All
+                </button>
+                {subSections.map((s) => (
+                  <button
+                    key={s.tag}
+                    className={"opp__section-pill opp__section-pill--sub" + (subSection === s.tag ? " is-active" : "")}
+                    type="button"
+                    onClick={() => setSubSection(s.tag)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
           <div className="opp__body">
             <div className="opp__right">

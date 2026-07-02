@@ -5,10 +5,13 @@ import {
   uploadRawJSON,
   fetchImagesForSection,
   fetchVideosByTag,
+  fetchVideosForSection,
+  fetchImagesByTag,
   videoPoster,
   deleteImage,
   deleteVideo,
 } from "../../utils/CloudinaryAPI";
+import { getSubSections } from "../../utils/closetSubsections";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
@@ -112,6 +115,13 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
   useEffect(() => {
     setSection(SECTION_OPTIONS[0].value);
   }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sub-section within the current section card (e.g. Skirts under
+  // Dresses/Skirts). null = "All" — every sub-section merged together.
+  const [subSection, setSubSection] = useState(null);
+  const donateEffectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
+  const donateSubSections = getSubSections(donateEffectiveSection, gender);
+  useEffect(() => { setSubSection(null); }, [section, gender]);
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
@@ -220,9 +230,9 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
       setChoicesLoading(true);
       setChoicesError("");
       try {
-        const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
-        const imgs = await fetchImagesForSection(effectiveSection);
-        const vids = await fetchVideosByTag(effectiveSection);
+        const [imgs, vids] = subSection
+          ? await Promise.all([fetchImagesByTag(subSection), fetchVideosByTag(subSection)])
+          : await Promise.all([fetchImagesForSection(donateEffectiveSection), fetchVideosForSection(donateEffectiveSection)]);
         const norm = [
           ...(imgs || []).map((u) => normalizeChoice(u, section)),
           ...(vids || []).map((u) =>
@@ -247,7 +257,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
       ignore = true;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, section]);
+  }, [isOpen, section, subSection]);
 
   // ✅ Open modal with "Select items to donate" fade-in/out
   const handleOpen = () => {
@@ -721,6 +731,28 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                 ↩️ Donated Items
               </button>
             </div>
+
+            {donateSubSections && (
+              <div className="donate-section-strip donate-section-strip--sub">
+                <button
+                  className={"donate-section-pill donate-section-pill--sub" + (!subSection ? " is-active" : "")}
+                  type="button"
+                  onClick={() => setSubSection(null)}
+                >
+                  All
+                </button>
+                {donateSubSections.map((s) => (
+                  <button
+                    key={s.tag}
+                    className={"donate-section-pill donate-section-pill--sub" + (subSection === s.tag ? " is-active" : "")}
+                    type="button"
+                    onClick={() => setSubSection(s.tag)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="donate-modal__body">
               {/* Full-width canvas + picker */}
