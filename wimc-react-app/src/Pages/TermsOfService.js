@@ -103,8 +103,11 @@ export default function TermsOfService() {
       <section className="legal-page__section">
         <h2>10. Contact</h2>
         <p>
-          For questions about these Terms, please contact us through the App's
-          About page.
+          For questions about these Terms, please email{" "}
+          <a href="mailto:support@gingerfaithllc.com" className="legal-page__link">
+            support@gingerfaithllc.com
+          </a>{" "}
+          or contact us through the App's About page.
         </p>
       </section>
       </div>

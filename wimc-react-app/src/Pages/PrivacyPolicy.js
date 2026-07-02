@@ -126,8 +126,11 @@ export default function PrivacyPolicy() {
       <section className="legal-page__section">
         <h2>8. Contact</h2>
         <p>
-          If you have questions about this Privacy Policy, please contact us
-          through the app's About page.
+          If you have questions about this Privacy Policy, please email{" "}
+          <a href="mailto:support@gingerfaithllc.com" className="legal-page__link">
+            support@gingerfaithllc.com
+          </a>{" "}
+          or contact us through the app's About page.
         </p>
       </section>
       </div>
