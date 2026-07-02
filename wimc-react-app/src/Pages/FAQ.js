@@ -166,7 +166,7 @@ const SECTIONS = [
       },
       {
         q: "Can I delete my account?",
-        a: "Yes. Tap your profile icon in the header, open User Settings, and go to the Delete Account tab. After you confirm (by typing DELETE and re-entering your password), your account and all associated data — closet photos and videos, saved plans, and profile — are permanently removed. If you'd prefer we handle it, email support@gingerfaithllc.com.",
+        a: "Yes. Tap your profile icon in the header, open User Settings, and go to the Delete Account tab. After you confirm (by typing DELETE and re-entering your password), your account and all associated data — closet photos and videos, saved plans, and profile — are permanently removed. If you'd prefer we handle it, email wimcsupport@gingerfaith.com.",
       },
       {
         q: "How do I update my profile information?",
@@ -195,7 +195,7 @@ const SECTIONS = [
       },
       {
         q: "Do you offer refunds?",
-        a: "If you experience a technical issue that prevents you from using the app, contact support@gingerfaithllc.com within 7 days of your charge and we will review your case promptly.",
+        a: "If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly.",
       },
     ],
   },
@@ -222,7 +222,7 @@ export default function FAQ() {
         <p className="faq-page__subtitle">
           Everything you need to know about What's in My Closet.
           Can't find your answer?{" "}
-          <a href="mailto:support@gingerfaithllc.com" className="faq-page__link">
+          <a href="mailto:wimcsupport@gingerfaith.com" className="faq-page__link">
             Email us
           </a>
           .
