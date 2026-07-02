@@ -397,13 +397,18 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
           <div className="kcm-grid">
             {SECTIONS.map((sec) => {
               const tag = petTag(pet.id, sec.tag);
+              // Pinned card image (set via 📌 in the section modal) takes
+              // priority; otherwise fall back to the optimistic post-upload
+              // thumb, otherwise let the card self-fetch.
+              let pinnedCardUrl = null;
+              try { pinnedCardUrl = localStorage.getItem(`wimc_card_image_${tag}`) || null; } catch {}
               return (
                 <ClosetSectionCard
                   key={sec.tag}
                   sectionName={sec.label}
                   tag={tag}
                   placeholderUrl={sec.placeholder}
-                  imageUrl={sectionThumbs[tag] || undefined}
+                  imageUrl={pinnedCardUrl || sectionThumbs[tag] || undefined}
                   onClick={() => handleCardClick(sec.tag)}
                   onAdd={() => { setSelectedSection(sec.tag); setIsAddOpen(true); }}
                 />

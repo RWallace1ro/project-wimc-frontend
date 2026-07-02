@@ -171,8 +171,10 @@ function ClosetSectionModal({
           }
           setItemsByTag((prev) => ({ ...prev, [tag]: ordered }));
           setVideosByTag((prev) => ({ ...prev, [tag]: vids }));
-          // Load pinned card image for this tag
-          const pinned = localStorage.getItem(getPinnedKey(tag));
+          // The pinned card-cover image is always keyed by the CARD's own base
+          // tag (sectionTag), never a sub-section tag — so pinning an item
+          // while viewing any sub-section still updates the one card cover.
+          const pinned = localStorage.getItem(getPinnedKey(sectionTag));
           setPinnedUrl(pinned || null);
         }
       } catch {
@@ -229,8 +231,11 @@ function ClosetSectionModal({
   };
 
   // ── Pin image as card cover ──────────────────────────────────────────────
+  // Always writes under the card's base tag (sectionTag), not the currently
+  // viewed sub-section — otherwise a pin made from e.g. "Skirts" would be
+  // invisible to the card, which only ever reads the base-tag key.
   const handlePinImage = (url) => {
-    syncSetItem(getPinnedKey(tag), url);
+    syncSetItem(getPinnedKey(sectionTag), url);
     setPinnedUrl(url);
     setPinFlash(url);
     setTimeout(() => setPinFlash(null), 2000);

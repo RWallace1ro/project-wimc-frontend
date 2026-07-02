@@ -107,6 +107,7 @@ const KID_MALE = {
   "dress-shirts-suits": [
     { label: "👕 Button-Ups",   plain: "Button-Ups",   slug: null },
     { label: "👔 Dress Shirts", plain: "Dress Shirts", slug: "dress-shirts" },
+    { label: "🤵 Suits",        plain: "Suits",        slug: "suits" },
   ],
   "shoes-sneakers": [
     { label: "👞 Shoes",          plain: "Shoes",          slug: null },

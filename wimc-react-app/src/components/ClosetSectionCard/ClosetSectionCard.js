@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
+import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { shareItemImage } from "../../utils/shareUtils";
 import "./ClosetSectionCard.css";
 
@@ -63,7 +63,9 @@ function ClosetSectionCard({
     async function fetchImageForSection() {
       if (propImageUrl || !tag) return;
       try {
-        const images = await fetchImagesByTag(tag);
+        // Subsection-aware — so the default (unpinned) card cover can surface
+        // an item that was sorted into a sub-section, not just the base tag.
+        const images = await fetchImagesForSection(tag);
         const first = images?.[0] ?? null;
         if (ignore) return;
         if (first) {

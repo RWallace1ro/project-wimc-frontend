@@ -454,15 +454,19 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
           <div className="kcm-grid">
             {SECTIONS.map((sec) => {
               const kidTag = childTag(child.id, sec.tag);
+              // Pinned card image (set via 📌 in the section modal, always
+              // keyed by this card's own base tag) takes priority; otherwise
+              // fall back to the optimistic post-upload thumb, otherwise let
+              // the card self-fetch (now sub-section aware).
+              let pinnedCardUrl = null;
+              try { pinnedCardUrl = localStorage.getItem(`wimc_card_image_${kidTag}`) || null; } catch {}
               return (
                 <ClosetSectionCard
                   key={sec.tag}
                   sectionName={sec.label}
                   tag={kidTag}
                   placeholderUrl={sec.placeholder}
-                  // Pass the optimistic thumb so the card refreshes immediately
-                  // after upload without waiting for Cloudinary's cache to update.
-                  imageUrl={sectionThumbs[kidTag] || undefined}
+                  imageUrl={pinnedCardUrl || sectionThumbs[kidTag] || undefined}
                   onClick={() => handleCardClick(sec.tag)}
                   onAdd={() => { setSelectedSection(sec.tag); setIsAddOpen(true); }}
                 />
