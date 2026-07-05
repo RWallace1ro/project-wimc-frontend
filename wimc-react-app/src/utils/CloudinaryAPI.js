@@ -48,7 +48,7 @@ async function getSignature(params) {
 }
 
 // ===== Generic uploader (signed — API secret never leaves the server) =====
-async function uploadTo(endpoint, fileOrBlob, { folder, tags } = {}) {
+async function uploadTo(endpoint, fileOrBlob, { folder, tags, filename } = {}) {
   // 1. Get signature from Firebase Function
   const { timestamp, signature } = await getSignature({
     upload_preset: UPLOAD_PRESET,
@@ -58,7 +58,12 @@ async function uploadTo(endpoint, fileOrBlob, { folder, tags } = {}) {
 
   // 2. Build signed FormData
   const formData = new FormData();
-  formData.append("file", fileOrBlob);
+  // A plain Blob (e.g. from uploadRawJSON) has no filename by default, so
+  // Cloudinary can't detect its format from the extension and rejects it
+  // ("unknown file format not allowed"). A real File object already carries
+  // its own name, so `filename` is only needed for Blob-based uploads.
+  if (filename) formData.append("file", fileOrBlob, filename);
+  else formData.append("file", fileOrBlob);
   formData.append("upload_preset", UPLOAD_PRESET);
   formData.append("api_key", API_KEY);
   formData.append("timestamp", timestamp);
@@ -124,7 +129,7 @@ export async function uploadRawJSON(jsonObj, folder = "wimc/outfits") {
     type: "application/json",
   });
 
-  return uploadTo(RAW_ENDPOINT, blob, { folder });
+  return uploadTo(RAW_ENDPOINT, blob, { folder, filename: "data.json" });
 }
 
 // ===== Transform helpers (safe to use anywhere) =====

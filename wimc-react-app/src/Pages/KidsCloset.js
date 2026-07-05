@@ -672,6 +672,8 @@ export default function KidsCloset() {
       {activeChild && (
         <KidsClosetModal
           child={activeChild}
+          siblings={profiles}
+          onSwitchChild={(p) => setActiveChild(p)}
           onClose={() => setActiveChild(null)}
           onUpdateChild={(updated) => {
             setProfiles((prev) =>

@@ -124,24 +124,28 @@ export default function TravelPackPanel({
   const [dayShareError, setDayShareError] = useState("");
   const [shareNote, setShareNote] = useState("");
 
-  const addItemsToDay = (rawItems) => {
+  const addItemsToDay = (rawItems, targetDay = selectedDay) => {
     const toAdd = rawItems.map((it) => normalizeMedia(it, it?.section)).filter(Boolean);
     setPackPlan((prev) => {
-      const seen = new Set((prev[selectedDay] || []).map((p) => p.mediaUrl || p.name));
+      const seen = new Set((prev[targetDay] || []).map((p) => p.mediaUrl || p.name));
       const unique = toAdd.filter((it) => {
         const k = it.mediaUrl || it.name;
         if (seen.has(k)) return false;
         seen.add(k);
         return true;
       });
-      return { ...prev, [selectedDay]: [...(prev[selectedDay] || []), ...unique] };
+      return { ...prev, [targetDay]: [...(prev[targetDay] || []), ...unique] };
     });
   };
 
-  // Apply items from search results (parent-routed, legacy)
+  // Apply items from search results (parent-routed, legacy) OR from an
+  // Outfit Planner "Sync to Travel Pack" push — the latter includes a `day`
+  // so the items land on the SAME day they were planned for, and the panel
+  // switches its own selected day to show where they landed.
   useEffect(() => {
     if (!incomingItems?.items?.length) return;
-    addItemsToDay(incomingItems.items);
+    if (incomingItems.day) setSelectedDay(incomingItems.day);
+    addItemsToDay(incomingItems.items, incomingItems.day || selectedDay);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incomingItems]);
 

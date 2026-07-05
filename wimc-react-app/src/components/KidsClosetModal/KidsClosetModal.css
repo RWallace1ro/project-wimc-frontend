@@ -50,6 +50,53 @@
   font-size: 36px;
 }
 
+/* ── Switch to another child without closing the modal ── */
+.kcm-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #1e293b;
+  flex-shrink: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.kcm-switcher__pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+.kcm-switcher__pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.kcm-switcher__pill.is-active {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+  font-weight: 600;
+  cursor: default;
+}
+.kcm-switcher__avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.kcm-switcher__icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
 /* ── Child profile avatar ── */
 .kcm-avatar-wrap {
   position: relative;

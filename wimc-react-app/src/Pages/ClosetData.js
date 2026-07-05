@@ -299,6 +299,7 @@ function ClosetData({
                 incomingItems={plannerIncoming}
                 gender={gender}
                 tagPrefix={genderPrefix}
+                onSyncToTravelPack={(day, items) => setPackIncoming({ day, items })}
               />
             </ProGate>
             <ProGate feature="Travel Pack Planner">

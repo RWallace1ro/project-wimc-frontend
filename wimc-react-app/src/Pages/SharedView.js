@@ -398,6 +398,13 @@ export default function SharedView() {
           </div>
         )}
 
+        {/* The sender's note — every share type (Donate Bin, Shopping List,
+            Travel Pack, Outfit Plan) can attach one, but it lives at the top
+            level of the payload, not inside any one sub-view's data shape. */}
+        {payload?.note && (
+          <div className="sv__note">📝 {payload.note}</div>
+        )}
+
         <div className="sv__card-body">
           {renderContent()}
         </div>

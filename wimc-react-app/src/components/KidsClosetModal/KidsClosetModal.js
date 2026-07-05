@@ -217,7 +217,7 @@ function KcmBgPicker({ bgKey, onClose: closePicker }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
+export default function KidsClosetModal({ child, onClose, onUpdateChild, siblings = [], onSwitchChild }) {
   // ── Gender-aware sections ─────────────────────────────────────────────────
   const SECTIONS = child?.gender === "male" ? SECTIONS_MALE : SECTIONS_FEMALE;
 
@@ -287,6 +287,16 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
   const [recentUpload, setRecentUpload] = useState(null); // {tag, url, mediaType, ts}
   const [selectedSection, setSelectedSection] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Switching to another child (via the in-modal switcher) should close any
+  // open sub-modal/panel from the previous child rather than carrying it over.
+  useEffect(() => {
+    setIsModalOpen(false);
+    setIsAddOpen(false);
+    setSelectedSection(null);
+    setIsSearchOpen(false);
+    setShowBgPicker(false);
+  }, [child.id]);
 
   // Start door animation on mount
   useEffect(() => {
@@ -442,6 +452,28 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild }) {
             </button>
           </div>
         </header>
+
+        {/* ── Switch to another child without closing this closet ── */}
+        {siblings.length > 1 && onSwitchChild && (
+          <nav className="kcm-switcher" aria-label="Switch child">
+            {siblings.map((sib) => (
+              <button
+                key={sib.id}
+                type="button"
+                className={`kcm-switcher__pill${sib.id === child.id ? " is-active" : ""}`}
+                onClick={() => sib.id !== child.id && onSwitchChild(sib)}
+                aria-current={sib.id === child.id ? "true" : undefined}
+                title={`Switch to ${sib.name}'s closet`}
+              >
+                {sib.photoUrl
+                  ? <img src={sib.photoUrl} alt={sib.name} className="kcm-switcher__avatar" />
+                  : <span className="kcm-switcher__icon">{GROUP_ICONS[sib.ageGroup] || "👶"}</span>
+                }
+                <span className="kcm-switcher__name">{sib.name}</span>
+              </button>
+            ))}
+          </nav>
+        )}
 
         {/* ── Background picker panel ── */}
         {showBgPicker && (

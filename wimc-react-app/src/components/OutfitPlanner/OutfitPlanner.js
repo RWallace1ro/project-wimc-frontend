@@ -89,6 +89,7 @@ export default function OutfitPlanner({
   incomingItems = null,
   gender = "female",
   sectionOptions = null,
+  onSyncToTravelPack,
 }) {
   const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
   const plannerLsKey = getPlannerLsKey(tagPrefix);
@@ -280,6 +281,13 @@ export default function OutfitPlanner({
       setTimeout(() => setShareUrl(""), 3500);
     } catch { setShareError("Export failed. Please try again."); }
     finally { setSharing(false); }
+  }
+
+  // Push the currently selected day's outfit into the Travel Pack's same day
+  // — the reverse of Travel Pack's own "Sync to Planner" button.
+  function syncToTravelPack() {
+    if (!onSyncToTravelPack) return;
+    onSyncToTravelPack(selectedDay, plan?.[selectedDay] || []);
   }
 
   // export one day
@@ -493,6 +501,16 @@ export default function OutfitPlanner({
                 >
                   {daySharing ? "Exporting…" : `Export ${selectedDay}`}
                 </button>
+                {onSyncToTravelPack && (
+                  <button
+                    className="planner__export"
+                    onClick={syncToTravelPack}
+                    disabled={(plan?.[selectedDay]?.length || 0) === 0}
+                    title={`Copy ${selectedDay}'s outfit into the Travel Pack's same day`}
+                  >
+                    🧳 Sync to Travel Pack
+                  </button>
+                )}
                 <button
                   className="planner__export"
                   onClick={() => exportWeek(false)}
