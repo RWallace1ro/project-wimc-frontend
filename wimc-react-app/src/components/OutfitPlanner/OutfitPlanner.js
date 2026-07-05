@@ -9,6 +9,7 @@ import {
   videoPoster,
 } from "../../utils/CloudinaryAPI";
 import { getSubSections } from "../../utils/closetSubsections";
+import { onImgError } from "../../utils/imgFallback";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
@@ -650,12 +651,14 @@ export default function OutfitPlanner({
                           className="planner__choice-img"
                           src={it.mediaPoster || ""}
                           alt="video"
+                          onError={onImgError}
                         />
                       ) : (
                         <img
                           className="planner__choice-img"
                           src={it.mediaThumb || it.mediaUrl}
                           alt="item"
+                          onError={onImgError}
                         />
                       )}
                     </button>
@@ -744,6 +747,7 @@ export default function OutfitPlanner({
                                 className="planner__img"
                                 src={it.mediaPoster || ""}
                                 alt="video poster"
+                                onError={onImgError}
                               />
                             ) : (
                               <img
@@ -752,6 +756,7 @@ export default function OutfitPlanner({
                                 alt={it.name || "item"}
                                 title="Click to enlarge"
                                 onClick={() => openLightbox(dayImgs, Math.max(0, imgIdx))}
+                                onError={onImgError}
                               />
                             )}
                             <button

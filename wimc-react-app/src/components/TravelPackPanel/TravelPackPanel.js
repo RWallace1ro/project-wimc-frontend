@@ -9,6 +9,7 @@ import {
   videoPoster,
 } from "../../utils/CloudinaryAPI";
 import { getSubSections } from "../../utils/closetSubsections";
+import { onImgError } from "../../utils/imgFallback";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import AIPackingAssistant from "../AIPackingAssistant/AIPackingAssistant";
 import Lightbox from "../Lightbox/Lightbox";
@@ -634,6 +635,7 @@ export default function TravelPackPanel({
                             : it.mediaThumb || it.mediaUrl
                         }
                         alt={it.mediaType === "video" ? "video" : "item"}
+                        onError={onImgError}
                       />
                     </button>
                   ))}
@@ -718,6 +720,7 @@ export default function TravelPackPanel({
                                 className="tp__thumb"
                                 src={it.mediaPoster || ""}
                                 alt={it.name || "video"}
+                                onError={onImgError}
                               />
                             ) : (
                               <img
@@ -726,6 +729,7 @@ export default function TravelPackPanel({
                                 alt={it.name || "item"}
                                 title="Click to enlarge"
                                 onClick={() => openLightbox(dayImgs, Math.max(0, imgIdx))}
+                                onError={onImgError}
                               />
                             )}
                             <button
