@@ -36,7 +36,14 @@ async function getSignature(params) {
     headers: await authHeaders(),
     body: JSON.stringify(params),
   });
-  if (!res.ok) throw new Error("Failed to get upload signature");
+  if (!res.ok) {
+    // Callers up the chain (share/export features) mostly swallow this into
+    // a generic "Export failed" message — log the real reason here so it's
+    // still visible in DevTools console regardless.
+    const t = await res.text().catch(() => "");
+    console.error(`getSignature failed: ${res.status} ${t}`);
+    throw new Error(`Failed to get upload signature (${res.status})`);
+  }
   return res.json(); // { timestamp, signature }
 }
 
@@ -62,6 +69,10 @@ async function uploadTo(endpoint, fileOrBlob, { folder, tags } = {}) {
   const res = await fetch(endpoint, { method: "POST", body: formData });
   if (!res.ok) {
     const t = await res.text();
+    // Same reasoning as above — log before throwing so the real Cloudinary
+    // error (e.g. a disallowed "raw"/json format on the upload preset) is
+    // visible even though most callers show a generic error to the user.
+    console.error(`Cloudinary upload failed: ${res.status} ${t} (endpoint: ${endpoint}, folder: ${folder})`);
     throw new Error(`Cloudinary upload failed: ${res.status} ${t}`);
   }
   return res.json(); // { secure_url, public_id, version, ... }

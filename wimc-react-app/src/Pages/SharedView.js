@@ -2,21 +2,29 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { decodeShareSrc, getCollabDoc, toggleCollabItem } from "../utils/shareUtils";
 import { auth } from "../firebase";
+import Lightbox from "../components/Lightbox/Lightbox";
 import "./SharedView.css";
 
 const GROUP_ICONS = { baby: "👶", toddler: "🧒", kids: "🧑", teen: "🧑‍🎓" };
 const AGE_LABELS  = { baby: "Baby", toddler: "Toddler", kids: "Kids", teen: "Teen" };
 
 // ── Sub-view: Wish List ───────────────────────────────────────────────────────
-function WishListView({ data }) {
+function WishListView({ data, onImageClick }) {
   const items = data?.items || [];
   if (!items.length) return <p className="sv-empty">No items in this wish list.</p>;
+  const images = items.filter((it) => it.image).map((it) => ({ src: it.image, alt: it.name || "Item" }));
   return (
     <div className="sv-wish-list">
       {items.map((item, i) => (
         <div key={item.id || i} className="sv-wish-item">
           {item.image
-            ? <img src={item.image} alt={item.name || "Item"} className="sv-wish-item__img" />
+            ? <img
+                src={item.image}
+                alt={item.name || "Item"}
+                className="sv-wish-item__img"
+                style={{ cursor: "pointer" }}
+                onClick={() => onImageClick(images, images.findIndex((im) => im.src === item.image))}
+              />
             : <div className="sv-wish-item__img" style={{ background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🛍️</div>
           }
           <div className="sv-wish-item__info">
@@ -34,9 +42,14 @@ function WishListView({ data }) {
 }
 
 // ── Sub-view: Donate Bin ──────────────────────────────────────────────────────
-function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle }) {
+function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle, onImageClick }) {
   const pending = data?.pending || [];
   const donated = data?.donated || [];
+  const allImages = [...pending, ...donated]
+    .filter((it) => it.imageUrl)
+    .map((it) => ({ src: it.imageUrl, alt: it.name || "Item" }));
+  const clickFor = (item) => () =>
+    item.imageUrl && onImageClick(allImages, allImages.findIndex((im) => im.src === item.imageUrl));
   return (
     <div>
       {pending.length > 0 && (
@@ -48,7 +61,7 @@ function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle }) {
               const done = !!checkedItems?.[key];
               return (
                 <div key={i} className={`sv-thumb ${done ? "sv-thumb--done" : ""}`}>
-                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
+                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={clickFor(item)} />}
                   <div className="sv-thumb__name">{item.name || "Item"}</div>
                   {canEdit && (
                     <input
@@ -71,7 +84,7 @@ function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle }) {
           <div className="sv-grid">
             {donated.map((item, i) => (
               <div key={i} className="sv-thumb sv-thumb--done">
-                {item.imageUrl && <img src={item.imageUrl} alt={item.name} />}
+                {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={clickFor(item)} />}
                 <div className="sv-thumb__name">{item.name || "Item"}</div>
               </div>
             ))}
@@ -147,10 +160,16 @@ function TravelPackView({ data, canEdit, checkedItems, onToggle }) {
 }
 
 // ── Sub-view: Outfit Planner ──────────────────────────────────────────────────
-function OutfitPlanView({ data }) {
+function OutfitPlanView({ data, onImageClick }) {
   const days = data?.days || {};
   const dayKeys = Object.keys(days);
   if (!dayKeys.length) return <p>No outfit plan available.</p>;
+  // One flat list across all days so ‹ › in the lightbox browses the whole
+  // week, not just the current day.
+  const allImages = dayKeys
+    .flatMap((day) => days[day] || [])
+    .filter((it) => it.mediaThumb || it.mediaUrl)
+    .map((it) => ({ src: it.mediaUrl || it.mediaThumb, alt: it.name || "Item" }));
   return (
     <div>
       {dayKeys.map((day) => {
@@ -159,15 +178,23 @@ function OutfitPlanView({ data }) {
           <div key={day} className="sv-day">
             <p className="sv-day__label">{day}</p>
             <div className="sv-grid">
-              {items.map((item, i) => (
-                <div key={i} className="sv-thumb">
-                  {(item.mediaThumb || item.mediaUrl)
-                    ? <img src={item.mediaThumb || item.mediaUrl} alt={item.name || "Item"} />
-                    : <div style={{ aspectRatio: "3/4", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>👗</div>
-                  }
-                  {item.name && <div className="sv-thumb__name">{item.name}</div>}
-                </div>
-              ))}
+              {items.map((item, i) => {
+                const fullUrl = item.mediaUrl || item.mediaThumb;
+                return (
+                  <div key={i} className="sv-thumb">
+                    {(item.mediaThumb || item.mediaUrl)
+                      ? <img
+                          src={item.mediaThumb || item.mediaUrl}
+                          alt={item.name || "Item"}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => onImageClick(allImages, allImages.findIndex((im) => im.src === fullUrl))}
+                        />
+                      : <div style={{ aspectRatio: "3/4", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>👗</div>
+                    }
+                    {item.name && <div className="sv-thumb__name">{item.name}</div>}
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
@@ -177,12 +204,18 @@ function OutfitPlanView({ data }) {
 }
 
 // ── Sub-view: Kids Profile ────────────────────────────────────────────────────
-function KidsProfileView({ data }) {
+function KidsProfileView({ data, onImageClick }) {
   const child = data?.child || data || {};
   return (
     <div style={{ textAlign: "center" }}>
       {child.photoUrl
-        ? <img src={child.photoUrl} alt={child.name} className="sv-kids-avatar" />
+        ? <img
+            src={child.photoUrl}
+            alt={child.name}
+            className="sv-kids-avatar"
+            style={{ cursor: "pointer" }}
+            onClick={() => onImageClick([{ src: child.photoUrl, alt: child.name }], 0)}
+          />
         : <span className="sv-kids-icon">{GROUP_ICONS[child.ageGroup] || "👶"}</span>
       }
       <p style={{ fontSize: 20, fontWeight: 800, margin: "0 0 4px" }}>{child.name || "Child"}</p>
@@ -236,6 +269,12 @@ export default function SharedView() {
   const [canEdit, setCanEdit]   = useState(false);
   const [checkedItems, setCheckedItems] = useState({});
   const [ownerName, setOwnerName]       = useState("");
+  // Fullscreen image viewer — { images: [{src,alt}], index } | null
+  const [lightbox, setLightbox] = useState(null);
+  const openLightbox = useCallback((images, index) => {
+    if (!images?.length || index < 0) return;
+    setLightbox({ images, index });
+  }, []);
 
   const type    = searchParams.get("type") || "";
   const srcEnc  = searchParams.get("src");
@@ -323,7 +362,7 @@ export default function SharedView() {
 
   // ── Render content ────────────────────────────────────────────────────────
   const renderContent = () => {
-    const props = { data: payload, collabId, canEdit, checkedItems, onToggle: handleToggle };
+    const props = { data: payload, collabId, canEdit, checkedItems, onToggle: handleToggle, onImageClick: openLightbox };
     switch (type) {
       case "wishlist":     return <WishListView {...props} />;
       case "donatebin":    return <DonateBinView {...props} />;
@@ -368,6 +407,15 @@ export default function SharedView() {
         <a href={process.env.PUBLIC_URL || "/"} className="sv__cta">Get WIMC — Organize your wardrobe 👗</a>
         <p className="sv__cta-sub">Free wardrobe management for everyone</p>
       </footer>
+
+      {lightbox && (
+        <Lightbox
+          images={lightbox.images}
+          index={lightbox.index}
+          onClose={() => setLightbox(null)}
+          onChange={(i) => setLightbox((prev) => ({ ...prev, index: i }))}
+        />
+      )}
     </div>
   );
 }

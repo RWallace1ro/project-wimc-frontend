@@ -480,7 +480,9 @@
     text-align: center;
   }
   .kids-closet__grid {
-    grid-template-columns: repeat(2, 1fr);
+    /* Single column on phone — two cards side-by-side don't fit without
+       overflowing the right edge. Scrolls vertically instead. */
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 }

@@ -22,16 +22,24 @@ export function decodeShareSrc(encoded) {
 
 // ── Collaborative (editable) Firestore doc ─────────────────────────────────────
 export async function createCollabDoc(type, data) {
-  const ref = await addDoc(collection(db, 'sharedContent'), {
-    type,
-    data,
-    ownerId: auth.currentUser?.uid ?? null,
-    ownerName: auth.currentUser?.displayName ?? 'WIMC User',
-    createdAt: new Date().toISOString(),
-    anyoneCanEdit: true,
-    checkedItems: {},
-  });
-  return `${appBase()}/shared?collab=${ref.id}&type=${encodeURIComponent(type)}`;
+  try {
+    const ref = await addDoc(collection(db, 'sharedContent'), {
+      type,
+      data,
+      ownerId: auth.currentUser?.uid ?? null,
+      ownerName: auth.currentUser?.displayName ?? 'WIMC User',
+      createdAt: new Date().toISOString(),
+      anyoneCanEdit: true,
+      checkedItems: {},
+    });
+    return `${appBase()}/shared?collab=${ref.id}&type=${encodeURIComponent(type)}`;
+  } catch (e) {
+    // Callers mostly show a generic "Export failed" message — log the real
+    // Firestore error here (e.g. a rules rejection, or an oversized/undefined
+    // field in `data`) so it's still visible in DevTools console.
+    console.error(`createCollabDoc(${type}) failed:`, e);
+    throw e;
+  }
 }
 export async function getCollabDoc(id) {
   try {
