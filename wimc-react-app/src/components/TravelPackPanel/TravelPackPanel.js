@@ -502,6 +502,16 @@ export default function TravelPackPanel({
                 >
                   🔍 Search Closet
                 </button>
+                {onSyncToPlanner && (
+                  <button
+                    className="tp__toggle"
+                    onClick={syncToPlanner}
+                    disabled={(packPlan[selectedDay]?.length || 0) === 0}
+                    title="Copy this pack day into the Planner's same day"
+                  >
+                    📅 Sync to Planner
+                  </button>
+                )}
                 <button
                   className="tp__toggle"
                   onClick={() => exportPackDay(selectedDay)}
@@ -757,16 +767,6 @@ export default function TravelPackPanel({
                   </ul>
                 </section>
               ))}
-            </div>
-
-            <div className="tp__sync">
-              <span className="tp__sync-day">Syncing: <strong>{selectedDay}</strong></span>
-              <button
-                onClick={syncToPlanner}
-                title="Copy this pack day into the Planner's same day"
-              >
-                Sync to Planner
-              </button>
             </div>
           </div>
         )}

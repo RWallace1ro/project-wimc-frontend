@@ -52,6 +52,14 @@
   white-space: nowrap;
 }
 
+.lb__footer {
+  margin-top: 6px;
+  max-width: min(80vw, 360px);
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
 /* ── Close button ── */
 .lb__close {
   position: fixed;

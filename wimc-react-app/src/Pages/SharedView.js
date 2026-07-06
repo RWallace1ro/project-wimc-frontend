@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { decodeShareSrc, getCollabDoc, toggleCollabItem, setCollabComment } from "../utils/shareUtils";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
 import Lightbox from "../components/Lightbox/Lightbox";
 import "./SharedView.css";
 
@@ -43,7 +44,7 @@ function ItemComment({ itemKey, comments, canEdit, onComment }) {
     >
       {existing
         ? <span className="sv-comment__text">💬 {existing}</span>
-        : canEdit && <span className="sv-comment__add">+ Add a note</span>
+        : canEdit && <span className="sv-comment__add">💬 + Add a note</span>
       }
     </div>
   );
@@ -53,11 +54,13 @@ function ItemComment({ itemKey, comments, canEdit, onComment }) {
 function WishListView({ data, onImageClick, canEdit, comments, onComment }) {
   const items = data?.items || [];
   if (!items.length) return <p className="sv-empty">No items in this wish list.</p>;
-  const images = items.filter((it) => it.image).map((it) => ({ src: it.image, alt: it.name || "Item" }));
+  const keyed = items.map((it, i) => ({ item: it, key: it.id || `item_${i}` }));
+  const images = keyed
+    .filter(({ item }) => item.image)
+    .map(({ item, key }) => ({ src: item.image, alt: item.name || "Item", key }));
   return (
     <div className="sv-wish-list">
-      {items.map((item, i) => {
-        const key = item.id || `item_${i}`;
+      {keyed.map(({ item, key }) => {
         return (
           <div key={key} className="sv-wish-item">
             {item.image
@@ -90,11 +93,16 @@ function WishListView({ data, onImageClick, canEdit, comments, onComment }) {
 function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle, onImageClick, comments, onComment }) {
   const pending = data?.pending || [];
   const donated = data?.donated || [];
-  const allImages = [...pending, ...donated]
+  const allImages = [
+    ...pending.map((it, i) => ({ ...it, _key: `pending_${i}` })),
+    ...donated.map((it, i) => ({ ...it, _key: `donated_${i}` })),
+  ]
     .filter((it) => it.imageUrl)
-    .map((it) => ({ src: it.imageUrl, alt: it.name || "Item" }));
-  const clickFor = (item) => () =>
-    item.imageUrl && onImageClick(allImages, allImages.findIndex((im) => im.src === item.imageUrl));
+    .map((it) => ({ src: it.imageUrl, alt: it.name || "Item", key: it._key }));
+  const clickFor = (key) => () => {
+    const idx = allImages.findIndex((im) => im.key === key);
+    if (idx >= 0) onImageClick(allImages, idx);
+  };
   return (
     <div>
       {pending.length > 0 && (
@@ -106,7 +114,7 @@ function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle, onImag
               const done = !!checkedItems?.[key];
               return (
                 <div key={i} className={`sv-thumb ${done ? "sv-thumb--done" : ""}`}>
-                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={clickFor(item)} />}
+                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={clickFor(key)} />}
                   <div className="sv-thumb__name">{item.name || "Item"}</div>
                   {canEdit && (
                     <input
@@ -132,7 +140,7 @@ function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle, onImag
               const key = `donated_${i}`;
               return (
                 <div key={i} className="sv-thumb sv-thumb--done">
-                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={clickFor(item)} />}
+                  {item.imageUrl && <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={clickFor(key)} />}
                   <div className="sv-thumb__name">{item.name || "Item"}</div>
                   <ItemComment itemKey={key} comments={comments} canEdit={canEdit} onComment={onComment} />
                 </div>
@@ -219,9 +227,9 @@ function OutfitPlanView({ data, onImageClick, canEdit, comments, onComment }) {
   // One flat list across all days so ‹ › in the lightbox browses the whole
   // week, not just the current day.
   const allImages = dayKeys
-    .flatMap((day) => days[day] || [])
+    .flatMap((day) => (days[day] || []).map((it, i) => ({ ...it, _key: `${day}_${i}` })))
     .filter((it) => it.mediaThumb || it.mediaUrl)
-    .map((it) => ({ src: it.mediaUrl || it.mediaThumb, alt: it.name || "Item" }));
+    .map((it) => ({ src: it.mediaUrl || it.mediaThumb, alt: it.name || "Item", key: it._key }));
   return (
     <div>
       {dayKeys.map((day) => {
@@ -231,7 +239,6 @@ function OutfitPlanView({ data, onImageClick, canEdit, comments, onComment }) {
             <p className="sv-day__label">{day}</p>
             <div className="sv-grid">
               {items.map((item, i) => {
-                const fullUrl = item.mediaUrl || item.mediaThumb;
                 const key = `${day}_${i}`;
                 return (
                   <div key={i} className="sv-thumb">
@@ -240,7 +247,7 @@ function OutfitPlanView({ data, onImageClick, canEdit, comments, onComment }) {
                           src={item.mediaThumb || item.mediaUrl}
                           alt={item.name || "Item"}
                           style={{ cursor: "pointer" }}
-                          onClick={() => onImageClick(allImages, allImages.findIndex((im) => im.src === fullUrl))}
+                          onClick={() => onImageClick(allImages, allImages.findIndex((im) => im.key === key))}
                         />
                       : <div style={{ aspectRatio: "3/4", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>👗</div>
                     }
@@ -268,7 +275,7 @@ function KidsProfileView({ data, onImageClick }) {
             alt={child.name}
             className="sv-kids-avatar"
             style={{ cursor: "pointer" }}
-            onClick={() => onImageClick([{ src: child.photoUrl, alt: child.name }], 0)}
+            onClick={() => onImageClick([{ src: child.photoUrl, alt: child.name, key: "avatar" }], 0)}
           />
         : <span className="sv-kids-icon">{GROUP_ICONS[child.ageGroup] || "👶"}</span>
       }
@@ -329,6 +336,17 @@ export default function SharedView() {
   const [checkedItems, setCheckedItems] = useState({});
   const [comments, setComments]         = useState({});
   const [ownerName, setOwnerName]       = useState("");
+  // The viewer's OWN tier, only populated if they happen to already be signed
+  // into the app in this browser (most recipients won't be) — lets the CTA
+  // say "upgrade" instead of "sign up" when that's the more accurate ask.
+  const [viewerTier, setViewerTier] = useState(null);
+  useEffect(() => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    getDoc(doc(db, "users", uid))
+      .then((snap) => setViewerTier(snap.exists() ? snap.data()?.tier || "free" : null))
+      .catch(() => {});
+  }, []);
   // Fullscreen image viewer — { images: [{src,alt}], index } | null
   const [lightbox, setLightbox] = useState(null);
   const openLightbox = useCallback((images, index) => {
@@ -398,6 +416,24 @@ export default function SharedView() {
   }, [collabId]);
 
   const meta = TYPE_META[type] || { emoji: "📋", label: "Shared Content" };
+
+  // Single tier-aware CTA line, folded into the same box as the "Get WIMC"
+  // button rather than a separate banner. Most viewers aren't signed in at
+  // all (viewerTier stays null), so they get the generic pitch; if they
+  // happen to already be signed in on this browser, the message matches
+  // their real tier instead of assuming.
+  const isProShare = PRO_TYPES.has(type);
+  const isViewerPro = viewerTier === "pro" || viewerTier === "pro_ai";
+  let ctaLine;
+  if (isProShare && !isViewerPro) {
+    ctaLine = viewerTier
+      ? "⭐ This was shared from a Pro feature — upgrade your plan to unlock it."
+      : "⭐ This was shared from a Pro feature of WIMC.";
+  } else if (isViewerPro) {
+    ctaLine = "Open WIMC to manage your own closet.";
+  } else {
+    ctaLine = "Free closet management for everyone.";
+  }
 
   // ── States ────────────────────────────────────────────────────────────────
   if (status === "loading") {
@@ -484,21 +520,14 @@ export default function SharedView() {
         </div>
       </div>
 
-      {PRO_TYPES.has(type) && (
-        <div className="sv__pro-banner">
-          ⭐ This was shared from a <strong>Pro</strong> feature of WIMC.
-          <a href={`${process.env.PUBLIC_URL || ""}/pricing`} className="sv__pro-banner__link">
-            See plans →
-          </a>
-        </div>
-      )}
-
       <footer className="sv__footer">
+        <p className="sv__cta-line">{ctaLine}</p>
         {/* Goes to Pricing (not straight into the app) — it shows sign-up for
             a visitor without an account, or upgrade options if they're
             already signed in on this browser, whichever applies. */}
-        <a href={`${process.env.PUBLIC_URL || ""}/pricing`} className="sv__cta">Get WIMC — Organize your closet 👗</a>
-        <p className="sv__cta-sub">Free closet management for everyone</p>
+        <a href={`${process.env.PUBLIC_URL || ""}/pricing`} className="sv__cta">
+          {isProShare && !isViewerPro ? "See Plans →" : "Get WIMC — Organize your closet 👗"}
+        </a>
       </footer>
 
       {lightbox && (
@@ -507,6 +536,16 @@ export default function SharedView() {
           index={lightbox.index}
           onClose={() => setLightbox(null)}
           onChange={(i) => setLightbox((prev) => ({ ...prev, index: i }))}
+          renderFooter={(current) =>
+            current.key ? (
+              <ItemComment
+                itemKey={current.key}
+                comments={comments}
+                canEdit={canEdit}
+                onComment={handleComment}
+              />
+            ) : null
+          }
         />
       )}
     </div>

@@ -34,6 +34,13 @@ const ImageUpload = ({ folder, tag, onUploadSuccess, sources }) => {
       // Explicit sources so "Search the web" (image_search) is always offered
       // alongside the URL/web-address option. Callers can still override.
       sources: sources || DEFAULT_SOURCES,
+      // Skip the crop/adjust step entirely — on phone screens its format/size
+      // controls sit below the fold under the preview image, requiring a
+      // pinch/scroll to find the confirm button. We don't need forced
+      // cropping for closet photos, so removing the step avoids the
+      // confusion rather than trying to restyle Cloudinary's own widget UI.
+      cropping: false,
+      showSkipCropButton: true,
     };
 
     const widget = window.cloudinary.createUploadWidget(

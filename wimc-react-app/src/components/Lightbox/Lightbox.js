@@ -5,12 +5,15 @@ import "./Lightbox.css";
  * Reusable fullscreen image lightbox.
  *
  * Props:
- *   images     – array of { src, alt } objects
- *   index      – currently displayed index
- *   onClose    – called when user closes
- *   onChange   – called with new index when user navigates
+ *   images       – array of { src, alt, ...anything } objects — extra fields
+ *                  (e.g. a per-item key) pass straight through to renderFooter
+ *   index        – currently displayed index
+ *   onClose      – called when user closes
+ *   onChange     – called with new index when user navigates
+ *   renderFooter – optional (current, index) => node, rendered below the
+ *                  image/caption (e.g. a comment box tied to the current item)
  */
-export default function Lightbox({ images = [], index = 0, onClose, onChange }) {
+export default function Lightbox({ images = [], index = 0, onClose, onChange, renderFooter }) {
   const total = images.length;
   const current = images[index] || {};
 
@@ -87,6 +90,11 @@ export default function Lightbox({ images = [], index = 0, onClose, onChange }) 
         />
         {current.alt && (
           <div className="lb__caption">{current.alt}</div>
+        )}
+        {renderFooter && (
+          <div className="lb__footer" onClick={(e) => e.stopPropagation()}>
+            {renderFooter(current, index)}
+          </div>
         )}
       </div>
 

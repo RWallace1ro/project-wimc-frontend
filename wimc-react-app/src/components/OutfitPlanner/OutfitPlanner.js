@@ -490,6 +490,16 @@ export default function OutfitPlanner({
                 >
                   🔍 Search Closet
                 </button>
+                {onSyncToTravelPack && (
+                  <button
+                    className="planner__export"
+                    onClick={syncToTravelPack}
+                    disabled={(plan?.[selectedDay]?.length || 0) === 0}
+                    title="Copy this day's outfit into the Travel Pack's same day"
+                  >
+                    🧳 Sync to Travel Pack
+                  </button>
+                )}
                 <button
                   className="planner__export"
                   onClick={() => exportDay(selectedDay)}
@@ -776,19 +786,6 @@ export default function OutfitPlanner({
                 </section>
               ))}
             </div>
-
-            {onSyncToTravelPack && (
-              <div className="planner__sync">
-                <span className="planner__sync-day">Syncing: <strong>{selectedDay}</strong></span>
-                <button
-                  onClick={syncToTravelPack}
-                  disabled={(plan?.[selectedDay]?.length || 0) === 0}
-                  title={`Copy this day's outfit into the Travel Pack's same day`}
-                >
-                  🧳 Sync to Travel Pack
-                </button>
-              </div>
-            )}
           </div>
         )}
       </section>

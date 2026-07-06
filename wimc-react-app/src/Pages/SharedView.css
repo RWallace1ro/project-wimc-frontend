@@ -305,49 +305,34 @@
 /* ── Divider ─────────────────────────────────────────────────────────────── */
 .sv-divider { height: 1px; background: #e2e8f0; margin: 18px 0; }
 
-/* ── Pro-feature upgrade banner ──────────────────────────────────────────── */
-.sv__pro-banner {
-  width: 100%;
-  max-width: 720px;
-  margin-top: 18px;
-  padding: 12px 20px;
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
-  color: #fff;
-  border-radius: 12px;
-  font-size: 13px;
-  text-align: center;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.sv__pro-banner__link {
-  color: #fff;
-  font-weight: 700;
-  text-decoration: underline;
-}
-
-/* ── Footer CTA ──────────────────────────────────────────────────────────── */
+/* ── Footer CTA — one combined card (message + button) ──────────────────── */
 .sv__footer {
   width: 100%;
   max-width: 720px;
+  margin-top: 24px;
+  padding: 20px;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  border-radius: 14px;
   text-align: center;
-  padding-top: 24px;
+}
+.sv__cta-line {
+  margin: 0 0 14px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
 }
 .sv__cta {
   display: inline-block;
   padding: 12px 28px;
-  background: #7c3aed;
-  color: #fff;
+  background: #fff;
+  color: #6d28d9;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s;
 }
-.sv__cta:hover { background: #6d28d9; }
-.sv__cta-sub { margin: 8px 0 0; font-size: 12px; color: rgba(255,255,255,0.5); }
+.sv__cta:hover { background: #f5f3ff; transform: translateY(-1px); }
 
 /* ── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
