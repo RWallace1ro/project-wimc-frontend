@@ -299,6 +299,7 @@ export default function TryOnStudio({
   if (!isOpen) return null;
 
   return (
+    <>
     <div className="tryon-overlay" onClick={onOverlay}>
       <div
         className="tryon-modal"
@@ -555,12 +556,17 @@ export default function TryOnStudio({
           </div>
         </div>
       </div>
-      <AIStyleFeedback
-        isOpen={isFeedbackOpen}
-        onClose={() => setIsFeedbackOpen(false)}
-        previewUrl={previewUrl}
-      />
-      ;
     </div>
+    {/* Rendered OUTSIDE .tryon-overlay's DOM — it has its own overlay, and
+        nesting it inside .tryon-overlay meant any click inside it (an
+        occasion button, the description input) bubbled up to onOverlay's
+        "click outside the modal → close" check (its content isn't inside
+        modalRef), instantly closing the whole Try-On Studio. */}
+    <AIStyleFeedback
+      isOpen={isFeedbackOpen}
+      onClose={() => setIsFeedbackOpen(false)}
+      previewUrl={previewUrl}
+    />
+    </>
   );
 }

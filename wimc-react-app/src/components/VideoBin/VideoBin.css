@@ -421,6 +421,15 @@
 .vb-action-btn--download:hover {
   background: #0284c7;
 }
+.vb-action-btn--delete {
+  background: #fff;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+.vb-action-btn--delete:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
 
 /* ── Player toolbar (share + download in fullscreen) ── */
 .vb-player__toolbar {
@@ -447,6 +456,13 @@
 }
 .vb-player__action:hover {
   background: rgba(255, 255, 255, 0.22);
+}
+.vb-player__action--delete {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(248, 113, 113, 0.5);
+}
+.vb-player__action--delete:hover {
+  background: rgba(239, 68, 68, 0.35);
 }
 
 .vb-player-overlay {

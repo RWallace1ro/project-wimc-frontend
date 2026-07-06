@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import { fetchVideosByTag, videoPoster } from "../../utils/CloudinaryAPI";
+import { fetchVideosByTag, videoPoster, deleteVideo } from "../../utils/CloudinaryAPI";
 import "./VideoBin.css";
 
 const SECTIONS = [
@@ -65,12 +65,16 @@ export default function VideoBin({ videos: propVideos = [] }) {
   const [meta, setMeta] = useState(loadMeta);
   const [shareStatus, setShareStatus] = useState({}); // { [url]: "copying"|"copied"|"error" }
   const [dlStatus, setDlStatus] = useState({}); // { [url]: "downloading"|"done"|"error" }
+  const [deletingUrl, setDeletingUrl] = useState(null);
+  // Cloudinary-deleted URLs — hidden from the merged list even if the parent's
+  // own propVideos prop hasn't refreshed yet.
+  const [deletedUrls, setDeletedUrls] = useState(() => new Set());
 
   const mergedVideos = useMemo(() => {
     const seen = new Set();
     const out = [];
     const add = (url, section) => {
-      if (!url || seen.has(url)) return;
+      if (!url || seen.has(url) || deletedUrls.has(url)) return;
       seen.add(url);
       const m = meta[url] || {};
       out.push({
@@ -87,7 +91,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
     });
     allVideos.forEach((v) => add(v.url, v.section));
     return out;
-  }, [propVideos, allVideos, meta]);
+  }, [propVideos, allVideos, meta, deletedUrls]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -218,6 +222,29 @@ export default function VideoBin({ videos: propVideos = [] }) {
     setTimeout(() => setDlStatus((prev) => ({ ...prev, [v.url]: null })), 2500);
   };
 
+  // ── Delete a video ─────────────────────────────────────────────────────────
+  const handleDelete = async (v) => {
+    if (!window.confirm("Delete this video? This cannot be undone.")) return;
+    setDeletingUrl(v.url);
+    try {
+      await deleteVideo(v.url);
+      setDeletedUrls((prev) => new Set(prev).add(v.url));
+      setAllVideos((prev) => prev.filter((x) => x.url !== v.url));
+      setMeta((prev) => {
+        if (!prev[v.url]) return prev;
+        const next = { ...prev };
+        delete next[v.url];
+        return next;
+      });
+      if (playingUrl === v.url) setPlayingUrl(null);
+    } catch (err) {
+      console.error("Video delete failed:", err);
+      alert(`Failed to delete video: ${err.message}`);
+    } finally {
+      setDeletingUrl(null);
+    }
+  };
+
   const playingVideo = useMemo(
     () => mergedVideos.find((v) => v.url === playingUrl),
     [mergedVideos, playingUrl],
@@ -257,6 +284,14 @@ export default function VideoBin({ videos: propVideos = [] }) {
           : dlStatus[v.url] === "done"
             ? "✅"
             : "⬇ Save"}
+      </button>
+      <button
+        className="vb-action-btn vb-action-btn--delete"
+        onClick={() => handleDelete(v)}
+        title="Delete video"
+        disabled={deletingUrl === v.url}
+      >
+        {deletingUrl === v.url ? "…" : "🗑️ Delete"}
       </button>
     </div>
   );
@@ -488,6 +523,14 @@ export default function VideoBin({ videos: propVideos = [] }) {
                           : dlStatus[playingUrl] === "done"
                             ? "✅ Saved!"
                             : "⬇ Download"}
+                      </button>
+                      <button
+                        className="vb-player__action vb-player__action--delete"
+                        onClick={() => handleDelete(playingVideo)}
+                        title="Delete video"
+                        disabled={deletingUrl === playingUrl}
+                      >
+                        {deletingUrl === playingUrl ? "…" : "🗑️ Delete"}
                       </button>
                     </div>
                   </div>
