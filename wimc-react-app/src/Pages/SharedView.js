@@ -488,6 +488,23 @@ export default function SharedView() {
       <header className="sv__header">
         <span className="sv__logo">👗 WIMC</span>
         <span className="sv__badge">Shared with you</span>
+        <button
+          className="sv__close"
+          onClick={() => {
+            // Works when the tab was opened by another page/tab (e.g. from
+            // "My Shares," which opens this in a new tab) — most browsers
+            // allow a script-opened tab to close itself. If this isn't such
+            // a tab, closing is blocked, so fall back to the app itself.
+            window.close();
+            setTimeout(() => {
+              window.location.href = process.env.PUBLIC_URL || "/";
+            }, 150);
+          }}
+          aria-label="Close"
+          title="Close"
+        >
+          ✕
+        </button>
       </header>
 
       <div className="sv__card">

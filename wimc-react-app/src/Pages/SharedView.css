@@ -34,6 +34,21 @@
   border-radius: 999px;
   padding: 3px 12px;
 }
+.sv__close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.sv__close:hover { background: rgba(255, 255, 255, 0.2); }
 
 /* ── Content card ────────────────────────────────────────────────────────── */
 .sv__card {
