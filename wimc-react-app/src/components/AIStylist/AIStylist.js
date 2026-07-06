@@ -3,6 +3,7 @@ import { aiProxyFetch } from "../../utils/aiProxy";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
 import { getClosetSections, extractSections, aiPickItems } from "../../utils/outfitBuilder";
+import Lightbox from "../Lightbox/Lightbox";
 import "./AIStylist.css";
 
 const CLOSET_GENDER_KEY = "wimc_closet_gender";
@@ -47,6 +48,7 @@ export default function AIStylist({
   });
   const [savedOpen, setSavedOpen]   = useState(false);
   const [saveFlashId, setSaveFlashId] = useState(null); // msg id that just saved
+  const [savedLightbox, setSavedLightbox] = useState(null); // { images, index }
 
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
@@ -306,9 +308,18 @@ Rules:
                     >🗑️</button>
                   </div>
                   <div className="stylist-saved__imgs">
-                    {o.items.map((it) => (
+                    {o.items.map((it, i) => (
                       <div key={it.tag} className="stylist-saved__item">
-                        <img src={it.url} alt={it.label} className="stylist-saved__img" />
+                        <img
+                          src={it.url}
+                          alt={it.label}
+                          className="stylist-saved__img"
+                          onClick={() => setSavedLightbox({
+                            images: o.items.map((x) => ({ src: x.url, alt: x.label })),
+                            index: i,
+                          })}
+                          title="Click to enlarge"
+                        />
                         <span className="stylist-saved__label">{it.label}</span>
                       </div>
                     ))}
@@ -451,6 +462,14 @@ Rules:
           </button>
         </footer>
       </aside>
+      {savedLightbox && (
+        <Lightbox
+          images={savedLightbox.images}
+          index={savedLightbox.index}
+          onClose={() => setSavedLightbox(null)}
+          onChange={(i) => setSavedLightbox((prev) => ({ ...prev, index: i }))}
+        />
+      )}
     </div>
   );
 }

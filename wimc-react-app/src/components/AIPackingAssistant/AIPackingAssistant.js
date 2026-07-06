@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
+import Lightbox from "../Lightbox/Lightbox";
 import "./AIPackingAssistant.css";
 
 const TRIP_TYPES = [
@@ -71,6 +72,8 @@ export default function AIPackingAssistant({
     catch { return []; }
   });
   const [savedOpen, setSavedOpen] = useState(false);
+  // Fullscreen viewer for saved-list thumbnails — { images:[{src,alt}], index }
+  const [savedLightbox, setSavedLightbox] = useState(null);
   useEffect(() => {
     if (!isOpen) return;
     try { setSavedLists(JSON.parse(localStorage.getItem(SAVED_LISTS_KEY) || "[]")); } catch {}
@@ -335,7 +338,7 @@ Your job:
                 onClick={() => setSavedOpen((v) => !v)}
                 title="Saved packing lists"
               >
-                📁
+                {gender === "male" ? "👔" : "👗"}
               </button>
             )}
             <button className="aipa-header__close" onClick={onClose} aria-label="Close">×</button>
@@ -352,36 +355,66 @@ Your job:
             {visibleLists.length === 0 ? (
               <p className="aipa-saved__empty">No saved packing lists yet.</p>
             ) : (
-              visibleLists.map((l) => (
-                <div key={l.id} className="aipa-saved__list">
-                  <div className="aipa-saved__meta">
-                    <span className="aipa-saved__date">{l.date}</span>
-                    <span className="aipa-saved__trip" title={`${l.destination} — ${l.tripType}`}>
-                      {l.destination} · {l.tripType} · {l.days?.join(", ")}
-                    </span>
-                    <button
-                      className="aipa-saved__delete"
-                      onClick={() => deleteList(l.id)}
-                      aria-label="Delete saved list"
-                    >🗑️</button>
+              visibleLists.map((l) => {
+                // Flat image list for this saved plan (used for lightbox
+                // prev/next across the whole plan, not just one day).
+                const lightboxImages = l.items.map((it) => ({ src: it.url, alt: `${it.day} — ${it.label}` }));
+                const days = l.days?.length ? l.days : [...new Set(l.items.map((it) => it.day))];
+                return (
+                  <div key={l.id} className="aipa-saved__list">
+                    <div className="aipa-saved__meta">
+                      <span className="aipa-saved__date">{l.date}</span>
+                      <span className="aipa-saved__trip" title={`${l.destination} — ${l.tripType}`}>
+                        {l.destination} · {l.tripType} · {days.join(", ")}
+                      </span>
+                      <button
+                        className="aipa-saved__delete"
+                        onClick={() => deleteList(l.id)}
+                        aria-label="Delete saved list"
+                      >🗑️</button>
+                    </div>
+                    {/* Each day gets its own row so a multi-day plan doesn't
+                        cram every item into one horizontal strip. */}
+                    <div className="aipa-saved__days">
+                      {days.filter((d) => l.items.some((it) => it.day === d)).map((day) => (
+                        <div key={day} className="aipa-saved__day-row">
+                          <p className="aipa-saved__day-label">🗓️ {day}</p>
+                          <div className="aipa-saved__imgs">
+                            {l.items.map((it, i) => ({ it, i })).filter(({ it }) => it.day === day).map(({ it, i }) => (
+                              <div key={i} className="aipa-saved__item">
+                                <img
+                                  src={it.url}
+                                  alt={it.label}
+                                  className="aipa-saved__img"
+                                  onClick={() => setSavedLightbox({ images: lightboxImages, index: i })}
+                                  title="Click to enlarge"
+                                />
+                                <span className="aipa-saved__label">{it.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {onAddImages && (
+                      <button className="aipa-saved__apply" onClick={() => applyList(l)}>
+                        📥 Apply to Travel Pack
+                      </button>
+                    )}
                   </div>
-                  <div className="aipa-saved__imgs">
-                    {l.items.map((it, i) => (
-                      <div key={i} className="aipa-saved__item">
-                        <img src={it.url} alt={it.label} className="aipa-saved__img" />
-                        <span className="aipa-saved__label">{it.day} · {it.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {onAddImages && (
-                    <button className="aipa-saved__apply" onClick={() => applyList(l)}>
-                      📥 Apply to Travel Pack
-                    </button>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
+        )}
+
+        {savedLightbox && (
+          <Lightbox
+            images={savedLightbox.images}
+            index={savedLightbox.index}
+            onClose={() => setSavedLightbox(null)}
+            onChange={(i) => setSavedLightbox((prev) => ({ ...prev, index: i }))}
+          />
         )}
 
         <div className="aipa-body">

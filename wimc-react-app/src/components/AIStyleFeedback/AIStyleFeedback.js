@@ -3,6 +3,7 @@ import { aiProxyFetch } from "../../utils/aiProxy";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
 import { extractSections, aiPickItems } from "../../utils/outfitBuilder";
+import Lightbox from "../Lightbox/Lightbox";
 import "./AIStyleFeedback.css";
 
 const OCCASIONS = [
@@ -39,6 +40,7 @@ export default function AIStyleFeedback({ isOpen, onClose, previewUrl, gender = 
     catch { return []; }
   });
   const [savedOpen, setSavedOpen] = useState(false);
+  const [savedLightbox, setSavedLightbox] = useState(null); // { images, index }
 
   // Re-read on open — picks up cloud-synced saves made on another device.
   useEffect(() => {
@@ -184,7 +186,7 @@ Please give me style feedback on this outfit!`;
       <div className="aisf-modal" role="dialog" aria-label="AI Style Feedback">
         <header className="aisf-header">
           <div className="aisf-header__left">
-            <span className="aisf-header__icon">👗</span>
+            <span className="aisf-header__icon">{gender === "male" ? "👔" : "👗"}</span>
             <div>
               <h2 className="aisf-header__title">AI Style Feedback</h2>
               <p className="aisf-header__sub">
@@ -232,9 +234,18 @@ Please give me style feedback on this outfit!`;
                     >🗑️</button>
                   </div>
                   <div className="aisf-saved__imgs">
-                    {o.items.map((it) => (
+                    {o.items.map((it, i) => (
                       <div key={it.tag} className="aisf-saved__item">
-                        <img src={it.url} alt={it.label} className="aisf-saved__img" />
+                        <img
+                          src={it.url}
+                          alt={it.label}
+                          className="aisf-saved__img"
+                          onClick={() => setSavedLightbox({
+                            images: o.items.map((x) => ({ src: x.url, alt: x.label })),
+                            index: i,
+                          })}
+                          title="Click to enlarge"
+                        />
                         <span className="aisf-saved__label">{it.label}</span>
                       </div>
                     ))}
@@ -302,7 +313,7 @@ Please give me style feedback on this outfit!`;
                 onClick={handleBuildOutfit}
                 disabled={building}
               >
-                {building ? "✨ Selecting items…" : boardOpen ? "✕ Close Look" : "👗 Build This Look"}
+                {building ? "✨ Selecting items…" : boardOpen ? "✕ Close Look" : `${gender === "male" ? "👔" : "👗"} Build This Look`}
               </button>
             )}
             {(feedback || error) && (
@@ -371,6 +382,14 @@ Please give me style feedback on this outfit!`;
           {error && <p className="aisf-error">{error}</p>}
         </div>
       </div>
+      {savedLightbox && (
+        <Lightbox
+          images={savedLightbox.images}
+          index={savedLightbox.index}
+          onClose={() => setSavedLightbox(null)}
+          onChange={(i) => setSavedLightbox((prev) => ({ ...prev, index: i }))}
+        />
+      )}
     </div>
   );
 }

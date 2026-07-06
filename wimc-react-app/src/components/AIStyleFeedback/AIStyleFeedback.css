@@ -447,6 +447,7 @@
   object-fit: cover;
   border-radius: 8px;
   display: block;
+  cursor: pointer;
 }
 .aisf-saved__label {
   font-size: 9px;

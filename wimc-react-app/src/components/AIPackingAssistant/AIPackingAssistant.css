@@ -558,11 +558,27 @@
   padding: 2px;
   flex-shrink: 0;
 }
+/* Each saved plan's days stack vertically; the OUTER .aipa-saved drawer
+   already scrolls vertically, so this naturally scrolls with it. */
+.aipa-saved__days {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.aipa-saved__day-row { min-width: 0; }
+.aipa-saved__day-label {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #6d28d9;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
 .aipa-saved__imgs {
   display: flex;
   gap: 6px;
   overflow-x: auto;
-  margin-bottom: 8px;
 }
 .aipa-saved__item {
   flex: 0 0 72px;
@@ -576,6 +592,7 @@
   object-fit: cover;
   border-radius: 8px;
   display: block;
+  cursor: pointer;
 }
 .aipa-saved__label {
   font-size: 8px;

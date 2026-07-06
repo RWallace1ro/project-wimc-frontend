@@ -512,6 +512,7 @@
   object-fit: cover;
   border-radius: 8px;
   display: block;
+  cursor: pointer;
 }
 .stylist-saved__label {
   font-size: 9px;
