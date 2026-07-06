@@ -11,7 +11,7 @@ const QUICK_PROMPTS = [
   "What should I wear to a job interview?",
   "Build me a casual weekend outfit",
   "What's a good outfit for a first date?",
-  "Suggest a capsule wardrobe for travel",
+  "Suggest a capsule closet for travel",
   "What should I wear to a summer wedding?",
   "Give me a chic work-from-home look",
   "🎨 What are the colors of the season?",
@@ -449,8 +449,8 @@ Rules:
           {messages.length === 0 && (
             <div className="stylist-welcome">
               <p className="stylist-welcome__text">
-                Hi! I'm your AI Stylist 👗 Ask me anything about your wardrobe —
-                outfits for occasions, capsule wardrobes, travel packing, and more.
+                Hi! I'm your AI Stylist 👗 Ask me anything about your closet —
+                outfits for occasions, capsule closets, travel packing, and more.
               </p>
               <div className="stylist-prompts">
                 {QUICK_PROMPTS.map((p) => (

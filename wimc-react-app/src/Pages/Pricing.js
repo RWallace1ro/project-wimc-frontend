@@ -46,7 +46,7 @@ const MONTHLY_PLANS = [
   {
     id: "pro-monthly",
     name: "Pro",
-    tagline: "All the tools you need to master your wardrobe, every month.",
+    tagline: "All the tools you need to master your closet, every month.",
     amount: "4.99",
     period: "/ month",
     note: "",
@@ -106,7 +106,7 @@ const ANNUAL_PLANS = [
     savings: "Save 33%",
     features: [
       { text: "Everything in Pro (monthly)", check: true },
-      { text: "Best value for wardrobe pros", check: true },
+      { text: "Best value for closet pros", check: true },
       { text: "Cancel anytime — no fees", check: true },
     ],
     btnLabel: "Get Pro Annual",

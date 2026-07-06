@@ -188,6 +188,48 @@
 .sv-thumb--done { opacity: 0.5; }
 .sv-thumb--done img { filter: grayscale(0.6); }
 
+/* ── Per-item comment / suggestion ──────────────────────────────────────── */
+.sv-comment {
+  font-size: 11px;
+  padding: 4px 6px;
+  border-top: 1px solid #f1f5f9;
+}
+.sv-comment--clickable { cursor: pointer; }
+.sv-comment__text {
+  color: #475569;
+  word-break: break-word;
+  white-space: normal;
+}
+.sv-comment__add {
+  color: #94a3b8;
+  font-style: italic;
+}
+.sv-comment--clickable:hover .sv-comment__add { color: #7c3aed; }
+.sv-comment--editing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.sv-comment__input {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  padding: 3px 6px;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+}
+.sv-comment__save,
+.sv-comment__cancel {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+.sv-comment__save { color: #16a34a; }
+.sv-comment__cancel { color: #b91c1c; }
+
 /* ── Checklist items ─────────────────────────────────────────────────────── */
 .sv-checklist { display: flex; flex-direction: column; gap: 6px; }
 .sv-check-item {
@@ -262,6 +304,29 @@
 
 /* ── Divider ─────────────────────────────────────────────────────────────── */
 .sv-divider { height: 1px; background: #e2e8f0; margin: 18px 0; }
+
+/* ── Pro-feature upgrade banner ──────────────────────────────────────────── */
+.sv__pro-banner {
+  width: 100%;
+  max-width: 720px;
+  margin-top: 18px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 13px;
+  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.sv__pro-banner__link {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: underline;
+}
 
 /* ── Footer CTA ──────────────────────────────────────────────────────────── */
 .sv__footer {

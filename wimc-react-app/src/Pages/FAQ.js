@@ -8,7 +8,7 @@ const SECTIONS = [
     items: [
       {
         q: "What is What's in My Closet (WIMC)?",
-        a: "What's in My Closet is a personal wardrobe management app that lets you photograph, organize, and plan outfits from your clothing collection. It includes AI-powered styling advice, a Try-On Studio for recording outfit videos with AI style feedback, a travel packing planner, a donation manager, a wish list, a shopping list, and more — all in one place.",
+        a: "What's in My Closet is a personal closet management app that lets you photograph, organize, and plan outfits from your clothing collection. It includes AI-powered styling advice, a Try-On Studio for recording outfit videos with AI style feedback, a travel packing planner, a donation manager, a wish list, a shopping list, and more — all in one place.",
       },
       {
         q: "Do I need an account to use the app?",
@@ -49,15 +49,15 @@ const SECTIONS = [
       },
       {
         q: "What is the Kids' Closet?",
-        a: "The Kids' Closet lets you create separate closet profiles for each child in your household. Each child gets their own six-section wardrobe, outfit planner, and donate bin — completely separate from the main closet.",
+        a: "The Kids' Closet lets you create separate closet profiles for each child in your household. Each child gets their own six-section closet, outfit planner, and donate bin — completely separate from the main closet.",
       },
       {
         q: "What is the Pet Closet?",
-        a: "The Pet Closet lets you create a profile for each pet (dog, cat, or other) with their species, breed, weight, apparel size, and key measurements (back length, neck, and chest). Each pet gets its own wardrobe with pet-specific sections — Sweaters/Coats, Shirts/Tops, Costumes/Dresses, Bandanas/Bows, Booties/Paw Wear, and Collars/Harnesses — plus the outfit planner, travel pack, wish list, donate bin, and AI search, all kept separate from your main and kids' closets. You can share a pet's sizing info with sitters and family.",
+        a: "The Pet Closet lets you create a profile for each pet (dog, cat, or other) with their species, breed, weight, apparel size, and key measurements (back length, neck, and chest). Each pet gets its own closet with pet-specific sections — Sweaters/Coats, Shirts/Tops, Costumes/Dresses, Bandanas/Bows, Booties/Paw Wear, and Collars/Harnesses — plus the outfit planner, travel pack, wish list, donate bin, and AI search, all kept separate from your main and kids' closets. You can share a pet's sizing info with sitters and family.",
       },
       {
         q: "Can I customize the look of each closet section?",
-        a: "Yes. Each section card supports a custom background image so you can personalize the look of your wardrobe at a glance.",
+        a: "Yes. Each section card supports a custom background image so you can personalize the look of your closet at a glance.",
       },
     ],
   },
@@ -66,7 +66,7 @@ const SECTIONS = [
     items: [
       {
         q: "What is the Outfit Preview Panel?",
-        a: "The Outfit Preview Panel is a virtual canvas where you can assemble outfits by selecting items from your closet sections. Build a look, save it, and share it — all without physically touching your wardrobe.",
+        a: "The Outfit Preview Panel is a virtual canvas where you can assemble outfits by selecting items from your closet sections. Build a look, save it, and share it — all without physically touching your closet.",
       },
       {
         q: "What is Outfit of the Day?",
@@ -91,7 +91,7 @@ const SECTIONS = [
       },
       {
         q: "What is the AI Donation Advisor?",
-        a: "The AI Donation Advisor helps you decide which items to donate by reviewing the pieces in your Donate Bin and giving thoughtful recommendations — considering factors like condition, usage, and wardrobe balance.",
+        a: "The AI Donation Advisor helps you decide which items to donate by reviewing the pieces in your Donate Bin and giving thoughtful recommendations — considering factors like condition, usage, and closet balance.",
       },
       {
         q: "What is the AI Packing Assistant?",
@@ -99,7 +99,7 @@ const SECTIONS = [
       },
       {
         q: "What is AI Closet Search?",
-        a: "AI Closet Search lets you search your wardrobe in plain English — for example, 'a casual outfit for the weekend' or 'show me my black dresses.' It identifies the right sections and uses AI vision to surface the matching items. You can save searches to revisit later and tap any image to view it full-screen.",
+        a: "AI Closet Search lets you search your closet in plain English — for example, 'a casual outfit for the weekend' or 'show me my black dresses.' It identifies the right sections and uses AI vision to surface the matching items. You can save searches to revisit later and tap any image to view it full-screen.",
       },
       {
         q: "What is AI Style Feedback?",

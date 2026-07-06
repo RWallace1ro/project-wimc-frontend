@@ -60,7 +60,7 @@ export default function AIDonationAdvisor({ isOpen, onClose, sections = null, on
 
   const allAnswered = QUESTIONS.every((q) => answers[q.id]);
 
-  const systemPrompt = `You are WIMC's Smart Donation Advisor — a friendly, practical assistant that helps users declutter their wardrobe.
+  const systemPrompt = `You are WIMC's Smart Donation Advisor — a friendly, practical assistant that helps users declutter their closet.
 
 The user's closet has these categories: ${SECTIONS.map((s) => s.label).join(", ")}.
 

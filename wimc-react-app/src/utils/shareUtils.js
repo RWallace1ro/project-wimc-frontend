@@ -31,6 +31,7 @@ export async function createCollabDoc(type, data) {
       createdAt: new Date().toISOString(),
       anyoneCanEdit: true,
       checkedItems: {},
+      comments: {},
     });
     return `${appBase()}/shared?collab=${ref.id}&type=${encodeURIComponent(type)}`;
   } catch (e) {
@@ -53,9 +54,24 @@ export async function toggleCollabItem(docId, key, value) {
   } catch {}
 }
 
+// Save (or clear) a per-item note/suggestion left by a recipient with edit
+// access. Stored as { text, ts } so the owner can see when it was left.
+export async function setCollabComment(docId, key, text) {
+  try {
+    const trimmed = (text || "").trim().slice(0, 280);
+    await updateDoc(doc(db, 'sharedContent', docId), {
+      [`comments.${key}`]: trimmed
+        ? { text: trimmed, ts: new Date().toISOString() }
+        : null,
+    });
+  } catch (e) {
+    console.error("setCollabComment failed:", e);
+  }
+}
+
 // ── Web Share API — share a clothing image as a real file ─────────────────────
 export async function shareItemImage(imageUrl, opts = {}) {
-  const { title = 'My Closet Item', text = 'From my WIMC wardrobe 👗' } = opts;
+  const { title = 'My Closet Item', text = 'From my WIMC closet 👗' } = opts;
   if (!imageUrl) return 'no-url';
   if (typeof navigator.canShare === 'function') {
     try {

@@ -247,6 +247,36 @@
   cursor: not-allowed;
 }
 
+/* Sync row — mirrors Travel Pack's own "Sync to Planner" row exactly */
+.planner__sync {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.planner__sync-day {
+  font-size: 12px;
+  color: #64748b;
+}
+.planner__sync > button {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+.planner__sync > button:hover {
+  background: #f5f7fb;
+  border-color: #cbd5ff;
+}
+.planner__sync > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .planner__mini {
   padding: 4px 8px;
   border: 1px solid #ddd;

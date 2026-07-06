@@ -702,7 +702,7 @@ function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
             content: `Category: "${activeCat?.label}". Context: "${input || "general shopping"}". Already have: ${existing}. Suggest 8-12 shopping items.`,
           },
         ],
-        `You are a smart shopping assistant for a wardrobe/lifestyle app called WIMC (What's In My Closet). 
+        `You are a smart shopping assistant for a closet/lifestyle app called WIMC (What's In My Closet). 
 Return ONLY a JSON array like: [{"name":"Item","detail":"optional size/color/brand hint"}]
 No markdown, no explanation, just the JSON array.`,
       );
@@ -790,7 +790,7 @@ No markdown, no explanation, just the JSON array.`,
       const catContext = `Current category: "${activeCat?.label}". Items on list: ${catItems.map((i) => i.name).join(", ") || "none"}.`;
       const raw = await callAI(
         newHistory,
-        `You are a helpful shopping assistant for WIMC (What's In My Closet), a wardrobe and lifestyle app. ${catContext}
+        `You are a helpful shopping assistant for WIMC (What's In My Closet), a closet and lifestyle app. ${catContext}
 Help the user with shopping decisions, outfit planning, packing lists, or anything shopping-related. Be concise and practical.
 If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"name":"x","detail":"y"}]`,
       );
@@ -905,7 +905,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
             <div className="sl-ai-row">
               <input
                 className="sl-ai-input"
-                placeholder="Optional context: trip to Paris, back to school, winter wardrobe…"
+                placeholder="Optional context: trip to Paris, back to school, winter closet…"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
@@ -2066,7 +2066,7 @@ export default function ShoppingList() {
 //             content: `Category: "${activeCat?.label}". Context: "${input || "general shopping"}". Already have: ${existing}. Suggest 8-12 shopping items.`,
 //           },
 //         ],
-//         `You are a smart shopping assistant for a wardrobe/lifestyle app called WIMC (What's In My Closet).
+//         `You are a smart shopping assistant for a closet/lifestyle app called WIMC (What's In My Closet).
 // Return ONLY a JSON array like: [{"name":"Item","detail":"optional size/color/brand hint"}]
 // No markdown, no explanation, just the JSON array.`,
 //       );
@@ -2154,7 +2154,7 @@ export default function ShoppingList() {
 //       const catContext = `Current category: "${activeCat?.label}". Items on list: ${catItems.map((i) => i.name).join(", ") || "none"}.`;
 //       const raw = await callAI(
 //         newHistory,
-//         `You are a helpful shopping assistant for WIMC (What's In My Closet), a wardrobe and lifestyle app. ${catContext}
+//         `You are a helpful shopping assistant for WIMC (What's In My Closet), a closet and lifestyle app. ${catContext}
 // Help the user with shopping decisions, outfit planning, packing lists, or anything shopping-related. Be concise and practical.
 // If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"name":"x","detail":"y"}]`,
 //       );
@@ -2264,7 +2264,7 @@ export default function ShoppingList() {
 //             <div className="sl-ai-row">
 //               <input
 //                 className="sl-ai-input"
-//                 placeholder="Optional context: trip to Paris, back to school, winter wardrobe…"
+//                 placeholder="Optional context: trip to Paris, back to school, winter closet…"
 //                 value={input}
 //                 onChange={(e) => setInput(e.target.value)}
 //                 onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
@@ -3326,7 +3326,7 @@ export default function ShoppingList() {
 //             content: `Category: "${activeCat?.label}". Context: "${input || "general shopping"}". Already have: ${existing}. Suggest 8-12 shopping items.`,
 //           },
 //         ],
-//         `You are a smart shopping assistant for a wardrobe/lifestyle app called WIMC (What's In My Closet).
+//         `You are a smart shopping assistant for a closet/lifestyle app called WIMC (What's In My Closet).
 // Return ONLY a JSON array like: [{"name":"Item","detail":"optional size/color/brand hint"}]
 // No markdown, no explanation, just the JSON array.`,
 //       );
@@ -3414,7 +3414,7 @@ export default function ShoppingList() {
 //       const catContext = `Current category: "${activeCat?.label}". Items on list: ${catItems.map((i) => i.name).join(", ") || "none"}.`;
 //       const raw = await callAI(
 //         newHistory,
-//         `You are a helpful shopping assistant for WIMC (What's In My Closet), a wardrobe and lifestyle app. ${catContext}
+//         `You are a helpful shopping assistant for WIMC (What's In My Closet), a closet and lifestyle app. ${catContext}
 // Help the user with shopping decisions, outfit planning, packing lists, or anything shopping-related. Be concise and practical.
 // If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"name":"x","detail":"y"}]`,
 //       );
@@ -3524,7 +3524,7 @@ export default function ShoppingList() {
 //             <div className="sl-ai-row">
 //               <input
 //                 className="sl-ai-input"
-//                 placeholder="Optional context: trip to Paris, back to school, winter wardrobe…"
+//                 placeholder="Optional context: trip to Paris, back to school, winter closet…"
 //                 value={input}
 //                 onChange={(e) => setInput(e.target.value)}
 //                 onKeyDown={(e) => e.key === "Enter" && handleSuggest()}

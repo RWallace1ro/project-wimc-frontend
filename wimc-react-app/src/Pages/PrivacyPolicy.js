@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
         <h2>2. How We Use Your Information</h2>
         <p>
           We use your information solely to provide the What's in My Closet
-          service — organizing your wardrobe, building outfits, and delivering
+          service — organizing your closet, building outfits, and delivering
           AI styling suggestions. We do not sell your data to third parties.
         </p>
       </section>

@@ -27,7 +27,7 @@ service cloud.firestore {
                     && request.resource.data.ownerId == request.auth.uid
                     && request.resource.data.keys().hasOnly(
                          ['type', 'data', 'ownerId', 'ownerName',
-                          'createdAt', 'anyoneCanEdit', 'checkedItems'])
+                          'createdAt', 'anyoneCanEdit', 'checkedItems', 'comments'])
                     && request.resource.data.type is string
                     && request.resource.data.type.size() <= 50
                     && request.resource.data.ownerName is string
@@ -36,14 +36,17 @@ service cloud.firestore {
                     && request.resource.data.createdAt.size() <= 40
                     && request.resource.data.anyoneCanEdit is bool
                     && request.resource.data.checkedItems is map
-                    && request.resource.data.checkedItems.size() == 0;
+                    && request.resource.data.checkedItems.size() == 0
+                    && request.resource.data.comments is map
+                    && request.resource.data.comments.size() == 0;
 
       // Collaborative editing is limited to toggling checkboxes (checkedItems)
-      // and only when the share opted in via anyoneCanEdit. No other field can
-      // be altered by a recipient.
+      // and leaving per-item notes/suggestions (comments), and only when the
+      // share opted in via anyoneCanEdit. No other field can be altered by a
+      // recipient.
       allow update: if resource.data.anyoneCanEdit == true
                     && request.resource.data.diff(resource.data)
-                         .affectedKeys().hasOnly(['checkedItems']);
+                         .affectedKeys().hasOnly(['checkedItems', 'comments']);
 
       // Only the original owner can delete their share.
       allow delete: if request.auth != null

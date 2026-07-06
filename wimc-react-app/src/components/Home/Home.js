@@ -118,7 +118,7 @@ export default Home;
 //             </button>
 //           </div>
 //           <footer className="home__footer">
-//             <p>Manage your wardrobe with ease!</p>
+//             <p>Manage your closet with ease!</p>
 //           </footer>
 //         </section>
 //         <div className={`door-container${doorsVisible ? " is-visible" : ""}${doorsOpen ? " is-open" : ""}`}>
@@ -176,7 +176,7 @@ export default Home;
 //             </button>
 //           </div>
 //           <footer className="home__footer">
-//             <p>Manage your wardrobe with ease!</p>
+//             <p>Manage your closet with ease!</p>
 //           </footer>
 //         </section>
 //         <div className={`door-container${doorsVisible ? " is-visible" : ""}${doorsOpen ? " is-open" : ""}`}>
@@ -223,7 +223,7 @@ export default Home;
 //           </button>
 //         </div>
 //         <footer className="home__footer">
-//           <p>Manage your wardrobe with ease!</p>
+//           <p>Manage your closet with ease!</p>
 //         </footer>
 //       </section>
 //       <div className={`door-container ${doorsOpen ? "active" : ""}`}>
