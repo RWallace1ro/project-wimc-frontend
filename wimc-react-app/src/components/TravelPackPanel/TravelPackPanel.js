@@ -234,32 +234,37 @@ export default function TravelPackPanel({
   }
 
   // ✅ Defined INSIDE the component so it can access setPackPlan and selectedDay
+  // item.day (from the AI Packing Assistant's multi-day plan) routes to that
+  // SPECIFIC day; falls back to whatever day is currently selected for any
+  // caller that doesn't specify one (e.g. manual single-item adds).
   function handleAIItem(item) {
     const v = (item?.name || "").trim();
     if (!v) return;
+    const day = item?.day && DAYS.includes(item.day) ? item.day : selectedDay;
     setPackPlan((prev) => ({
       ...prev,
-      [selectedDay]: [...prev[selectedDay], { name: v, kind: "text" }],
+      [day]: [...prev[day], { name: v, kind: "text" }],
     }));
   }
 
-  // Add real closet IMAGES chosen in the AI packing builder to the selected day.
-  // images: [{ url, section }]
+  // Add real closet IMAGES chosen in the AI packing builder — each lands on
+  // its OWN day when provided (multi-day trip plan), or the selected day.
+  // images: [{ url, section, day? }]
   function handleAIImages(images) {
     if (!images?.length) return;
     setPackPlan((prev) => {
-      const dayArr = prev[selectedDay];
-      const seen = new Set(dayArr.map((p) => p.mediaUrl || p.name));
-      const toAdd = images
-        .map((img) => normalizeMedia(img.url, img.section))
-        .filter(Boolean)
-        .filter((it) => {
-          const k = it.mediaUrl || it.name;
-          if (seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        });
-      return { ...prev, [selectedDay]: [...dayArr, ...toAdd] };
+      const next = { ...prev };
+      images.forEach((img) => {
+        const day = img.day && DAYS.includes(img.day) ? img.day : selectedDay;
+        const dayArr = next[day] || [];
+        const seen = new Set(dayArr.map((p) => p.mediaUrl || p.name));
+        const it = normalizeMedia(img.url, img.section);
+        if (!it) return;
+        const k = it.mediaUrl || it.name;
+        if (seen.has(k)) return;
+        next[day] = [...dayArr, it];
+      });
+      return next;
     });
   }
 
@@ -780,6 +785,7 @@ export default function TravelPackPanel({
         onAddImages={handleAIImages}
         onSaved={() => setIsAIPackOpen(false)}
         selectedDay={selectedDay}
+        gender={gender}
         sections={SECTION_OPTIONS.map((o) => ({
           label: o.label,
           tag: tagPrefix ? `${tagPrefix}-${o.value}` : o.value,
