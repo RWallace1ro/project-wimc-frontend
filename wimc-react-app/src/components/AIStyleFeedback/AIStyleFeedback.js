@@ -1,5 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
+import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
+import { syncSetItem } from "../../utils/syncStore";
+import { extractSections, aiPickItems } from "../../utils/outfitBuilder";
 import "./AIStyleFeedback.css";
 
 const OCCASIONS = [
@@ -12,13 +15,40 @@ const OCCASIONS = [
   "Weekend Brunch",
 ];
 
-export default function AIStyleFeedback({ isOpen, onClose, previewUrl }) {
+const SAVED_LOOKS_KEY = "wimc_style_feedback_saved_outfits";
+
+export default function AIStyleFeedback({ isOpen, onClose, previewUrl, gender = "female" }) {
   const [occasion, setOccasion] = useState("");
   const [description, setDescription] = useState("");
   const [feedback, setFeedback] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState("");
   const abortRef = useRef(null);
+
+  // Outfit board — the closet items AI Style Feedback recommended to
+  // "Complete the Look," built into a visual, pick-able board.
+  const [sectionImages, setSectionImages] = useState({}); // { tag: [url,...] }
+  const [imgIndexes, setImgIndexes] = useState({});        // { tag: idx }
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [building, setBuilding] = useState(false);
+  const [saveFlash, setSaveFlash] = useState(false);
+
+  // Saved looks — same pattern as AI Stylist's saved outfits, own key.
+  const [savedLooks, setSavedLooks] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(SAVED_LOOKS_KEY) || "[]"); }
+    catch { return []; }
+  });
+  const [savedOpen, setSavedOpen] = useState(false);
+
+  // Re-read on open — picks up cloud-synced saves made on another device.
+  useEffect(() => {
+    if (!isOpen) return;
+    try { setSavedLooks(JSON.parse(localStorage.getItem(SAVED_LOOKS_KEY) || "[]")); } catch {}
+  }, [isOpen]);
+
+  const outfitSections =
+    !streaming && feedback ? extractSections(feedback, gender) : [];
+  const hasOutfit = outfitSections.length >= 2;
 
   const systemPrompt = `You are WIMC's AI Style Feedback assistant — a friendly, encouraging, and knowledgeable personal stylist.
 
@@ -42,6 +72,7 @@ Keep the tone warm, positive, and empowering — never critical.`;
     if (!description.trim() || streaming) return;
     setFeedback("");
     setError("");
+    setBoardOpen(false);
     setStreaming(true);
 
     const userMsg = `I'm wearing: ${description.trim()}
@@ -68,6 +99,67 @@ Please give me style feedback on this outfit!`;
     }
   };
 
+  // ── Build This Look — fetch closet photos for the recommended sections and
+  // let the AI pick the best match, mirroring AI Stylist's "Build This Outfit."
+  const handleBuildOutfit = async () => {
+    if (boardOpen) { setBoardOpen(false); return; }
+    setBuilding(true);
+    try {
+      const missing = outfitSections.filter((s) => sectionImages[s.tag] === undefined);
+      let imagesByTag = { ...sectionImages };
+      if (missing.length) {
+        const results = await Promise.all(
+          missing.map((s) => fetchImagesForSection(s.tag).then((urls) => ({ tag: s.tag, urls })))
+        );
+        results.forEach(({ tag, urls }) => { imagesByTag[tag] = urls; });
+        setSectionImages(imagesByTag);
+      }
+      const picks = await aiPickItems(feedback, outfitSections, imagesByTag, "ai_style_feedback_outfit_pick");
+      if (picks) setImgIndexes((prev) => ({ ...prev, ...picks }));
+      setBoardOpen(true);
+    } finally {
+      setBuilding(false);
+    }
+  };
+
+  const cycleImg = (tag, dir, total) => {
+    setImgIndexes((prev) => ({ ...prev, [tag]: ((prev[tag] || 0) + dir + total) % total }));
+  };
+
+  const persistLooks = (list) => {
+    setSavedLooks(list);
+    try { syncSetItem(SAVED_LOOKS_KEY, JSON.stringify(list)); } catch {}
+  };
+
+  const saveOutfit = () => {
+    const items = outfitSections
+      .map((s) => {
+        const imgs = sectionImages[s.tag] || [];
+        const idx = imgIndexes[s.tag] || 0;
+        return imgs.length ? { label: s.label, tag: s.tag, url: imgs[idx] } : null;
+      })
+      .filter(Boolean);
+    if (!items.length) return;
+
+    const look = {
+      id: Date.now(),
+      date: new Date().toLocaleDateString(),
+      request: description.trim(),
+      gender,
+      items,
+    };
+    persistLooks([look, ...savedLooks]);
+    setSaveFlash(true);
+    setTimeout(() => setSaveFlash(false), 2000);
+  };
+
+  const deleteLook = (id) => persistLooks(savedLooks.filter((o) => o.id !== id));
+
+  // Older saves have no gender field — infer it from the item tags.
+  const lookGender = (o) =>
+    o.gender || (o.items?.some((it) => (it.tag || "").startsWith("male-")) ? "male" : "female");
+  const visibleLooks = savedLooks.filter((o) => lookGender(o) === gender);
+
   const reset = () => {
     abortRef.current?.abort();
     setOccasion("");
@@ -75,6 +167,9 @@ Please give me style feedback on this outfit!`;
     setFeedback("");
     setError("");
     setStreaming(false);
+    setBoardOpen(false);
+    setSectionImages({});
+    setImgIndexes({});
   };
 
   if (!isOpen) return null;
@@ -97,10 +192,58 @@ Please give me style feedback on this outfit!`;
               </p>
             </div>
           </div>
-          <button className="aisf-close" onClick={onClose} aria-label="Close">
-            ×
-          </button>
+          <div className="aisf-header__actions">
+            {visibleLooks.length > 0 && (
+              <button
+                className={`aisf-header__btn${savedOpen ? " is-active" : ""}`}
+                onClick={() => setSavedOpen((v) => !v)}
+                title="Saved looks"
+              >
+                {gender === "male" ? "👔" : "👗"}
+              </button>
+            )}
+            <button className="aisf-close" onClick={onClose} aria-label="Close">
+              ×
+            </button>
+          </div>
         </header>
+
+        {/* Saved looks drawer */}
+        {savedOpen && (
+          <div className="aisf-saved">
+            <div className="aisf-saved__head">
+              <h3 className="aisf-saved__title">Saved Looks ({visibleLooks.length})</h3>
+              <button className="aisf-saved__close" onClick={() => setSavedOpen(false)}>✕</button>
+            </div>
+            {visibleLooks.length === 0 ? (
+              <p className="aisf-saved__empty">No saved looks yet.</p>
+            ) : (
+              visibleLooks.map((o) => (
+                <div key={o.id} className="aisf-saved__outfit">
+                  <div className="aisf-saved__meta">
+                    <span className="aisf-saved__date">{o.date}</span>
+                    {o.request && (
+                      <span className="aisf-saved__request" title={o.request}>{o.request}</span>
+                    )}
+                    <button
+                      className="aisf-saved__delete"
+                      onClick={() => deleteLook(o.id)}
+                      aria-label="Delete look"
+                    >🗑️</button>
+                  </div>
+                  <div className="aisf-saved__imgs">
+                    {o.items.map((it) => (
+                      <div key={it.tag} className="aisf-saved__item">
+                        <img src={it.url} alt={it.label} className="aisf-saved__img" />
+                        <span className="aisf-saved__label">{it.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         <div className="aisf-body">
           {/* Video preview (if available) */}
@@ -153,6 +296,15 @@ Please give me style feedback on this outfit!`;
             >
               {streaming ? "✨ Analysing…" : "✨ Get Style Feedback"}
             </button>
+            {hasOutfit && (
+              <button
+                className="aisf-btn aisf-btn--outfit"
+                onClick={handleBuildOutfit}
+                disabled={building}
+              >
+                {building ? "✨ Selecting items…" : boardOpen ? "✕ Close Look" : "👗 Build This Look"}
+              </button>
+            )}
             {(feedback || error) && (
               <button className="aisf-btn" onClick={reset} disabled={streaming}>
                 🔄 Start Over
@@ -167,6 +319,52 @@ Please give me style feedback on this outfit!`;
                 {feedback}
                 {streaming && <span className="aisf-cursor">▋</span>}
               </pre>
+            </div>
+          )}
+
+          {/* Outfit image board — the recommended "Complete the Look" items */}
+          {boardOpen && (
+            <div className="aisf-outfit-board">
+              {outfitSections.map((s) => {
+                const imgs = sectionImages[s.tag] || [];
+                const idx = imgIndexes[s.tag] || 0;
+                return (
+                  <div key={s.tag} className="aisf-outfit-card">
+                    <p className="aisf-outfit-card__label">{s.label}</p>
+                    {imgs.length > 0 ? (
+                      <>
+                        <img
+                          src={imgs[idx]}
+                          alt={s.label}
+                          className="aisf-outfit-card__img"
+                        />
+                        {imgs.length > 1 && (
+                          <>
+                            <button
+                              className="aisf-outfit-card__prev"
+                              onClick={() => cycleImg(s.tag, -1, imgs.length)}
+                              aria-label={`Previous ${s.label}`}
+                            >‹</button>
+                            <button
+                              className="aisf-outfit-card__next"
+                              onClick={() => cycleImg(s.tag, 1, imgs.length)}
+                              aria-label={`Next ${s.label}`}
+                            >›</button>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <div className="aisf-outfit-card__empty">No items yet</div>
+                    )}
+                  </div>
+                );
+              })}
+              <button
+                className={`aisf-outfit-save${saveFlash ? " is-saved" : ""}`}
+                onClick={saveOutfit}
+              >
+                {saveFlash ? "✓ Look Saved!" : "💾 Save This Look"}
+              </button>
             </div>
           )}
 

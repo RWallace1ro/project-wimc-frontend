@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
+import { getClosetSections, extractSections, aiPickItems } from "../../utils/outfitBuilder";
 import "./AIStylist.css";
 
 const CLOSET_GENDER_KEY = "wimc_closet_gender";
@@ -17,75 +18,6 @@ const QUICK_PROMPTS = [
   "🎨 What are the colors of the season?",
   "🌿 What are the current seasonal fashion trends?",
 ];
-
-function getClosetSections(gender) {
-  const p = gender === "male" ? "male-" : "";
-  return [
-    {
-      label: gender === "male" ? "Dress Shirts/Suits" : "Dresses/Skirts",
-      tag: gender === "male" ? "male-dress-shirts-suits" : "dresses-skirts",
-    },
-    { label: "Shoes/Sneakers",   tag: `${p}shoes-sneakers` },
-    { label: "Pants/Jeans",      tag: `${p}pants-jeans` },
-    { label: "Tops",             tag: `${p}tops` },
-    { label: "Bags/Accessories", tag: `${p}bags-accessories` },
-    { label: "Jackets/Coats",    tag: `${p}jackets-coats` },
-  ];
-}
-
-// Keywords that map to each base tag (without gender prefix)
-const SECTION_KEYWORDS = {
-  "dresses-skirts":   ["dress", "dresses", "skirt", "skirts", "gown"],
-  "shoes-sneakers":   ["shoe", "shoes", "sneaker", "sneakers", "boot", "boots", "heel", "heels", "loafer", "loafers", "sandal", "sandals"],
-  "pants-jeans":      ["pant", "pants", "jean", "jeans", "trouser", "trousers", "chino", "chinos", "legging", "leggings", "shorts"],
-  "tops":             ["top", "tops", "shirt", "shirts", "blouse", "blouses", "t-shirt", "tee", "tees", "sweater", "sweaters", "tank", "polo"],
-  "bags-accessories": ["bag", "bags", "handbag", "accessory", "accessories", "purse", "clutch", "belt", "belts", "scarf", "scarves", "hat", "hats"],
-  "jackets-coats":    ["jacket", "jackets", "coat", "coats", "blazer", "blazers", "cardigan", "cardigans", "hoodie", "hoodies", "vest", "vests"],
-  // male-specific
-  "male-dress-shirts-suits": ["suit", "suits", "dress shirt", "dress shirts", "blazer", "blazers", "tie", "ties"],
-};
-
-// Find which closet sections are mentioned in an AI message.
-// Strategy 1: parse [Section Name] brackets from ✨ outfit lines.
-// Strategy 2: broad keyword fallback for natural-language responses.
-function extractSections(text, gender) {
-  const sections = getClosetSections(gender);
-
-  // --- Strategy 1: bracket parsing on ✨ outfit lines ---
-  const outfitLines = text.match(/✨[^\n]*/g) || [];
-  if (outfitLines.length) {
-    const mentioned = new Set();
-    outfitLines.forEach((line) => {
-      (line.match(/\[([^\]]+)\]/g) || []).forEach((m) =>
-        mentioned.add(m.slice(1, -1).trim().toLowerCase())
-      );
-    });
-    if (mentioned.size >= 2) {
-      const bracketMatched = sections.filter((s) =>
-        [...mentioned].some((name) => name === s.label.toLowerCase())
-      );
-      if (bracketMatched.length >= 2) return bracketMatched;
-    }
-  }
-
-  // --- Strategy 2: exact label match (original) ---
-  const exactMatched = sections.filter((s) =>
-    new RegExp(s.label.replace(/[/\\^$*+?.()|[\]{}]/g, "\\$&"), "i").test(text)
-  );
-  if (exactMatched.length >= 2) return exactMatched;
-
-  // --- Strategy 3: keyword fallback ---
-  const words = text.toLowerCase();
-  return sections.filter((s) => {
-    const baseTag = s.tag.replace(/^male-/, "");
-    const keywords = SECTION_KEYWORDS[s.tag] || SECTION_KEYWORDS[baseTag] || [];
-    return keywords.some((kw) => {
-      // whole-word match to avoid "tops" matching "stop"
-      const re = new RegExp(`\\b${kw.replace(/[-]/g, "[-\\s]?")}s?\\b`);
-      return re.test(words);
-    });
-  });
-}
 
 export default function AIStylist({
   isOpen,
@@ -157,63 +89,6 @@ export default function AIStylist({
   }, [isOpen]);
 
   // ── Outfit board helpers ─────────────────────────────────────────────────
-  // Cloudinary transform: small thumbnails for AI vision (saves tokens)
-  const thumbUrl = (url) => url.replace("/upload/", "/upload/w_400,c_limit,q_auto/");
-
-  // Ask Claude (vision) to pick the best item from each section to match the
-  // outfit suggestion. Returns { [tag]: index } or null on failure.
-  const aiPickItems = async (outfitText, sections, imagesByTag) => {
-    const MAX_PER_SECTION = 8;
-    const content = [];
-    const included = []; // [{tag, count}] in order sent
-
-    sections.forEach((s) => {
-      const urls = (imagesByTag[s.tag] || []).slice(0, MAX_PER_SECTION);
-      if (!urls.length) return;
-      included.push({ tag: s.tag, label: s.label, count: urls.length });
-      content.push({ type: "text", text: `Section "${s.label}" — ${urls.length} item${urls.length !== 1 ? "s" : ""}, numbered 1 to ${urls.length}:` });
-      urls.forEach((url) => {
-        content.push({ type: "image", source: { type: "url", url: thumbUrl(url) } });
-      });
-    });
-
-    if (!included.length) return null;
-
-    content.push({
-      type: "text",
-      text: `Outfit suggestion: "${outfitText}"
-
-Look at the closet item photos above. For each section, pick the ONE item (by its number, 1-based, in the order shown) that best matches this outfit suggestion in style, color, and occasion.
-
-Respond with ONLY a JSON object mapping section label to chosen item number, e.g. {"Tops": 2, "Pants/Jeans": 1}. No other text.`,
-    });
-
-    try {
-      const res = await aiProxyFetch(
-        {
-          model: "claude-sonnet-4-5",
-          max_tokens: 200,
-          messages: [{ role: "user", content }],
-        },
-        { feature: "ai_stylist_outfit_pick" }
-      );
-      const data = await res.json();
-      if (!res.ok) return null;
-      const text = data.content?.[0]?.text || "";
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return null;
-      const picks = JSON.parse(jsonMatch[0]);
-      const indexes = {};
-      included.forEach(({ tag, label, count }) => {
-        const n = parseInt(picks[label], 10);
-        if (n >= 1 && n <= count) indexes[tag] = n - 1;
-      });
-      return Object.keys(indexes).length ? indexes : null;
-    } catch {
-      return null;
-    }
-  };
-
   const handleBuildOutfit = async (msgId, sections, outfitText) => {
     if (openBoardId === msgId) { setOpenBoardId(null); return; }
 

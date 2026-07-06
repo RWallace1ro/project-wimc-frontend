@@ -566,6 +566,7 @@ export default function TryOnStudio({
       isOpen={isFeedbackOpen}
       onClose={() => setIsFeedbackOpen(false)}
       previewUrl={previewUrl}
+      gender={gender}
     />
     </>
   );
