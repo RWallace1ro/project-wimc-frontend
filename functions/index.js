@@ -8,6 +8,7 @@
  * createPortalSession       — Opens the Stripe customer billing portal.
  * stripeWebhook             — Signature-verified Stripe webhook → sets user tier.
  * finalizeScheduledDeletions — Daily job: completes 14-day-grace account deletions.
+ * cleanupExpiredShares      — Daily job: deletes sharedContent links older than 30 days.
  *
  * Secrets:
  *   ANTHROPIC_API_KEY     — firebase functions:secrets:set ANTHROPIC_API_KEY
@@ -749,6 +750,42 @@ exports.finalizeScheduledDeletions = functions
         // A failed account never blocks the rest of the batch. It stays
         // pendingDeletion=true and is retried on the next daily run.
         console.error(`finalizeScheduledDeletions: failed for ${uid}:`, e);
+      }
+    }
+
+    return null;
+  });
+
+// ── Scheduled share cleanup ────────────────────────────────────────────────────
+// Runs once a day. Deletes sharedContent docs (Share + Edit / view-only links,
+// including their checkedItems and comments) once they're older than 30 days.
+// A single inequality filter on one field needs no composite Firestore index.
+const SHARE_RETENTION_DAYS = 30;
+exports.cleanupExpiredShares = functions
+  .pubsub.schedule("every 24 hours")
+  .onRun(async () => {
+    const adminDb = getAdminDb();
+    const cutoffIso = new Date(
+      Date.now() - SHARE_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    let snap;
+    try {
+      snap = await adminDb.collection("sharedContent").where("createdAt", "<=", cutoffIso).get();
+    } catch (e) {
+      console.error("cleanupExpiredShares: query failed:", e);
+      return null;
+    }
+
+    console.log(`cleanupExpiredShares: deleting ${snap.size} share(s) older than ${SHARE_RETENTION_DAYS} days`);
+
+    for (const docSnap of snap.docs) {
+      try {
+        await docSnap.ref.delete();
+      } catch (e) {
+        // A failed delete never blocks the rest of the batch — it's simply
+        // retried on the next daily run.
+        console.error(`cleanupExpiredShares: failed to delete ${docSnap.id}:`, e);
       }
     }
 

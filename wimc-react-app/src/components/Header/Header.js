@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ReactComponent as HomeIcon } from "../../assets/images/home-icon.svg";
 import { useWIMCTour } from "../WIMCTourVideo/useTour";
 import { useTier } from "../../context/TierContext";
+import { auth } from "../../firebase";
+import { listMyShares, countUnreadShares } from "../../utils/shareUtils";
 import "./Header.css";
 
 // Heavy modal components — lazy loaded so they don't bloat the initial bundle.
@@ -13,6 +15,7 @@ const TryOnStudio       = lazy(() => import("../TryOnStudio/TryOnStudio"));
 const AIStylist         = lazy(() => import("../AIStylist/AIStylist"));
 const UserSettingsModal = lazy(() => import("../UserSettingsModal/UserSettingsModal"));
 const WIMCTourVideo     = lazy(() => import("../WIMCTourVideo/WIMCTourVideo"));
+const MySharesPanel     = lazy(() => import("../MyShares/MySharesPanel"));
 
 const CLOSET_GENDER_KEY = "wimc_closet_gender";
 
@@ -37,7 +40,23 @@ function Header({
   const [isStylistOpen, setIsStylistOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMySharesOpen, setIsMySharesOpen] = useState(false);
+  const [unreadShareCount, setUnreadShareCount] = useState(0);
   const mobileMenuRef = useRef(null);
+
+  // Refresh the "My Shares" unread badge on mount/login, and again whenever
+  // the panel is closed (covers reading a share in a new tab, then coming
+  // back). Cheap: one Firestore query, not a live listener.
+  const refreshShareBadge = () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) { setUnreadShareCount(0); return; }
+    listMyShares(uid).then((shares) => setUnreadShareCount(countUnreadShares(shares)));
+  };
+  useEffect(() => {
+    if (isLoggedIn) refreshShareBadge();
+    else setUnreadShareCount(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn]);
 
   // Current closet gender (same source ClosetTabs reads) — Header's own
   // Try-On Studio instance needs this to fetch from the correct closet.
@@ -116,6 +135,10 @@ function Header({
       <button className="header__button header__button--kids" onClick={() => { if (!requirePro("Kids' Closet")) return; navigate("/kids-closet"); setIsMobileMenuOpen(false); }}>👶 Kids</button>
       <button className="header__button header__button--pets" onClick={() => { if (!requirePro("Pet Closet")) return; navigate("/pet-closet"); setIsMobileMenuOpen(false); }}>🐾 Pets</button>
       <button className="header__button header__button--receipts" onClick={() => { if (!requirePro("Receipts")) return; navigate("/receipts"); setIsMobileMenuOpen(false); }}>🧾 Receipts</button>
+      <button className="header__button header__button--shares" onClick={() => { setIsMySharesOpen(true); setIsMobileMenuOpen(false); }} title="Links you've shared, and recipients' comments">
+        🔗 My Shares
+        {unreadShareCount > 0 && <span className="header__badge">{unreadShareCount}</span>}
+      </button>
       <button className="header__button header__button--tour" onClick={() => { openTour(); setIsMobileMenuOpen(false); }}>🎬 Tour</button>
       <button className="header__about-button" onClick={() => { navigate("/about"); setIsMobileMenuOpen(false); }}>About</button>
       <button className="header__button header__button--settings" onClick={() => { setIsSettingsOpen(true); setIsMobileMenuOpen(false); }}>⚙️ Settings</button>
@@ -222,6 +245,12 @@ function Header({
           onDeletionScheduled={() => { setIsSettingsOpen(false); onDeletionScheduled?.(); }}
         />
         <WIMCTourVideo isOpen={isTourOpen} onClose={closeTour} autoPlay={true} />
+        <MySharesPanel
+          isOpen={isMySharesOpen}
+          onClose={() => { setIsMySharesOpen(false); refreshShareBadge(); }}
+          uid={auth.currentUser?.uid}
+          onSharesLoaded={(shares) => setUnreadShareCount(countUnreadShares(shares))}
+        />
       </Suspense>
     </>
   );

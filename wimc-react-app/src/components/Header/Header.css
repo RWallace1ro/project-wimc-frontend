@@ -157,6 +157,25 @@
     background-color 0.2s,
     transform 0.1s;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* Small unread-count badge (e.g. "My Shares" new comments) */
+.header__badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
 }
 .header__button:hover,
 .header__about-button:hover {

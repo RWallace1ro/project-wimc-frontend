@@ -1,5 +1,6 @@
 import { db, auth } from '../firebase';
-import { collection, addDoc, getDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
+import { syncSetItem } from './syncStore';
 
 /** Stable app base URL (origin + PUBLIC_URL), independent of the current route.
  *  Produces e.g. https://rwallace1ro.github.io/project-wimc-frontend
@@ -67,6 +68,56 @@ export async function setCollabComment(docId, key, text) {
   } catch (e) {
     console.error("setCollabComment failed:", e);
   }
+}
+
+// ── My Shares (owner-side list + unread-comment tracking) ──────────────────────
+// Query without orderBy to avoid needing a Firestore composite index — sort
+// client-side instead (same approach used by the account-deletion finalizer).
+export async function listMyShares(uid) {
+  if (!uid) return [];
+  try {
+    const q = query(collection(db, 'sharedContent'), where('ownerId', '==', uid));
+    const snap = await getDocs(q);
+    const shares = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    shares.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return shares;
+  } catch (e) {
+    console.error('listMyShares failed:', e);
+    return [];
+  }
+}
+
+// Most recent comment timestamp on a share, or null if it has none.
+export function getLastCommentAt(share) {
+  const comments = share?.comments || {};
+  let max = null;
+  for (const v of Object.values(comments)) {
+    if (v?.ts && (!max || v.ts > max)) max = v.ts;
+  }
+  return max;
+}
+
+// "Last viewed by the owner" is tracked in the owner's own synced storage
+// (not on the public sharedContent doc) — it's private to the owner and this
+// way needs no extra Firestore permission for writing to someone else-visible
+// data.
+const SHARE_VIEWED_PREFIX = 'wimc_share_viewed_';
+export function markShareViewed(shareId) {
+  try { syncSetItem(SHARE_VIEWED_PREFIX + shareId, new Date().toISOString()); } catch {}
+}
+export function getShareViewedAt(shareId) {
+  try { return localStorage.getItem(SHARE_VIEWED_PREFIX + shareId); } catch { return null; }
+}
+
+// Count of the owner's shares that have a comment newer than the owner last
+// viewed that share — used for the header notification badge.
+export function countUnreadShares(shares) {
+  return shares.reduce((n, s) => {
+    const lastComment = getLastCommentAt(s);
+    if (!lastComment) return n;
+    const viewedAt = getShareViewedAt(s.id);
+    return !viewedAt || lastComment > viewedAt ? n + 1 : n;
+  }, 0);
 }
 
 // ── Web Share API — share a clothing image as a real file ─────────────────────
