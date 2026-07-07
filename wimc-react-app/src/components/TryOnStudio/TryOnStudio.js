@@ -5,6 +5,7 @@ import {
   fetchImagesForSection,
 } from "../../utils/CloudinaryAPI";
 import { getSubSections } from "../../utils/closetSubsections";
+import { setVideoRefImage } from "../../utils/videoMeta";
 import AIStyleFeedback from "../AIStyleFeedback/AIStyleFeedback";
 import "./TryOnStudio.css";
 
@@ -236,6 +237,9 @@ export default function TryOnStudio({
       const res = await uploadVideo(recordedBlob, section);
       if (res?.secure_url) {
         setUploadedUrl(res.secure_url);
+        // Remember the closet item being tried on so Video Bin can show it
+        // as this video's thumbnail instead of an auto-extracted frame.
+        if (refImage) setVideoRefImage(res.secure_url, refImage);
         setShareMsg("✅ Saved to Video Bin!");
       } else {
         setShareErr("Upload failed — please try again.");

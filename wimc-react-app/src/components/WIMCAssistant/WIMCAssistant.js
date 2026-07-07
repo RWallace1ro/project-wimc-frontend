@@ -80,14 +80,19 @@ export default function WIMCAssistant() {
         { signal: abortRef.current.signal, feature: "wimc_assistant" }
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error?.message || `HTTP ${res.status}`);
+      if (!res.ok) {
+        // Server sends `error` as a friendly plain string (e.g. the daily
+        // help-question limit message), not an { message } object.
+        const msg = (typeof data?.error === "string" ? data.error : data?.error?.message) || `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
       const reply = data.content?.[0]?.text || "";
       setMessages((prev) =>
         prev.map((m) => (m.id === assistMsg.id ? { ...m, content: reply, streaming: false } : m))
       );
     } catch (e) {
       if (e.name !== "AbortError") {
-        setError(`Error: ${e.message}`);
+        setError(e.message || "Something went wrong. Please try again.");
         setMessages((prev) => prev.filter((m) => m.id !== assistMsg.id));
       } else {
         setMessages((prev) =>

@@ -98,12 +98,19 @@ Please give me a personalised donation plan for my closet.`;
         messages: [{ role: "user", content: userMsg }],
       }, { signal: abortRef.current.signal, feature: "ai_donation_advisor" });
 
-      if (!res.ok) throw new Error(`API error ${res.status}`);
       const data = await res.json();
+      if (!res.ok) {
+        // Server sends `error` as a friendly plain string (e.g. the daily
+        // AI-limit message) — surface it instead of a generic error.
+        const msg = (typeof data?.error === "string" ? data.error : data?.error?.message) || `HTTP ${res.status}`;
+        const err = new Error(msg);
+        err.isApi = true;
+        throw err;
+      }
       setResult(data.content?.[0]?.text || "");
     } catch (e) {
       if (e.name !== "AbortError")
-        setError("Something went wrong. Please try again.");
+        setError(e.isApi ? e.message : "Something went wrong. Please try again.");
     } finally {
       setStreaming(false);
     }

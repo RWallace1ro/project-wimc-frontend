@@ -1,4 +1,3 @@
-import { syncSetItem } from '../../utils/syncStore';
 import React, {
   useEffect,
   useRef,
@@ -8,6 +7,7 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { fetchVideosByTag, videoPoster, deleteVideo } from "../../utils/CloudinaryAPI";
+import { loadVideoMeta, saveVideoMeta } from "../../utils/videoMeta";
 import "./VideoBin.css";
 
 const SECTIONS = [
@@ -28,8 +28,6 @@ const SECTION_LABELS = {
   "jackets-coats": "Jackets/Coats",
 };
 
-const LS_META_KEY = "wimc_video_meta";
-
 function fmtDate(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -38,19 +36,6 @@ function fmtDate(iso) {
     day: "2-digit",
     year: "numeric",
   });
-}
-
-function loadMeta() {
-  try {
-    return JSON.parse(localStorage.getItem(LS_META_KEY) || "{}");
-  } catch {
-    return {};
-  }
-}
-function saveMeta(meta) {
-  try {
-    syncSetItem(LS_META_KEY, JSON.stringify(meta));
-  } catch {}
 }
 
 export default function VideoBin({ videos: propVideos = [] }) {
@@ -62,13 +47,19 @@ export default function VideoBin({ videos: propVideos = [] }) {
   const playerVideoRef = useRef(null);
   const [editingUrl, setEditingUrl] = useState(null);
   const [editValue, setEditValue] = useState("");
-  const [meta, setMeta] = useState(loadMeta);
+  const [meta, setMeta] = useState(loadVideoMeta);
   const [shareStatus, setShareStatus] = useState({}); // { [url]: "copying"|"copied"|"error" }
   const [dlStatus, setDlStatus] = useState({}); // { [url]: "downloading"|"done"|"error" }
   const [deletingUrl, setDeletingUrl] = useState(null);
   // Cloudinary-deleted URLs — hidden from the merged list even if the parent's
   // own propVideos prop hasn't refreshed yet.
   const [deletedUrls, setDeletedUrls] = useState(() => new Set());
+  // Video URLs whose poster-frame image failed to load — falls back to the
+  // ▶ placeholder instead of the browser's broken-image icon. videoPoster()
+  // always returns a non-empty string, so `v.poster` alone can't detect this.
+  const [posterFailed, setPosterFailed] = useState(() => new Set());
+  const markPosterFailed = (url) =>
+    setPosterFailed((prev) => (prev.has(url) ? prev : new Set(prev).add(url)));
 
   const mergedVideos = useMemo(() => {
     const seen = new Set();
@@ -79,7 +70,9 @@ export default function VideoBin({ videos: propVideos = [] }) {
       const m = meta[url] || {};
       out.push({
         url,
-        poster: videoPoster(url),
+        // Prefer the closet item the user tried on (if this video was
+        // recorded via Try-On Studio) over an auto-extracted video frame.
+        poster: m.refImage || videoPoster(url),
         section: section || "uncategorized",
         title: m.title || "",
         addedAt: m.addedAt || new Date().toISOString(),
@@ -108,7 +101,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
   }, [isOpen]);
 
   useEffect(() => {
-    saveMeta(meta);
+    saveVideoMeta(meta);
   }, [meta]);
 
   useEffect(() => {
@@ -303,11 +296,12 @@ export default function VideoBin({ videos: propVideos = [] }) {
         className="vb-card__thumb-btn"
         onClick={() => setPlayingUrl(v.url)}
       >
-        {v.poster ? (
+        {v.poster && !posterFailed.has(v.url) ? (
           <img
             className="vb-card__thumb"
             src={v.poster}
             alt={v.title || "video"}
+            onError={() => markPosterFailed(v.url)}
           />
         ) : (
           <div className="vb-card__thumb vb-card__thumb--blank">▶</div>
@@ -356,11 +350,12 @@ export default function VideoBin({ videos: propVideos = [] }) {
         className="vb-row__thumb-btn"
         onClick={() => setPlayingUrl(v.url)}
       >
-        {v.poster ? (
+        {v.poster && !posterFailed.has(v.url) ? (
           <img
             className="vb-row__thumb"
             src={v.poster}
             alt={v.title || "video"}
+            onError={() => markPosterFailed(v.url)}
           />
         ) : (
           <div className="vb-row__thumb vb-row__thumb--blank">▶</div>
