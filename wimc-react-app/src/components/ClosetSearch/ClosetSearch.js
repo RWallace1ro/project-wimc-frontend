@@ -144,12 +144,22 @@ Only include the most relevant 1-3 sections from the list above. Always include 
     messages: [{ role: "user", content: query }],
   });
   const fullText = data.content?.[0]?.text || "";
-  const jsonMatch = fullText.match(/\{"sections":\s*\[.*?\]\}/s);
+  // Tolerant of whitespace/newlines around the braces and colon — Claude
+  // doesn't always format the JSON block identically (e.g. `{ "sections":`
+  // with a space, or split across lines inside a ```json fence), and the
+  // tight `{"sections":` pattern silently failed to match those, leaving the
+  // raw JSON visible in the response and `sections` empty until the user
+  // retried.
+  const JSON_RE = /\{\s*"sections"\s*:\s*\[[^\]]*\]\s*\}/is;
+  const jsonMatch = fullText.match(JSON_RE);
   let sections = [];
   if (jsonMatch) {
     try { sections = JSON.parse(jsonMatch[0]).sections || []; } catch {}
   }
-  const text = fullText.replace(/\{"sections":\s*\[.*?\]\}/s, "").trim();
+  const text = fullText
+    .replace(JSON_RE, "")
+    .replace(/```(?:json)?/gi, "") // strip any leftover markdown code fence
+    .trim();
   return { text, sections };
 }
 
@@ -172,7 +182,8 @@ async function filterImagesByQuery(imageObjects, userQuery) {
 I will show you ${batch.length} clothing items, each labeled "Item 0", "Item 1", etc.
 
 Your job: return ONLY the items that genuinely match ALL aspects of the search.
-- If the search names a COLOR (e.g. "black dresses"), the item's MAIN color must be that color. A mostly-white dress with black trim is NOT a black dress. Be strict about color.
+- If the search names ONE color (e.g. "black dresses"), the item's MAIN color must be that color. A mostly-white dress with black trim is NOT a black dress. Be strict about color.
+- If the search names TWO OR MORE colors together (e.g. "red and white sneakers"), the item must show BOTH of those colors as its main colors — reject an item that only has ONE of the named colors (e.g. white sneakers with no red, or red sneakers with no white) even though it shares one color with the search. Only include items whose color scheme is genuinely that specific combination.
 - If the search names a TYPE (e.g. "dress", "jacket"), the item must be that type.
 - If the search names a STYLE/occasion (e.g. "formal", "casual"), judge by the garment's look.
 
@@ -198,7 +209,8 @@ If NONE of the items match the search, respond with exactly: {"matching": []}`,
     });
 
     const text = data.content?.[0]?.text || "";
-    const jsonMatch = text.match(/\{"matching":\s*\[.*?\]\}/s);
+    // Same whitespace tolerance as identifySections' JSON_RE above.
+    const jsonMatch = text.match(/\{\s*"matching"\s*:\s*\[[^\]]*\]\s*\}/is);
     if (jsonMatch) {
       const { matching } = JSON.parse(jsonMatch[0]);
       if (Array.isArray(matching)) {
