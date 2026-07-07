@@ -88,6 +88,11 @@ export default function VideoBin({ videos: propVideos = [] }) {
 
   useEffect(() => {
     if (!isOpen) return;
+    // VideoBin stays mounted persistently in the sidebar, so `meta` (loaded
+    // once at initial mount) goes stale the moment Try-On Studio — a totally
+    // separate component — writes a refImage for a newly saved video. Refresh
+    // it every time the modal opens so a fresh tried-on-item thumbnail shows.
+    setMeta(loadVideoMeta());
     setLoading(true);
     Promise.all(
       SECTIONS.map((sec) =>
