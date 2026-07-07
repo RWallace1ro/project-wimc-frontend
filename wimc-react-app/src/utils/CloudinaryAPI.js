@@ -146,14 +146,17 @@ export function imageSrcSet(url) {
     .join(", ");
 }
 
-// Primary video poster attempt (frame at 3s -> jpg appended)
+// Video poster — grabs the very FIRST frame (so_0). A fixed later offset like
+// so_3 (3 seconds in) 404s for any video shorter than that, which is common
+// for quick recordings — so_0 always exists as long as the video has at
+// least one frame.
 export function videoPoster(url) {
-  return url ? url.replace("/upload/", "/upload/so_3,du_0/") + ".jpg" : "";
+  return url ? url.replace("/upload/", "/upload/so_0,du_0/") + ".jpg" : "";
 }
 
 export function safeVideoPoster(url) {
   if (!url) return "";
-  const withTransform = url.replace("/upload/", "/upload/so_3,du_0/");
+  const withTransform = url.replace("/upload/", "/upload/so_0,du_0/");
   return withTransform.replace(/\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i, ".jpg");
 }
 
@@ -169,7 +172,14 @@ export const fetchImagesByTag = async (tag) => {
   try {
     const response = await fetch(url, { method: "GET" });
     if (!response.ok) {
-      throw new Error(`Failed to fetch images by tag: ${response.statusText}`);
+      // Cloudinary returns 404 for a tag that simply has no items yet — every
+      // brand-new sub-section (e.g. "heels", "skirts") 404s until the user
+      // uploads something to it. That's expected, not an error, so it's
+      // silent; only log truly unexpected statuses.
+      if (response.status !== 404) {
+        console.error(`fetchImagesByTag("${tag}") failed: ${response.status} ${response.statusText}`);
+      }
+      return [];
     }
     const data = await response.json();
     const images = (data.resources || []).map(
@@ -316,7 +326,12 @@ export const fetchVideosByTag = async (tag) => {
   try {
     const response = await fetch(url, { method: "GET" });
     if (!response.ok) {
-      throw new Error(`Failed to fetch videos by tag: ${response.statusText}`);
+      // Same reasoning as fetchImagesByTag — a 404 just means this tag has
+      // no videos yet, which is normal for most sub-sections.
+      if (response.status !== 404) {
+        console.error(`fetchVideosByTag("${tag}") failed: ${response.status} ${response.statusText}`);
+      }
+      return [];
     }
     const data = await response.json();
     const videos = (data.resources || []).map(

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { shareItemImage } from "../../utils/shareUtils";
+import { onImgError } from "../../utils/imgFallback";
 import "./ClosetSectionCard.css";
 
 const COLOR_PREFIX = "color:";
@@ -27,8 +28,9 @@ function ClosetSectionCard({
   const [sharing, setSharing] = useState(false);
 
   const isVideoUrl = (u) => !!u && /\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i.test(u);
+  // so_0 (first frame), not so_3 — a fixed 3s offset 404s for shorter videos.
   const toPoster = (u) =>
-    u ? u.replace("/upload/", "/upload/so_3,du_0/") + ".jpg" : "";
+    u ? u.replace("/upload/", "/upload/so_0,du_0/") + ".jpg" : "";
   const toThumb = (u) =>
     u ? u.replace("/upload/", "/upload/f_auto,q_auto,w_600,c_limit/") : "";
 
@@ -132,6 +134,7 @@ function ClosetSectionCard({
         alt={sectionName}
         className="closet-section-card__image"
         loading="lazy"
+        onError={onImgError}
       />
     );
   };

@@ -26,8 +26,9 @@ export function makeItem({ form, upload, kind }) {
       "/upload/",
       "/upload/f_auto,q_auto/",
     );
+    // so_0 (first frame), not so_3 — a fixed 3s offset 404s for shorter videos.
     const poster =
-      upload.secure_url.replace("/upload/", "/upload/so_3,du_0/") + ".jpg";
+      upload.secure_url.replace("/upload/", "/upload/so_0,du_0/") + ".jpg";
     return { ...base, mediaUrl: streamUrl, mediaPoster: poster };
   }
 }
