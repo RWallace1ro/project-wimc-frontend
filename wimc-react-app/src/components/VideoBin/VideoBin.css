@@ -558,3 +558,166 @@
     height: 52px;
   }
 }
+
+/* ── Trash button (header) ── */
+.vb-trash-btn {
+  padding: 0 10px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.vb-trash-btn:hover { background: rgba(255, 255, 255, 0.15); }
+.vb-trash-btn.is-active { background: rgba(255, 255, 255, 0.25); }
+
+/* ── Deleted-videos trash drawer ── */
+.vb-trash {
+  flex-shrink: 0;
+  max-height: 40%;
+  overflow-y: auto;
+  background: #fff7ed;
+  border-bottom: 1px solid #fed7aa;
+  padding: 12px 20px;
+}
+.vb-trash__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.vb-trash__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #9a3412;
+}
+.vb-trash__close {
+  border: none;
+  background: #fff;
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  cursor: pointer;
+  color: #9a3412;
+}
+.vb-trash__sub {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #9a3412;
+  opacity: 0.85;
+}
+.vb-trash__empty {
+  font-size: 13px;
+  color: #b45309;
+  margin: 8px 0;
+}
+.vb-trash__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vb-trash__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  padding: 8px;
+}
+.vb-trash__thumb {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: #1a1a2e;
+}
+.vb-trash__thumb--blank {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 16px;
+}
+.vb-trash__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vb-trash__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vb-trash__days {
+  font-size: 11px;
+  color: #b45309;
+}
+.vb-trash__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.vb-trash__restore,
+.vb-trash__delete {
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.vb-trash__restore {
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+.vb-trash__restore:hover { background: #dcfce7; }
+.vb-trash__delete {
+  border: 1px solid #fca5a5;
+  background: #fff;
+  color: #b91c1c;
+}
+.vb-trash__delete:hover { background: #fef2f2; }
+.vb-trash__delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Undo toast ── */
+.vb-undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 10000;
+  background: #0f172a;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.vb-undo-toast__btn {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.vb-undo-toast__btn:hover { background: rgba(255, 255, 255, 0.22); }

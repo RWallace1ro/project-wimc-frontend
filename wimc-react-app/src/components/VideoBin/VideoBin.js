@@ -7,7 +7,17 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import { fetchVideosByTag, videoPoster, deleteVideo } from "../../utils/CloudinaryAPI";
-import { loadVideoMeta, saveVideoMeta } from "../../utils/videoMeta";
+import {
+  loadVideoMeta,
+  saveVideoMeta,
+  loadVideoTrash,
+  saveVideoTrash,
+  trashVideo,
+  removeFromVideoTrash,
+  daysUntilPurge,
+  isPastPurgeWindow,
+  VIDEO_TRASH_DAYS,
+} from "../../utils/videoMeta";
 import "./VideoBin.css";
 
 const SECTIONS = [
@@ -51,9 +61,6 @@ export default function VideoBin({ videos: propVideos = [] }) {
   const [shareStatus, setShareStatus] = useState({}); // { [url]: "copying"|"copied"|"error" }
   const [dlStatus, setDlStatus] = useState({}); // { [url]: "downloading"|"done"|"error" }
   const [deletingUrl, setDeletingUrl] = useState(null);
-  // Cloudinary-deleted URLs — hidden from the merged list even if the parent's
-  // own propVideos prop hasn't refreshed yet.
-  const [deletedUrls, setDeletedUrls] = useState(() => new Set());
   // Video URLs whose poster-frame image failed to load — falls back to the
   // ▶ placeholder instead of the browser's broken-image icon. videoPoster()
   // always returns a non-empty string, so `v.poster` alone can't detect this.
@@ -61,11 +68,23 @@ export default function VideoBin({ videos: propVideos = [] }) {
   const markPosterFailed = (url) =>
     setPosterFailed((prev) => (prev.has(url) ? prev : new Set(prev).add(url)));
 
+  // Deleted-videos trash (30-day grace period, undo, restore, purge-now)
+  const [trash, setTrash] = useState(loadVideoTrash);
+  const [trashOpen, setTrashOpen] = useState(false);
+  const [undoVideo, setUndoVideo] = useState(null); // most-recently-trashed video
+  const undoTimerRef = useRef(null);
+  useEffect(() => () => clearTimeout(undoTimerRef.current), []);
+
+  // Videos currently in the 30-day trash — hidden from the main list. Derived
+  // from `trash` (not tracked separately) so it's correct even for items
+  // trashed in an earlier session, not just ones deleted just now.
+  const trashedUrls = useMemo(() => new Set(trash.map((t) => t.url)), [trash]);
+
   const mergedVideos = useMemo(() => {
     const seen = new Set();
     const out = [];
     const add = (url, section) => {
-      if (!url || seen.has(url) || deletedUrls.has(url)) return;
+      if (!url || seen.has(url) || trashedUrls.has(url)) return;
       seen.add(url);
       const m = meta[url] || {};
       out.push({
@@ -84,7 +103,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
     });
     allVideos.forEach((v) => add(v.url, v.section));
     return out;
-  }, [propVideos, allVideos, meta, deletedUrls]);
+  }, [propVideos, allVideos, meta, trashedUrls]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -93,6 +112,24 @@ export default function VideoBin({ videos: propVideos = [] }) {
     // separate component — writes a refImage for a newly saved video. Refresh
     // it every time the modal opens so a fresh tried-on-item thumbnail shows.
     setMeta(loadVideoMeta());
+
+    // Refresh trash + opportunistically purge anything past the 30-day grace
+    // window. There's no server-side cron for this (per-user synced storage,
+    // not a global collection like sharedContent) — checked client-side each
+    // time the bin opens instead. Best-effort; never blocks the UI.
+    const currentTrash = loadVideoTrash();
+    setTrash(currentTrash);
+    const expired = currentTrash.filter((t) => isPastPurgeWindow(t.deletedAt));
+    if (expired.length) {
+      Promise.allSettled(expired.map((t) => deleteVideo(t.url))).then(() => {
+        const remaining = loadVideoTrash().filter(
+          (t) => !expired.some((e) => e.url === t.url)
+        );
+        saveVideoTrash(remaining);
+        setTrash(remaining);
+      });
+    }
+
     setLoading(true);
     Promise.all(
       SECTIONS.map((sec) =>
@@ -220,25 +257,50 @@ export default function VideoBin({ videos: propVideos = [] }) {
     setTimeout(() => setDlStatus((prev) => ({ ...prev, [v.url]: null })), 2500);
   };
 
-  // ── Delete a video ─────────────────────────────────────────────────────────
-  const handleDelete = async (v) => {
-    if (!window.confirm("Delete this video? This cannot be undone.")) return;
-    setDeletingUrl(v.url);
+  // ── Delete a video (soft-delete → 30-day trash, undoable) ──────────────────
+  // No confirm dialog — the whole point of the trash + undo is that a single
+  // delete click is no longer destructive; Cloudinary isn't touched until the
+  // user permanently deletes it from the trash, or the 30-day window elapses.
+  const handleDelete = (v) => {
+    const next = trashVideo({ url: v.url, poster: v.poster, section: v.section, title: v.title });
+    setTrash(next);
+    setAllVideos((prev) => prev.filter((x) => x.url !== v.url));
+    if (playingUrl === v.url) setPlayingUrl(null);
+
+    clearTimeout(undoTimerRef.current);
+    setUndoVideo(v);
+    undoTimerRef.current = setTimeout(() => setUndoVideo(null), 6000);
+  };
+
+  const handleUndoDelete = () => {
+    if (!undoVideo) return;
+    clearTimeout(undoTimerRef.current);
+    setTrash(removeFromVideoTrash(undoVideo.url));
+    setUndoVideo(null);
+  };
+
+  // Restore a video from the trash drawer back to the main list.
+  const handleRestore = (entry) => {
+    setTrash(removeFromVideoTrash(entry.url));
+    if (undoVideo?.url === entry.url) setUndoVideo(null);
+  };
+
+  // Permanently delete a trashed video right now, bypassing the 30-day wait.
+  const handlePermanentDelete = async (entry) => {
+    if (!window.confirm("Permanently delete this video? This cannot be undone.")) return;
+    setDeletingUrl(entry.url);
     try {
-      await deleteVideo(v.url);
-      setDeletedUrls((prev) => new Set(prev).add(v.url));
-      setAllVideos((prev) => prev.filter((x) => x.url !== v.url));
+      await deleteVideo(entry.url);
+    } catch (err) {
+      console.error("Permanent video delete failed:", err);
+    } finally {
+      setTrash(removeFromVideoTrash(entry.url));
       setMeta((prev) => {
-        if (!prev[v.url]) return prev;
+        if (!prev[entry.url]) return prev;
         const next = { ...prev };
-        delete next[v.url];
+        delete next[entry.url];
         return next;
       });
-      if (playingUrl === v.url) setPlayingUrl(null);
-    } catch (err) {
-      console.error("Video delete failed:", err);
-      alert(`Failed to delete video: ${err.message}`);
-    } finally {
       setDeletingUrl(null);
     }
   };
@@ -449,6 +511,13 @@ export default function VideoBin({ videos: propVideos = [] }) {
                     </button>
                   </div>
                   <button
+                    className={`vb-trash-btn${trashOpen ? " is-active" : ""}`}
+                    onClick={() => setTrashOpen((v) => !v)}
+                    title="Deleted videos (kept 30 days)"
+                  >
+                    🗑️{trash.length > 0 && ` (${trash.length})`}
+                  </button>
+                  <button
                     className="vb-modal__close"
                     onClick={() => setIsOpen(false)}
                     aria-label="Close"
@@ -457,6 +526,54 @@ export default function VideoBin({ videos: propVideos = [] }) {
                   </button>
                 </div>
               </header>
+
+              {trashOpen && (
+                <div className="vb-trash">
+                  <div className="vb-trash__head">
+                    <h3 className="vb-trash__title">
+                      🗑️ Deleted Videos ({trash.length})
+                    </h3>
+                    <button className="vb-trash__close" onClick={() => setTrashOpen(false)}>✕</button>
+                  </div>
+                  <p className="vb-trash__sub">
+                    Kept for {VIDEO_TRASH_DAYS} days, then permanently removed. Restore any of these, or delete one for good right now.
+                  </p>
+                  {trash.length === 0 ? (
+                    <p className="vb-trash__empty">Nothing in the trash.</p>
+                  ) : (
+                    <div className="vb-trash__list">
+                      {trash.map((t) => {
+                        const days = daysUntilPurge(t.deletedAt);
+                        return (
+                          <div key={t.url} className="vb-trash__item">
+                            {t.poster ? (
+                              <img src={t.poster} alt={t.title || "video"} className="vb-trash__thumb" onError={(e) => { e.target.style.display = "none"; }} />
+                            ) : (
+                              <div className="vb-trash__thumb vb-trash__thumb--blank">▶</div>
+                            )}
+                            <div className="vb-trash__info">
+                              <span className="vb-trash__name">{t.title || "Untitled"}</span>
+                              <span className="vb-trash__days">
+                                {days > 0 ? `${days} day${days !== 1 ? "s" : ""} left` : "Purging soon…"}
+                              </span>
+                            </div>
+                            <div className="vb-trash__actions">
+                              <button className="vb-trash__restore" onClick={() => handleRestore(t)}>↩️ Restore</button>
+                              <button
+                                className="vb-trash__delete"
+                                onClick={() => handlePermanentDelete(t)}
+                                disabled={deletingUrl === t.url}
+                              >
+                                {deletingUrl === t.url ? "…" : "🗑️ Delete Permanently"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="vb-modal__body">
                 {loading && <p className="vb-loading">Loading videos…</p>}
@@ -552,6 +669,14 @@ export default function VideoBin({ videos: propVideos = [] }) {
                   </div>
                 </div>
               </>
+            )}
+
+            {/* Undo toast — shown for a few seconds right after a delete */}
+            {undoVideo && (
+              <div className="vb-undo-toast">
+                <span>Video moved to trash.</span>
+                <button className="vb-undo-toast__btn" onClick={handleUndoDelete}>↩️ Undo</button>
+              </div>
             )}
           </>,
           document.body,

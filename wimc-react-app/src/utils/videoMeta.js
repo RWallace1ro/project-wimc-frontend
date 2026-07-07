@@ -32,3 +32,51 @@ export function setVideoRefImage(videoUrl, refImage) {
   meta[videoUrl] = { ...(meta[videoUrl] || {}), refImage };
   saveVideoMeta(meta);
 }
+
+// ── Deleted-videos trash (30-day grace period) ──────────────────────────────
+// Per-user, synced list — there's no global collection of every user's videos
+// the way sharedContent works for shares, so the 30-day auto-purge is checked
+// client-side (opportunistically, whenever Video Bin opens) rather than by a
+// server-side scheduled function.
+export const VIDEO_TRASH_KEY = "wimc_video_trash";
+export const VIDEO_TRASH_DAYS = 30;
+
+export function loadVideoTrash() {
+  try {
+    return JSON.parse(localStorage.getItem(VIDEO_TRASH_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function saveVideoTrash(list) {
+  try {
+    syncSetItem(VIDEO_TRASH_KEY, JSON.stringify(list));
+  } catch {}
+}
+
+// Add a video to trash (does NOT touch Cloudinary — that only happens on
+// permanent delete or once the 30-day window elapses).
+export function trashVideo(entry) {
+  const list = loadVideoTrash();
+  const next = [{ ...entry, deletedAt: new Date().toISOString() }, ...list.filter((x) => x.url !== entry.url)];
+  saveVideoTrash(next);
+  return next;
+}
+
+// Remove a video from trash (used by both Restore and permanent-delete).
+export function removeFromVideoTrash(url) {
+  const next = loadVideoTrash().filter((x) => x.url !== url);
+  saveVideoTrash(next);
+  return next;
+}
+
+export function daysUntilPurge(deletedAt) {
+  const elapsed = (Date.now() - new Date(deletedAt).getTime()) / (24 * 60 * 60 * 1000);
+  return Math.max(0, Math.ceil(VIDEO_TRASH_DAYS - elapsed));
+}
+
+export function isPastPurgeWindow(deletedAt) {
+  const elapsed = (Date.now() - new Date(deletedAt).getTime()) / (24 * 60 * 60 * 1000);
+  return elapsed >= VIDEO_TRASH_DAYS;
+}
