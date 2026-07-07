@@ -181,18 +181,21 @@ async function filterImagesByQuery(imageObjects, userQuery) {
 
 I will show you ${batch.length} clothing items, each labeled "Item 0", "Item 1", etc.
 
-Your job: return ONLY the items that genuinely match ALL aspects of the search.
+Your job: identify ONLY the items that genuinely match ALL aspects of the search.
 - If the search names ONE color (e.g. "black dresses"), the item's MAIN color must be that color. A mostly-white dress with black trim is NOT a black dress. Be strict about color.
-- If the search names TWO OR MORE colors together (e.g. "red and white sneakers"), the item must show BOTH of those colors as its main colors — reject an item that only has ONE of the named colors (e.g. white sneakers with no red, or red sneakers with no white) even though it shares one color with the search. Only include items whose color scheme is genuinely that specific combination.
+- If the search names TWO OR MORE colors together (e.g. "red and white sneakers"), the item must clearly show BOTH of those colors as significant colors on the item — reject an item that only has ONE of the named colors, even if it's a strong match on that one color (e.g. all-white sneakers with zero red must be REJECTED; all-red sneakers with zero white must be REJECTED). Only a sneaker that is genuinely BOTH red AND white counts.
 - If the search names a TYPE (e.g. "dress", "jacket"), the item must be that type.
 - If the search names a STYLE/occasion (e.g. "formal", "casual"), judge by the garment's look.
 
-Examine each item's actual dominant color and details carefully. Only include an item if you are confident it matches.
+First, go through EACH item one at a time and note its actual colors in one short line, e.g.:
+Item 0: white with black sole — no red, reject
+Item 1: red and white — match
+Item 2: all black — reject
 
-Respond with ONLY a JSON object listing the matching item numbers, e.g.:
+Then, on its own line at the very end, give ONLY a JSON object listing the item numbers that matched:
 {"matching": [0, 3]}
 
-If NONE of the items match the search, respond with exactly: {"matching": []}`,
+If NONE of the items match the search, end with exactly: {"matching": []}`,
       },
     ];
     batch.forEach((obj, i) => {
@@ -204,7 +207,11 @@ If NONE of the items match the search, respond with exactly: {"matching": []}`,
 
     const data = await postProxy({
       model: "claude-sonnet-4-5",
-      max_tokens: 200,
+      // Bumped up from 200 — the per-item color reasoning (added to reduce
+      // false-positive color matches, e.g. plain white sneakers matching a
+      // "red and white sneakers" search) needs room for a line per item
+      // before the final JSON verdict.
+      max_tokens: 800,
       messages: [{ role: "user", content }],
     });
 
