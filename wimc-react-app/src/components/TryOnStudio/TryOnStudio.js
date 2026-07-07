@@ -3,6 +3,7 @@ import {
   uploadVideo,
   fetchImagesByTag,
   fetchImagesForSection,
+  videoStream,
 } from "../../utils/CloudinaryAPI";
 import { getSubSections } from "../../utils/closetSubsections";
 import { setVideoRefImage } from "../../utils/videoMeta";
@@ -239,7 +240,11 @@ export default function TryOnStudio({
         setUploadedUrl(res.secure_url);
         // Remember the closet item being tried on so Video Bin can show it
         // as this video's thumbnail instead of an auto-extracted frame.
-        if (refImage) setVideoRefImage(res.secure_url, refImage);
+        // Keyed by the SAME f_auto,q_auto transformed URL Video Bin's own
+        // fetchVideosByTag reconstructs — the raw upload secure_url has no
+        // transform segment, so saving under that key never matched anything
+        // VideoBin later looked up, and the thumbnail silently never showed.
+        if (refImage) setVideoRefImage(videoStream(res.secure_url), refImage);
         setShareMsg("✅ Saved to Video Bin!");
       } else {
         setShareErr("Upload failed — please try again.");

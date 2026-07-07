@@ -262,9 +262,12 @@ export default function VideoBin({ videos: propVideos = [] }) {
   // delete click is no longer destructive; Cloudinary isn't touched until the
   // user permanently deletes it from the trash, or the 30-day window elapses.
   const handleDelete = (v) => {
+    // Don't remove it from allVideos — mergedVideos already hides anything in
+    // trashedUrls. Removing it here too meant Restore/Undo had nothing left
+    // to show until the video list was refetched (i.e. closing and reopening
+    // the bin), since allVideos only refreshes when the modal opens.
     const next = trashVideo({ url: v.url, poster: v.poster, section: v.section, title: v.title });
     setTrash(next);
-    setAllVideos((prev) => prev.filter((x) => x.url !== v.url));
     if (playingUrl === v.url) setPlayingUrl(null);
 
     clearTimeout(undoTimerRef.current);
