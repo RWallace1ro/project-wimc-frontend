@@ -13,6 +13,7 @@ import "./OutfitPreviewPanel.css";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
+import { onImgError } from "../../utils/imgFallback";
 
 const SECTION_OPTIONS_FEMALE = [
   { value: "dresses-skirts",   label: "Dresses/Skirts" },
@@ -1001,28 +1002,40 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
               </div>
             ) : (
               <div className="opp-favs__grid">
-                {favorites.map((f, i) => (
-                  <button
-                    key={(f.mediaUrl || "fav") + i}
-                    className="opp-favs__thumb"
-                    title="Add to preview"
-                    onClick={() => addItem(f)}
-                  >
-                    {f.mediaType === "video" ? (
+                {favorites.map((f, i) => {
+                  const favImgs = favorites
+                    .filter((x) => x.mediaUrl || x.mediaThumb)
+                    .map((x) => ({ src: x.mediaThumb || x.mediaUrl, alt: x.name || "" }));
+                  const imgIdx = favorites.indexOf(f);
+                  return (
+                    <span key={(f.mediaUrl || "fav") + i} className="opp-favs__wrap">
                       <img
                         className="opp-favs__img"
-                        src={f.mediaPoster || ""}
-                        alt="video"
-                      />
-                    ) : (
-                      <img
-                        className="opp-favs__img"
-                        src={f.mediaThumb || f.mediaUrl}
+                        src={f.mediaType === "video" ? f.mediaPoster || "" : f.mediaThumb || f.mediaUrl}
                         alt={f.name || "favorite"}
+                        title="Click to enlarge"
+                        onClick={() => openLightbox(favImgs, Math.max(0, imgIdx))}
+                        onError={onImgError}
                       />
-                    )}
-                  </button>
-                ))}
+                      <button
+                        className="opp-favs__add"
+                        onClick={() => addItem(f)}
+                        title="Add to preview"
+                        aria-label="Add to preview"
+                      >
+                        ➕
+                      </button>
+                      <button
+                        className="opp-favs__del"
+                        onClick={() => toggleFavorite(f)}
+                        title="Remove from favorites"
+                        aria-label="Remove from favorites"
+                      >
+                        🗑️
+                      </button>
+                    </span>
+                  );
+                })}
               </div>
             )}
           </aside>
@@ -1135,7 +1148,12 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                         </div>
                       </div>
                       <div className="opp__look-strip">
-                        {(l.items || []).slice(0, 10).map((it, i) => (
+                        {(l.items || []).slice(0, 10).map((it, i) => {
+                          const lookImgs = (l.items || [])
+                            .filter((x) => x.mediaUrl || x.mediaThumb)
+                            .map((x) => ({ src: x.mediaThumb || x.mediaUrl, alt: x.name || "" }));
+                          const imgIdx = (l.items || []).indexOf(it);
+                          return (
                           <img
                             key={(it.mediaUrl || "thumb") + i}
                             className="opp__look-thumb"
@@ -1145,17 +1163,24 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                                 : it.mediaThumb || it.mediaUrl
                             }
                             alt={it.name || "item"}
+                            style={{ cursor: "zoom-in" }}
+                            onClick={() => openLightbox(lookImgs, Math.max(0, imgIdx))}
                             onError={(e) => {
                               if (
                                 it.mediaUrl &&
-                                e.currentTarget.src !== it.mediaUrl
+                                e.currentTarget.src !== it.mediaUrl &&
+                                !e.currentTarget.dataset.retried
                               ) {
+                                e.currentTarget.dataset.retried = "true";
                                 e.currentTarget.src = it.mediaUrl;
+                              } else {
+                                onImgError(e);
                               }
                             }}
-                            title={it.name || ""}
+                            title={it.name || "Click to enlarge"}
                           />
-                        ))}
+                          );
+                        })}
                         {(l.items || []).length > 10 && (
                           <span className="opp__look-more">
                             +{(l.items || []).length - 10}

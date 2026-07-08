@@ -706,25 +706,51 @@
 }
 .opp-favs__grid {
   padding: 10px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   overflow: auto;
 }
-.opp-favs__thumb {
-  border: 1px solid #eee;
-  border-radius: 8px;
-  overflow: hidden;
-  padding: 0;
-  background: #fff;
-  cursor: pointer;
+.opp-favs__wrap {
+  position: relative;
+  display: inline-block;
 }
 .opp-favs__img {
-  width: 100%;
-  height: 100px;
-  object-fit: contain;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #eee;
   display: block;
+  cursor: zoom-in;
 }
+.opp-favs__add,
+.opp-favs__del {
+  position: absolute;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.opp-favs__add { right: 2px; background: rgba(37, 99, 235, 0.75); }
+.opp-favs__del { left: 2px; background: rgba(15, 23, 42, 0.6); }
+.opp-favs__wrap:hover .opp-favs__add,
+.opp-favs__wrap:hover .opp-favs__del { opacity: 1; }
+@media (hover: none) {
+  .opp-favs__add, .opp-favs__del { opacity: 0.85; }
+}
+.opp-favs__add:hover { background: #2563eb; }
+.opp-favs__del:hover { background: #dc2626; }
 
 /* ===== SAVED LOOKS Drawer ===== */
 .opp-saved__backdrop {
@@ -823,16 +849,16 @@
   gap: 6px;
 }
 .opp__look-strip {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 8px;
 }
 .opp__look-thumb {
-  width: 42px;
-  height: 42px;
+  width: 72px;
+  height: 72px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 1px solid #eee;
   display: block;
 }
