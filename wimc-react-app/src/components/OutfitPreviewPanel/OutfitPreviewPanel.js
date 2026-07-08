@@ -1067,12 +1067,6 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
           >
             <header
               className="opp-saved__head"
-              style={{
-                position: "sticky",
-                top: 0,
-                background: "#fff",
-                zIndex: 2,
-              }}
             >
               <h4 className="opp-saved__title">Saved Looks</h4>
               <div
