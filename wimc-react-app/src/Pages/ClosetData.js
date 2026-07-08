@@ -422,7 +422,7 @@ function ClosetData({
       <ClosetSearch
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        onSectionSelect={(tag) => openSection(tag)}
+        onSectionSelect={(tag) => openSection(genderPrefix ? `${genderPrefix}-${tag}` : tag)}
         onApplyItems={handleApplyItems}
         gender={gender}
         tagPrefix={genderPrefix}
