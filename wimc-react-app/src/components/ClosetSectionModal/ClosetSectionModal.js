@@ -9,8 +9,33 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
 import { syncSetItem } from "../../utils/syncStore";
-import { getSubSections } from "../../utils/closetSubsections";
+import { getSubSections, donatePrefixForTag } from "../../utils/closetSubsections";
 import "./ClosetSectionModal.css";
+
+// Moving an item re-uploads it under a new Cloudinary public_id (new URL) and
+// deletes the old asset — Cloudinary can't rename in place. Anything that
+// captured the old URL (e.g. a pending/donated Donate Bin entry) would then
+// silently point at a dead asset. Patch those references so a later "Confirm
+// removed from closet" in Donate Bin still targets the item's real, current copy.
+function patchDonateBinUrl(sourceTag, oldUrl, newUrl) {
+  const prefix = donatePrefixForTag(sourceTag);
+  for (const base of ["donateItems", "donatedItems"]) {
+    const key = prefix ? `wimc_${base}_${prefix}` : base;
+    try {
+      const list = JSON.parse(localStorage.getItem(key) || "[]");
+      if (!Array.isArray(list) || list.length === 0) continue;
+      let changed = false;
+      const updated = list.map((it) => {
+        if (it?.imageUrl === oldUrl || it?.url === oldUrl) {
+          changed = true;
+          return { ...it, ...(it.imageUrl !== undefined ? { imageUrl: newUrl } : {}), ...(it.url !== undefined ? { url: newUrl } : {}) };
+        }
+        return it;
+      });
+      if (changed) syncSetItem(key, JSON.stringify(updated));
+    } catch {}
+  }
+}
 
 function getPinnedKey(tag)  { return `wimc_card_image_${tag}`; }
 function getOrderKey(tag)   { return `wimc_image_order_${tag}`; }
@@ -269,6 +294,10 @@ function ClosetSectionModal({
     try {
       // transferItem returns the new delivery URL of the copy in the destination.
       const newUrl = await transferItem(url, destTag, resourceType);
+
+      // Keep any pending/donated Donate Bin record for this item pointed at
+      // its new (real) asset instead of the now-deleted original.
+      if (resourceType === "image") patchDonateBinUrl(tag, url, newUrl);
 
       // ── Immediate optimistic updates (no Cloudinary CDN re-fetch needed) ──
 

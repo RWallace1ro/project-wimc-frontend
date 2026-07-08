@@ -169,6 +169,16 @@ function kindOf(prefix) {
   return "adult";
 }
 
+// The per-closet key prefix (matching DonateBin's `tagPrefix` prop) that owns
+// a given section tag — "male", "kid-{id}", "pet-{id}", or "" for the main
+// female closet. Used to find the right localStorage donate-bin lists when a
+// tag's closet needs to be inferred from an item's current section tag alone.
+export function donatePrefixForTag(sectionTag) {
+  const split = splitSectionTag(sectionTag || "");
+  if (!split) return "";
+  return split.prefix.replace(/-$/, "");
+}
+
 /**
  * Sub-section definitions for a base slug + context. Returns [{label, plain,
  * slug}] (slug null = the card's own tag), or null. `kind`: "adult" | "kid".
