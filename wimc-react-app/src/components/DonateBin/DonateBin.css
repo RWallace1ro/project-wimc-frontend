@@ -621,21 +621,9 @@
   padding: 2px 6px;
   border-radius: 4px;
 }
-/* .opp-saved sizing/position now defined once in OutfitPreviewPanel.css
+/* .opp-saved and .opp-saved__head are defined once in OutfitPreviewPanel.css
    (shared by Saved Looks, Saved Donation Sets, and Donated Items) so all
-   three stay visually consistent — do not redefine it here. */
-.opp-saved__head {
-  position: sticky;
-  top: 0;
-  background: #fff;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-}
+   three stay visually consistent — do not redefine them here. */
 .opp-saved__actions {
   display: flex;
   gap: 8px;
