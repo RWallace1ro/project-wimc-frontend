@@ -682,13 +682,15 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.3);
   z-index: 430;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .opp-favs {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: min(92vw, 420px);
+  /* Sized to match the closet section modal for a consistent look. */
+  width: 90%;
+  max-width: 1100px;
+  height: 80%;
   max-height: 90vh;
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -754,18 +756,22 @@
 .opp-favs__add:hover { background: #2563eb; }
 .opp-favs__del:hover { background: #dc2626; }
 
-/* ===== SAVED LOOKS Drawer ===== */
+/* ===== SAVED LOOKS Drawer (also used by Donate Bin's Saved Sets and
+   Donated Items drawers, via the opp-saved--* modifier classes) ===== */
 .opp-saved__backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.3);
   z-index: 430;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .opp-saved {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: min(92vw, 460px);
+  /* Sized to match the closet section modal for a consistent look. */
+  width: 90%;
+  max-width: 1100px;
+  height: 80%;
   max-height: 90vh;
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -778,11 +784,11 @@
 }
 @keyframes oppSavedIn {
   from {
-    transform: translate(-50%, -50%) translateY(8px);
+    transform: translateY(8px);
     opacity: 0;
   }
   to {
-    transform: translate(-50%, -50%) translateY(0);
+    transform: translateY(0);
     opacity: 1;
   }
 }

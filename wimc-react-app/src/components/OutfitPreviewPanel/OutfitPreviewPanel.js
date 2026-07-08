@@ -967,16 +967,16 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
 
       {/* Favorites Drawer */}
       {favsOpen && (
-        <>
-          <div
-            className="opp-favs__backdrop"
-            onClick={() => setFavsOpen(false)}
-          />
+        <div
+          className="opp-favs__backdrop"
+          onClick={() => setFavsOpen(false)}
+        >
           <aside
             className="opp-favs"
             role="dialog"
             aria-modal="true"
             aria-label="Favorites"
+            onClick={(e) => e.stopPropagation()}
           >
             <header className="opp-favs__head">
               <h4>Favorites</h4>
@@ -1048,22 +1048,22 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
               </div>
             )}
           </aside>
-        </>
+        </div>
       )}
 
       {/* Saved Looks Drawer */}
       {looksOpen && (
-        <>
-          <div
-            className="opp-saved__backdrop"
-            onClick={() => setLooksOpen(false)}
-            aria-label="Close Saved Looks"
-          />
+        <div
+          className="opp-saved__backdrop"
+          onClick={() => setLooksOpen(false)}
+          aria-label="Close Saved Looks"
+        >
           <aside
             className="opp-saved"
             role="dialog"
             aria-modal="true"
             aria-label="Saved Looks"
+            onClick={(e) => e.stopPropagation()}
           >
             <header
               className="opp-saved__head"
@@ -1211,7 +1211,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
               )}
             </div>
           </aside>
-        </>
+        </div>
       )}
 
       <section

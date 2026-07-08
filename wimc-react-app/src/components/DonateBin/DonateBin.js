@@ -876,17 +876,17 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
 
           {/* Saved Donation Sets Drawer */}
           {setsOpen && (
-            <>
-              <div
-                className="opp-saved__backdrop"
-                onClick={() => setSetsOpen(false)}
-                aria-label="Close Saved Sets"
-              />
+            <div
+              className="opp-saved__backdrop"
+              onClick={() => setSetsOpen(false)}
+              aria-label="Close Saved Sets"
+            >
               <aside
                 className="opp-saved opp-saved--donations"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Saved Donation Sets"
+                onClick={(e) => e.stopPropagation()}
               >
                 <header className="opp-saved__head">
                   <h4 className="opp-saved__title">Saved Donation Sets</h4>
@@ -1022,22 +1022,22 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                   )}
                 </div>
               </aside>
-            </>
+            </div>
           )}
 
           {/* Donated Items Drawer */}
           {donatedOpen && (
-            <>
-              <div
-                className="opp-saved__backdrop"
-                onClick={() => setDonatedOpen(false)}
-                aria-label="Close Donated Items"
-              />
+            <div
+              className="opp-saved__backdrop"
+              onClick={() => setDonatedOpen(false)}
+              aria-label="Close Donated Items"
+            >
               <aside
                 className="opp-saved opp-saved--donated"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Donated Items"
+                onClick={(e) => e.stopPropagation()}
               >
                 <header className="opp-saved__head">
                   <h4 className="opp-saved__title">Donated Items</h4>
@@ -1139,7 +1139,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                   )}
                 </div>
               </aside>
-            </>
+            </div>
           )}
 
           {/* AI Donation Advisor */}
