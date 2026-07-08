@@ -745,6 +745,7 @@
 .donate-thumb-wrap {
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
 }
 .donate-thumb-wrap.is-removed .opp__look-thumb {
   opacity: 0.55;

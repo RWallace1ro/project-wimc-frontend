@@ -721,6 +721,15 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   const deleteLook = (lookId) => {
     setLooks((prev) => prev.filter((l) => l.id !== lookId));
   };
+  const removeItemFromLook = (lookId, itemIdx) => {
+    setLooks((prev) =>
+      prev.map((l) =>
+        l.id === lookId
+          ? { ...l, items: (l.items || []).filter((_, i) => i !== itemIdx), updatedAt: new Date().toISOString() }
+          : l,
+      ),
+    );
+  };
 
   // share/export payloads
   const buildSharePayload = () => ({
@@ -1154,31 +1163,40 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                             .map((x) => ({ src: x.mediaThumb || x.mediaUrl, alt: x.name || "" }));
                           const imgIdx = (l.items || []).indexOf(it);
                           return (
-                          <img
-                            key={(it.mediaUrl || "thumb") + i}
-                            className="opp__look-thumb"
-                            src={
-                              it.mediaType === "video"
-                                ? it.mediaPoster || ""
-                                : it.mediaThumb || it.mediaUrl
-                            }
-                            alt={it.name || "item"}
-                            style={{ cursor: "zoom-in" }}
-                            onClick={() => openLightbox(lookImgs, Math.max(0, imgIdx))}
-                            onError={(e) => {
-                              if (
-                                it.mediaUrl &&
-                                e.currentTarget.src !== it.mediaUrl &&
-                                !e.currentTarget.dataset.retried
-                              ) {
-                                e.currentTarget.dataset.retried = "true";
-                                e.currentTarget.src = it.mediaUrl;
-                              } else {
-                                onImgError(e);
+                          <span key={(it.mediaUrl || "thumb") + i} className="opp__look-thumb-wrap">
+                            <img
+                              className="opp__look-thumb"
+                              src={
+                                it.mediaType === "video"
+                                  ? it.mediaPoster || ""
+                                  : it.mediaThumb || it.mediaUrl
                               }
-                            }}
-                            title={it.name || "Click to enlarge"}
-                          />
+                              alt={it.name || "item"}
+                              style={{ cursor: "zoom-in" }}
+                              onClick={() => openLightbox(lookImgs, Math.max(0, imgIdx))}
+                              onError={(e) => {
+                                if (
+                                  it.mediaUrl &&
+                                  e.currentTarget.src !== it.mediaUrl &&
+                                  !e.currentTarget.dataset.retried
+                                ) {
+                                  e.currentTarget.dataset.retried = "true";
+                                  e.currentTarget.src = it.mediaUrl;
+                                } else {
+                                  onImgError(e);
+                                }
+                              }}
+                              title={it.name || "Click to enlarge"}
+                            />
+                            <button
+                              className="opp__look-thumb-del"
+                              onClick={(e) => { e.stopPropagation(); removeItemFromLook(l.id, i); }}
+                              title="Remove from look"
+                              aria-label="Remove from look"
+                            >
+                              🗑️
+                            </button>
+                          </span>
                           );
                         })}
                         {(l.items || []).length > 10 && (

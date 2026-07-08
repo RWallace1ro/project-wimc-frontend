@@ -382,6 +382,14 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
     );
   const deleteSet = (id) =>
     persistSets((sets || []).filter((s) => s.id !== id));
+  const removeItemFromSet = (id, itemIdx) =>
+    persistSets(
+      (sets || []).map((s) =>
+        s.id === id
+          ? { ...s, items: (s.items || []).filter((_, i) => i !== itemIdx), updatedAt: new Date().toISOString() }
+          : s,
+      ),
+    );
   const loadSet = (id, mode = "replace") => {
     const s = (sets || []).find((x) => x.id === id);
     if (!s) return;
@@ -973,14 +981,35 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
                             </div>
                           </div>
                           <div className="opp__look-strip">
-                            {(s.items || []).slice(0, 10).map((it, i) => (
-                              <img
-                                key={(it.imageUrl || it.url || "thumb") + i}
-                                className="opp__look-thumb"
-                                src={it.imageUrl || it.url}
-                                alt={it.name || "item"}
-                              />
-                            ))}
+                            {(s.items || []).slice(0, 10).map((it, i) => {
+                              const setImgs = (s.items || [])
+                                .filter((x) => x.imageUrl || x.url)
+                                .map((x) => ({ src: x.imageUrl || x.url, alt: x.name || "" }));
+                              const imgIdx = (s.items || []).indexOf(it);
+                              return (
+                                <span
+                                  key={(it.imageUrl || it.url || "thumb") + i}
+                                  className="donate-thumb-wrap"
+                                >
+                                  <img
+                                    className="opp__look-thumb"
+                                    src={it.imageUrl || it.url}
+                                    alt={it.name || "item"}
+                                    style={{ cursor: "zoom-in" }}
+                                    title="Click to enlarge"
+                                    onClick={() => openLb(setImgs, Math.max(0, imgIdx))}
+                                  />
+                                  <button
+                                    className="donate-thumb-del"
+                                    onClick={(e) => { e.stopPropagation(); removeItemFromSet(s.id, i); }}
+                                    title="Remove from set"
+                                    aria-label="Remove from set"
+                                  >
+                                    🗑️
+                                  </button>
+                                </span>
+                              );
+                            })}
                             {(s.items || []).length > 10 && (
                               <span className="opp__look-more">
                                 +{(s.items || []).length - 10}
