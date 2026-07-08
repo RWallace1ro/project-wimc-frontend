@@ -704,8 +704,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  padding: 14px 18px;
+  border-bottom: 1px solid #1e3a5f;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  color: #fff;
+}
+.opp-favs__head h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+.opp-favs__head .opp__mini {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+.opp-favs__head .opp__mini:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.opp-favs__head .opp__mini:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 .opp-favs__grid {
   padding: 10px;
@@ -797,13 +817,37 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  padding: 14px 18px;
+  border-bottom: 1px solid #1e3a5f;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  color: #fff;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .opp-saved__title {
   margin: 0;
   font-size: 14px;
   font-weight: 700;
+  color: #fff;
+}
+.opp-saved__head .opp__btn,
+.opp-saved__head .opp__mini,
+.opp-saved__head .opp__input {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+.opp-saved__head .opp__btn:hover,
+.opp-saved__head .opp__mini:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.opp-saved__head .opp__btn:disabled,
+.opp-saved__head .opp__mini:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.opp-saved__head .opp__input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .opp-saved__toolbar {
