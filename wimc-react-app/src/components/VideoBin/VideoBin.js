@@ -298,6 +298,11 @@ export default function VideoBin({ videos: propVideos = [] }) {
       console.error("Permanent video delete failed:", err);
     } finally {
       setTrash(removeFromVideoTrash(entry.url));
+      // Unlike a soft-delete (trash), the video is genuinely gone from
+      // Cloudinary now — remove the stale entry from allVideos too, or it
+      // reappears in the merged list (trashedUrls no longer hides it) until
+      // the bin is reopened and the video list is refetched.
+      setAllVideos((prev) => prev.filter((x) => x.url !== entry.url));
       setMeta((prev) => {
         if (!prev[entry.url]) return prev;
         const next = { ...prev };
