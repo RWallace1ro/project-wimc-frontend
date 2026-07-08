@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
+import ApiErrorMessage from "../common/ApiErrorMessage";
 import "./AIDonationAdvisor.css";
 
 // Default section labels for the prompt. Actual fetch tags come from the
@@ -263,7 +264,7 @@ Please give me a personalised donation plan for my closet.`;
                 {result}
                 {streaming && <span className="aida-cursor">▋</span>}
               </pre>
-              {error && <p className="aida-error">{error}</p>}
+              {error && <ApiErrorMessage className="aida-error" message={error} />}
 
               {!streaming && result && !board && (
                 <div className="aida-actions">

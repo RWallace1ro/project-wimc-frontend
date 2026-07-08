@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { aiProxyFetch } from "../../utils/aiProxy";
+import ApiErrorMessage from "../common/ApiErrorMessage";
 import "./WIMCAssistant.css";
 
 const QUICK_QUESTIONS = [
@@ -212,7 +213,7 @@ export default function WIMCAssistant() {
               </div>
             ))}
 
-            {error && <p className="wa-error">{error}</p>}
+            {error && <ApiErrorMessage className="wa-error" message={error} />}
             <div ref={bottomRef} />
           </div>
 

@@ -3,6 +3,7 @@ import { syncSetItem } from '../../utils/syncStore';
 import { uploadRawJSON } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import { aiProxyFetch } from "../../utils/aiProxy";
+import ApiErrorMessage from "../common/ApiErrorMessage";
 import "./ShoppingList.css";
 
 // ── Default categories ────────────────────────────────────────────────────────
@@ -1120,7 +1121,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
         )}
 
         {result?.type === "error" && (
-          <p className="sl-ai-error">{result.message}</p>
+          <ApiErrorMessage className="sl-ai-error" message={result.message} />
         )}
       </div>
     </div>

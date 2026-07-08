@@ -3,6 +3,7 @@ import { aiProxyFetch } from "../../utils/aiProxy";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
 import Lightbox from "../Lightbox/Lightbox";
+import ApiErrorMessage from "../common/ApiErrorMessage";
 import "./AIPackingAssistant.css";
 
 const TRIP_TYPES = [
@@ -593,7 +594,7 @@ Your job:
             </div>
           )}
 
-          {error && <p className="aipa-error">{error}</p>}
+          {error && <ApiErrorMessage className="aipa-error" message={error} />}
         </div>
       </div>
     </div>

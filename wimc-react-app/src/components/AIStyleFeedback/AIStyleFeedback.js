@@ -4,6 +4,7 @@ import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
 import { extractSections, aiPickItems } from "../../utils/outfitBuilder";
 import Lightbox from "../Lightbox/Lightbox";
+import ApiErrorMessage from "../common/ApiErrorMessage";
 import "./AIStyleFeedback.css";
 
 const OCCASIONS = [
@@ -386,7 +387,7 @@ Please give me style feedback on this outfit!`;
             </div>
           )}
 
-          {error && <p className="aisf-error">{error}</p>}
+          {error && <ApiErrorMessage className="aisf-error" message={error} />}
         </div>
       </div>
       {savedLightbox && (

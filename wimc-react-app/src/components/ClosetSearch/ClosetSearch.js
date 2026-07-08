@@ -3,6 +3,7 @@ import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import { syncSetItem } from "../../utils/syncStore";
 import { sectionTagsWithSubs } from "../../utils/closetSubsections";
+import ApiErrorMessage from "../common/ApiErrorMessage";
 import "./ClosetSearch.css";
 
 const SECTIONS = [
@@ -705,7 +706,7 @@ export default function ClosetSearch({
             </div>
           )}
 
-          {error && <p className="cs-error">{error}</p>}
+          {error && <ApiErrorMessage className="cs-error" message={error} />}
         </div>
       </div>
 

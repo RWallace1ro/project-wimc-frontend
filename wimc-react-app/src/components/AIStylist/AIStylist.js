@@ -4,6 +4,7 @@ import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
 import { getClosetSections, extractSections, aiPickItems } from "../../utils/outfitBuilder";
 import Lightbox from "../Lightbox/Lightbox";
+import ApiErrorMessage from "../common/ApiErrorMessage";
 import "./AIStylist.css";
 
 const CLOSET_GENDER_KEY = "wimc_closet_gender";
@@ -441,7 +442,7 @@ Rules:
             );
           })}
 
-          {error && <p className="stylist-error">{error}</p>}
+          {error && <ApiErrorMessage className="stylist-error" message={error} />}
           <div ref={bottomRef} />
         </div>
 
