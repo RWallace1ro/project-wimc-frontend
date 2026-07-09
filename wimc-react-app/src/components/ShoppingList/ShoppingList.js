@@ -1493,7 +1493,10 @@ export default function ShoppingList() {
   const [closetChecking, setClosetChecking] = useState(false);
   const [closetCheckMsg, setClosetCheckMsg] = useState("");
   const checkAgainstCloset = async () => {
-    const unchecked = items.filter((i) => !i.checked);
+    // Scoped to the category currently being viewed — checking all
+    // categories at once could flag matches on items in a different, hidden
+    // tab, showing a "Found N matches" count with no visible badge anywhere.
+    const unchecked = catItems.filter((i) => !i.checked);
     if (!unchecked.length || closetChecking) return;
     setClosetChecking(true);
     setClosetCheckMsg("");
@@ -1908,7 +1911,7 @@ export default function ShoppingList() {
               <button
                 className="sl-btn sl-btn--sm"
                 onClick={checkAgainstCloset}
-                disabled={closetChecking || !items.some((i) => !i.checked)}
+                disabled={closetChecking || !catItems.some((i) => !i.checked)}
               >
                 {closetChecking ? "Checking your closet…" : "👀 Check my closet for duplicates"}
               </button>
