@@ -4,7 +4,10 @@ import { uploadRawJSON } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import ApiErrorMessage from "../common/ApiErrorMessage";
+import { checkShoppingListAgainstCloset } from "../../utils/closetDupeCheck";
 import "./ShoppingList.css";
+
+const CLOSET_GENDER_KEY = "wimc_closet_gender";
 
 // ── Default categories ────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [
@@ -88,14 +91,17 @@ function CategoryTab({ cat, active, count, onClick }) {
   );
 }
 
-function ShoppingItem({ item, onToggle, onDelete, onEditNote }) {
+function ShoppingItem({ item, onToggle, onDelete, onEditNote, onDismissMatch }) {
   const [editingNote, setEditingNote] = useState(false);
   const [note, setNote] = useState(item.note || "");
+  const [matchExpanded, setMatchExpanded] = useState(false);
 
   const saveNote = () => {
     onEditNote(item.id, note);
     setEditingNote(false);
   };
+
+  const showMatch = item.closetMatch && !item.closetMatchDismissed;
 
   return (
     <div className={`sl-item ${item.checked ? "sl-item--checked" : ""}`}>
@@ -133,6 +139,30 @@ function ShoppingItem({ item, onToggle, onDelete, onEditNote }) {
           </span>
         )}
         {item.aiSuggested && <span className="sl-item__ai-tag">✨ AI</span>}
+        {showMatch && (
+          <button
+            className="sl-item__dupe-badge"
+            onClick={() => setMatchExpanded((v) => !v)}
+          >
+            👀 Maybe already in your closet
+          </button>
+        )}
+        {showMatch && matchExpanded && (
+          <div className="sl-item__dupe-compare" onClick={(e) => e.stopPropagation()}>
+            <img className="sl-item__dupe-img" src={item.closetMatch} alt="Possible match in your closet" />
+            <div className="sl-item__dupe-actions">
+              <button className="sl-btn sl-btn--sm sl-btn--danger" onClick={() => onDelete(item.id)}>
+                Remove from list
+              </button>
+              <button
+                className="sl-btn sl-btn--sm"
+                onClick={() => { onDismissMatch(item.id); setMatchExpanded(false); }}
+              >
+                Keep anyway
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <button
         className="sl-item__delete"
@@ -1359,6 +1389,44 @@ export default function ShoppingList() {
     setItems((prev) => prev.filter((i) => i.id !== id));
   const editNote = (id, note) =>
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, note } : i)));
+  const dismissMatch = (id) =>
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, closetMatchDismissed: true } : i)));
+
+  // ── "Already in your closet?" opt-in check ─────────────────────────────────
+  const [closetChecking, setClosetChecking] = useState(false);
+  const [closetCheckMsg, setClosetCheckMsg] = useState("");
+  const checkAgainstCloset = async () => {
+    const unchecked = items.filter((i) => !i.checked);
+    if (!unchecked.length || closetChecking) return;
+    setClosetChecking(true);
+    setClosetCheckMsg("");
+    try {
+      const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
+      const { matchesById, errored } = await checkShoppingListAgainstCloset(unchecked, gender);
+      if (errored) {
+        setClosetCheckMsg("Couldn't complete the check. Please try again.");
+      } else {
+        const matchCount = Object.keys(matchesById).length;
+        setItems((prev) =>
+          prev.map((i) =>
+            matchesById[i.id]
+              ? { ...i, closetMatch: matchesById[i.id], closetMatchDismissed: false }
+              : i,
+          ),
+        );
+        setClosetCheckMsg(
+          matchCount
+            ? `Found ${matchCount} possible match${matchCount !== 1 ? "es" : ""} in your closet.`
+            : "No likely matches found in your closet.",
+        );
+      }
+    } catch {
+      setClosetCheckMsg("Couldn't complete the check. Please try again.");
+    } finally {
+      setClosetChecking(false);
+      setTimeout(() => setClosetCheckMsg(""), 5000);
+    }
+  };
   const clearChecked = () => {
     setItems((prev) => {
       const toRemove = prev.filter((i) => i.categoryId === activeCatId && i.checked);
@@ -1734,6 +1802,21 @@ export default function ShoppingList() {
                 Add
               </button>
             </div>
+            <p className="sl-add-tip">
+              💡 Tip: be specific (e.g. "black ankle boots" instead of "boots") — it helps the
+              "Check my closet" tool below catch duplicates more accurately.
+            </p>
+
+            <div className="sl-dupe-check-row">
+              <button
+                className="sl-btn sl-btn--sm"
+                onClick={checkAgainstCloset}
+                disabled={closetChecking || !items.some((i) => !i.checked)}
+              >
+                {closetChecking ? "Checking your closet…" : "👀 Check my closet for duplicates"}
+              </button>
+              {closetCheckMsg && <span className="sl-dupe-check-msg">{closetCheckMsg}</span>}
+            </div>
 
             {/* Filters + search */}
             <div className="sl-filters">
@@ -1806,6 +1889,7 @@ export default function ShoppingList() {
                     onToggle={toggleItem}
                     onDelete={deleteItem}
                     onEditNote={editNote}
+                    onDismissMatch={dismissMatch}
                   />
                 ))
               )}
