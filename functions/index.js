@@ -122,12 +122,19 @@ async function incrementUsage(uid) {
 // Generic tier-agnostic daily counter, keyed by its own Firestore collection
 // and cap — used for features exempt from the paid AI-request ladder (help
 // bot, closet duplicate check) so each gets an independent daily allowance.
-// Same peek/increment split as above.
+// Same peek/increment split as above. Also honors the aiUnlimited owner/dev
+// bypass, same as the main tiered ladder — otherwise that flag would only
+// cover the paid AI ladder and these separate counters would still cap out.
 async function peekCustom(uid, collectionName, dailyLimit) {
   const adminDb = getAdminDb();
   const ref = adminDb.collection(collectionName).doc(uid);
+  const userRef = adminDb.collection("users").doc(uid);
   const today = new Date().toISOString().slice(0, 10);
-  const snap = await ref.get();
+  const [snap, userSnap] = await Promise.all([ref.get(), userRef.get()]);
+  const userData = userSnap.exists ? userSnap.data() : {};
+  if (userData.aiUnlimited === true || userData.aiUnlimited === "true") {
+    return { allowed: true, count: 0, limit: Infinity };
+  }
   const data = snap.exists ? snap.data() : {};
   const count = data.date === today ? (data.count || 0) : 0;
   return { allowed: count < dailyLimit, count, limit: dailyLimit };
