@@ -306,9 +306,26 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   // LS hydrate/persist (Planner-style)
   const hydratedRef = useRef(false);
 
+  // This panel stays mounted across gender/kid/pet switches (only `tagPrefix`
+  // changes), but the hydrate effect below only ever ran once — so toggling
+  // gender left the OTHER closet's selection sitting in the grid, and then
+  // started writing it into the new closet's storage key. Force a re-hydrate
+  // whenever the closet identity changes.
+  useEffect(() => {
+    hydratedRef.current = false;
+  }, [tagPrefix]);
+
   // ----- HYDRATE -----
   useEffect(() => {
     if (hydratedRef.current) return;
+
+    // Reset to empty first — otherwise, if the newly-switched-to closet has
+    // no saved selection of its own, whatever was in memory from the
+    // previous closet would keep showing instead of an empty grid.
+    setSelected([]);
+    setNote("");
+    setFavorites([]);
+    setLooks([]);
 
     try {
       const raw = localStorage.getItem(LS.STATE_V2);
@@ -363,7 +380,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
       // baseline history after hydration
       pushHistory({ selected: [], note: "" });
     }
-  }, [pushHistory]);
+  }, [pushHistory, tagPrefix]);
 
   // ----- PERSIST + notify parent -----
   useEffect(() => {
