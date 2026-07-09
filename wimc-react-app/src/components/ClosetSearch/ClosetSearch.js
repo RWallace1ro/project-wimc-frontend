@@ -277,6 +277,20 @@ export default function ClosetSearch({
     }
   }, [isOpen, savedKey]);
 
+  // This component stays mounted (only its own `isOpen` toggles visibility),
+  // so a search's results otherwise linger even after switching to a
+  // different closet (male/female toggle, or a different kid/pet). Clear the
+  // stale search whenever the closet identity changes.
+  useEffect(() => {
+    setQuery("");
+    setResultText("");
+    setSections([]);
+    setResultImages([]);
+    setNoMatches(false);
+    setSelected(new Set());
+    setError("");
+  }, [gender, tagPrefix]);
+
   const persistSaved = (list) => {
     setSavedSearches(list);
     try { syncSetItem(savedKey, JSON.stringify(list)); } catch {}
@@ -481,7 +495,7 @@ export default function ClosetSearch({
               onClick={() => setShowSaved((v) => !v)}
               title="View your saved searches"
             >
-              📁 Saved{savedSearches.length ? ` (${savedSearches.length})` : ""}
+              {gender === "male" ? "👔" : "👗"} Saved{savedSearches.length ? ` (${savedSearches.length})` : ""}
             </button>
             {(query || hasResult || resultImages.length > 0) && (
               <button className="cs-header__reset" onClick={reset} title="Start a new search">🔄 New</button>
@@ -494,7 +508,7 @@ export default function ClosetSearch({
           {/* Saved searches drawer */}
           {showSaved && (
             <div className="cs-saved">
-              <p className="cs-saved__title">📁 Saved Searches</p>
+              <p className="cs-saved__title">{gender === "male" ? "👔" : "👗"} Saved Searches</p>
               {savedSearches.length === 0 ? (
                 <p className="cs-saved__empty">
                   No saved searches yet. Run a search, then tap 💾 Save to keep

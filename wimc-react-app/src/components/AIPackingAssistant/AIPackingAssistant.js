@@ -586,7 +586,7 @@ Your job:
                       disabled={pickedCount === 0}
                       title="Keep this plan so you can reapply or reuse it later"
                     >
-                      📁 Save This Plan
+                      {gender === "male" ? "👔" : "👗"} Save This Plan
                     </button>
                   </div>
                 </div>

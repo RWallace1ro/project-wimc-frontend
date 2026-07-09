@@ -938,7 +938,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
           onClick={() => setSavedOpen(true)}
           title="Your saved AI feedback (all categories)"
         >
-          📁 Saved{savedFeedback.length ? ` (${savedFeedback.length})` : ""}
+          {gender === "male" ? "👔" : "👗"} Saved{savedFeedback.length ? ` (${savedFeedback.length})` : ""}
         </button>
         <button className="sl-ai-panel__close" onClick={onClose}>
           ×
@@ -1216,7 +1216,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
             onClick={(e) => e.stopPropagation()}
           >
             <header className="opp-saved__head">
-              <h4 className="opp-saved__title">📁 Saved Feedback</h4>
+              <h4 className="opp-saved__title">{gender === "male" ? "👔" : "👗"} Saved Feedback</h4>
               <button className="opp__btn" onClick={() => setSavedOpen(false)} aria-label="Close">
                 ✕
               </button>
