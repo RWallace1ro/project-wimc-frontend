@@ -78,39 +78,61 @@ async function verifyUser(req) {
   }
 }
 
-// Atomically check + increment today's usage for a user. Returns
-// { allowed, count }. Resets the counter when the UTC date changes.
-async function checkAndIncrementUsage(uid) {
+// Split into a read-only PEEK (checked before calling Anthropic — never
+// charges) and an INCREMENT (called only after Anthropic responds
+// successfully). This means a failed/errored AI call — a 5xx from Anthropic,
+// a network hiccup, etc. — never costs the user part of their daily limit;
+// only a genuine successful response does. There's a small window where
+// several simultaneous requests could all pass the peek before any of them
+// increments (a user firing multiple tabs at once), but that's an acceptable
+// tradeoff for never wrongly penalizing a failed request.
+async function peekUsage(uid) {
   const adminDb = getAdminDb();
   const usageRef = adminDb.collection("aiUsage").doc(uid);
   const userRef  = adminDb.collection("users").doc(uid);
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  const [usageSnap, userSnap] = await Promise.all([usageRef.get(), userRef.get()]);
+  const data = usageSnap.exists ? usageSnap.data() : {};
+  const userData = userSnap.exists ? userSnap.data() : {};
+  const tier = userData.tier || "free";
+  // Owner/dev bypass: set aiUnlimited on a user doc to skip the daily cap
+  // (does NOT change their tier, so feature-gating still tests normally).
+  // Accept boolean true OR the string "true" so a Firestore type mix-up
+  // doesn't silently disable the bypass.
+  if (userData.aiUnlimited === true || userData.aiUnlimited === "true") {
+    return { allowed: true, count: 0, limit: Infinity, tier };
+  }
+  const limit = AI_LIMITS[tier] ?? AI_LIMITS.free;
+  const count = data.date === today ? (data.count || 0) : 0;
+  return { allowed: count < limit, count, limit, tier };
+}
+async function incrementUsage(uid) {
+  const adminDb = getAdminDb();
+  const usageRef = adminDb.collection("aiUsage").doc(uid);
+  const today = new Date().toISOString().slice(0, 10);
   return adminDb.runTransaction(async (tx) => {
-    const [usageSnap, userSnap] = await Promise.all([tx.get(usageRef), tx.get(userRef)]);
-    const data = usageSnap.exists ? usageSnap.data() : {};
-    const userData = userSnap.exists ? userSnap.data() : {};
-    const tier = userData.tier || "free";
-    // Owner/dev bypass: set aiUnlimited on a user doc to skip the daily cap
-    // (does NOT change their tier, so feature-gating still tests normally).
-    // Accept boolean true OR the string "true" so a Firestore type mix-up
-    // doesn't silently disable the bypass.
-    if (userData.aiUnlimited === true || userData.aiUnlimited === "true") {
-      return { allowed: true, count: 0, limit: Infinity, tier };
-    }
-    const limit = AI_LIMITS[tier] ?? AI_LIMITS.free;
+    const snap = await tx.get(usageRef);
+    const data = snap.exists ? snap.data() : {};
     const count = data.date === today ? (data.count || 0) : 0;
-    if (count >= limit) {
-      return { allowed: false, count, limit, tier };
-    }
     tx.set(usageRef, { date: today, count: count + 1, updatedAt: Date.now() });
-    return { allowed: true, count: count + 1, limit, tier };
+    return count + 1;
   });
 }
 
 // Generic tier-agnostic daily counter, keyed by its own Firestore collection
 // and cap — used for features exempt from the paid AI-request ladder (help
 // bot, closet duplicate check) so each gets an independent daily allowance.
-async function checkAndIncrementCustom(uid, collectionName, dailyLimit) {
+// Same peek/increment split as above.
+async function peekCustom(uid, collectionName, dailyLimit) {
+  const adminDb = getAdminDb();
+  const ref = adminDb.collection(collectionName).doc(uid);
+  const today = new Date().toISOString().slice(0, 10);
+  const snap = await ref.get();
+  const data = snap.exists ? snap.data() : {};
+  const count = data.date === today ? (data.count || 0) : 0;
+  return { allowed: count < dailyLimit, count, limit: dailyLimit };
+}
+async function incrementCustom(uid, collectionName) {
   const adminDb = getAdminDb();
   const ref = adminDb.collection(collectionName).doc(uid);
   const today = new Date().toISOString().slice(0, 10);
@@ -118,19 +140,14 @@ async function checkAndIncrementCustom(uid, collectionName, dailyLimit) {
     const snap = await tx.get(ref);
     const data = snap.exists ? snap.data() : {};
     const count = data.date === today ? (data.count || 0) : 0;
-    if (count >= dailyLimit) {
-      return { allowed: false, count, limit: dailyLimit };
-    }
     tx.set(ref, { date: today, count: count + 1, updatedAt: Date.now() });
-    return { allowed: true, count: count + 1, limit: dailyLimit };
+    return count + 1;
   });
 }
-async function checkAndIncrementHelp(uid) {
-  return checkAndIncrementCustom(uid, "aiHelpUsage", HELP_DAILY_LIMIT);
-}
-async function checkAndIncrementDupeCheck(uid) {
-  return checkAndIncrementCustom(uid, "aiDupeCheckUsage", DUPE_CHECK_DAILY_LIMIT);
-}
+async function peekHelp(uid) { return peekCustom(uid, "aiHelpUsage", HELP_DAILY_LIMIT); }
+async function incrementHelp(uid) { return incrementCustom(uid, "aiHelpUsage"); }
+async function peekDupeCheck(uid) { return peekCustom(uid, "aiDupeCheckUsage", DUPE_CHECK_DAILY_LIMIT); }
+async function incrementDupeCheck(uid) { return incrementCustom(uid, "aiDupeCheckUsage"); }
 
 // ── Anthropic proxy ───────────────────────────────────────────────────────────
 exports.anthropicProxy = functions
@@ -162,13 +179,15 @@ exports.anthropicProxy = functions
     const isHelp = feature === HELP_FEATURE;
     const isDupeCheck = feature === DUPE_CHECK_FEATURE;
 
-    // ── Per-user daily rate limit ─────────────────────────────────────────────
+    // ── Per-user daily rate limit (peek only — charged after success below) ───
+    let tier = "free";
     try {
-      const { allowed, count, limit, tier } = isHelp
-        ? await checkAndIncrementHelp(uid)
+      const { allowed, count, limit, tier: t } = isHelp
+        ? await peekHelp(uid)
         : isDupeCheck
-          ? await checkAndIncrementDupeCheck(uid)
-          : await checkAndIncrementUsage(uid);
+          ? await peekDupeCheck(uid)
+          : await peekUsage(uid);
+      tier = t;
       if (!allowed) {
         const msg = isHelp
           ? `You've reached today's limit of ${limit} help questions. Please try again tomorrow.`
@@ -182,7 +201,6 @@ exports.anthropicProxy = functions
         res.status(429).json({ error: msg });
         return;
       }
-      res.set("X-AI-Usage", String(count));
     } catch (e) {
       console.error("rate-limit check failed:", e);
       // Fail open on counter errors so a Firestore hiccup doesn't block users,
@@ -200,6 +218,21 @@ exports.anthropicProxy = functions
         body: JSON.stringify({ ...anthropicBody, stream: false }),
       });
       const data = await upstream.json();
+      // Only charge the user's daily limit on a genuine successful response —
+      // an error from Anthropic (rate limit, 5xx, bad request, etc.) shouldn't
+      // cost them part of their quota.
+      if (upstream.ok) {
+        try {
+          const count = isHelp
+            ? await incrementHelp(uid)
+            : isDupeCheck
+              ? await incrementDupeCheck(uid)
+              : await incrementUsage(uid);
+          res.set("X-AI-Usage", String(count));
+        } catch (e) {
+          console.error("usage increment failed:", e);
+        }
+      }
       res.status(upstream.status).json(data);
     } catch (err) {
       console.error("anthropicProxy error:", err);

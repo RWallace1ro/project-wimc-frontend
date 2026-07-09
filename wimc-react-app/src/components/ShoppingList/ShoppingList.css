@@ -793,6 +793,21 @@
 .sl-ai-panel__icon {
   font-size: 16px;
 }
+.sl-ai-panel__saved-btn {
+  font-size: 12px;
+  color: #7c3aed;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 99px;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: auto;
+  margin-right: 8px;
+}
+.sl-ai-panel__saved-btn:hover {
+  background: #f3e8ff;
+}
 .sl-ai-panel__close {
   background: none;
   border: none;
@@ -2197,6 +2212,21 @@
 } */
 /* .sl-ai-panel__icon {
   font-size: 16px;
+}
+.sl-ai-panel__saved-btn {
+  font-size: 12px;
+  color: #7c3aed;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 99px;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: auto;
+  margin-right: 8px;
+}
+.sl-ai-panel__saved-btn:hover {
+  background: #f3e8ff;
 }
 .sl-ai-panel__close {
   background: none;

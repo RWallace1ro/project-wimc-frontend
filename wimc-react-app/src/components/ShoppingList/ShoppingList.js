@@ -75,6 +75,21 @@ function aiErrMsg(e, fallback) {
   return e?.isApi && e.message ? e.message : fallback;
 }
 
+// Claude often wraps JSON in a ```json fence or adds a stray sentence despite
+// being told not to — a strict JSON.parse(raw.trim()) throws on that and was
+// showing a generic error for every Suggest/Budget/Prioritize call. Strip
+// fence markers and fall back to extracting the first {...} or [...] block.
+function extractJson(raw) {
+  const cleaned = raw.replace(/```(?:json)?/gi, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const match = cleaned.match(/[[{][\s\S]*[\]}]/);
+    if (match) return JSON.parse(match[0]);
+    throw new Error("Malformed AI response.");
+  }
+}
+
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function CategoryTab({ cat, active, count, onClick }) {
@@ -666,7 +681,8 @@ function AddCategoryModal({ onAdd, onClose }) {
 
 // ── AI Panel ──────────────────────────────────────────────────────────────────
 function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
-  const [mode, setMode] = useState("suggest"); // suggest | chat | budget | prioritize | saved
+  const [mode, setMode] = useState("suggest"); // suggest | chat | budget | prioritize
+  const [savedOpen, setSavedOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -737,7 +753,7 @@ function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
 Return ONLY a JSON array like: [{"name":"Item","detail":"optional size/color/brand hint"}]
 No markdown, no explanation, just the JSON array.`,
       );
-      const parsed = JSON.parse(raw.trim());
+      const parsed = extractJson(raw);
       setResult({ type: "suggest", items: parsed });
     } catch (e) {
       setResult({
@@ -767,7 +783,7 @@ Analyze the shopping list and return ONLY a JSON object like:
 {"tips": ["tip1","tip2","tip3"], "priority": ["item1","item2"], "canSkip": ["item3"], "estimatedTotal": "$X-$Y", "savingsTip": "one key tip"}
 No markdown, no explanation, just the JSON.`,
       );
-      const parsed = JSON.parse(raw.trim());
+      const parsed = extractJson(raw);
       setResult({ type: "budget", data: parsed });
     } catch (e) {
       setResult({
@@ -797,7 +813,7 @@ Prioritize the list and return ONLY a JSON array of objects sorted by priority:
 [{"name":"item","priority":"high|medium|low","reason":"brief reason"}]
 No markdown, no explanation, just the JSON array.`,
       );
-      const parsed = JSON.parse(raw.trim());
+      const parsed = extractJson(raw);
       setResult({ type: "prioritize", items: parsed });
     } catch (e) {
       setResult({
@@ -886,6 +902,13 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
           <span className="sl-ai-panel__icon">✨</span>
           AI Shopping Assistant
         </div>
+        <button
+          className="sl-ai-panel__saved-btn"
+          onClick={() => setSavedOpen(true)}
+          title="Your saved AI feedback (all categories)"
+        >
+          📁 Saved{savedFeedback.length ? ` (${savedFeedback.length})` : ""}
+        </button>
         <button className="sl-ai-panel__close" onClick={onClose}>
           ×
         </button>
@@ -902,11 +925,6 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
           { id: "chat", label: "💬 Chat", title: "Ask anything" },
           { id: "budget", label: "💰 Budget", title: "Budget analysis" },
           { id: "prioritize", label: "🎯 Prioritize", title: "Rank your list" },
-          {
-            id: "saved",
-            label: `📁 Saved${savedFeedback.length ? ` (${savedFeedback.length})` : ""}`,
-            title: "Your saved AI feedback (all categories)",
-          },
         ].map((m) => (
           <button
             key={m.id}
@@ -1110,50 +1128,68 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
           </div>
         )}
 
-        {/* ── Saved feedback (all categories) ── */}
-        {mode === "saved" && (
-          <div className="sl-ai-section">
-            {savedFeedback.length === 0 ? (
-              <p className="sl-ai-hint">
-                No saved feedback yet. Run 💰 Budget, 🎯 Prioritize, or 💬 Chat,
-                then tap <strong>💾 Save feedback</strong> to keep it here —
-                across all your categories.
-              </p>
-            ) : (
-              <div className="sl-saved-fb">
-                {savedFeedback.map((f) => (
-                  <div key={f.id} className="sl-saved-fb__card">
-                    <div className="sl-saved-fb__head">
-                      <span className="sl-saved-fb__cat">
-                        {f.catEmoji} {f.catLabel}
-                      </span>
-                      <span className="sl-saved-fb__kind">
-                        {f.kind === "budget" ? "💰 Budget" : f.kind === "prioritize" ? "🎯 Prioritize" : "💬 Chat"}
-                      </span>
-                      <span className="sl-saved-fb__date">
-                        {new Date(f.ts).toLocaleDateString()}
-                      </span>
-                      <button
-                        className="sl-saved-fb__del"
-                        onClick={() => deleteFeedback(f.id)}
-                        title="Delete saved feedback"
-                        aria-label="Delete saved feedback"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                    <pre className="sl-saved-fb__body">{f.content}</pre>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
         {result?.type === "error" && (
           <ApiErrorMessage className="sl-ai-error" message={result.message} />
         )}
       </div>
+
+      {/* ── Saved feedback (all categories) — own centered modal, same
+          pattern as Favorites/Saved Looks/Donation Sets elsewhere in the
+          app, so it doesn't grow the chat panel inline. ── */}
+      {savedOpen && (
+        <div className="opp-saved__backdrop" onClick={() => setSavedOpen(false)}>
+          <aside
+            className="opp-saved"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Saved AI Feedback"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <header className="opp-saved__head">
+              <h4 className="opp-saved__title">📁 Saved Feedback</h4>
+              <button className="opp__btn" onClick={() => setSavedOpen(false)} aria-label="Close">
+                ✕
+              </button>
+            </header>
+            <div className="opp-saved__content">
+              {savedFeedback.length === 0 ? (
+                <p className="sl-ai-hint">
+                  No saved feedback yet. Run 💰 Budget, 🎯 Prioritize, or 💬 Chat,
+                  then tap <strong>💾 Save feedback</strong> to keep it here —
+                  across all your categories.
+                </p>
+              ) : (
+                <div className="sl-saved-fb">
+                  {savedFeedback.map((f) => (
+                    <div key={f.id} className="sl-saved-fb__card">
+                      <div className="sl-saved-fb__head">
+                        <span className="sl-saved-fb__cat">
+                          {f.catEmoji} {f.catLabel}
+                        </span>
+                        <span className="sl-saved-fb__kind">
+                          {f.kind === "budget" ? "💰 Budget" : f.kind === "prioritize" ? "🎯 Prioritize" : "💬 Chat"}
+                        </span>
+                        <span className="sl-saved-fb__date">
+                          {new Date(f.ts).toLocaleDateString()}
+                        </span>
+                        <button
+                          className="sl-saved-fb__del"
+                          onClick={() => deleteFeedback(f.id)}
+                          title="Delete saved feedback"
+                          aria-label="Delete saved feedback"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                      <pre className="sl-saved-fb__body">{f.content}</pre>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }
