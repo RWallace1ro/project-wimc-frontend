@@ -726,6 +726,13 @@ function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
 
   const activeCat = categories.find((c) => c.id === activeCatId);
 
+  // Applies the same male/female closet toggle Closet Search and Try-On
+  // Studio already read, so suggestions lean toward the right style —
+  // skipped for "Kids Items" since that category isn't tied to the adult
+  // closet's gender at all (kids profiles have their own gender per child).
+  const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
+  const genderContext = activeCat?.id !== "kids" ? ` The shopper is ${gender === "male" ? "male" : "female"} — suggest items appropriate for ${gender === "male" ? "men's" : "women's"} fashion.` : "";
+
   const saveFeedback = (kind, content) => {
     if (!content) return;
     const entry = {
@@ -768,7 +775,7 @@ function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
         [
           {
             role: "user",
-            content: `Category: "${activeCat?.label}". Context: "${input || "general shopping"}". Already have: ${existing}. Suggest 8-12 shopping items.${travelContext}`,
+            content: `Category: "${activeCat?.label}". Context: "${input || "general shopping"}". Already have: ${existing}. Suggest 8-12 shopping items.${travelContext}${genderContext}`,
           },
         ],
         `You are a smart shopping assistant for a closet/lifestyle app called WIMC (What's In My Closet).
@@ -797,7 +804,7 @@ No markdown, no explanation, just the JSON array.`,
         [
           {
             role: "user",
-            content: `Shopping list for "${activeCat?.label}": ${list}. Budget context: "${input || "general budget advice"}".`,
+            content: `Shopping list for "${activeCat?.label}": ${list}. Budget context: "${input || "general budget advice"}".${genderContext}`,
           },
         ],
         `You are a budget-conscious shopping advisor for WIMC app. 
@@ -827,7 +834,7 @@ No markdown, no explanation, just the JSON.`,
         [
           {
             role: "user",
-            content: `Prioritize this shopping list for "${activeCat?.label}": ${list}. Context: "${input || "everyday use"}"`,
+            content: `Prioritize this shopping list for "${activeCat?.label}": ${list}. Context: "${input || "everyday use"}"${genderContext}`,
           },
         ],
         `You are a smart shopping assistant for WIMC app.
@@ -856,7 +863,7 @@ No markdown, no explanation, just the JSON array.`,
     setChatHistory(newHistory);
     setLoading(true);
     try {
-      const catContext = `Current category: "${activeCat?.label}". Items on list: ${catItems.map((i) => i.name).join(", ") || "none"}.`;
+      const catContext = `Current category: "${activeCat?.label}". Items on list: ${catItems.map((i) => i.name).join(", ") || "none"}.${genderContext}`;
       const raw = await callAI(
         newHistory,
         `You are a helpful shopping assistant for WIMC (What's In My Closet), a closet and lifestyle app. ${catContext}
@@ -2281,7 +2288,7 @@ export default function ShoppingList() {
 //         [
 //           {
 //             role: "user",
-//             content: `Shopping list for "${activeCat?.label}": ${list}. Budget context: "${input || "general budget advice"}".`,
+//             content: `Shopping list for "${activeCat?.label}": ${list}. Budget context: "${input || "general budget advice"}".${genderContext}`,
 //           },
 //         ],
 //         `You are a budget-conscious shopping advisor for WIMC app.
@@ -2311,7 +2318,7 @@ export default function ShoppingList() {
 //         [
 //           {
 //             role: "user",
-//             content: `Prioritize this shopping list for "${activeCat?.label}": ${list}. Context: "${input || "everyday use"}"`,
+//             content: `Prioritize this shopping list for "${activeCat?.label}": ${list}. Context: "${input || "everyday use"}"${genderContext}`,
 //           },
 //         ],
 //         `You are a smart shopping assistant for WIMC app.
@@ -3541,7 +3548,7 @@ export default function ShoppingList() {
 //         [
 //           {
 //             role: "user",
-//             content: `Shopping list for "${activeCat?.label}": ${list}. Budget context: "${input || "general budget advice"}".`,
+//             content: `Shopping list for "${activeCat?.label}": ${list}. Budget context: "${input || "general budget advice"}".${genderContext}`,
 //           },
 //         ],
 //         `You are a budget-conscious shopping advisor for WIMC app.
@@ -3571,7 +3578,7 @@ export default function ShoppingList() {
 //         [
 //           {
 //             role: "user",
-//             content: `Prioritize this shopping list for "${activeCat?.label}": ${list}. Context: "${input || "everyday use"}"`,
+//             content: `Prioritize this shopping list for "${activeCat?.label}": ${list}. Context: "${input || "everyday use"}"${genderContext}`,
 //           },
 //         ],
 //         `You are a smart shopping assistant for WIMC app.
