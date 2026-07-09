@@ -892,6 +892,14 @@
 .sl-ai-input:focus {
   border-color: #7c3aed;
 }
+.sl-ai-input--select {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.sl-ai-hint--travel {
+  color: #0369a1;
+  margin-top: -2px;
+}
 
 /* Spinner */
 .sl-spinner {
@@ -2311,6 +2319,14 @@
 }
 .sl-ai-input:focus {
   border-color: #7c3aed;
+}
+.sl-ai-input--select {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+.sl-ai-hint--travel {
+  color: #0369a1;
+  margin-top: -2px;
 }
 
 /* Spinner */

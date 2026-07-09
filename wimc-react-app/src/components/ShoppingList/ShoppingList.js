@@ -24,6 +24,10 @@ const DEFAULT_CATEGORIES = [
 const LS_KEY = "wimc_shopping_list_v1";
 const FEEDBACK_KEY = "wimc_shopping_ai_feedback_v1";
 
+// Trip types offered when suggesting for the "Travel Items" category — same
+// options as AI Packing Assistant, so the two features feel consistent.
+const TRIP_TYPES = ["Business", "Beach", "Hiking", "City Break", "Wedding", "Backpacking", "Ski/Winter", "Cruise"];
+
 function uid() {
   return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
 }
@@ -689,6 +693,12 @@ function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
   const [chatHistory, setChatHistory] = useState([]);
   const chatEndRef = useRef(null);
 
+  // ── Travel destination/trip-type context (Travel Items category only) —
+  // lets Suggest mode reason about climate/season for what to buy, the same
+  // way AI Packing Assistant does for what to pack from the closet.
+  const [destination, setDestination] = useState("");
+  const [tripType, setTripType] = useState("");
+
   // ── Saved AI feedback (persists across categories & sessions) ──
   const [savedFeedback, setSavedFeedback] = useState([]);
   const [savedMsg, setSavedMsg] = useState("");
@@ -737,19 +747,24 @@ function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
   }, [chatHistory]);
 
   // ── Suggest items ──
+  const isTravelCat = activeCat?.id === "travel";
   const handleSuggest = async () => {
     setLoading(true);
     setResult(null);
     try {
       const existing = catItems.map((i) => i.name).join(", ") || "none yet";
+      const travelContext =
+        isTravelCat && destination.trim()
+          ? ` This is for a trip to "${destination.trim()}"${tripType ? ` (${tripType} trip)` : ""} — consider the destination's likely weather, climate, and season, and the trip type, when deciding what to suggest.`
+          : "";
       const raw = await callAI(
         [
           {
             role: "user",
-            content: `Category: "${activeCat?.label}". Context: "${input || "general shopping"}". Already have: ${existing}. Suggest 8-12 shopping items.`,
+            content: `Category: "${activeCat?.label}". Context: "${input || "general shopping"}". Already have: ${existing}. Suggest 8-12 shopping items.${travelContext}`,
           },
         ],
-        `You are a smart shopping assistant for a closet/lifestyle app called WIMC (What's In My Closet). 
+        `You are a smart shopping assistant for a closet/lifestyle app called WIMC (What's In My Closet).
 Return ONLY a JSON array like: [{"name":"Item","detail":"optional size/color/brand hint"}]
 No markdown, no explanation, just the JSON array.`,
       );
@@ -951,6 +966,27 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
               </strong>
               .
             </p>
+            {isTravelCat && (
+              <div className="sl-ai-row">
+                <input
+                  className="sl-ai-input"
+                  placeholder="Destination (e.g. Cancun, Iceland)…"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
+                />
+                <select
+                  className="sl-ai-input sl-ai-input--select"
+                  value={tripType}
+                  onChange={(e) => setTripType(e.target.value)}
+                >
+                  <option value="">Trip type (optional)</option>
+                  {TRIP_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="sl-ai-row">
               <input
                 className="sl-ai-input"
@@ -967,6 +1003,11 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
                 {loading ? <span className="sl-spinner" /> : "Generate"}
               </button>
             </div>
+            {isTravelCat && destination.trim() && (
+              <p className="sl-ai-hint sl-ai-hint--travel">
+                🌦️ Suggestions will consider {destination.trim()}'s likely weather/climate{tripType ? ` for a ${tripType.toLowerCase()} trip` : ""}.
+              </p>
+            )}
 
             {result?.type === "suggest" && (
               <SuggestResults items={result.items} onAdd={addSuggestedItems} />
