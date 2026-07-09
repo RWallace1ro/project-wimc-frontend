@@ -1504,7 +1504,7 @@ export default function ShoppingList() {
     setClosetCheckMsg("");
     try {
       const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
-      const { matchesById, errored, errorMessage } = await checkShoppingListAgainstCloset(unchecked, gender);
+      const { matchesById, checkedCount, totalCount, errored, errorMessage } = await checkShoppingListAgainstCloset(unchecked, gender);
       if (errored) {
         setClosetCheckMsg(errorMessage || "Couldn't complete the check. Please try again.");
       } else {
@@ -1516,10 +1516,12 @@ export default function ShoppingList() {
               : i,
           ),
         );
+        const truncatedNote =
+          totalCount > checkedCount ? ` (checked the first ${checkedCount} of ${totalCount} items)` : "";
         setClosetCheckMsg(
-          matchCount
+          (matchCount
             ? `Found ${matchCount} possible match${matchCount !== 1 ? "es" : ""} in your closet.`
-            : "No likely matches found in your closet.",
+            : "No likely matches found in your closet.") + truncatedNote,
         );
       }
     } catch {

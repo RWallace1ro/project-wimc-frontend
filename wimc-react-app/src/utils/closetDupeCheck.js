@@ -14,8 +14,10 @@ import { fetchImagesByTag } from "./CloudinaryAPI";
 import { sectionTagsWithSubs } from "./closetSubsections";
 import { extractSections } from "./outfitBuilder";
 
-const MAX_LIST_ITEMS = 15;   // keep the prompt (and AI cost) bounded
+const MAX_LIST_ITEMS = 25;    // keep the prompt (and AI cost) bounded
 const MAX_CLOSET_IMAGES = 24; // vision request practical limit
+const PER_TAG_IMAGE_CAP = 6;  // ensures no single matched section can crowd
+                               // out the others when splitting MAX_CLOSET_IMAGES
 
 async function postProxy(body) {
   const res = await aiProxyFetch(body, { feature: "ai_shopping_closet_check" });
@@ -32,12 +34,16 @@ async function postProxy(body) {
 /**
  * @param {Array<{id:string,name:string,detail?:string}>} items - unchecked shopping list items
  * @param {"male"|"female"} gender
- * @returns {Promise<{ matchesById: Record<string,string>, checkedCount: number, errored: boolean }>}
+ * @returns {Promise<{ matchesById: Record<string,string>, checkedCount: number, totalCount: number, errored: boolean }>}
  *   matchesById: shopping-list item id -> matched closet photo URL
+ *   checkedCount vs totalCount: lets the caller tell the user when the list
+ *   was too long to check in one pass (only the first MAX_LIST_ITEMS ran).
  */
 export async function checkShoppingListAgainstCloset(items, gender = "female") {
-  const candidates = items.filter((it) => it.name?.trim()).slice(0, MAX_LIST_ITEMS);
-  if (!candidates.length) return { matchesById: {}, checkedCount: 0, errored: false };
+  const named = items.filter((it) => it.name?.trim());
+  const candidates = named.slice(0, MAX_LIST_ITEMS);
+  const totalCount = named.length;
+  if (!candidates.length) return { matchesById: {}, checkedCount: 0, totalCount, errored: false };
 
   // 1) Keyword-guess each item's likely section(s) — free, no AI call.
   const sectionTagsByItem = candidates.map((it) => {
@@ -46,18 +52,22 @@ export async function checkShoppingListAgainstCloset(items, gender = "female") {
     return sections.map((s) => s.tag);
   });
   const allTags = Array.from(new Set(sectionTagsByItem.flat()));
-  if (!allTags.length) return { matchesById: {}, checkedCount: 0, errored: false };
+  if (!allTags.length) return { matchesById: {}, checkedCount: 0, totalCount, errored: false };
 
   // 2) Fetch candidate closet photos for those sections (incl. sub-sections).
   const expandedTags = Array.from(new Set(allTags.flatMap((t) => sectionTagsWithSubs(t))));
   let closetUrls = [];
   try {
     const lists = await Promise.all(expandedTags.map((t) => fetchImagesByTag(t).catch(() => [])));
-    closetUrls = Array.from(new Set(lists.flat())).slice(0, MAX_CLOSET_IMAGES);
+    // Cap per-tag BEFORE the global cap so a section with lots of photos
+    // (or one that just happens to fetch first) can't crowd out the others —
+    // every matched section gets a fair shot at a slot.
+    const capped = lists.map((urls) => urls.slice(0, PER_TAG_IMAGE_CAP));
+    closetUrls = Array.from(new Set(capped.flat())).slice(0, MAX_CLOSET_IMAGES);
   } catch {
-    return { matchesById: {}, checkedCount: candidates.length, errored: true };
+    return { matchesById: {}, checkedCount: candidates.length, totalCount, errored: true };
   }
-  if (!closetUrls.length) return { matchesById: {}, checkedCount: candidates.length, errored: false };
+  if (!closetUrls.length) return { matchesById: {}, checkedCount: candidates.length, totalCount, errored: false };
 
   // 3) One vision request: does any closet photo look like the same item as
   //    a listed one?
@@ -109,10 +119,10 @@ If nothing matches, end with exactly: {"matches": []}`,
         }
       }
     }
-    return { matchesById, checkedCount: candidates.length, errored: false };
+    return { matchesById, checkedCount: candidates.length, totalCount, errored: false };
   } catch (e) {
     // Surface the real reason (e.g. the daily-limit message) instead of a
     // generic "couldn't complete" that hides why it actually failed.
-    return { matchesById: {}, checkedCount: candidates.length, errored: true, errorMessage: e?.message };
+    return { matchesById: {}, checkedCount: candidates.length, totalCount, errored: true, errorMessage: e?.message };
   }
 }
