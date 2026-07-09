@@ -198,7 +198,7 @@ function DonatedItemsView({ data, onImageClick, comments, onComment }) {
         {items.map((item, i) => {
           const key = `donated_${i}`;
           return (
-            <div key={key} className="sv-thumb sv-thumb--done">
+            <div key={key} className="sv-thumb">
               <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={() => onImageClick(images, i)} />
               <div className="sv-thumb__name">{item.name || "Item"}</div>
               <ItemComment itemKey={key} comments={comments} canEdit={false} onComment={onComment} />
