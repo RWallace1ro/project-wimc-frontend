@@ -50,6 +50,13 @@ function prioritizeToText(items) {
     .join("\n");
 }
 
+function suggestToText(items, destination, tripType) {
+  const head = destination
+    ? `Trip: ${destination}${tripType ? ` (${tripType})` : ""}\n\n`
+    : "";
+  return head + items.map((it) => `• ${it.name}${it.detail ? ` — ${it.detail}` : ""}`).join("\n");
+}
+
 // ── AI call via Anthropic API ─────────────────────────────────────────────────
 async function callAI(messages, systemPrompt) {
   const res = await aiProxyFetch({
@@ -967,25 +974,29 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
               .
             </p>
             {isTravelCat && (
-              <div className="sl-ai-row">
-                <input
-                  className="sl-ai-input"
-                  placeholder="Destination (e.g. Cancun, Iceland)…"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
-                />
-                <select
-                  className="sl-ai-input sl-ai-input--select"
-                  value={tripType}
-                  onChange={(e) => setTripType(e.target.value)}
-                >
-                  <option value="">Trip type (optional)</option>
-                  {TRIP_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
+              <>
+                <div className="sl-ai-row">
+                  <input
+                    className="sl-ai-input"
+                    placeholder="Destination (e.g. Cancun, Iceland)…"
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSuggest()}
+                  />
+                </div>
+                <div className="sl-ai-row">
+                  <select
+                    className="sl-ai-input sl-ai-input--select"
+                    value={tripType}
+                    onChange={(e) => setTripType(e.target.value)}
+                  >
+                    <option value="">Trip type (optional)</option>
+                    {TRIP_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
             )}
             <div className="sl-ai-row">
               <input
@@ -1010,7 +1021,16 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
             )}
 
             {result?.type === "suggest" && (
-              <SuggestResults items={result.items} onAdd={addSuggestedItems} />
+              <>
+                <SuggestResults items={result.items} onAdd={addSuggestedItems} />
+                <button
+                  className="sl-btn sl-btn--sm sl-save-fb"
+                  onClick={() => saveFeedback("suggest", suggestToText(result.items, isTravelCat ? destination.trim() : "", isTravelCat ? tripType : ""))}
+                >
+                  💾 Save feedback
+                </button>
+                {savedMsg && <span className="sl-save-fb__msg">{savedMsg}</span>}
+              </>
             )}
           </div>
         )}
@@ -1208,7 +1228,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
                           {f.catEmoji} {f.catLabel}
                         </span>
                         <span className="sl-saved-fb__kind">
-                          {f.kind === "budget" ? "💰 Budget" : f.kind === "prioritize" ? "🎯 Prioritize" : "💬 Chat"}
+                          {f.kind === "budget" ? "💰 Budget" : f.kind === "prioritize" ? "🎯 Prioritize" : f.kind === "suggest" ? "💡 Suggest" : "💬 Chat"}
                         </span>
                         <span className="sl-saved-fb__date">
                           {new Date(f.ts).toLocaleDateString()}
