@@ -134,6 +134,10 @@ const SECTIONS = [
         q: "How does the Donate Bin work?",
         a: "Open the Donate Bin, browse your closet sections, and select items you'd like to donate. Once you're ready, tap 'Donate Items' to move them to your Donated Items history. You can save donation sets, share them, or get AI advice before committing.",
       },
+      {
+        q: "What do 'Load' and 'Merge' do on a saved donation set (or a saved outfit look)?",
+        a: "'Load' replaces your current selection with the saved set's items. 'Merge' adds the saved set's items into your current selection, keeping what's already there. The same Load/Merge choice is available when importing a link in Outfit Preview.",
+      },
     ],
   },
   {
