@@ -110,7 +110,9 @@ If nothing matches, end with exactly: {"matches": []}`,
       }
     }
     return { matchesById, checkedCount: candidates.length, errored: false };
-  } catch {
-    return { matchesById: {}, checkedCount: candidates.length, errored: true };
+  } catch (e) {
+    // Surface the real reason (e.g. the daily-limit message) instead of a
+    // generic "couldn't complete" that hides why it actually failed.
+    return { matchesById: {}, checkedCount: candidates.length, errored: true, errorMessage: e?.message };
   }
 }

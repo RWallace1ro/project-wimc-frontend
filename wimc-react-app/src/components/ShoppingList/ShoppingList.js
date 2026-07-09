@@ -914,7 +914,9 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
         note: "",
       })),
     );
-    setResult(null);
+    // Keep the results (and the "Save feedback" button) visible after adding
+    // — clearing them here meant Save was only ever available before you'd
+    // added anything to your list.
   };
 
   return (
@@ -1502,9 +1504,9 @@ export default function ShoppingList() {
     setClosetCheckMsg("");
     try {
       const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
-      const { matchesById, errored } = await checkShoppingListAgainstCloset(unchecked, gender);
+      const { matchesById, errored, errorMessage } = await checkShoppingListAgainstCloset(unchecked, gender);
       if (errored) {
-        setClosetCheckMsg("Couldn't complete the check. Please try again.");
+        setClosetCheckMsg(errorMessage || "Couldn't complete the check. Please try again.");
       } else {
         const matchCount = Object.keys(matchesById).length;
         setItems((prev) =>
