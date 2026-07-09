@@ -48,6 +48,14 @@ const AI_LIMITS = { free: 3, pro: 10, pro_ai: 50 };
 const HELP_FEATURE = "wimc_assistant";
 const HELP_DAILY_LIMIT = 40;
 
+// The Shopping List's "Check my closet for duplicates" tool is likewise
+// exempt from the paid-tier AI ladder — it directly serves the app's own
+// "avoid buying duplicates" pitch, so it shouldn't be locked behind Pro+AI.
+// Its own small daily cap (same tier-agnostic pattern as the help bot) bounds
+// the cost since it's still a real API call.
+const DUPE_CHECK_FEATURE = "ai_shopping_closet_check";
+const DUPE_CHECK_DAILY_LIMIT = 5;
+
 // Set permissive CORS headers on every response so the browser never blocks
 // the preflight. Allow the Authorization header so the client can send the
 // Firebase ID token used for per-user rate limiting.
@@ -99,21 +107,29 @@ async function checkAndIncrementUsage(uid) {
   });
 }
 
-// Separate daily counter for the help assistant (not tied to the tier ladder).
-async function checkAndIncrementHelp(uid) {
+// Generic tier-agnostic daily counter, keyed by its own Firestore collection
+// and cap — used for features exempt from the paid AI-request ladder (help
+// bot, closet duplicate check) so each gets an independent daily allowance.
+async function checkAndIncrementCustom(uid, collectionName, dailyLimit) {
   const adminDb = getAdminDb();
-  const ref = adminDb.collection("aiHelpUsage").doc(uid);
+  const ref = adminDb.collection(collectionName).doc(uid);
   const today = new Date().toISOString().slice(0, 10);
   return adminDb.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
     const data = snap.exists ? snap.data() : {};
     const count = data.date === today ? (data.count || 0) : 0;
-    if (count >= HELP_DAILY_LIMIT) {
-      return { allowed: false, count, limit: HELP_DAILY_LIMIT };
+    if (count >= dailyLimit) {
+      return { allowed: false, count, limit: dailyLimit };
     }
     tx.set(ref, { date: today, count: count + 1, updatedAt: Date.now() });
-    return { allowed: true, count: count + 1, limit: HELP_DAILY_LIMIT };
+    return { allowed: true, count: count + 1, limit: dailyLimit };
   });
+}
+async function checkAndIncrementHelp(uid) {
+  return checkAndIncrementCustom(uid, "aiHelpUsage", HELP_DAILY_LIMIT);
+}
+async function checkAndIncrementDupeCheck(uid) {
+  return checkAndIncrementCustom(uid, "aiDupeCheckUsage", DUPE_CHECK_DAILY_LIMIT);
 }
 
 // ── Anthropic proxy ───────────────────────────────────────────────────────────
@@ -140,24 +156,29 @@ exports.anthropicProxy = functions
 
     // The client tags each call with a feature label. Strip it before
     // forwarding (Anthropic would reject an unknown field) and use it to pick
-    // the rate-limit bucket: the help bot has its own counter, exempt from the
-    // tier AI ladder.
+    // the rate-limit bucket: the help bot and the closet duplicate-check each
+    // have their own counter, exempt from the tier AI ladder.
     const { feature, ...anthropicBody } = req.body || {};
     const isHelp = feature === HELP_FEATURE;
+    const isDupeCheck = feature === DUPE_CHECK_FEATURE;
 
     // ── Per-user daily rate limit ─────────────────────────────────────────────
     try {
       const { allowed, count, limit, tier } = isHelp
         ? await checkAndIncrementHelp(uid)
-        : await checkAndIncrementUsage(uid);
+        : isDupeCheck
+          ? await checkAndIncrementDupeCheck(uid)
+          : await checkAndIncrementUsage(uid);
       if (!allowed) {
         const msg = isHelp
           ? `You've reached today's limit of ${limit} help questions. Please try again tomorrow.`
-          : `You've reached today's limit of ${limit} AI requests. ${
-              tier === "pro_ai"
-                ? "Please try again tomorrow."
-                : "Upgrade your plan for more daily AI requests, or try again tomorrow."
-            }`;
+          : isDupeCheck
+            ? `You've reached today's limit of ${limit} closet duplicate checks. Please try again tomorrow.`
+            : `You've reached today's limit of ${limit} AI requests. ${
+                tier === "pro_ai"
+                  ? "Please try again tomorrow."
+                  : "Upgrade your plan for more daily AI requests, or try again tomorrow."
+              }`;
         res.status(429).json({ error: msg });
         return;
       }
