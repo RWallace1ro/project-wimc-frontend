@@ -240,29 +240,57 @@ function ShoppingListView({ data, canEdit, checkedItems, onToggle, comments, onC
 }
 
 // ── Sub-view: Travel Pack ─────────────────────────────────────────────────────
-function TravelPackView({ data, canEdit, checkedItems, onToggle, comments, onComment }) {
+const TRAVEL_PACK_DAY_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+function TravelPackView({ data, onImageClick, canEdit, checkedItems, onToggle, comments, onComment }) {
   const days = data?.days || {};
-  const dayKeys = Object.keys(days).sort((a, b) => Number(a) - Number(b));
+  // Day keys are weekday names (e.g. "Monday"); fall back to alphabetical for
+  // any unrecognized key rather than a numeric sort, which produced "Day NaN".
+  const dayKeys = Object.keys(days).sort((a, b) => {
+    const ia = TRAVEL_PACK_DAY_ORDER.indexOf(a);
+    const ib = TRAVEL_PACK_DAY_ORDER.indexOf(b);
+    if (ia === -1 && ib === -1) return a.localeCompare(b);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
   if (!dayKeys.length) return <p>No packing list available.</p>;
+  const allImages = dayKeys
+    .flatMap((day) => (days[day] || []).map((it, i) => ({ ...it, _key: `${day}_${i}` })))
+    .filter((it) => it.mediaThumb || it.mediaUrl)
+    .map((it) => ({ src: it.mediaUrl || it.mediaThumb, alt: it.name || "Item", key: it._key }));
   return (
     <div>
       {dayKeys.map((day) => {
         const items = days[day] || [];
         return (
           <div key={day} className="sv-day">
-            <p className="sv-day__label">Day {Number(day) + 1}</p>
-            <div className="sv-checklist">
+            <p className="sv-day__label">{day}</p>
+            <div className="sv-grid">
               {items.map((item, i) => {
-                const key = `day${day}_${i}`;
+                const key = `${day}_${i}`;
                 const done = !!checkedItems?.[key];
                 const name = item.name || item.label || `Item ${i + 1}`;
+                const src = item.mediaThumb || item.mediaUrl;
                 return (
-                  <div key={key} className="sv-check-item">
-                    {canEdit
-                      ? <input type="checkbox" checked={done} onChange={(e) => onToggle(key, e.target.checked)} />
-                      : <span style={{ fontSize: 16 }}>{done ? "✅" : "⬜"}</span>
+                  <div key={key} className={`sv-thumb ${done ? "sv-thumb--done" : ""}`}>
+                    {src
+                      ? <img
+                          src={src}
+                          alt={name}
+                          style={{ cursor: "pointer" }}
+                          onClick={() => onImageClick(allImages, allImages.findIndex((im) => im.key === key))}
+                        />
+                      : <div style={{ aspectRatio: "3/4", background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🧳</div>
                     }
-                    <span className={`sv-check-item__name ${done ? "sv-check-item__name--done" : ""}`}>{name}</span>
+                    <div className="sv-thumb__name">{name}</div>
+                    {canEdit && (
+                      <input
+                        type="checkbox"
+                        checked={done}
+                        onChange={(e) => onToggle(key, e.target.checked)}
+                        style={{ position: "absolute", top: 4, left: 4, accentColor: "#7c3aed" }}
+                      />
+                    )}
                     <ItemComment itemKey={key} comments={comments} canEdit={canEdit} onComment={onComment} />
                   </div>
                 );
