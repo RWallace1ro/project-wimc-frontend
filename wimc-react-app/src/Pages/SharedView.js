@@ -154,6 +154,62 @@ function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle, onImag
   );
 }
 
+// ── Sub-view: Saved Donation Sets ───────────────────────────────────────────────
+function DonationSetsView({ data, onImageClick, comments, onComment }) {
+  const sets = data?.sets || [];
+  if (!sets.length) return <p className="sv-empty">No saved donation sets.</p>;
+  return (
+    <div>
+      {sets.map((set, si) => {
+        const items = (set.items || []).filter((it) => it.imageUrl);
+        const images = items.map((it, i) => ({ src: it.imageUrl, alt: it.name || "Item", key: `set${si}_${i}` }));
+        return (
+          <div key={set.id || si}>
+            {si > 0 && <div className="sv-divider" />}
+            <p className="sv-section-title">{set.name || `Donation Set ${si + 1}`} ({items.length})</p>
+            <div className="sv-grid">
+              {items.map((item, i) => {
+                const key = `set${si}_${i}`;
+                return (
+                  <div key={key} className="sv-thumb">
+                    <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={() => onImageClick(images, i)} />
+                    <div className="sv-thumb__name">{item.name || "Item"}</div>
+                    <ItemComment itemKey={key} comments={comments} canEdit={false} onComment={onComment} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Sub-view: Donated Items ─────────────────────────────────────────────────────
+function DonatedItemsView({ data, onImageClick, comments, onComment }) {
+  const items = (data?.items || []).filter((it) => it.imageUrl);
+  if (!items.length) return <p className="sv-empty">No donated items.</p>;
+  const images = items.map((it, i) => ({ src: it.imageUrl, alt: it.name || "Item", key: `donated_${i}` }));
+  return (
+    <div>
+      <p className="sv-section-title">Donated Items ({items.length})</p>
+      <div className="sv-grid">
+        {items.map((item, i) => {
+          const key = `donated_${i}`;
+          return (
+            <div key={key} className="sv-thumb sv-thumb--done">
+              <img src={item.imageUrl} alt={item.name} style={{ cursor: "pointer" }} onClick={() => onImageClick(images, i)} />
+              <div className="sv-thumb__name">{item.name || "Item"}</div>
+              <ItemComment itemKey={key} comments={comments} canEdit={false} onComment={onComment} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Sub-view: Shopping List ───────────────────────────────────────────────────
 function ShoppingListView({ data, canEdit, checkedItems, onToggle, comments, onComment }) {
   const items = data?.items || [];
@@ -473,6 +529,8 @@ export default function SharedView() {
     switch (type) {
       case "wishlist":     return <WishListView {...props} />;
       case "donatebin":    return <DonateBinView {...props} />;
+      case "donatesets":   return <DonationSetsView {...props} />;
+      case "donatedbins":  return <DonatedItemsView {...props} />;
       case "shoppinglist": return <ShoppingListView {...props} />;
       case "travelpack":   return <TravelPackView {...props} />;
       case "outfit":       return <OutfitPlanView {...props} />;

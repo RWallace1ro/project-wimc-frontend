@@ -917,6 +917,12 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
     w.addEventListener("load", () => URL.revokeObjectURL(url));
   }
 
+  // A plain product/photo link (jpg, png, tif, etc.) — add it directly as a
+  // single item via an <img> tag rather than fetch()-ing it, since many
+  // third-party image CDNs (retailer product photos, etc.) block cross-origin
+  // fetch with CORS even though the browser can display the image just fine.
+  const IMAGE_URL_RE = /\.(jpe?g|png|gif|webp|avif|tiff?|bmp|svg)(\?|#|$)/i;
+
   // ----- NEW: Import from URL (fixes no-undef) -----
   const importFromUrl = useCallback(
     async (mode /* 'replace' | 'merge' */) => {
@@ -924,6 +930,11 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
       setLoadingImport(true);
       setImportError("");
       try {
+        if (IMAGE_URL_RE.test(loadUrl)) {
+          addMany([loadUrl], mode === "replace" ? "replace" : "merge");
+          setLoadUrl("");
+          return;
+        }
         const res = await fetch(loadUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
@@ -931,9 +942,10 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
           throw new Error("Malformed outfit JSON.");
         }
         addMany(data.items, mode === "replace" ? "replace" : "merge");
+        setLoadUrl("");
       } catch (e) {
         setImportError(
-          "Couldn’t load that link. Make sure it’s a valid outfit URL.",
+          "Couldn’t load that link. Paste either a photo URL or a WIMC shared-outfit link.",
         );
       } finally {
         setLoadingImport(false);
