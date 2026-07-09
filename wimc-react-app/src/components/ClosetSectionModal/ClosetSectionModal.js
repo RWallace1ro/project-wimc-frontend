@@ -147,6 +147,29 @@ function ClosetSectionModal({
     }
   }, [recentUpload]);
 
+  // Purge items deleted elsewhere (e.g. Donate Bin's "Confirm removed from
+  // closet") from every cached tag — otherwise the deleted photos keep
+  // showing here until a full app refresh re-fetches everything.
+  useEffect(() => {
+    const onRemoved = (e) => {
+      const urls = e.detail?.urls;
+      if (!Array.isArray(urls) || !urls.length) return;
+      const removedSet = new Set(urls);
+      setItemsByTag((prev) => {
+        const next = {};
+        let changed = false;
+        for (const [t, list] of Object.entries(prev)) {
+          const filtered = list.filter((u) => !removedSet.has(u));
+          if (filtered.length !== list.length) changed = true;
+          next[t] = filtered;
+        }
+        return changed ? next : prev;
+      });
+    };
+    window.addEventListener("wimc:closet-items-removed", onRemoved);
+    return () => window.removeEventListener("wimc:closet-items-removed", onRemoved);
+  }, []);
+
   // Effective tag all data operations key off (fetch, add, delete, move, pin)
   const tag = subTag || sectionTag;
 

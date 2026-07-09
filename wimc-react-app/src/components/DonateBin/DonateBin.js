@@ -511,12 +511,14 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
     setRemovingFromCloset(true);
     setRemoveMsg("");
     let ok = 0;
+    const removedUrls = [];
     for (const it of removableDonated) {
       const url = it.imageUrl || it.url;
       try {
         if (/\/video\/upload\//.test(url)) await deleteVideo(url);
         else await deleteImage(url);
         ok += 1;
+        removedUrls.push(url);
       } catch {
         /* best-effort — keep going */
       }
@@ -530,6 +532,14 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
       try { syncSetItem(lsDonatedKey, JSON.stringify(updated)); } catch {}
       return updated;
     });
+    // The closet section grid/modal cache these photos and has no way to
+    // know they were deleted here — broadcast so they can purge them
+    // immediately instead of showing stale images until a full app refresh.
+    if (removedUrls.length) {
+      try {
+        window.dispatchEvent(new CustomEvent("wimc:closet-items-removed", { detail: { urls: removedUrls } }));
+      } catch {}
+    }
     setRemovingFromCloset(false);
     setRemoveMsg(`✅ Removed ${ok} item${ok !== 1 ? "s" : ""} from your closet.`);
     setTimeout(() => setRemoveMsg(""), 4000);

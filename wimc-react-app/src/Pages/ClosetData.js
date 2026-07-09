@@ -186,6 +186,21 @@ function ClosetData({
       onRegisterOpenSection(openSection);
   }, [onRegisterOpenSection, openSection]);
 
+  // Purge items deleted elsewhere (Donate Bin's "Confirm removed from
+  // closet") from this page's own closetItems — it's passed to Donate Bin
+  // as its picker source, so a stale entry here could let a deleted photo
+  // be re-added to a new donation set.
+  useEffect(() => {
+    const onRemoved = (e) => {
+      const urls = e.detail?.urls;
+      if (!Array.isArray(urls) || !urls.length) return;
+      const removedSet = new Set(urls);
+      setClosetItems((prev) => prev.filter((u) => !removedSet.has(u)));
+    };
+    window.addEventListener("wimc:closet-items-removed", onRemoved);
+    return () => window.removeEventListener("wimc:closet-items-removed", onRemoved);
+  }, []);
+
   useEffect(() => {
     if (isLoggedIn && selectedTab) {
       fetchSectionItems(selectedTab);
