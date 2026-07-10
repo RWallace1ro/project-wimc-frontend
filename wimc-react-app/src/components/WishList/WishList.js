@@ -636,27 +636,19 @@ export default function WishList({ storageKey }) {
 
           {/* Saved Wish Lists Drawer */}
           {listsOpen && (
-            <>
-              <div
-                className="opp-saved__backdrop"
-                onClick={() => setListsOpen(false)}
-                aria-label="Close Saved Wish Lists"
-              />
+            <div
+              className="opp-saved__backdrop"
+              onClick={() => setListsOpen(false)}
+              aria-label="Close Saved Wish Lists"
+            >
               <aside
                 className="opp-saved"
                 role="dialog"
                 aria-modal="true"
                 aria-label="Saved Wish Lists"
+                onClick={(e) => e.stopPropagation()}
               >
-                <header
-                  className="opp-saved__head"
-                  style={{
-                    position: "sticky",
-                    top: 0,
-                    background: "#fff",
-                    zIndex: 2,
-                  }}
-                >
+                <header className="opp-saved__head">
                   <h4 className="opp-saved__title">Saved Wish Lists</h4>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <input
@@ -789,7 +781,7 @@ export default function WishList({ storageKey }) {
                   )}
                 </div>
               </aside>
-            </>
+            </div>
           )}
         </>
       )}
