@@ -10,7 +10,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { getSubSections } from "../../utils/closetSubsections";
 import { onImgError } from "../../utils/imgFallback";
-import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
+import { appShareUrl, createCollabDoc, shareAppLink, decodeShareSrc } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import "./OutfitPlanner.css";
@@ -241,7 +241,21 @@ export default function OutfitPlanner({
     setLoadingImport(true);
     setImportError("");
     try {
-      const res = await fetch(importUrl);
+      // Users naturally paste the link WIMC's own "Share" gives them — an
+      // app page (/shared?src=<encoded raw url>), not the raw JSON file
+      // itself. Fetching that page directly 404s. Unwrap it when present.
+      let fetchUrl = importUrl;
+      try {
+        const asUrl = new URL(fetchUrl);
+        const srcParam = asUrl.searchParams.get("src");
+        if (srcParam) {
+          const decoded = decodeShareSrc(srcParam);
+          if (decoded) fetchUrl = decoded;
+        }
+      } catch {
+        /* not a valid absolute URL — fall through and let fetch() report why */
+      }
+      const res = await fetch(fetchUrl);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const src = data.days || data;

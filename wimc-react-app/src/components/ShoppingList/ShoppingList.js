@@ -1,7 +1,7 @@
 import { syncSetItem } from '../../utils/syncStore';
 ﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { uploadRawJSON } from "../../utils/CloudinaryAPI";
-import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
+import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl, decodeShareSrc } from "../../utils/shareUtils";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import ApiErrorMessage from "../common/ApiErrorMessage";
 import { checkShoppingListAgainstCloset } from "../../utils/closetDupeCheck";
@@ -1631,7 +1631,22 @@ export default function ShoppingList() {
     setLoadingImport(true);
     setImportError("");
     try {
-      const res = await fetch(importUrl.trim());
+      // Users naturally paste the link WIMC's own "Share" gives them — an
+      // app page (/shared?src=<encoded raw url>), not the raw JSON file
+      // itself. Fetching that page directly 404s (no static file exists at
+      // that path). Unwrap it to the underlying raw URL when present.
+      let fetchUrl = importUrl.trim();
+      try {
+        const asUrl = new URL(fetchUrl);
+        const src = asUrl.searchParams.get("src");
+        if (src) {
+          const decoded = decodeShareSrc(src);
+          if (decoded) fetchUrl = decoded;
+        }
+      } catch {
+        /* not a valid absolute URL — fall through and let fetch() report why */
+      }
+      const res = await fetch(fetchUrl);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.kind !== "wimc.shoppingList")

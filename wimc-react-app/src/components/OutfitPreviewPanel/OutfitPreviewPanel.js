@@ -10,7 +10,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { getSubSections } from "../../utils/closetSubsections";
 import "./OutfitPreviewPanel.css";
-import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../utils/shareUtils";
+import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl, decodeShareSrc } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import { onImgError } from "../../utils/imgFallback";
@@ -952,7 +952,21 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
           setLoadUrl("");
           return;
         }
-        const res = await fetch(loadUrl);
+        // Users naturally paste the link WIMC's own "Share" gives them — an
+        // app page (/shared?src=<encoded raw url>), not the raw JSON file
+        // itself. Fetching that page directly 404s. Unwrap it when present.
+        let fetchUrl = loadUrl;
+        try {
+          const asUrl = new URL(fetchUrl);
+          const src = asUrl.searchParams.get("src");
+          if (src) {
+            const decoded = decodeShareSrc(src);
+            if (decoded) fetchUrl = decoded;
+          }
+        } catch {
+          /* not a valid absolute URL — fall through and let fetch() report why */
+        }
+        const res = await fetch(fetchUrl);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!data?.items || !Array.isArray(data.items)) {
