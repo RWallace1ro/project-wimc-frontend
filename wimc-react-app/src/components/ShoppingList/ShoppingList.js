@@ -117,7 +117,7 @@ function CategoryTab({ cat, active, count, onClick }) {
   );
 }
 
-function ShoppingItem({ item, onToggle, onDelete, onEditNote, onDismissMatch }) {
+function ShoppingItem({ item, onToggle, onDelete, onEditNote, onDismissMatch, isDuplicateName }) {
   const [editingNote, setEditingNote] = useState(false);
   const [note, setNote] = useState(item.note || "");
   const [matchExpanded, setMatchExpanded] = useState(false);
@@ -141,6 +141,11 @@ function ShoppingItem({ item, onToggle, onDelete, onEditNote, onDismissMatch }) 
       <div className="sl-item__body">
         <span className="sl-item__name">{item.name}</span>
         {item.detail && <span className="sl-item__detail">{item.detail}</span>}
+        {isDuplicateName && (
+          <span className="sl-item__dupe-name-badge" title="Another item with this same name is already on this list">
+            ⚠️ Added twice
+          </span>
+        )}
         {editingNote ? (
           <div className="sl-item__note-edit">
             <input
@@ -1453,6 +1458,15 @@ export default function ShoppingList() {
   const checkedCount = catItems.filter((i) => i.checked).length;
   const totalCount = items.filter((i) => !i.checked).length;
 
+  // Flags items whose (normalized) name appears more than once in this
+  // category — catches someone re-adding the same thing on a later visit
+  // without noticing it's already on the list.
+  const dupeNameCounts = catItems.reduce((acc, i) => {
+    const key = i.name.trim().toLowerCase();
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
   const filteredItems = catItems.filter((item) => {
     const matchFilter =
       filter === "all"
@@ -1943,6 +1957,9 @@ export default function ShoppingList() {
               </button>
               {closetCheckMsg && <span className="sl-dupe-check-msg">{closetCheckMsg}</span>}
             </div>
+            <p className="sl-dupe-check-note">
+              Note: if this category has more than 25 items, the duplicate check only covers the first 25.
+            </p>
 
             {/* Filters + search */}
             <div className="sl-filters">
@@ -2016,6 +2033,7 @@ export default function ShoppingList() {
                     onDelete={deleteItem}
                     onEditNote={editNote}
                     onDismissMatch={dismissMatch}
+                    isDuplicateName={dupeNameCounts[item.name.trim().toLowerCase()] > 1}
                   />
                 ))
               )}

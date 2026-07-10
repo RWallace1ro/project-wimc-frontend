@@ -405,6 +405,11 @@
   font-size: 12px;
   color: #475569;
 }
+.sl-dupe-check-note {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 2px 0 0;
+}
 .sl-add-input {
   flex: 1;
   padding: 10px 12px;
@@ -636,6 +641,17 @@
 }
 .sl-item__dupe-badge:hover {
   background: #fef3c7;
+}
+.sl-item__dupe-name-badge {
+  display: inline-block;
+  margin-top: 4px;
+  margin-left: 6px;
+  font-size: 12px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 99px;
+  padding: 2px 8px;
 }
 .sl-item__dupe-compare {
   margin-top: 8px;
@@ -2076,6 +2092,17 @@
 }
 .sl-item__dupe-badge:hover {
   background: #fef3c7;
+}
+.sl-item__dupe-name-badge {
+  display: inline-block;
+  margin-top: 4px;
+  margin-left: 6px;
+  font-size: 12px;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 99px;
+  padding: 2px 8px;
 }
 .sl-item__dupe-compare {
   margin-top: 8px;
