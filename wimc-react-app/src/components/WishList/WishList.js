@@ -469,7 +469,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
       const cloudUrl =
         res?.secure_url || res?.url || res?.data?.secure_url || res?.data?.url;
       if (!cloudUrl) throw new Error("Upload failed");
-      const url = appShareUrl(cloudUrl, "wishlist");
+      const url = appShareUrl(cloudUrl, "savedwishlists");
       const result = await shareAppLink({
         title: "My WIMC Wish Lists 🛍️",
         text: "Check out my saved wish lists on WIMC!",
@@ -627,7 +627,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
 
             <div className="wish-modal__body">
               {/* Canvas */}
-              <div className="wish-canvas">
+              <div className={`wish-canvas${wishListItems.length === 0 ? " wish-canvas--empty" : ""}`}>
                 {wishListItems.length === 0 ? (
                   <div className="wish-canvas__hint">
                     No items yet — paste a link, upload, or add from the left.
@@ -894,6 +894,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
 
                                 <button
                                   className="donate-thumb-del"
+                                  style={{ left: "auto", right: 2, opacity: 1 }}
                                   onClick={(e) => { e.stopPropagation(); deleteSavedListItem(l.id, i); }}
                                   title="Remove from this list"
                                   aria-label="Remove from this list"

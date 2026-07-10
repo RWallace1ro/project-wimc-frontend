@@ -89,6 +89,58 @@ function WishListView({ data, onImageClick, canEdit, comments, onComment }) {
   );
 }
 
+// ── Sub-view: Saved Wish Lists (multiple named lists) ──────────────────────────
+function SavedWishListsView({ data, onImageClick, comments, onComment }) {
+  const lists = data?.lists || [];
+  if (!lists.length) return <p className="sv-empty">No saved wish lists.</p>;
+  return (
+    <div>
+      {lists.map((list, li) => {
+        const items = list.items || [];
+        const keyed = items.map((it, i) => ({ item: it, key: `${list.id || li}_${it.id || i}` }));
+        const images = keyed
+          .filter(({ item }) => item.image)
+          .map(({ item, key }) => ({ src: item.image, alt: item.name || "Item", key }));
+        return (
+          <div key={list.id || li}>
+            {li > 0 && <div className="sv-divider" />}
+            <p className="sv-section-title">{list.name || `Wish List ${li + 1}`} ({items.length})</p>
+            {items.length === 0 ? (
+              <p className="sv-empty">No items in this list.</p>
+            ) : (
+              <div className="sv-wish-list">
+                {keyed.map(({ item, key }) => (
+                  <div key={key} className="sv-wish-item">
+                    {item.image
+                      ? <img
+                          src={item.image}
+                          alt={item.name || "Item"}
+                          className="sv-wish-item__img"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => onImageClick(images, images.findIndex((im) => im.src === item.image))}
+                        />
+                      : <div className="sv-wish-item__img" style={{ background: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🛍️</div>
+                    }
+                    <div className="sv-wish-item__info">
+                      <p className="sv-wish-item__name">{item.name || "Unnamed item"}</p>
+                      {item.description && <p className="sv-wish-item__desc">{item.description}</p>}
+                      {item.siteName && <span className="sv-wish-item__site">{item.siteName}</span>}
+                      <ItemComment itemKey={key} comments={comments} canEdit={false} onComment={onComment} />
+                    </div>
+                    {item.url && (
+                      <a href={item.url} target="_blank" rel="noreferrer" className="sv-wish-item__link">View →</a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Sub-view: Donate Bin ──────────────────────────────────────────────────────
 function DonateBinView({ data, collabId, canEdit, checkedItems, onToggle, onImageClick, comments, onComment }) {
   const pending = data?.pending || [];
@@ -396,7 +448,10 @@ function KidsProfileView({ data, onImageClick }) {
 
 // ── Titles & icons per type ───────────────────────────────────────────────────
 const TYPE_META = {
-  wishlist:     { emoji: "🛍️", label: "Wish List" },
+  wishlist:      { emoji: "🛍️", label: "Wish List" },
+  savedwishlists: { emoji: "🛍️", label: "Saved Wish Lists" },
+  donatesets:    { emoji: "♻️", label: "Saved Donation Sets" },
+  donatedbins:   { emoji: "♻️", label: "Donated Items" },
   donatebin:    { emoji: "♻️", label: "Donate Bin" },
   shoppinglist: { emoji: "🛒", label: "Shopping List" },
   travelpack:   { emoji: "🧳", label: "Travel Pack" },
@@ -556,6 +611,7 @@ export default function SharedView() {
     const props = { data: payload, collabId, canEdit, checkedItems, onToggle: handleToggle, onImageClick: openLightbox, comments, onComment: handleComment };
     switch (type) {
       case "wishlist":     return <WishListView {...props} />;
+      case "savedwishlists": return <SavedWishListsView {...props} />;
       case "donatebin":    return <DonateBinView {...props} />;
       case "donatesets":   return <DonationSetsView {...props} />;
       case "donatedbins":  return <DonatedItemsView {...props} />;
