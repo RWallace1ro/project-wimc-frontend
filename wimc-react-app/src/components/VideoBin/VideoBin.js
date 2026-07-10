@@ -6,7 +6,8 @@ import React, {
   useCallback,
 } from "react";
 import { createPortal } from "react-dom";
-import { fetchVideosByTag, videoPoster, deleteVideo } from "../../utils/CloudinaryAPI";
+import { fetchVideosByTag, videoPoster, deleteVideo, uploadRawJSON } from "../../utils/CloudinaryAPI";
+import { appShareUrl, shareAppLink } from "../../utils/shareUtils";
 import {
   loadVideoMeta,
   saveVideoMeta,
@@ -202,29 +203,42 @@ export default function VideoBin({ videos: propVideos = [] }) {
     [editValue],
   );
 
-  // ── Share a video (copy link + native share sheet) ────────────────────────
+  // ── Share a video ───────────────────────────────────────────────────────
+  // Previously shared the raw Cloudinary .mp4 URL directly. Messaging apps
+  // (iMessage, WhatsApp, SMS, etc.) generate their own link preview by
+  // scraping the URL for Open Graph tags — a bare video file has none, so
+  // they render a static thumbnail with no indication it's a playable video
+  // (what looked like "just a still picture, no play button"). Sharing a
+  // real WIMC page instead (same pattern as every other share feature) gives
+  // recipients an actual <video> player with controls.
   const handleShare = async (v) => {
     setShareStatus((prev) => ({ ...prev, [v.url]: "copying" }));
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: v.title || "My WIMC Video",
-          text: "Check out this video from my closet!",
-          url: v.url,
-        });
+      const payload = {
+        kind: "wimc.video",
+        version: 1,
+        createdAt: new Date().toISOString(),
+        url: v.url,
+        poster: v.poster || "",
+        title: v.title || "",
+      };
+      const res = await uploadRawJSON(payload, "wimc/video-shares");
+      const cloudUrl = res?.secure_url || res?.url;
+      if (!cloudUrl) throw new Error("Upload failed");
+      const shareUrl = appShareUrl(cloudUrl, "video");
+
+      const result = await shareAppLink({
+        title: v.title || "My WIMC Video",
+        text: "Check out this video from my closet!",
+        url: shareUrl,
+      });
+      if (result === "shared" || result === "clipboard") {
         setShareStatus((prev) => ({ ...prev, [v.url]: "copied" }));
-      } else {
-        await navigator.clipboard.writeText(v.url);
-        setShareStatus((prev) => ({ ...prev, [v.url]: "copied" }));
-      }
-    } catch {
-      // User cancelled share or clipboard failed — try clipboard as fallback
-      try {
-        await navigator.clipboard.writeText(v.url);
-        setShareStatus((prev) => ({ ...prev, [v.url]: "copied" }));
-      } catch {
+      } else if (result !== "aborted") {
         setShareStatus((prev) => ({ ...prev, [v.url]: "error" }));
       }
+    } catch {
+      setShareStatus((prev) => ({ ...prev, [v.url]: "error" }));
     }
     setTimeout(
       () => setShareStatus((prev) => ({ ...prev, [v.url]: null })),

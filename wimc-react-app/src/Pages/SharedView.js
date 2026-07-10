@@ -400,6 +400,23 @@ function OutfitPlanView({ data, onImageClick, canEdit, comments, onComment }) {
   );
 }
 
+// ── Sub-view: Video ──────────────────────────────────────────────────────────
+function VideoView({ data }) {
+  if (!data?.url) return <p className="sv-empty">No video available.</p>;
+  return (
+    <div>
+      {data.title && <p className="sv-section-title">{data.title}</p>}
+      <video
+        controls
+        playsInline
+        poster={data.poster || undefined}
+        src={data.url}
+        style={{ width: "100%", maxWidth: 480, borderRadius: 10, background: "#000", display: "block" }}
+      />
+    </div>
+  );
+}
+
 // ── Sub-view: Receipt ────────────────────────────────────────────────────────
 function ReceiptView({ data, onImageClick }) {
   const isImage = data?.fileType === "image" && data?.fileUrl;
@@ -493,6 +510,7 @@ const TYPE_META = {
   donatesets:    { emoji: "♻️", label: "Saved Donation Sets" },
   donatedbins:   { emoji: "♻️", label: "Donated Items" },
   receipt:       { emoji: "🧾", label: "Receipt" },
+  video:         { emoji: "🎬", label: "Video" },
   donatebin:    { emoji: "♻️", label: "Donate Bin" },
   shoppinglist: { emoji: "🛒", label: "Shopping List" },
   travelpack:   { emoji: "🧳", label: "Travel Pack" },
@@ -662,6 +680,7 @@ export default function SharedView() {
       case "kidsprofile":
       case "kidsCloset":   return <KidsProfileView {...props} />;
       case "receipt":      return <ReceiptView {...props} />;
+      case "video":        return <VideoView {...props} />;
       default:
         return <pre style={{ fontSize: 12, overflowX: "auto" }}>{JSON.stringify(payload, null, 2)}</pre>;
     }
