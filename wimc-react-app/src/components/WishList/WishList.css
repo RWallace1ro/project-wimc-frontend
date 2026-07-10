@@ -137,12 +137,22 @@
     padding: 8px 10px;
     gap: 6px;
   }
+  /* Title + close (✕) always share the top row together; actions get their
+     own full-width row below so a wrapped action button never ends up
+     crammed against the close button. */
   .wish-modal__title {
-    flex: 1 1 100%;
+    flex: 1 1 auto;
     font-size: 14px;
+    order: 1;
+  }
+  .wish-modal__close {
+    order: 2;
+    flex-shrink: 0;
+    margin-left: 0;
   }
   .wish-modal__actions {
-    flex: 1;
+    order: 3;
+    flex: 1 1 100%;
     flex-wrap: wrap;
     gap: 5px;
   }
@@ -150,10 +160,6 @@
     font-size: 11px;
     padding: 0 8px;
     height: 28px;
-  }
-  .wish-modal__close {
-    flex-shrink: 0;
-    margin-left: auto;
   }
 }
 .wish-modal__title {

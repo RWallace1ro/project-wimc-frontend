@@ -799,8 +799,9 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                     <button
                       className="opp__btn"
                       onClick={() => setListsOpen(false)}
+                      aria-label="Close"
                     >
-                      Close
+                      ✕
                     </button>
                   </div>
                 </header>
