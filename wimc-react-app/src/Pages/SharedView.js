@@ -400,6 +400,46 @@ function OutfitPlanView({ data, onImageClick, canEdit, comments, onComment }) {
   );
 }
 
+// ── Sub-view: Receipt ────────────────────────────────────────────────────────
+function ReceiptView({ data, onImageClick }) {
+  const isImage = data?.fileType === "image" && data?.fileUrl;
+  return (
+    <div>
+      {data?.fileUrl ? (
+        isImage ? (
+          <img
+            src={data.fileUrl}
+            alt="Receipt"
+            className="sv-wish-item__img"
+            style={{ width: "100%", maxWidth: 360, cursor: "pointer", marginBottom: 12 }}
+            onClick={() => onImageClick([{ src: data.fileUrl, alt: "Receipt" }], 0)}
+          />
+        ) : (
+          <a
+            href={data.fileUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="sv-wish-item__link"
+            style={{ display: "inline-block", marginBottom: 12 }}
+          >
+            📄 Open PDF Receipt
+          </a>
+        )
+      ) : null}
+      <div className="sv-receipt-details">
+        {data?.store && <p><strong>Store:</strong> {data.store}</p>}
+        {data?.amount && <p><strong>Amount:</strong> ${data.amount}</p>}
+        {data?.date && <p><strong>Date:</strong> {data.date}</p>}
+        {data?.category && <p><strong>Category:</strong> {data.category}</p>}
+        {data?.notes && <p><strong>Notes:</strong> {data.notes}</p>}
+        {data?.returned && <p><strong>Status:</strong> Returned{data.returnedDate ? ` on ${data.returnedDate}` : ""}</p>}
+        {data?.isGift && <p>🎁 Gift Receipt</p>}
+        {data?.note && <p style={{ marginTop: 8 }}>📝 {data.note}</p>}
+      </div>
+    </div>
+  );
+}
+
 // ── Sub-view: Kids Profile ────────────────────────────────────────────────────
 function KidsProfileView({ data, onImageClick }) {
   const child = data?.child || data || {};
@@ -452,6 +492,7 @@ const TYPE_META = {
   savedwishlists: { emoji: "🛍️", label: "Saved Wish Lists" },
   donatesets:    { emoji: "♻️", label: "Saved Donation Sets" },
   donatedbins:   { emoji: "♻️", label: "Donated Items" },
+  receipt:       { emoji: "🧾", label: "Receipt" },
   donatebin:    { emoji: "♻️", label: "Donate Bin" },
   shoppinglist: { emoji: "🛒", label: "Shopping List" },
   travelpack:   { emoji: "🧳", label: "Travel Pack" },
@@ -620,6 +661,7 @@ export default function SharedView() {
       case "outfit":       return <OutfitPlanView {...props} />;
       case "kidsprofile":
       case "kidsCloset":   return <KidsProfileView {...props} />;
+      case "receipt":      return <ReceiptView {...props} />;
       default:
         return <pre style={{ fontSize: 12, overflowX: "auto" }}>{JSON.stringify(payload, null, 2)}</pre>;
     }

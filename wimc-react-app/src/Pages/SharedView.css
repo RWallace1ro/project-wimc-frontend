@@ -175,6 +175,20 @@
   text-decoration: none;
 }
 
+/* ── Receipt ─────────────────────────────────────────────────────────────── */
+.sv-receipt-details {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.sv-receipt-details p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #1e293b;
+}
+.sv-receipt-details p:last-child { margin-bottom: 0; }
+
 /* ── Image grid (donate, outfit) ─────────────────────────────────────────── */
 .sv-grid {
   display: grid;

@@ -2,7 +2,7 @@ import { syncSetItem } from '../utils/syncStore';
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { uploadReceipt, uploadRawJSON } from "../utils/CloudinaryAPI";
-import { shareItemImage, shareAppLink } from "../utils/shareUtils";
+import { shareItemImage, shareAppLink, appShareUrl } from "../utils/shareUtils";
 import { useTier } from "../context/TierContext";
 import "./Receipts.css";
 
@@ -79,6 +79,7 @@ export default function Receipts() {
   const [actionToast, setActionToast] = useState(""); // feedback message
   const [downloading, setDownloading] = useState(false);
   const [receiptShareNote, setReceiptShareNote] = useState("");
+  const [sharingViewOnly, setSharingViewOnly] = useState(false);
   const [showSync, setShowSync] = useState(false);
   const [syncUrl, setSyncUrl] = useState("");
   const [restoreUrl, setRestoreUrl] = useState("");
@@ -323,27 +324,56 @@ export default function Receipts() {
     }
   };
 
-  // ── Share receipt as text (view only — always available) ─────────────────
+  // ── Share receipt as a proper view-only WIMC page (works with or without
+  // an attached file — previously this fell back to either the raw
+  // Cloudinary file URL, which 404s if that asset is ever deleted/moved, or
+  // (when there was no file) the app's own current-page URL, which just
+  // reopens the app instead of showing the shared receipt). ─────────────────
   const handleShareViewOnly = async (receipt) => {
-    const title = `Receipt — ${receipt.store || "WIMC"}`;
-    const text = [
-      receipt.store    && `Store: ${receipt.store}`,
-      receipt.amount   && `Amount: $${receipt.amount}`,
-      receipt.date     && `Date: ${fmtDate(receipt.date)}`,
-      receipt.category && `Category: ${receipt.category}`,
-      receipt.notes    && `Notes: ${receipt.notes}`,
-      receipt.returned && `Status: Returned${receipt.returnedDate ? " on " + fmtDate(receipt.returnedDate) : ""}`,
-      receiptShareNote && `\n📝 ${receiptShareNote}`,
-      receipt.fileUrl  && `\nView receipt: ${receipt.fileUrl}`,
-    ].filter(Boolean).join("\n");
+    setSharingViewOnly(true);
+    try {
+      const payload = {
+        kind: "wimc.receipt",
+        version: 1,
+        createdAt: new Date().toISOString(),
+        store: receipt.store || "",
+        amount: receipt.amount || "",
+        date: receipt.date || "",
+        category: receipt.category || "",
+        notes: receipt.notes || "",
+        returned: !!receipt.returned,
+        returnedDate: receipt.returnedDate || "",
+        isGift: !!receipt.isGift,
+        fileUrl: receipt.fileUrl || "",
+        fileType: receipt.fileType || "",
+        note: receiptShareNote || "",
+        meta: { source: "WIMC Receipt" },
+      };
+      const res = await uploadRawJSON(payload, "wimc/receipt-shares");
+      const cloudUrl = res?.secure_url || res?.url;
+      if (!cloudUrl) throw new Error("Upload failed");
+      const url = appShareUrl(cloudUrl, "receipt");
 
-    const result = await shareAppLink({ title, text, url: receipt.fileUrl || window.location.href });
-    if (result === "shared-url" || result === "shared") {
-      showToast("✅ Receipt shared!");
-    } else if (result === "clipboard") {
-      showToast("📋 Details copied to clipboard!");
-    } else if (result !== "aborted") {
-      showToast("❌ Sharing not supported on this device.");
+      const title = `Receipt — ${receipt.store || "WIMC"}`;
+      const text = [
+        receipt.store    && `Store: ${receipt.store}`,
+        receipt.amount   && `Amount: $${receipt.amount}`,
+        receipt.date     && `Date: ${fmtDate(receipt.date)}`,
+        receiptShareNote && `\n📝 ${receiptShareNote}`,
+      ].filter(Boolean).join("\n");
+
+      const result = await shareAppLink({ title, text, url });
+      if (result === "shared-url" || result === "shared") {
+        showToast("✅ Receipt shared!");
+      } else if (result === "clipboard") {
+        showToast("📋 Link copied to clipboard!");
+      } else if (result !== "aborted") {
+        showToast("❌ Sharing not supported on this device.");
+      }
+    } catch {
+      showToast("❌ Share failed. Please try again.");
+    } finally {
+      setSharingViewOnly(false);
     }
   };
 
@@ -1023,32 +1053,34 @@ export default function Receipts() {
                 <button
                   className="receipts-view-share-btn"
                   onClick={() => handleShareViewOnly(viewReceipt)}
+                  disabled={sharingViewOnly}
                 >
-                  Share (View Only)
+                  {sharingViewOnly ? "…" : "Share (View Only)"}
                 </button>
-                {viewReceipt.fileUrl && (
-                  <>
-                    <button
-                      className="receipts-view-share-btn"
-                      onClick={() => handleDownload(viewReceipt)}
-                      disabled={downloading}
-                    >
-                      {downloading ? "…" : "⬇️ Download"}
-                    </button>
-                    <button
-                      className="receipts-view-share-btn"
-                      onClick={() => handleShare(viewReceipt)}
-                    >
-                      🔗 Share File
-                    </button>
-                    <button
-                      className="receipts-view-share-btn"
-                      onClick={() => handleEmail(viewReceipt)}
-                    >
-                      ✉️ Email
-                    </button>
-                  </>
-                )}
+                <button
+                  className="receipts-view-share-btn"
+                  onClick={() => handleDownload(viewReceipt)}
+                  disabled={downloading || !viewReceipt.fileUrl}
+                  title={viewReceipt.fileUrl ? "" : "No file attached to this receipt"}
+                >
+                  {downloading ? "…" : "⬇️ Download"}
+                </button>
+                <button
+                  className="receipts-view-share-btn"
+                  onClick={() => handleShare(viewReceipt)}
+                  disabled={!viewReceipt.fileUrl}
+                  title={viewReceipt.fileUrl ? "" : "No file attached to this receipt"}
+                >
+                  🔗 Share File
+                </button>
+                <button
+                  className="receipts-view-share-btn"
+                  onClick={() => handleEmail(viewReceipt)}
+                  disabled={!viewReceipt.fileUrl}
+                  title={viewReceipt.fileUrl ? "" : "No file attached to this receipt"}
+                >
+                  ✉️ Email
+                </button>
               </div>
               <textarea
                 className="receipts-share-note"
