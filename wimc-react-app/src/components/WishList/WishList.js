@@ -234,23 +234,26 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
     try { syncSetItem(lsMovedKey, JSON.stringify(list)); } catch {}
   };
 
-  const [movingItemId, setMovingItemId] = useState(null);
+  // movingContext identifies WHICH item is mid-move: { itemId, listId (null
+  // for the live wish list) } — lets the same popover/handlers work whether
+  // the item lives in the live grid or inside a Saved List.
+  const [movingContext, setMovingContext] = useState(null);
   const [moveTargetTag, setMoveTargetTag] = useState("");
   const [moving, setMoving] = useState(false);
   const [moveError, setMoveError] = useState("");
 
-  const startMove = (item) => {
+  const startMove = (item, listId = null) => {
     const guess = extractSections(`${item.name || ""} ${item.description || ""}`, gender)[0];
-    setMovingItemId(item.id);
+    setMovingContext({ itemId: item.id, listId });
     setMoveTargetTag(guess?.tag || SECTION_OPTIONS[0].value);
     setMoveError("");
   };
   const cancelMove = () => {
-    setMovingItemId(null);
+    setMovingContext(null);
     setMoveError("");
   };
 
-  const confirmMove = async (item) => {
+  const confirmMove = async (item, onRemove) => {
     const src = item.image || item.url;
     if (!src) return;
     setMoving(true);
@@ -268,10 +271,8 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
         { id: item.id, name: item.name || "", image: uploaded.secure_url, sectionLabel: label, movedAt: new Date().toISOString() },
         ...movedItems,
       ]);
-      const updated = wishListItems.filter((it) => it.id !== item.id);
-      setWishListItems(updated);
-      syncSetItem(lsItemsKey, JSON.stringify(updated));
-      setMovingItemId(null);
+      onRemove();
+      setMovingContext(null);
     } catch (e) {
       // Many retailer image CDNs block cross-origin fetch (CORS) even though
       // the browser can display the image fine — a common, expected failure
@@ -337,6 +338,27 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
     );
   const deleteList = (id) =>
     persistLists((savedLists || []).filter((l) => l.id !== id));
+  const deleteSavedListItem = (listId, itemIdx) =>
+    persistLists(
+      (savedLists || []).map((l) =>
+        l.id === listId
+          ? { ...l, items: (l.items || []).filter((_, i) => i !== itemIdx), updatedAt: new Date().toISOString() }
+          : l,
+      ),
+    );
+  const toggleReceived = (listId, itemIdx) =>
+    persistLists(
+      (savedLists || []).map((l) =>
+        l.id === listId
+          ? {
+              ...l,
+              items: (l.items || []).map((it, i) =>
+                i === itemIdx ? { ...it, received: !it.received } : it,
+              ),
+            }
+          : l,
+      ),
+    );
   const loadList = (id, mode = "replace") => {
     const l = (savedLists || []).find((x) => x.id === id);
     if (!l) return;
@@ -680,16 +702,6 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                             i
                           </button>
 
-                          {/* move to closet (bottom-right) — "I got it!" */}
-                          <button
-                            type="button"
-                            className="wish-thumb__move"
-                            title="Move to your closet"
-                            onClick={(e) => { e.stopPropagation(); startMove(item); }}
-                          >
-                            {gender === "male" ? "👔" : "👗"}
-                          </button>
-
                           {/* caption (bottom overlay) */}
                           {item.name && nameShown && (
                             <figcaption
@@ -698,34 +710,6 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                             >
                               {item.name}
                             </figcaption>
-                          )}
-
-                          {movingItemId === item.id && (
-                            <div className="wish-move-popover" onClick={(e) => e.stopPropagation()}>
-                              <p className="wish-move-popover__title">Move to closet section:</p>
-                              <select
-                                className="wish-move-popover__select"
-                                value={moveTargetTag}
-                                onChange={(e) => setMoveTargetTag(e.target.value)}
-                              >
-                                {SECTION_OPTIONS.map((o) => (
-                                  <option key={o.value} value={o.value}>{o.label}</option>
-                                ))}
-                              </select>
-                              {moveError && <p className="wish-move-popover__error">{moveError}</p>}
-                              <div className="wish-move-popover__actions">
-                                <button
-                                  className="wish-move-popover__btn wish-move-popover__btn--primary"
-                                  onClick={() => confirmMove(item)}
-                                  disabled={moving}
-                                >
-                                  {moving ? "Moving…" : "Confirm"}
-                                </button>
-                                <button className="wish-move-popover__btn" onClick={cancelMove} disabled={moving}>
-                                  Cancel
-                                </button>
-                              </div>
-                            </div>
                           )}
                         </figure>
                       );
@@ -879,23 +863,84 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                               const hasImg = it.image || it.url?.match(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i);
                               const listImgs = (l.items || []).filter(x => x.image || x.url?.match(/\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i)).map(x => ({ src: x.image || x.url, alt: x.name || "" }));
                               const imgIdx = listImgs.findIndex(ci => ci.src === (it.image || it.url));
+                              const isMoving = movingContext?.listId === l.id && movingContext?.itemId === it.id;
                               return (
-                              <div
-                                key={(it.url || "thumb") + i}
-                                className="opp__look-thumb"
-                                style={{ display: "grid", placeItems: "center", fontSize: 10, cursor: hasImg ? "zoom-in" : "default" }}
-                                onClick={() => hasImg && openLb(listImgs, Math.max(0, imgIdx))}
-                              >
-                                {hasImg ? (
-                                  <img
-                                    src={it.image || it.url}
-                                    alt={it.name || "item"}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6 }}
-                                  />
-                                ) : (
-                                  it.name || "item"
+                              <span key={(it.url || "thumb") + i} className="donate-thumb-wrap">
+                                <div
+                                  className="opp__look-thumb"
+                                  style={{ display: "grid", placeItems: "center", fontSize: 10, cursor: hasImg ? "zoom-in" : "default" }}
+                                  onClick={() => hasImg && openLb(listImgs, Math.max(0, imgIdx))}
+                                >
+                                  {hasImg ? (
+                                    <img
+                                      src={it.image || it.url}
+                                      alt={it.name || "item"}
+                                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6 }}
+                                    />
+                                  ) : (
+                                    it.name || "item"
+                                  )}
+                                </div>
+
+                                {/* Received checkbox — check once acquired to
+                                    reveal the Move-to-Closet action */}
+                                <input
+                                  type="checkbox"
+                                  checked={!!it.received}
+                                  onChange={() => toggleReceived(l.id, i)}
+                                  title="Mark as received"
+                                  style={{ position: "absolute", top: 4, left: 4, accentColor: "#16a34a" }}
+                                />
+
+                                <button
+                                  className="donate-thumb-del"
+                                  onClick={(e) => { e.stopPropagation(); deleteSavedListItem(l.id, i); }}
+                                  title="Remove from this list"
+                                  aria-label="Remove from this list"
+                                >
+                                  🗑️
+                                </button>
+
+                                {it.received && hasImg && (
+                                  <button
+                                    type="button"
+                                    className="wish-thumb__move"
+                                    style={{ opacity: 1, bottom: 4, right: 4 }}
+                                    title="Move to your closet"
+                                    onClick={(e) => { e.stopPropagation(); startMove(it, l.id); }}
+                                  >
+                                    {gender === "male" ? "👔" : "👗"}
+                                  </button>
                                 )}
-                              </div>
+
+                                {isMoving && (
+                                  <div className="wish-move-popover" onClick={(e) => e.stopPropagation()}>
+                                    <p className="wish-move-popover__title">Move to closet section:</p>
+                                    <select
+                                      className="wish-move-popover__select"
+                                      value={moveTargetTag}
+                                      onChange={(e) => setMoveTargetTag(e.target.value)}
+                                    >
+                                      {SECTION_OPTIONS.map((o) => (
+                                        <option key={o.value} value={o.value}>{o.label}</option>
+                                      ))}
+                                    </select>
+                                    {moveError && <p className="wish-move-popover__error">{moveError}</p>}
+                                    <div className="wish-move-popover__actions">
+                                      <button
+                                        className="wish-move-popover__btn wish-move-popover__btn--primary"
+                                        onClick={() => confirmMove(it, () => deleteSavedListItem(l.id, i))}
+                                        disabled={moving}
+                                      >
+                                        {moving ? "Moving…" : "Confirm"}
+                                      </button>
+                                      <button className="wish-move-popover__btn" onClick={cancelMove} disabled={moving}>
+                                        Cancel
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </span>
                               );
                             })}
                             {(l.items || []).length > 10 && (
