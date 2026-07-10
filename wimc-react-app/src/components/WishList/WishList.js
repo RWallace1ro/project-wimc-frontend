@@ -233,6 +233,8 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
     setMovedItems(list);
     try { syncSetItem(lsMovedKey, JSON.stringify(list)); } catch {}
   };
+  const deleteMovedItem = (idx) =>
+    persistMoved(movedItems.filter((_, i) => i !== idx));
 
   // movingContext identifies WHICH item is mid-move: { itemId, listId (null
   // for the live wish list) } — lets the same popover/handlers work whether
@@ -865,9 +867,9 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                               const imgIdx = listImgs.findIndex(ci => ci.src === (it.image || it.url));
                               const isMoving = movingContext?.listId === l.id && movingContext?.itemId === it.id;
                               return (
-                              <span key={(it.url || "thumb") + i} className="donate-thumb-wrap">
+                              <span key={(it.url || "thumb") + i} className="donate-thumb-wrap wish-saved-thumb-wrap">
                                 <div
-                                  className="opp__look-thumb"
+                                  className="opp__look-thumb wish-saved-thumb"
                                   style={{ display: "grid", placeItems: "center", fontSize: 10, cursor: hasImg ? "zoom-in" : "default" }}
                                   onClick={() => hasImg && openLb(listImgs, Math.max(0, imgIdx))}
                                 >
@@ -875,7 +877,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                                     <img
                                       src={it.image || it.url}
                                       alt={it.name || "item"}
-                                      style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: 6 }}
+                                      style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: 6 }}
                                     />
                                   ) : (
                                     it.name || "item"
@@ -988,16 +990,32 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                     </p>
                   ) : (
                     <div className="opp__look-strip">
-                      {movedItems.map((m, i) => (
-                        <span key={m.id + i} className="opp__look-thumb-wrap">
-                          <img
-                            className="opp__look-thumb"
-                            src={m.image}
-                            alt={m.name || "item"}
-                            title={`${m.name || "Item"} — moved to ${m.sectionLabel}`}
-                          />
-                        </span>
-                      ))}
+                      {movedItems.map((m, i) => {
+                        const movedImgs = movedItems
+                          .filter((x) => x.image)
+                          .map((x) => ({ src: x.image, alt: x.name || "" }));
+                        const imgIdx = movedImgs.findIndex((im) => im.src === m.image);
+                        return (
+                          <span key={m.id + i} className="opp__look-thumb-wrap">
+                            <img
+                              className="opp__look-thumb"
+                              src={m.image}
+                              alt={m.name || "item"}
+                              style={{ cursor: "zoom-in" }}
+                              title={`${m.name || "Item"} — moved to ${m.sectionLabel}. Click to enlarge.`}
+                              onClick={() => openLb(movedImgs, Math.max(0, imgIdx))}
+                            />
+                            <button
+                              className="opp__look-thumb-del"
+                              onClick={(e) => { e.stopPropagation(); deleteMovedItem(i); }}
+                              title="Remove from this record"
+                              aria-label="Remove from this record"
+                            >
+                              🗑️
+                            </button>
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
