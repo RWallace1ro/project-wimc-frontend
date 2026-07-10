@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { uploadReceipt, uploadRawJSON } from "../utils/CloudinaryAPI";
 import { shareItemImage, shareAppLink, appShareUrl } from "../utils/shareUtils";
 import { useTier } from "../context/TierContext";
+import { onImgError } from "../utils/imgFallback";
 import "./Receipts.css";
 
 const LS_KEY = "wimc_receipts";
@@ -666,7 +667,7 @@ export default function Receipts() {
                   return (
                     <>
                       {first?.type === "image" ? (
-                        <img src={first.url} alt={r.store || "receipt"} className="receipt-card__img" />
+                        <img src={first.url} alt={r.store || "receipt"} className="receipt-card__img" onError={onImgError} />
                       ) : first?.type === "pdf" ? (
                         <div className="receipt-card__pdf-icon">📄</div>
                       ) : (
@@ -786,7 +787,7 @@ export default function Receipts() {
                       {form.files.map((f, idx) => (
                         <div key={idx} className="receipts-file-chip">
                           {f.type === "image" ? (
-                            <img src={f.url} alt={`File ${idx + 1}`} className="receipts-file-chip__img" />
+                            <img src={f.url} alt={`File ${idx + 1}`} className="receipts-file-chip__img" onError={onImgError} />
                           ) : (
                             <div className="receipts-file-chip__pdf">📄</div>
                           )}
@@ -1107,7 +1108,7 @@ export default function Receipts() {
                           </p>
                         )}
                         {f.type === "image" ? (
-                          <img src={f.url} alt={`Receipt photo ${idx + 1}`} className="receipts-view-img" />
+                          <img src={f.url} alt={`Receipt photo ${idx + 1}`} className="receipts-view-img" onError={onImgError} />
                         ) : (
                           <a href={f.url} target="_blank" rel="noopener noreferrer" className="receipts-view-pdf">
                             📄 Open PDF{files.length > 1 ? ` (page ${idx + 1})` : " Receipt"}
@@ -1156,7 +1157,7 @@ export default function Receipts() {
                     {(editForm.files || []).map((f, idx) => (
                       <div key={idx} className="receipts-file-chip">
                         {f.type === "image" ? (
-                          <img src={f.url} alt={`Photo ${idx + 1}`} className="receipts-file-chip__img" />
+                          <img src={f.url} alt={`Photo ${idx + 1}`} className="receipts-file-chip__img" onError={onImgError} />
                         ) : (
                           <div className="receipts-file-chip__pdf">📄</div>
                         )}
