@@ -426,7 +426,7 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
               <OutfitPreviewPanel tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPreviewIncoming} />
               <OutfitPlanner      tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPlannerIncoming} />
               <TravelPackPanel    tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPackIncoming} />
-              <WishList           storageKey={`pet-${pet.id}-wishlist`} />
+              <WishList           storageKey={`pet-${pet.id}-wishlist`} gender={petGender} tagPrefix={`pet-${pet.id}`} sectionOptions={SECTION_OPTIONS} />
               <DonateBin          tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petDonateIncoming} />
             </div>
           </div>

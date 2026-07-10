@@ -377,7 +377,7 @@ function ClosetData({
         </div>
 
         <aside className="closet-data__side-right">
-          <WishList userId="123" />
+          <WishList gender={gender} tagPrefix={genderPrefix} />
           <ShoppingList />
           <ProGate feature="Video Bin">
             <VideoBin videos={sectionVideos} />
@@ -715,7 +715,7 @@ export default ClosetData;
 //         </div>
 
 //         <aside className="closet-data__side-right">
-//           <WishList userId="123" />
+//           <WishList gender={gender} tagPrefix={genderPrefix} />
 //           <VideoBin videos={sectionVideos} />
 //         </aside>
 

@@ -515,7 +515,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
               <OutfitPreviewPanel tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPreviewIncoming} />
               <OutfitPlanner      tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPlannerIncoming} />
               <TravelPackPanel    tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPackIncoming} />
-              <WishList           storageKey={`kid-${child.id}-wishlist`} />
+              <WishList           storageKey={`kid-${child.id}-wishlist`} gender={child?.gender || "female"} tagPrefix={`kid-${child.id}`} />
               <DonateBin          tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsDonateIncoming} />
             </div>
           </div>

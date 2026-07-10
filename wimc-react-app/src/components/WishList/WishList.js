@@ -1,11 +1,28 @@
 import { syncSetItem } from '../../utils/syncStore';
 import React, { useEffect, useRef, useState } from "react";
 import Lightbox from "../Lightbox/Lightbox";
-import { uploadRawJSON } from "../../utils/CloudinaryAPI";
+import { uploadRawJSON, uploadImage } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import { fetchLinkPreview } from "../../utils/linkPreview";
+import { extractSections } from "../../utils/outfitBuilder";
 import ImageUpload from "../ImageUpload/ImageUpload"; // uses your existing widget
 import "./WishList.css";
+
+// Gender-aware section options (male first section = Dress Shirts/Suits) —
+// same shape/convention as Donate Bin's getSectionOptions.
+function getSectionOptions(gender) {
+  const first = gender === "male"
+    ? { value: "dress-shirts-suits", label: "Dress Shirts/Suits" }
+    : { value: "dresses-skirts", label: "Dresses/Skirts" };
+  return [
+    first,
+    { value: "shoes-sneakers", label: "Shoes/Sneakers" },
+    { value: "pants-jeans", label: "Pants/Jeans" },
+    { value: "tops", label: "Tops" },
+    { value: "bags-accessories", label: "Bags/Accessories" },
+    { value: "jackets-coats", label: "Jackets/Coats" },
+  ];
+}
 
 const IconSave = (props) => (
   <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" {...props}>
@@ -36,11 +53,14 @@ const IconSave = (props) => (
   </svg>
 );
 
-export default function WishList({ storageKey }) {
+export default function WishList({ storageKey, gender = "female", tagPrefix = "", sectionOptions = null }) {
   // storageKey lets kids closets keep their own wish lists separate from the
   // parent's main list.  Falls back to the original key for backward-compat.
   const lsItemsKey = storageKey ? `${storageKey}_items`      : "wishListItems";
   const lsListsKey = storageKey ? `${storageKey}_savedLists` : "wimc_saved_wishlists";
+  const lsMovedKey = storageKey ? `${storageKey}_movedToCloset` : "wimc_wishlist_moved_to_closet";
+
+  const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
 
   const [wishListItems, setWishListItems] = useState([]);
   const [newItem, setNewItem] = useState({
@@ -198,6 +218,70 @@ export default function WishList({ storageKey }) {
     const updated = wishListItems.filter((_, i) => i !== index);
     setWishListItems(updated);
     syncSetItem(lsItemsKey, JSON.stringify(updated));
+  };
+
+  // ── Move to Closet ("I got it!") ─────────────────────────────────────────
+  // Uploads the item's image into the chosen closet section, then moves the
+  // item out of the Wish List into a small "Moved to Closet" history list
+  // (mirrors Donate Bin's donated-items pattern) rather than deleting it
+  // with no trace.
+  const [movedItems, setMovedItems] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(lsMovedKey) || "[]"); } catch { return []; }
+  });
+  const [movedOpen, setMovedOpen] = useState(false);
+  const persistMoved = (list) => {
+    setMovedItems(list);
+    try { syncSetItem(lsMovedKey, JSON.stringify(list)); } catch {}
+  };
+
+  const [movingItemId, setMovingItemId] = useState(null);
+  const [moveTargetTag, setMoveTargetTag] = useState("");
+  const [moving, setMoving] = useState(false);
+  const [moveError, setMoveError] = useState("");
+
+  const startMove = (item) => {
+    const guess = extractSections(`${item.name || ""} ${item.description || ""}`, gender)[0];
+    setMovingItemId(item.id);
+    setMoveTargetTag(guess?.tag || SECTION_OPTIONS[0].value);
+    setMoveError("");
+  };
+  const cancelMove = () => {
+    setMovingItemId(null);
+    setMoveError("");
+  };
+
+  const confirmMove = async (item) => {
+    const src = item.image || item.url;
+    if (!src) return;
+    setMoving(true);
+    setMoveError("");
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const fullTag = tagPrefix ? `${tagPrefix}-${moveTargetTag}` : moveTargetTag;
+      const uploaded = await uploadImage(blob, fullTag);
+      if (!uploaded?.secure_url) throw new Error("Upload failed");
+
+      const label = SECTION_OPTIONS.find((o) => o.value === moveTargetTag)?.label || moveTargetTag;
+      persistMoved([
+        { id: item.id, name: item.name || "", image: uploaded.secure_url, sectionLabel: label, movedAt: new Date().toISOString() },
+        ...movedItems,
+      ]);
+      const updated = wishListItems.filter((it) => it.id !== item.id);
+      setWishListItems(updated);
+      syncSetItem(lsItemsKey, JSON.stringify(updated));
+      setMovingItemId(null);
+    } catch (e) {
+      // Many retailer image CDNs block cross-origin fetch (CORS) even though
+      // the browser can display the image fine — a common, expected failure
+      // for URL-based wish items, not a bug to "fix" client-side.
+      setMoveError(
+        "Couldn't fetch that image to move it (the site may block this). Try saving the photo to your device and re-uploading it to the Wish List, then move it from there."
+      );
+    } finally {
+      setMoving(false);
+    }
   };
 
   // Toggle caption/name visibility
@@ -457,6 +541,13 @@ export default function WishList({ storageKey }) {
                 >
                   Saved Lists
                 </button>
+                <button
+                  className="wish-modal__btn"
+                  onClick={() => setMovedOpen(true)}
+                  title="Items you've moved to your closet"
+                >
+                  {gender === "male" ? "👔" : "👗"} Moved to Closet{movedItems.length ? ` (${movedItems.length})` : ""}
+                </button>
               </div>
               <button className="wish-modal__btn wish-modal__close" onClick={closeModal} aria-label="Close">
                 ✕
@@ -589,6 +680,16 @@ export default function WishList({ storageKey }) {
                             i
                           </button>
 
+                          {/* move to closet (bottom-right) — "I got it!" */}
+                          <button
+                            type="button"
+                            className="wish-thumb__move"
+                            title="Move to your closet"
+                            onClick={(e) => { e.stopPropagation(); startMove(item); }}
+                          >
+                            {gender === "male" ? "👔" : "👗"}
+                          </button>
+
                           {/* caption (bottom overlay) */}
                           {item.name && nameShown && (
                             <figcaption
@@ -597,6 +698,34 @@ export default function WishList({ storageKey }) {
                             >
                               {item.name}
                             </figcaption>
+                          )}
+
+                          {movingItemId === item.id && (
+                            <div className="wish-move-popover" onClick={(e) => e.stopPropagation()}>
+                              <p className="wish-move-popover__title">Move to closet section:</p>
+                              <select
+                                className="wish-move-popover__select"
+                                value={moveTargetTag}
+                                onChange={(e) => setMoveTargetTag(e.target.value)}
+                              >
+                                {SECTION_OPTIONS.map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </select>
+                              {moveError && <p className="wish-move-popover__error">{moveError}</p>}
+                              <div className="wish-move-popover__actions">
+                                <button
+                                  className="wish-move-popover__btn wish-move-popover__btn--primary"
+                                  onClick={() => confirmMove(item)}
+                                  disabled={moving}
+                                >
+                                  {moving ? "Moving…" : "Confirm"}
+                                </button>
+                                <button className="wish-move-popover__btn" onClick={cancelMove} disabled={moving}>
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
                           )}
                         </figure>
                       );
@@ -776,6 +905,52 @@ export default function WishList({ storageKey }) {
                             )}
                           </div>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </aside>
+            </div>
+          )}
+
+          {/* Moved to Closet Drawer */}
+          {movedOpen && (
+            <div
+              className="opp-saved__backdrop"
+              onClick={() => setMovedOpen(false)}
+              aria-label="Close Moved to Closet"
+            >
+              <aside
+                className="opp-saved"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Moved to Closet"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <header className="opp-saved__head">
+                  <h4 className="opp-saved__title">
+                    {gender === "male" ? "👔" : "👗"} Moved to Closet
+                  </h4>
+                  <button className="opp__btn" onClick={() => setMovedOpen(false)} aria-label="Close">
+                    ✕
+                  </button>
+                </header>
+                <div className="opp-saved__content">
+                  {!movedItems.length ? (
+                    <p className="sl-ai-hint">
+                      Items you move here from your Wish List (once you've acquired them) will show up here as a record.
+                    </p>
+                  ) : (
+                    <div className="opp__look-strip">
+                      {movedItems.map((m, i) => (
+                        <span key={m.id + i} className="opp__look-thumb-wrap">
+                          <img
+                            className="opp__look-thumb"
+                            src={m.image}
+                            alt={m.name || "item"}
+                            title={`${m.name || "Item"} — moved to ${m.sectionLabel}`}
+                          />
+                        </span>
                       ))}
                     </div>
                   )}
