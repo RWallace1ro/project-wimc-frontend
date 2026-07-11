@@ -6,8 +6,16 @@ import App from "./components/App/App";
 import { register as registerSW } from "./serviceWorkerRegistration";
 import { initSentry, logAppEvent } from "./utils/analytics";
 import { hasAnalyticsConsent } from "./utils/consent";
-import { initFirebaseAnalytics } from "./firebase";
+import { initFirebaseAnalytics, auth } from "./firebase";
 import "./index.css";
+
+// QA helper — lets a signed-in tester grab their own Firebase ID token from
+// the browser console (e.g. to manually probe Firestore security rules via
+// the REST API), since the SDK's real internals aren't reachable from a
+// plain console otherwise. Only ever returns the CURRENT user's own token —
+// same thing they already implicitly have via their live session — so this
+// exposes nothing a signed-in user couldn't already do.
+window.wimcGetIdToken = () => auth.currentUser?.getIdToken();
 
 // ── Sentry error monitoring (consent-gated) ──────────────────────────────────
 // Optional analytics. Per GDPR, Sentry is only initialized once the user has
