@@ -55,9 +55,6 @@ const AuthAction = React.lazy(() => import("../../Pages/AuthAction"));
 const NotFound = React.lazy(() => import("../../Pages/NotFound"));
 const WIMCAssistant = React.lazy(() => import("../WIMCAssistant/WIMCAssistant"));
 
-const DEFAULT_AVATAR =
-  "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
-
 // Redirects unauthenticated users to "/" and opens the login modal
 function ProtectedRoute({ isLoggedIn, onLoginRequired, children }) {
   const triggered = useRef(false);
@@ -87,7 +84,7 @@ function AppInner() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userData, setUserData] = useState({
     userName: "Your Closet",
-    avatarUrl: DEFAULT_AVATAR,
+    avatarUrl: "",
     email: "",
   });
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -153,7 +150,7 @@ function AppInner() {
           setUserData({
             uid: firebaseUser.uid,
             userName: profile.userName || firebaseUser.displayName || "Your Closet",
-            avatarUrl: profile.avatarUrl || firebaseUser.photoURL || DEFAULT_AVATAR,
+            avatarUrl: profile.avatarUrl || firebaseUser.photoURL || "",
             email: firebaseUser.email,
             pendingDeletion: profile.pendingDeletion || false,
             deletionDate: profile.deletionDate || null,
@@ -172,7 +169,7 @@ function AppInner() {
         setNeedsVerification(false);
         setUserData({
           userName: "Your Closet",
-          avatarUrl: DEFAULT_AVATAR,
+          avatarUrl: "",
           email: "",
         });
         setIsLoading(false);
@@ -233,7 +230,7 @@ function AppInner() {
       const profile = {
         userName: userCredentials.username,
         email: cleanEmail,
-        avatarUrl: userCredentials.avatarUrl || DEFAULT_AVATAR,
+        avatarUrl: userCredentials.avatarUrl || "",
         createdAt: new Date().toISOString(),
       };
       await setDoc(doc(db, "users", user.uid), profile);
@@ -362,13 +359,18 @@ function AppInner() {
           setUserData({
             uid: auth.currentUser.uid,
             userName: profile.userName || auth.currentUser.displayName || "Your Closet",
-            avatarUrl: profile.avatarUrl || auth.currentUser.photoURL || DEFAULT_AVATAR,
+            avatarUrl: profile.avatarUrl || auth.currentUser.photoURL || "",
             email: auth.currentUser.email,
           });
           setNeedsVerification(false);
           setIsLoggedIn(true);
         });
-        navigate("/home");
+        // This handler only ever runs once — right after a brand-new signup
+        // finishes email verification (a returning user's normal login never
+        // reaches here). Send them to Pricing first so they actually see the
+        // paid plans exist, instead of landing straight on Free with no
+        // visibility into what else is available.
+        navigate("/pricing");
       } else {
         setVerifyMsg("Not verified yet. Click the link in your email, then try again.");
       }

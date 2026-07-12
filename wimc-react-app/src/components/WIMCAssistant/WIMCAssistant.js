@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import ApiErrorMessage from "../common/ApiErrorMessage";
+import FormattedText from "../common/FormattedText";
 import "./WIMCAssistant.css";
 
 const QUICK_QUESTIONS = [
@@ -208,7 +209,9 @@ export default function WIMCAssistant() {
             {messages.map((msg) => (
               <div key={msg.id} className={`wa-msg wa-msg--${msg.role}`}>
                 <div className="wa-msg__bubble">
-                  {msg.content || (msg.streaming ? <span className="wa-cursor">▋</span> : "")}
+                  {msg.content
+                    ? <FormattedText text={msg.content} />
+                    : (msg.streaming ? <span className="wa-cursor">▋</span> : "")}
                 </div>
               </div>
             ))}

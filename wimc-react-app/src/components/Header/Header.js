@@ -6,6 +6,7 @@ import { useWIMCTour } from "../WIMCTourVideo/useTour";
 import { useTier } from "../../context/TierContext";
 import { auth } from "../../firebase";
 import { listMyShares, countUnreadShares } from "../../utils/shareUtils";
+import Avatar from "../Avatar/Avatar";
 import "./Header.css";
 
 // Heavy modal components — lazy loaded so they don't bloat the initial bundle.
@@ -75,9 +76,6 @@ function Header({
 
   const { isOpen: isTourOpen, openTour, closeTour, showIfNew } = useWIMCTour();
 
-  const defaultAvatarUrl =
-    "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
-
   const navigate = useNavigate();
   const location = useLocation();
   const { requirePro } = useTier();
@@ -125,7 +123,6 @@ function Header({
   };
 
   const activeTab = location.pathname === "/closet-data" ? selectedTab : "";
-  const displayAvatarUrl = currentAvatarUrl || defaultAvatarUrl;
 
   const loggedInButtons = (
     <>
@@ -173,7 +170,7 @@ function Header({
             {isLoggedIn ? (
               <div className="header__user">
                 <span className="header__user-name">{currentUserName ? `${currentUserName}'s Closet` : "Your Closet"}</span>
-                <img src={displayAvatarUrl} alt="User avatar" className="header__avatar" onError={(e) => { e.target.src = defaultAvatarUrl; }} />
+                <Avatar url={currentAvatarUrl} name={currentUserName} className="header__avatar" />
                 <div className="header__divider" />
                 {loggedInButtons}
               </div>
@@ -192,7 +189,7 @@ function Header({
               </div>
             )}
             {isLoggedIn && (
-              <img src={displayAvatarUrl} alt="User avatar" className="header__avatar" onError={(e) => { e.target.src = defaultAvatarUrl; }} />
+              <Avatar url={currentAvatarUrl} name={currentUserName} className="header__avatar" />
             )}
             <button
               className="header__hamburger"

@@ -4,6 +4,7 @@ import { aiProxyFetch } from "../../utils/aiProxy";
 import { syncSetItem } from "../../utils/syncStore";
 import { sectionTagsWithSubs } from "../../utils/closetSubsections";
 import ApiErrorMessage from "../common/ApiErrorMessage";
+import FormattedText from "../common/FormattedText";
 import "./ClosetSearch.css";
 
 const SECTIONS = [
@@ -592,7 +593,7 @@ export default function ClosetSearch({
           {/* Result */}
           {hasResult && (
             <div className="cs-result">
-              <p className="cs-result__text">{resultText}</p>
+              <p className="cs-result__text"><FormattedText text={resultText} /></p>
 
               {/* No genuine matches found */}
               {!hasImages && !isLoading && noMatches && (

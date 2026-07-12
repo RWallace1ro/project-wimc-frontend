@@ -1,0 +1,14 @@
+/* Sizing/border/shape come from whatever className is also passed in
+   (e.g. header__avatar, usm-avatar-preview) — this just adds the
+   initials-circle look on top of that. */
+.avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9em;
+  letter-spacing: 0.5px;
+  user-select: none;
+}

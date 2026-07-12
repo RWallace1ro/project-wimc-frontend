@@ -13,12 +13,10 @@ import { deleteAllUserData, scheduleDeletion } from "../../utils/accountDeletion
 import { useBackground } from "../../context/BackgroundContext";
 import { useTier } from "../../context/TierContext";
 import { openBillingPortal } from "../../utils/billing";
+import Avatar from "../Avatar/Avatar";
 import "./UserSettingsModal.css";
 
 const TIER_LABELS = { free: "Free", pro: "Pro", pro_ai: "Pro + AI" };
-
-const DEFAULT_AVATAR =
-  "https://res.cloudinary.com/djoh2vfhd/image/upload/v1729608070/2011-10-27_20.07.18_HDR_cdbudn.jpg";
 
 const PAGE_BG_KEY = "closet-page";
 
@@ -661,13 +659,10 @@ export default function UserSettingsModal({
 
               <div className="usm-avatar-section">
                 <div className="usm-avatar-wrap">
-                  <img
+                  <Avatar
                     className="usm-avatar-preview"
-                    src={avatarPreview || DEFAULT_AVATAR}
-                    alt="Avatar preview"
-                    onError={(e) => {
-                      e.target.src = DEFAULT_AVATAR;
-                    }}
+                    url={avatarPreview}
+                    name={userName}
                   />
                   <button
                     type="button"

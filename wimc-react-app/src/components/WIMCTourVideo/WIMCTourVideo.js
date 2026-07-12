@@ -7,7 +7,7 @@ const SLIDES = [
   {
     id: "welcome",
     label: "Welcome",
-    dur: 8,
+    dur: 22,
     icon: "👗👔",
     title: "WIMC™",
     subtitle: "What's In My Closet",
@@ -23,7 +23,7 @@ const SLIDES = [
   {
     id: "auth",
     label: "Authentication",
-    dur: 9,
+    dur: 19,
     icon: "🔐",
     title: "Authentication",
     type: "feature",
@@ -34,7 +34,7 @@ const SLIDES = [
   {
     id: "closet",
     label: "Smart Closet",
-    dur: 9,
+    dur: 24,
     icon: "👗",
     title: "Smart Closet",
     type: "feature",
@@ -45,7 +45,7 @@ const SLIDES = [
   {
     id: "search",
     label: "Closet Search",
-    dur: 8,
+    dur: 18,
     icon: "🔍",
     title: "Closet Search",
     type: "feature",
@@ -56,7 +56,7 @@ const SLIDES = [
   {
     id: "planning",
     label: "Planning Tools",
-    dur: 9,
+    dur: 22,
     icon: "📅",
     title: "Planning Tools",
     type: "feature",
@@ -67,7 +67,7 @@ const SLIDES = [
   {
     id: "ai",
     label: "AI Features",
-    dur: 10,
+    dur: 26,
     icon: "✨",
     title: "Five AI Features",
     type: "feature",
@@ -78,7 +78,7 @@ const SLIDES = [
   {
     id: "tryon",
     label: "Try-On Studio",
-    dur: 9,
+    dur: 19,
     icon: "🎬",
     title: "Try-On Studio",
     type: "feature",
@@ -89,7 +89,7 @@ const SLIDES = [
   {
     id: "donate-wishlist",
     label: "Donate & Wish List",
-    dur: 9,
+    dur: 19,
     icon: "🗑️",
     title: "Donate Bin & Wish List",
     type: "feature",
@@ -100,7 +100,7 @@ const SLIDES = [
   {
     id: "shopping",
     label: "Shopping List",
-    dur: 9,
+    dur: 20,
     icon: "🛒",
     title: "Shopping & Wish List",
     type: "feature",
@@ -111,7 +111,7 @@ const SLIDES = [
   {
     id: "kids",
     label: "Kids' Closet",
-    dur: 9,
+    dur: 16,
     icon: "👶",
     title: "Kids' Closet",
     type: "feature",
@@ -122,7 +122,7 @@ const SLIDES = [
   {
     id: "pets",
     label: "Pet Closet",
-    dur: 9,
+    dur: 24,
     icon: "🐾",
     title: "Pet Closet",
     type: "feature",
@@ -133,7 +133,7 @@ const SLIDES = [
   {
     id: "receipts-weather",
     label: "Receipts & Weather",
-    dur: 9,
+    dur: 20,
     icon: "🧾",
     title: "Receipts & Weather",
     type: "feature",
@@ -144,7 +144,7 @@ const SLIDES = [
   {
     id: "settings",
     label: "Settings & More",
-    dur: 9,
+    dur: 24,
     icon: "⚙️",
     title: "Settings & More",
     type: "feature",
@@ -531,6 +531,7 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
   const playingRef  = useRef(false);
   const speedRef    = useRef(1);
   const uttRef      = useRef(null);   // Web Speech utterance
+  const speechTokenRef = useRef(0);   // invalidates a stale sentence-chain when a new slide starts speaking
   const [voiceReady, setVoiceReady] = useState(false); // eslint-disable-line no-unused-vars
   const [muted, setMuted]           = useState(false);
   const mutedRef = useRef(false);
@@ -556,22 +557,15 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
  
   // ── Web Speech API helpers ──────────────────────────────────────────────────
   const stopSpeech = useCallback(() => {
+    speechTokenRef.current++; // invalidate any in-flight sentence chain
     if (window.speechSynthesis) window.speechSynthesis.cancel();
   }, []);
- 
-  const speak = useCallback((text) => {
-    if (!window.speechSynthesis || mutedRef.current) return;
-    window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    // Soft, natural delivery — slower and gentle pitch.
-    utt.rate  = Math.min(2, 0.82 * speedRef.current);
-    utt.pitch = 0.9;
-    utt.volume = 0.9;
 
-    // Pick the most human-sounding English voice available, in priority order.
+  // Pick the most human-sounding English voice available, in priority order.
+  const pickVoice = useCallback(() => {
     const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith("en"));
     const byName = (re) => voices.find(v => re.test(v.name));
-    const chosen =
+    return (
       // 1. Neural / "Natural" / "Online" voices — by far the most human
       byName(/natural|neural|online/i) ||
       // 2. Known high-quality named voices (Win / Mac / Chrome)
@@ -582,11 +576,45 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
       // 4. Any other female-ish English voice
       byName(/female|woman|karen|victoria|moira|fiona|zira|susan|eva/i) ||
       // 5. Fallback: first English voice
-      voices[0];
-    if (chosen) utt.voice = chosen;
-    uttRef.current = utt;
-    window.speechSynthesis.speak(utt);
+      voices[0]
+    );
   }, []);
+
+  // TTS engines try to pronounce "WIMC" as a word ("wimm-see") instead of
+  // spelling it out — insert spaces so it's read as individual letters.
+  // Captions still display the real "WIMC" text; this only affects speech.
+  const spokenForm = (s) => s.replace(/WIMC/g, "W I M C");
+
+  const speak = useCallback((text) => {
+    if (!window.speechSynthesis || mutedRef.current) return;
+    window.speechSynthesis.cancel();
+    const myToken = ++speechTokenRef.current;
+    const chosen = pickVoice();
+
+    // Split into sentences and speak them as separate utterances with a real
+    // pause in between — spoken as one continuous utterance, sentences (and
+    // the next section's narration right after) ran together with no
+    // breathing room at all.
+    const sentences =
+      text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)?.map((s) => s.trim()).filter(Boolean) || [text];
+
+    const speakSentence = (i) => {
+      if (speechTokenRef.current !== myToken || i >= sentences.length) return;
+      const utt = new SpeechSynthesisUtterance(spokenForm(sentences[i]));
+      // Soft, natural delivery — slower and gentle pitch.
+      utt.rate = Math.min(2, 0.82 * speedRef.current);
+      utt.pitch = 0.9;
+      utt.volume = 0.9;
+      if (chosen) utt.voice = chosen;
+      utt.onend = () => {
+        if (speechTokenRef.current !== myToken) return;
+        setTimeout(() => speakSentence(i + 1), 1100 / speedRef.current);
+      };
+      uttRef.current = utt;
+      window.speechSynthesis.speak(utt);
+    };
+    speakSentence(0);
+  }, [pickVoice]);
  
   // Voices load async — re-render when ready
   useEffect(() => {

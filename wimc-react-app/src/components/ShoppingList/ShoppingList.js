@@ -4,6 +4,7 @@ import { uploadRawJSON } from "../../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl, decodeShareSrc } from "../../utils/shareUtils";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import ApiErrorMessage from "../common/ApiErrorMessage";
+import FormattedText from "../common/FormattedText";
 import { checkShoppingListAgainstCloset } from "../../utils/closetDupeCheck";
 import "./ShoppingList.css";
 
@@ -1065,7 +1066,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
                   {msg.role === "assistant" && (
                     <span className="sl-chat-msg__avatar">✨</span>
                   )}
-                  <div className="sl-chat-msg__bubble">{msg.content}</div>
+                  <div className="sl-chat-msg__bubble"><FormattedText text={msg.content} /></div>
                   {msg.role === "assistant" && msg.content && (
                     <button
                       className="sl-chat-msg__save"
@@ -1256,7 +1257,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
                           🗑️
                         </button>
                       </div>
-                      <pre className="sl-saved-fb__body">{f.content}</pre>
+                      <pre className="sl-saved-fb__body"><FormattedText text={f.content} /></pre>
                     </div>
                   ))}
                 </div>
@@ -2529,7 +2530,7 @@ export default function ShoppingList() {
 //                   {msg.role === "assistant" && (
 //                     <span className="sl-chat-msg__avatar">✨</span>
 //                   )}
-//                   <div className="sl-chat-msg__bubble">{msg.content}</div>
+//                   <div className="sl-chat-msg__bubble"><FormattedText text={msg.content} /></div>
 //                   {msg.addedItems?.length > 0 && (
 //                     <div className="sl-chat-msg__added">
 //                       ✓ Added {msg.addedItems.length} item
@@ -3789,7 +3790,7 @@ export default function ShoppingList() {
 //                   {msg.role === "assistant" && (
 //                     <span className="sl-chat-msg__avatar">✨</span>
 //                   )}
-//                   <div className="sl-chat-msg__bubble">{msg.content}</div>
+//                   <div className="sl-chat-msg__bubble"><FormattedText text={msg.content} /></div>
 //                   {msg.addedItems?.length > 0 && (
 //                     <div className="sl-chat-msg__added">
 //                       ✓ Added {msg.addedItems.length} item

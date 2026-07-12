@@ -5,6 +5,7 @@ import { syncSetItem } from "../../utils/syncStore";
 import { getClosetSections, extractSections, aiPickItems } from "../../utils/outfitBuilder";
 import Lightbox from "../Lightbox/Lightbox";
 import ApiErrorMessage from "../common/ApiErrorMessage";
+import FormattedText from "../common/FormattedText";
 import "./AIStylist.css";
 
 const CLOSET_GENDER_KEY = "wimc_closet_gender";
@@ -362,7 +363,9 @@ Rules:
             return (
               <div key={msg.id} className={`stylist-msg stylist-msg--${msg.role}`}>
                 <div className="stylist-msg__bubble">
-                  {msg.content || (msg.streaming ? <span className="stylist-cursor">▋</span> : "")}
+                  {msg.content
+                    ? <FormattedText text={msg.content} />
+                    : (msg.streaming ? <span className="stylist-cursor">▋</span> : "")}
                 </div>
 
                 {/* Action row */}

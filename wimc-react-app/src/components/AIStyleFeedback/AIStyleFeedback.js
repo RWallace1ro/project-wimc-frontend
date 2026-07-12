@@ -5,6 +5,7 @@ import { syncSetItem } from "../../utils/syncStore";
 import { extractSections, aiPickItems } from "../../utils/outfitBuilder";
 import Lightbox from "../Lightbox/Lightbox";
 import ApiErrorMessage from "../common/ApiErrorMessage";
+import FormattedText from "../common/FormattedText";
 import "./AIStyleFeedback.css";
 
 const OCCASIONS = [
@@ -335,7 +336,7 @@ Please give me style feedback on this outfit!`;
           {(feedback || streaming) && (
             <div className="aisf-result">
               <pre className="aisf-result__text">
-                {feedback}
+                <FormattedText text={feedback} />
                 {streaming && <span className="aisf-cursor">▋</span>}
               </pre>
             </div>

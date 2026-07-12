@@ -4,6 +4,7 @@ import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { syncSetItem } from "../../utils/syncStore";
 import Lightbox from "../Lightbox/Lightbox";
 import ApiErrorMessage from "../common/ApiErrorMessage";
+import FormattedText from "../common/FormattedText";
 import "./AIPackingAssistant.css";
 
 const TRIP_TYPES = [
@@ -495,7 +496,7 @@ Your job:
                 <span className="aipa-result__day">{selectedDays.join(", ")}</span>
               </div>
               <pre className="aipa-result__text">
-                {response}
+                <FormattedText text={response} />
                 {streaming && <span className="aipa-cursor">▋</span>}
               </pre>
 
