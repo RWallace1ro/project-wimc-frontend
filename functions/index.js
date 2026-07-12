@@ -696,7 +696,11 @@ async function finalizeOneAccountData(uid) {
     kidPetProfiles.forEach((prof) => {
       if (!prof?.id) return;
       KID_PET_SECTION_KEYS.forEach((sec) => {
-        const tag = `${prof._prefix}-${prof.id}-${sec}`;
+        // Tags are scoped per-user (see CloudinaryAPI.js's scopedTag on the
+        // client) — must match that `${uid}-...` prefix here too, or this
+        // cleanup silently finds nothing (or, before that client fix
+        // shipped, could have matched another user's identically-named tag).
+        const tag = `${uid}-${prof._prefix}-${prof.id}-${sec}`;
         tagJobs.push(
           fetchTagListServer(tag, "image").then((arr) => arr.forEach((u) => urls.add(u))),
           fetchTagListServer(tag, "video").then((arr) => arr.forEach((u) => urls.add(u))),

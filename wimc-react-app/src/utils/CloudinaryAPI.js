@@ -2,6 +2,36 @@ import { Cloudinary } from "@cloudinary/url-gen";
 import { auth } from "../firebase";
 import { sectionTagsWithSubs } from "./closetSubsections";
 
+// ── Per-user tag scoping ─────────────────────────────────────────────────────
+// CRITICAL: every closet tag ("tops", "male-shoes-sneakers", "kid-abc-tops",
+// etc.) used to be a completely GLOBAL Cloudinary tag with no per-user
+// scoping at all — every signed-up account uploaded to and fetched from the
+// exact same tag namespace, so any user could see every other user's closet
+// photos for a given section (confirmed via a real cross-account leak during
+// testing). Fixing this here, at the network-call boundary, covers every
+// upload/fetch call in the app without touching ~25 other call sites, since
+// they all funnel through uploadImage/uploadVideo/uploadReceipt/
+// fetchImagesByTag/fetchVideosByTag — and since this prefixing happens AFTER
+// closetSubsections.js has already done its sub-section tag expansion (that
+// logic only ever sees the original bare tags), nothing there needs to
+// change either.
+function currentUid() {
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    // Every legitimate call path here requires a signed-in user already
+    // (uploads are rejected server-side without one). If this ever fires,
+    // something is calling a closet API without auth — fail toward an
+    // isolated, non-colliding tag rather than silently falling back to the
+    // old global/shared namespace.
+    console.error("Cloudinary tag requested with no signed-in user.");
+    return "anon-unscoped";
+  }
+  return uid;
+}
+function scopedTag(tag) {
+  return `${currentUid()}-${tag}`;
+}
+
 // Build request headers with the current user's Firebase ID token so the
 // cloudinarySign / deleteCloudinaryAsset functions can require authentication.
 async function authHeaders() {
@@ -89,7 +119,7 @@ export async function uploadImage(file, sectionTag = "default") {
   try {
     return await uploadTo(IMG_ENDPOINT, file, {
       folder: "closet-items",
-      tags: sectionTag,
+      tags: scopedTag(sectionTag),
     });
   } catch (err) {
     console.error("Error uploading image:", err);
@@ -102,7 +132,7 @@ export async function uploadVideo(file, sectionTag = "default") {
   try {
     return await uploadTo(VID_ENDPOINT, file, {
       folder: "closet-items",
-      tags: sectionTag,
+      tags: scopedTag(sectionTag),
     });
   } catch (err) {
     console.error("Error uploading video:", err);
@@ -115,7 +145,7 @@ export async function uploadReceipt(file) {
   try {
     return await uploadTo(IMG_ENDPOINT, file, {
       folder: "receipts",
-      tags: "receipts",
+      tags: scopedTag("receipts"),
     });
   } catch (err) {
     console.error("Error uploading receipt:", err);
@@ -168,7 +198,7 @@ export function videoStream(url) {
 // ===== Listing by tag =====
 // Images by tag (requires "Auto-create image list" in Cloudinary settings)
 export const fetchImagesByTag = async (tag) => {
-  const url = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${tag}.json`;
+  const url = `https://res.cloudinary.com/${CLOUD_NAME}/image/list/${scopedTag(tag)}.json`;
   try {
     const response = await fetch(url, { method: "GET" });
     if (!response.ok) {
@@ -322,7 +352,7 @@ export async function transferItem(url, newSectionTag, resourceType = "image") {
 
 // Videos by tag (requires the equivalent video list manifest enabled)
 export const fetchVideosByTag = async (tag) => {
-  const url = `https://res.cloudinary.com/${CLOUD_NAME}/video/list/${tag}.json`;
+  const url = `https://res.cloudinary.com/${CLOUD_NAME}/video/list/${scopedTag(tag)}.json`;
   try {
     const response = await fetch(url, { method: "GET" });
     if (!response.ok) {
