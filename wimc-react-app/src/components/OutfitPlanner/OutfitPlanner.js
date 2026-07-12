@@ -29,13 +29,11 @@ function getPlannerLsKey(tagPrefix) {
   return tagPrefix ? `wimc_week_plan_${tagPrefix}_v1` : LS_KEY;
 }
 
-// Gender-aware section options (male first section = Dress Shirts/Suits)
-function getSectionOptions(gender) {
-  const first = gender === "male"
-    ? { value: "dress-shirts-suits", label: "Dress Shirts/Suits" }
-    : { value: "dresses-skirts", label: "Dresses/Skirts" };
+// Unisex closet: one fixed 7-option list, same for everyone.
+function getSectionOptions() {
   return [
-    first,
+    { value: "dresses-skirts", label: "Dresses/Skirts" },
+    { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
     { value: "shoes-sneakers", label: "Shoes/Sneakers" },
     { value: "pants-jeans", label: "Pants/Jeans" },
     { value: "tops", label: "Tops" },
@@ -88,11 +86,10 @@ export default function OutfitPlanner({
   currentPreview = [],
   tagPrefix = "",
   incomingItems = null,
-  gender = "female",
   sectionOptions = null,
   onSyncToTravelPack,
 }) {
-  const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
+  const SECTION_OPTIONS = sectionOptions || getSectionOptions();
   const plannerLsKey = getPlannerLsKey(tagPrefix);
   const [internalPlan, setInternalPlan] = useState(emptyWeek());
   const plan = weekPlan ?? internalPlan;
@@ -118,17 +115,13 @@ export default function OutfitPlanner({
 
   // inline picker
   const [pickerSection, setPickerSection] = useState(SECTION_OPTIONS[0].value);
-  // Reset picker section when gender changes so we never fetch the wrong tag
-  useEffect(() => {
-    setPickerSection(SECTION_OPTIONS[0].value);
-  }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sub-section within the current picker card (e.g. Skirts under
   // Dresses/Skirts). null = "All" — every sub-section merged together.
   const [pickerSubSection, setPickerSubSection] = useState(null);
   const pickerEffectiveSection = tagPrefix ? `${tagPrefix}-${pickerSection}` : pickerSection;
-  const pickerSubSections = getSubSections(pickerEffectiveSection, gender);
-  useEffect(() => { setPickerSubSection(null); }, [pickerSection, gender]);
+  const pickerSubSections = getSubSections(pickerEffectiveSection);
+  useEffect(() => { setPickerSubSection(null); }, [pickerSection]);
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
@@ -420,7 +413,6 @@ export default function OutfitPlanner({
         onClose={() => setIsSearchOpen(false)}
         target="planner"
         tagPrefix={tagPrefix}
-        gender={gender}
         onApplyItems={applySearchItems}
       />
       {/* Move-to-day popover (fixed, centered — never clipped) */}

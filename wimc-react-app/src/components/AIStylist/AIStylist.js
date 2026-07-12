@@ -8,7 +8,6 @@ import ApiErrorMessage from "../common/ApiErrorMessage";
 import FormattedText from "../common/FormattedText";
 import "./AIStylist.css";
 
-const CLOSET_GENDER_KEY = "wimc_closet_gender";
 const SAVED_OUTFITS_KEY = "wimc_stylist_saved_outfits";
 
 const QUICK_PROMPTS = [
@@ -155,7 +154,6 @@ export default function AIStylist({
       id: Date.now(),
       date: new Date().toLocaleDateString(),
       request,
-      gender: localStorage.getItem(CLOSET_GENDER_KEY) || "female",
       items,
     };
     persistOutfits([outfit, ...savedOutfits]);
@@ -167,17 +165,9 @@ export default function AIStylist({
     persistOutfits(savedOutfits.filter((o) => o.id !== id));
   };
 
-  // Gender of a saved outfit. Older saves have no gender field — infer it
-  // from the item tags (male sections use the "male-" tag prefix).
-  const outfitGender = (o) =>
-    o.gender || (o.items?.some((it) => (it.tag || "").startsWith("male-")) ? "male" : "female");
-
-  // ── System prompt ────────────────────────────────────────────────────────
-  const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
-
-  // Saved outfits shown in the drawer: only the current gender's
-  const visibleOutfits = savedOutfits.filter((o) => outfitGender(o) === gender);
-  const sectionLabels = getClosetSections(gender).map((s) => s.label);
+  // Closet is unisex now — show every saved outfit, no gender filtering.
+  const visibleOutfits = savedOutfits;
+  const sectionLabels = getClosetSections().map((s) => s.label);
 
   const closetContext = closetItems.length > 0
     ? `The user currently has ${closetItems.length} item${closetItems.length !== 1 ? "s" : ""}${selectedTab ? ` in their "${selectedTab}" section` : " in their closet"}. Reference this section and suggest complementary categories.`
@@ -280,7 +270,7 @@ Rules:
                 className={`stylist-header__btn${savedOpen ? " is-active" : ""}`}
                 onClick={() => setSavedOpen((v) => !v)}
                 title="Saved outfits"
-              >{gender === "male" ? "👔" : "👗"}</button>
+              >👕</button>
             )}
             {messages.length > 0 && (
               <button className="stylist-header__btn stylist-header__btn--new" onClick={clearChat} title="Start a new request">🔄 New</button>
@@ -356,7 +346,7 @@ Rules:
           {messages.map((msg) => {
             const outfitSections =
               msg.role === "assistant" && !msg.streaming && msg.content
-                ? extractSections(msg.content, gender)
+                ? extractSections(msg.content)
                 : [];
             const hasOutfit = outfitSections.length >= 2;
 

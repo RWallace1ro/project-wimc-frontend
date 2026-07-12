@@ -418,16 +418,15 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
 
           {/* ── Features row ── */}
           {/* sectionOptions = pet-twist labels (with standard tags) so every
-              panel shows pet section names; petGender flows through for
-              consistency with the pet's gender choice. */}
+              panel shows pet section names. */}
           <div className="kcm-features">
             <h3 className="kcm-features__heading">Features</h3>
             <div className="kcm-features__panels">
-              <OutfitPreviewPanel tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPreviewIncoming} />
-              <OutfitPlanner      tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPlannerIncoming} />
-              <TravelPackPanel    tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petPackIncoming} />
-              <WishList           storageKey={`pet-${pet.id}-wishlist`} gender={petGender} tagPrefix={`pet-${pet.id}`} sectionOptions={SECTION_OPTIONS} />
-              <DonateBin          tagPrefix={`pet-${pet.id}`} gender={petGender} sectionOptions={SECTION_OPTIONS} incomingItems={petDonateIncoming} />
+              <OutfitPreviewPanel tagPrefix={`pet-${pet.id}`} sectionOptions={SECTION_OPTIONS} incomingItems={petPreviewIncoming} />
+              <OutfitPlanner      tagPrefix={`pet-${pet.id}`} sectionOptions={SECTION_OPTIONS} incomingItems={petPlannerIncoming} />
+              <TravelPackPanel    tagPrefix={`pet-${pet.id}`} sectionOptions={SECTION_OPTIONS} incomingItems={petPackIncoming} />
+              <WishList           storageKey={`pet-${pet.id}-wishlist`} tagPrefix={`pet-${pet.id}`} sectionOptions={SECTION_OPTIONS} />
+              <DonateBin          tagPrefix={`pet-${pet.id}`} sectionOptions={SECTION_OPTIONS} incomingItems={petDonateIncoming} />
             </div>
           </div>
         </div>
@@ -457,7 +456,6 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
           onClose={() => setIsSearchOpen(false)}
           onApplyItems={handlePetApplyItems}
           tagPrefix={`pet-${pet.id}`}
-          gender={petGender}
           sectionOptions={SECTION_OPTIONS}
         />
 

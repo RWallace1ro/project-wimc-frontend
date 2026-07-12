@@ -19,14 +19,15 @@ const TRIP_TYPES = [
 ];
 
 // Default section labels (used for the prompt). The actual fetch tags come from
-// the `sections` prop so kids/pet/male closets resolve correctly.
+// the `sections` prop so kids/pet closets resolve correctly.
 const DEFAULT_SECTIONS = [
-  { label: "Dresses/Skirts",   tag: "dresses-skirts" },
-  { label: "Shoes/Sneakers",   tag: "shoes-sneakers" },
-  { label: "Pants/Jeans",      tag: "pants-jeans" },
-  { label: "Tops",             tag: "tops" },
-  { label: "Bags/Accessories", tag: "bags-accessories" },
-  { label: "Jackets/Coats",    tag: "jackets-coats" },
+  { label: "Dresses/Skirts",     tag: "dresses-skirts" },
+  { label: "Dress Shirts/Suits", tag: "dress-shirts-suits" },
+  { label: "Shoes/Sneakers",     tag: "shoes-sneakers" },
+  { label: "Pants/Jeans",        tag: "pants-jeans" },
+  { label: "Tops",               tag: "tops" },
+  { label: "Bags/Accessories",   tag: "bags-accessories" },
+  { label: "Jackets/Coats",      tag: "jackets-coats" },
 ];
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -44,7 +45,6 @@ export default function AIPackingAssistant({
   onSaved,
   selectedDay,
   sections = null,
-  gender = "female",
 }) {
   const SECTIONS = sections && sections.length ? sections : DEFAULT_SECTIONS;
 
@@ -283,7 +283,6 @@ Your job:
       date: new Date().toLocaleDateString(),
       destination: destination.trim(),
       tripType,
-      gender,
       days: selectedDays,
       items,
     };
@@ -306,8 +305,8 @@ Your job:
     }, 1200);
   };
 
-  const listGender = (l) => l.gender || "female";
-  const visibleLists = savedLists.filter((l) => listGender(l) === gender);
+  // Closet is unisex now — show every saved list, no gender filtering.
+  const visibleLists = savedLists;
 
   const reset = () => {
     abortRef.current?.abort();
@@ -346,7 +345,7 @@ Your job:
                 onClick={() => setSavedOpen((v) => !v)}
                 title="Saved packing lists"
               >
-                {gender === "male" ? "👔" : "👗"}
+                👕
               </button>
             )}
             <button className="aipa-header__close" onClick={onClose} aria-label="Close">×</button>
@@ -587,7 +586,7 @@ Your job:
                       disabled={pickedCount === 0}
                       title="Keep this plan so you can reapply or reuse it later"
                     >
-                      {gender === "male" ? "👔" : "👗"} Save This Plan
+                      👕 Save This Plan
                     </button>
                   </div>
                 </div>

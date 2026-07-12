@@ -15,16 +15,9 @@ import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import { onImgError } from "../../utils/imgFallback";
 
-const SECTION_OPTIONS_FEMALE = [
-  { value: "dresses-skirts",   label: "Dresses/Skirts" },
-  { value: "shoes-sneakers",   label: "Shoes/Sneakers" },
-  { value: "pants-jeans",      label: "Pants/Jeans" },
-  { value: "tops",             label: "Tops" },
-  { value: "bags-accessories", label: "Bags/Accessories" },
-  { value: "jackets-coats",    label: "Jackets/Coats" },
-];
-
-const SECTION_OPTIONS_MALE = [
+// Unisex closet: one fixed 7-option list, same for everyone.
+const SECTION_OPTIONS_UNISEX = [
+  { value: "dresses-skirts",     label: "Dresses/Skirts" },
   { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
   { value: "shoes-sneakers",     label: "Shoes/Sneakers" },
   { value: "pants-jeans",        label: "Pants/Jeans" },
@@ -171,10 +164,10 @@ const IconPrint = (props) => (
   </svg>
 );
 
-export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", gender = "female", incomingItems = null, sectionOptions = null }) {
-  // sectionOptions, when provided (e.g. Pet Closet), overrides the gender-based
-  // defaults so panels show custom labels while keeping standard underlying tags.
-  const SECTION_OPTIONS = sectionOptions || (gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE);
+export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", incomingItems = null, sectionOptions = null }) {
+  // sectionOptions, when provided (e.g. Pet Closet), overrides the default
+  // unisex list so panels show custom labels while keeping standard tags.
+  const SECTION_OPTIONS = sectionOptions || SECTION_OPTIONS_UNISEX;
   // Child-specific LS keys — prevents main closet and kids closets sharing preview state
   const LS = buildLS(tagPrefix);
   // layout & doors
@@ -186,17 +179,13 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   // data
   const [selected, setSelected] = useState([]);
   const [section, setSection] = useState(SECTION_OPTIONS[0].value);
-  // Reset section when gender changes so we never fetch the wrong tag
-  useEffect(() => {
-    setSection(SECTION_OPTIONS[0].value);
-  }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sub-section within the current section card (e.g. Skirts under
   // Dresses/Skirts). null = "All" — every sub-section merged together.
   const [subSection, setSubSection] = useState(null);
   const effectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
-  const subSections = getSubSections(effectiveSection, gender);
-  useEffect(() => { setSubSection(null); }, [section, gender]);
+  const subSections = getSubSections(effectiveSection);
+  useEffect(() => { setSubSection(null); }, [section]);
   const [choices, setChoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -1002,7 +991,6 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
         onClose={() => setIsSearchOpen(false)}
         target="preview"
         tagPrefix={tagPrefix}
-        gender={gender}
         sectionOptions={sectionOptions}
         onApplyItems={(items) => addMany(items, "merge")}
       />

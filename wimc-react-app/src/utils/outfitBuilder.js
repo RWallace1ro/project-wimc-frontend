@@ -7,39 +7,36 @@
  */
 import { aiProxyFetch } from "./aiProxy";
 
-export function getClosetSections(gender) {
-  const p = gender === "male" ? "male-" : "";
+// Unisex closet: one fixed 7-section list, same for everyone.
+export function getClosetSections() {
   return [
-    {
-      label: gender === "male" ? "Dress Shirts/Suits" : "Dresses/Skirts",
-      tag: gender === "male" ? "male-dress-shirts-suits" : "dresses-skirts",
-    },
-    { label: "Shoes/Sneakers",   tag: `${p}shoes-sneakers` },
-    { label: "Pants/Jeans",      tag: `${p}pants-jeans` },
-    { label: "Tops",             tag: `${p}tops` },
-    { label: "Bags/Accessories", tag: `${p}bags-accessories` },
-    { label: "Jackets/Coats",    tag: `${p}jackets-coats` },
+    { label: "Dresses/Skirts",     tag: "dresses-skirts" },
+    { label: "Dress Shirts/Suits", tag: "dress-shirts-suits" },
+    { label: "Shoes/Sneakers",     tag: "shoes-sneakers" },
+    { label: "Pants/Jeans",        tag: "pants-jeans" },
+    { label: "Tops",               tag: "tops" },
+    { label: "Bags/Accessories",   tag: "bags-accessories" },
+    { label: "Jackets/Coats",      tag: "jackets-coats" },
   ];
 }
 
-// Keywords that map to each base tag (without gender prefix)
+// Keywords that map to each base tag
 const SECTION_KEYWORDS = {
   "dresses-skirts":   ["dress", "dresses", "skirt", "skirts", "gown"],
+  "dress-shirts-suits": ["suit", "suits", "dress shirt", "dress shirts", "blazer", "blazers", "tie", "ties"],
   "shoes-sneakers":   ["shoe", "shoes", "sneaker", "sneakers", "boot", "boots", "heel", "heels", "loafer", "loafers", "sandal", "sandals"],
   "pants-jeans":      ["pant", "pants", "jean", "jeans", "trouser", "trousers", "chino", "chinos", "legging", "leggings", "shorts"],
   "tops":             ["top", "tops", "shirt", "shirts", "blouse", "blouses", "t-shirt", "tee", "tees", "sweater", "sweaters", "tank", "polo"],
   "bags-accessories": ["bag", "bags", "handbag", "accessory", "accessories", "purse", "clutch", "belt", "belts", "scarf", "scarves", "hat", "hats"],
   "jackets-coats":    ["jacket", "jackets", "coat", "coats", "blazer", "blazers", "cardigan", "cardigans", "hoodie", "hoodies", "vest", "vests"],
-  // male-specific
-  "male-dress-shirts-suits": ["suit", "suits", "dress shirt", "dress shirts", "blazer", "blazers", "tie", "ties"],
 };
 
 // Find which closet sections are mentioned in an AI message.
 // Strategy 1: parse [Section Name] brackets from ✨ outfit lines.
 // Strategy 2: exact label match anywhere in the text.
 // Strategy 3: broad keyword fallback for natural-language responses.
-export function extractSections(text, gender) {
-  const sections = getClosetSections(gender);
+export function extractSections(text) {
+  const sections = getClosetSections();
 
   const outfitLines = text.match(/✨[^\n]*/g) || [];
   if (outfitLines.length) {
@@ -64,8 +61,7 @@ export function extractSections(text, gender) {
 
   const words = text.toLowerCase();
   return sections.filter((s) => {
-    const baseTag = s.tag.replace(/^male-/, "");
-    const keywords = SECTION_KEYWORDS[s.tag] || SECTION_KEYWORDS[baseTag] || [];
+    const keywords = SECTION_KEYWORDS[s.tag] || [];
     return keywords.some((kw) => {
       const re = new RegExp(`\\b${kw.replace(/[-]/g, "[-\\s]?")}s?\\b`);
       return re.test(words);

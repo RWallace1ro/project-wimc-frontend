@@ -20,7 +20,7 @@ const OCCASIONS = [
 
 const SAVED_LOOKS_KEY = "wimc_style_feedback_saved_outfits";
 
-export default function AIStyleFeedback({ isOpen, onClose, previewUrl, gender = "female" }) {
+export default function AIStyleFeedback({ isOpen, onClose, previewUrl }) {
   const [occasion, setOccasion] = useState("");
   const [description, setDescription] = useState("");
   const [feedback, setFeedback] = useState("");
@@ -51,7 +51,7 @@ export default function AIStyleFeedback({ isOpen, onClose, previewUrl, gender = 
   }, [isOpen]);
 
   const outfitSections =
-    !streaming && feedback ? extractSections(feedback, gender) : [];
+    !streaming && feedback ? extractSections(feedback) : [];
   const hasOutfit = outfitSections.length >= 2;
 
   const systemPrompt = `You are WIMC's AI Style Feedback assistant — a friendly, encouraging, and knowledgeable personal stylist.
@@ -156,7 +156,6 @@ Please give me style feedback on this outfit!`;
       id: Date.now(),
       date: new Date().toLocaleDateString(),
       request: description.trim(),
-      gender,
       items,
     };
     persistLooks([look, ...savedLooks]);
@@ -166,10 +165,8 @@ Please give me style feedback on this outfit!`;
 
   const deleteLook = (id) => persistLooks(savedLooks.filter((o) => o.id !== id));
 
-  // Older saves have no gender field — infer it from the item tags.
-  const lookGender = (o) =>
-    o.gender || (o.items?.some((it) => (it.tag || "").startsWith("male-")) ? "male" : "female");
-  const visibleLooks = savedLooks.filter((o) => lookGender(o) === gender);
+  // Closet is unisex now — show every saved look, no gender filtering.
+  const visibleLooks = savedLooks;
 
   const reset = () => {
     abortRef.current?.abort();
@@ -195,7 +192,7 @@ Please give me style feedback on this outfit!`;
       <div className="aisf-modal" role="dialog" aria-label="AI Style Feedback">
         <header className="aisf-header">
           <div className="aisf-header__left">
-            <span className="aisf-header__icon">{gender === "male" ? "👔" : "👗"}</span>
+            <span className="aisf-header__icon">👕</span>
             <div>
               <h2 className="aisf-header__title">AI Style Feedback</h2>
               <p className="aisf-header__sub">
@@ -210,7 +207,7 @@ Please give me style feedback on this outfit!`;
                 onClick={() => setSavedOpen((v) => !v)}
                 title="Saved looks"
               >
-                {gender === "male" ? "👔" : "👗"}
+                👕
               </button>
             )}
             <button className="aisf-close" onClick={onClose} aria-label="Close">
@@ -322,7 +319,7 @@ Please give me style feedback on this outfit!`;
                 onClick={handleBuildOutfit}
                 disabled={building}
               >
-                {building ? "✨ Selecting items…" : boardOpen ? "✕ Close Look" : `${gender === "male" ? "👔" : "👗"} Build This Look`}
+                {building ? "✨ Selecting items…" : boardOpen ? "✕ Close Look" : "👕 Build This Look"}
               </button>
             )}
             {(feedback || error) && (

@@ -18,7 +18,6 @@ const UserSettingsModal = lazy(() => import("../UserSettingsModal/UserSettingsMo
 const WIMCTourVideo     = lazy(() => import("../WIMCTourVideo/WIMCTourVideo"));
 const MySharesPanel     = lazy(() => import("../MyShares/MySharesPanel"));
 
-const CLOSET_GENDER_KEY = "wimc_closet_gender";
 
 function Header({
   userName,
@@ -58,21 +57,6 @@ function Header({
     else setUnreadShareCount(0);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
-
-  // Current closet gender (same source ClosetTabs reads) — Header's own
-  // Try-On Studio instance needs this to fetch from the correct closet.
-  const [closetGender, setClosetGender] = useState(
-    () => localStorage.getItem(CLOSET_GENDER_KEY) || "female"
-  );
-  useEffect(() => {
-    const sync = () => setClosetGender(localStorage.getItem(CLOSET_GENDER_KEY) || "female");
-    window.addEventListener("wimc-gender-changed", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("wimc-gender-changed", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
 
   const { isOpen: isTourOpen, openTour, closeTour, showIfNew } = useWIMCTour();
 
@@ -231,7 +215,7 @@ function Header({
 
       <Suspense fallback={null}>
         <WeatherModal isOpen={isWeatherOpen} onClose={() => setIsWeatherOpen(false)} />
-        <TryOnStudio isOpen={isTryOnOpen} onClose={() => setIsTryOnOpen(false)} initialImageUrl={null} initialSection={null} gender={closetGender} />
+        <TryOnStudio isOpen={isTryOnOpen} onClose={() => setIsTryOnOpen(false)} initialImageUrl={null} initialSection={null} />
         <AIStylist isOpen={isStylistOpen} onClose={() => setIsStylistOpen(false)} closetItems={closetItems} selectedTab={selectedTab} />
         <UserSettingsModal
           isOpen={isSettingsOpen}

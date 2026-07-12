@@ -1,25 +1,35 @@
 /**
  * closetSubsections — fixed sub-sections for each closet section card.
  *
- * Four profiles: adult-female, adult-male, kids-female, kids-male. The kid's
- * gender is NOT in the storage tag, so callers pass `gender`; the kid-vs-adult
- * "kind" is derived from the tag prefix (kid-/pet-/main).
+ * Unisex: one ADULT profile, one KID profile (no more male/female split —
+ * the closet's gender toggle was removed). "kind" (adult/kid/pet) is still
+ * derived from the tag prefix (kid-{id}-/pet-{id}-/main).
+ *
+ * "Dresses/Skirts" and "Dress Shirts/Suits" are both now permanent,
+ * always-visible cards for everyone (previously one replaced the other based
+ * on gender) — everything else stays 6 shared cards, so the closet has 7
+ * cards total.
  *
  * Rules (unchanged from the original Bags/Accessories pattern):
  *  - Card NAMES and underlying Cloudinary TAGS never change.
  *  - The FIRST sub-section (`slug: null`) reuses the card's own tag, so existing
  *    items appear there; each additional sub-section gets its own new tag.
- *  - Per-closet scoping is preserved via the tag prefix (male-/kid-{id}-/…).
+ *  - Per-closet scoping is preserved via the tag prefix (kid-{id}-/pet-{id}-/…).
  */
 
 // slug: null → use the card's own (main) tag.
-const ADULT_FEMALE = {
+const ADULT = {
   "dresses-skirts": [
     { label: "👗 Dresses", plain: "Dresses", slug: null },
     { label: "🩳 Skirts",  plain: "Skirts",  slug: "skirts" },
   ],
+  "dress-shirts-suits": [
+    { label: "👔 Dress Shirts", plain: "Dress Shirts", slug: null },
+    { label: "🤵 Suits",        plain: "Suits",        slug: "suits" },
+  ],
   "shoes-sneakers": [
-    { label: "👟 Sneakers",       plain: "Sneakers",       slug: null },
+    { label: "👞 Shoes",          plain: "Shoes",          slug: null },
+    { label: "👟 Sneakers",       plain: "Sneakers",       slug: "sneakers" },
     { label: "👠 Heels",          plain: "Heels",          slug: "heels" },
     { label: "🩴 Sandals/Slides", plain: "Sandals/Slides", slug: "sandals-slides" },
   ],
@@ -28,13 +38,13 @@ const ADULT_FEMALE = {
     { label: "👖 Jeans", plain: "Jeans", slug: "jeans" },
   ],
   tops: [
-    { label: "👚 Sweaters/Blouses", plain: "Sweaters/Blouses", slug: null },
-    { label: "👔 Shirts",           plain: "Shirts",           slug: "shirts" },
-    { label: "👕 T-Shirts",         plain: "T-Shirts",         slug: "t-shirts" },
+    { label: "👔 Shirts/Blouses", plain: "Shirts/Blouses", slug: null },
+    { label: "👕 T-Shirts",       plain: "T-Shirts",       slug: "t-shirts" },
+    { label: "🧶 Sweaters",       plain: "Sweaters",       slug: "sweaters" },
   ],
   "bags-accessories": [
     { label: "👜 Bags",        plain: "Bags",        slug: null },
-    { label: "💍 Accessories", plain: "Accessories", slug: "accessories" },
+    { label: "🕶️ Accessories", plain: "Accessories", slug: "accessories" },
     { label: "🌸 Fragrance",   plain: "Fragrance",   slug: "fragrance" },
   ],
   "jackets-coats": [
@@ -43,67 +53,11 @@ const ADULT_FEMALE = {
   ],
 };
 
-const ADULT_MALE = {
-  "dress-shirts-suits": [
-    { label: "👔 Dress Shirts", plain: "Dress Shirts", slug: null },
-    { label: "🤵 Suits",        plain: "Suits",        slug: "suits" },
-  ],
-  "shoes-sneakers": [
-    { label: "👞 Shoes",          plain: "Shoes",          slug: null },
-    { label: "👟 Sneakers",       plain: "Sneakers",       slug: "sneakers" },
-    { label: "🩴 Sandals/Slides", plain: "Sandals/Slides", slug: "sandals-slides" },
-  ],
-  "pants-jeans": [
-    { label: "👖 Pants", plain: "Pants", slug: null },
-    { label: "👖 Jeans", plain: "Jeans", slug: "jeans" },
-  ],
-  tops: [
-    { label: "👔 Casual Shirts", plain: "Casual Shirts", slug: null },
-    { label: "👕 T-Shirts",      plain: "T-Shirts",      slug: "t-shirts" },
-    { label: "🧶 Sweaters",      plain: "Sweaters",      slug: "sweaters" },
-  ],
-  "bags-accessories": [
-    { label: "👜 Bags",        plain: "Bags",        slug: null },
-    { label: "⌚ Accessories", plain: "Accessories", slug: "accessories" },
-    { label: "🧴 Fragrance",   plain: "Fragrance",   slug: "fragrance" },
-  ],
-  "jackets-coats": [
-    { label: "🧥 Jackets", plain: "Jackets", slug: null },
-    { label: "🥼 Coats",   plain: "Coats",   slug: "coats" },
-  ],
-};
-
-const KID_FEMALE = {
+const KID = {
   "dresses-skirts": [
     { label: "👗 Dresses", plain: "Dresses", slug: null },
     { label: "🩳 Skirts",  plain: "Skirts",  slug: "skirts" },
   ],
-  "shoes-sneakers": [
-    { label: "👞 Shoes",          plain: "Shoes",          slug: null },
-    { label: "👟 Sneakers",       plain: "Sneakers",       slug: "sneakers" },
-    { label: "🩴 Sandals/Slides", plain: "Sandals/Slides", slug: "sandals-slides" },
-  ],
-  "pants-jeans": [
-    { label: "👖 Pants", plain: "Pants", slug: null },
-    { label: "👖 Jeans", plain: "Jeans", slug: "jeans" },
-  ],
-  tops: [
-    { label: "🧶 Sweaters", plain: "Sweaters", slug: null },
-    { label: "👔 Shirts",   plain: "Shirts",   slug: "shirts" },
-    { label: "👕 T-Shirts", plain: "T-Shirts", slug: "t-shirts" },
-  ],
-  "bags-accessories": [
-    { label: "👜 Bags",        plain: "Bags",        slug: null },
-    { label: "📿 Accessories", plain: "Accessories", slug: "accessories" },
-    { label: "🌸 Fragrance",   plain: "Fragrance",   slug: "fragrance" },
-  ],
-  "jackets-coats": [
-    { label: "🧥 Jackets", plain: "Jackets", slug: null },
-    { label: "🥼 Coats",   plain: "Coats",   slug: "coats" },
-  ],
-};
-
-const KID_MALE = {
   "dress-shirts-suits": [
     { label: "👕 Button-Ups",   plain: "Button-Ups",   slug: null },
     { label: "👔 Dress Shirts", plain: "Dress Shirts", slug: "dress-shirts" },
@@ -125,8 +79,8 @@ const KID_MALE = {
   ],
   "bags-accessories": [
     { label: "👜 Bags",        plain: "Bags",        slug: null },
-    { label: "⌚ Accessories", plain: "Accessories", slug: "accessories" },
-    { label: "🧴 Fragrance",   plain: "Fragrance",   slug: "fragrance" },
+    { label: "🕶️ Accessories", plain: "Accessories", slug: "accessories" },
+    { label: "🌸 Fragrance",   plain: "Fragrance",   slug: "fragrance" },
   ],
   "jackets-coats": [
     { label: "🧥 Jackets", plain: "Jackets", slug: null },
@@ -134,10 +88,10 @@ const KID_MALE = {
   ],
 };
 
-const PROFILES = [ADULT_FEMALE, ADULT_MALE, KID_FEMALE, KID_MALE];
+const PROFILES = [ADULT, KID];
 const BASE_SLUGS = Array.from(new Set(PROFILES.flatMap((p) => Object.keys(p))));
 
-// Every sub-section slug across all 4 profiles (excludes the null "main tag"
+// Every sub-section slug across both profiles (excludes the null "main tag"
 // entries). Single source of truth for anything that needs to enumerate every
 // possible Cloudinary tag a closet card could use — e.g. account deletion.
 export const ALL_SUBSECTION_SLUGS = Array.from(
@@ -170,9 +124,9 @@ function kindOf(prefix) {
 }
 
 // The per-closet key prefix (matching DonateBin's `tagPrefix` prop) that owns
-// a given section tag — "male", "kid-{id}", "pet-{id}", or "" for the main
-// female closet. Used to find the right localStorage donate-bin lists when a
-// tag's closet needs to be inferred from an item's current section tag alone.
+// a given section tag — "kid-{id}", "pet-{id}", or "" for the main closet.
+// Used to find the right localStorage donate-bin lists when a tag's closet
+// needs to be inferred from an item's current section tag alone.
 export function donatePrefixForTag(sectionTag) {
   const split = splitSectionTag(sectionTag || "");
   if (!split) return "";
@@ -182,28 +136,26 @@ export function donatePrefixForTag(sectionTag) {
 /**
  * Sub-section definitions for a base slug + context. Returns [{label, plain,
  * slug}] (slug null = the card's own tag), or null. `kind`: "adult" | "kid".
+ * Accepts (and ignores) a legacy `gender` key for callers that still pass
+ * one — the closet is unisex now, so it no longer affects which defs come
+ * back.
  */
-export function getSubSectionDefs(baseSlug, { gender = "female", kind = "adult" } = {}) {
+export function getSubSectionDefs(baseSlug, { kind = "adult" } = {}) {
   if (kind === "pet") return null;
-  const profile = kind === "kid"
-    ? (gender === "male" ? KID_MALE : KID_FEMALE)
-    : (gender === "male" ? ADULT_MALE : ADULT_FEMALE);
+  const profile = kind === "kid" ? KID : ADULT;
   return profile[baseSlug] || null;
 }
 
 /**
  * Sub-sections for a full section tag, or null. Returns [{label, plain, tag}]
- * with the first entry mapped to the card's own tag. `gender` is required for
- * kids closets (their tag doesn't encode gender); for the main closet it
- * defaults from the tag's male- prefix.
+ * with the first entry mapped to the card's own tag.
  */
-export function getSubSections(sectionTag, gender) {
+export function getSubSections(sectionTag) {
   const split = splitSectionTag(sectionTag);
   if (!split) return null;
   const { base, prefix } = split;
   const kind = kindOf(prefix);
-  const g = gender || (prefix === "male-" ? "male" : "female");
-  const defs = getSubSectionDefs(base, { gender: g, kind });
+  const defs = getSubSectionDefs(base, { kind });
   if (!defs) return null;
   return defs.map((d) => ({
     label: d.label,
@@ -213,9 +165,9 @@ export function getSubSections(sectionTag, gender) {
 }
 
 /**
- * All Cloudinary tags that could belong to a section (main + every gender's
- * sub-section tags), deduped. Gender-agnostic on purpose so fetch coverage
- * works without knowing the closet's gender.
+ * All Cloudinary tags that could belong to a section (main + every
+ * sub-section tag), deduped. Used so fetch coverage always finds items sorted
+ * into any sub-section.
  */
 export function sectionTagsWithSubs(sectionTag) {
   const split = splitSectionTag(sectionTag);

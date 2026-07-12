@@ -33,13 +33,12 @@ async function postProxy(body) {
 
 /**
  * @param {Array<{id:string,name:string,detail?:string}>} items - unchecked shopping list items
- * @param {"male"|"female"} gender
  * @returns {Promise<{ matchesById: Record<string,string>, checkedCount: number, totalCount: number, errored: boolean }>}
  *   matchesById: shopping-list item id -> matched closet photo URL
  *   checkedCount vs totalCount: lets the caller tell the user when the list
  *   was too long to check in one pass (only the first MAX_LIST_ITEMS ran).
  */
-export async function checkShoppingListAgainstCloset(items, gender = "female") {
+export async function checkShoppingListAgainstCloset(items) {
   const named = items.filter((it) => it.name?.trim());
   const candidates = named.slice(0, MAX_LIST_ITEMS);
   const totalCount = named.length;
@@ -48,7 +47,7 @@ export async function checkShoppingListAgainstCloset(items, gender = "female") {
   // 1) Keyword-guess each item's likely section(s) — free, no AI call.
   const sectionTagsByItem = candidates.map((it) => {
     const text = `${it.name} ${it.detail || ""}`;
-    const sections = extractSections(text, gender);
+    const sections = extractSections(text);
     return sections.map((s) => s.tag);
   });
   const allTags = Array.from(new Set(sectionTagsByItem.flat()));

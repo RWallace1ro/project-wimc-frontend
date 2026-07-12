@@ -1,4 +1,3 @@
-import { syncSetItem } from '../utils/syncStore';
 import { logAppEvent } from '../utils/analytics';
 import React, { useState, useEffect, useCallback } from "react";
 import ClosetSectionCard from "../components/ClosetSectionCard/ClosetSectionCard";
@@ -27,9 +26,7 @@ import topsImg from "../assets/images/tops.jpg";
 import bagsAccessoriesImg from "../assets/images/bags-accessories.jpg";
 import jacketsCoatsImg from "../assets/images/jackets-coats.jpg";
 
-const CLOSET_GENDER_KEY = "wimc_closet_gender";
-
-function getSectionTagToDisplayName(gender) {
+function getSectionTagToDisplayName() {
   return {
     "dresses-skirts": "Dresses/Skirts",
     "dress-shirts-suits": "Dress Shirts/Suits",
@@ -41,31 +38,26 @@ function getSectionTagToDisplayName(gender) {
   };
 }
 
-// Male sections use a "male-" tag prefix so male items never merge with the
-// female closet (which keeps the original plain tags). `name` stays the base
-// key for display-name lookup; `tag` is the gender-specific Cloudinary tag.
-function getClosetSections(gender) {
-  const p = gender === "male" ? "male-" : "";
-  const firstSection =
-    gender === "male"
-      ? { name: "dress-shirts-suits", tag: "male-dress-shirts-suits", placeholderUrl: dressesSkirtsImg }
-      : { name: "dresses-skirts", tag: "dresses-skirts", placeholderUrl: dressesSkirtsImg };
+// Unisex closet: 7 fixed categories, always the same for everyone — no more
+// gender-based tag prefix or category swap. Dresses/Skirts and Dress
+// Shirts/Suits are both permanent, always-visible categories now.
+function getClosetSections() {
   return [
-    firstSection,
-    { name: "shoes-sneakers",   tag: `${p}shoes-sneakers`,   placeholderUrl: shoesSneakersImg },
-    { name: "pants-jeans",      tag: `${p}pants-jeans`,      placeholderUrl: pantsJeansImg },
-    { name: "tops",             tag: `${p}tops`,             placeholderUrl: topsImg },
-    { name: "bags-accessories", tag: `${p}bags-accessories`, placeholderUrl: bagsAccessoriesImg },
-    { name: "jackets-coats",    tag: `${p}jackets-coats`,    placeholderUrl: jacketsCoatsImg },
+    { name: "dresses-skirts",    tag: "dresses-skirts",       placeholderUrl: dressesSkirtsImg },
+    { name: "dress-shirts-suits", tag: "dress-shirts-suits",  placeholderUrl: dressesSkirtsImg },
+    { name: "shoes-sneakers",    tag: "shoes-sneakers",       placeholderUrl: shoesSneakersImg },
+    { name: "pants-jeans",       tag: "pants-jeans",          placeholderUrl: pantsJeansImg },
+    { name: "tops",              tag: "tops",                 placeholderUrl: topsImg },
+    { name: "bags-accessories",  tag: "bags-accessories",     placeholderUrl: bagsAccessoriesImg },
+    { name: "jackets-coats",     tag: "jackets-coats",        placeholderUrl: jacketsCoatsImg },
   ];
 }
 
-// Map a (possibly "male-"-prefixed) tag back to its display label
+// Map a section tag back to its display label
 function tagToDisplayName(tag) {
   if (!tag) return "";
-  const base = tag.replace(/^male-/, "");
   const names = getSectionTagToDisplayName();
-  return names[base] || base;
+  return names[tag] || tag;
 }
 
 const COLOR_PREFIX = "color:";
@@ -139,24 +131,11 @@ function ClosetData({
     Sunday: [],
   });
 
-  const [gender, setGender] = useState(
-    () => localStorage.getItem(CLOSET_GENDER_KEY) || "female"
-  );
-
   const { requirePro } = useTier();
 
-  const handleGenderChange = (g) => {
-    setGender(g);
-    syncSetItem(CLOSET_GENDER_KEY, g);
-    // Notify the header tabs so they switch to this gender's sections instantly
-    try { window.dispatchEvent(new Event("wimc-gender-changed")); } catch {}
-  };
-
-  const closetSections = getClosetSections(gender);
-  const sectionTagToDisplayName = getSectionTagToDisplayName(gender);
-  // Gender-derived tag prefix for the side panels & search: male items live
-  // under "male-*" tags; female keeps the original plain tags (data preserved).
-  const genderPrefix = gender === "male" ? "male" : "";
+  // Closet is unisex now — no more gender toggle or gender-derived tag prefix.
+  const closetSections = getClosetSections();
+  const sectionTagToDisplayName = getSectionTagToDisplayName();
 
   const fetchSectionItems = async (tag) => {
     setIsLoading(true);
@@ -268,20 +247,6 @@ function ClosetData({
       style={getPageBgStyle(backgrounds[PAGE_BG_KEY])}
     >
       <header className="closet-data__header-actions">
-        <div className="closet-data__gender-toggle">
-          <button
-            className={`closet-data__gender-btn${gender === "female" ? " is-active" : ""}`}
-            onClick={() => handleGenderChange("female")}
-          >
-            ♀ Female
-          </button>
-          <button
-            className={`closet-data__gender-btn${gender === "male" ? " is-active" : ""}`}
-            onClick={() => handleGenderChange("male")}
-          >
-            ♂ Male
-          </button>
-        </div>
         <button
           className="add-clothing-button"
           onClick={() => setIsSearchOpen(true)}
@@ -304,7 +269,7 @@ function ClosetData({
 
       <section className="closet-data">
         <aside className="closet-data__side-left">
-          <OutfitPreviewPanel onSelectionChange={setPreviewSelection} gender={gender} tagPrefix={genderPrefix} incomingItems={previewIncoming} />
+          <OutfitPreviewPanel onSelectionChange={setPreviewSelection} incomingItems={previewIncoming} />
           <aside className="closet-data__side-container">
             <ProGate feature="Outfit of the Day planner">
               <OutfitPlanner
@@ -312,8 +277,6 @@ function ClosetData({
                 onChange={setWeekPlan}
                 currentPreview={previewSelection}
                 incomingItems={plannerIncoming}
-                gender={gender}
-                tagPrefix={genderPrefix}
                 onSyncToTravelPack={(day, items) => setPackIncoming({ day, items })}
               />
             </ProGate>
@@ -321,8 +284,6 @@ function ClosetData({
               <TravelPackPanel
                 currentPreview={previewSelection}
                 incomingItems={packIncoming}
-                gender={gender}
-                tagPrefix={genderPrefix}
                 onSyncToPlanner={(day, items) => {
                   setWeekPlan((prev) => {
                     const seen = new Set();
@@ -340,15 +301,15 @@ function ClosetData({
             </ProGate>
           </aside>
           <ProGate feature="Donate Bin">
-            <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} gender={gender} tagPrefix={genderPrefix} />
+            <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} />
           </ProGate>
         </aside>
 
         <div className="closet-data__cards-container">
           {closetSections.map((section) => {
             // Pinned card image takes priority; otherwise the card fetches its
-            // own thumbnail by the gender-specific tag (so male/female stay
-            // separate). Passing tag + undefined imageUrl triggers that fetch.
+            // own thumbnail by tag. Passing tag + undefined imageUrl triggers
+            // that fetch.
             const pinnedCardUrl = (() => {
               try { return localStorage.getItem(`wimc_card_image_${section.tag}`) || null; } catch { return null; }
             })();
@@ -377,7 +338,7 @@ function ClosetData({
         </div>
 
         <aside className="closet-data__side-right">
-          <WishList gender={gender} tagPrefix={genderPrefix} />
+          <WishList />
           <ShoppingList />
           <ProGate feature="Video Bin">
             <VideoBin videos={sectionVideos} />
@@ -393,7 +354,6 @@ function ClosetData({
           onAddItem={openAddForSection}
           recentUpload={recentUpload}
           onSwitchSection={(tag) => setSelectedSection(tag)}
-          gender={gender}
           allSections={closetSections.map((s) => ({
             label: sectionTagToDisplayName[s.name] || s.tag,
             tag: s.tag,
@@ -410,7 +370,7 @@ function ClosetData({
             // Each card is split into sub-sections — expose each as its own
             // upload target so items land in the right collection. The first
             // sub-section keeps the card's own tag.
-            const subs = getSubSections(s.tag, gender);
+            const subs = getSubSections(s.tag);
             if (subs) return subs.map((sub) => ({ value: sub.tag, label: sub.label }));
             return [{ value: s.tag, label }];
           })}
@@ -422,7 +382,6 @@ function ClosetData({
         onClose={() => setIsTryOnOpen(false)}
         initialImageUrl={tryOnImageUrl}
         initialSection={tryOnSection}
-        gender={gender}
       />
 
       <BackgroundPicker
@@ -437,10 +396,8 @@ function ClosetData({
       <ClosetSearch
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        onSectionSelect={(tag) => openSection(genderPrefix ? `${genderPrefix}-${tag}` : tag)}
+        onSectionSelect={(tag) => openSection(tag)}
         onApplyItems={handleApplyItems}
-        gender={gender}
-        tagPrefix={genderPrefix}
       />
     </main>
   );
@@ -715,7 +672,7 @@ export default ClosetData;
 //         </div>
 
 //         <aside className="closet-data__side-right">
-//           <WishList gender={gender} tagPrefix={genderPrefix} />
+//           <WishList />
 //           <VideoBin videos={sectionVideos} />
 //         </aside>
 

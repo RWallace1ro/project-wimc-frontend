@@ -17,13 +17,11 @@ import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import "./DonateBin.css";
 
-// Gender-aware section options (male first section = Dress Shirts/Suits)
-function getSectionOptions(gender) {
-  const first = gender === "male"
-    ? { value: "dress-shirts-suits", label: "Dress Shirts/Suits" }
-    : { value: "dresses-skirts", label: "Dresses/Skirts" };
+// Unisex closet: one fixed 7-option list, same for everyone.
+function getSectionOptions() {
   return [
-    first,
+    { value: "dresses-skirts", label: "Dresses/Skirts" },
+    { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
     { value: "shoes-sneakers", label: "Shoes/Sneakers" },
     { value: "pants-jeans", label: "Pants/Jeans" },
     { value: "tops", label: "Tops" },
@@ -95,8 +93,8 @@ function normalizeChoice(x, sectionHint) {
 }
 const keyOf = (it) => it.imageUrl || it.url || it.mediaUrl || it.name || "";
 
-export default function DonateBin({ tagPrefix = "", incomingItems = null, gender = "female", sectionOptions = null }) {
-  const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
+export default function DonateBin({ tagPrefix = "", incomingItems = null, sectionOptions = null }) {
+  const SECTION_OPTIONS = sectionOptions || getSectionOptions();
   // Child-specific localStorage keys so each child has their own donate bin data
   const lsDonateKey  = tagPrefix ? `wimc_donateItems_${tagPrefix}`  : "donateItems";
   const lsDonatedKey = tagPrefix ? `wimc_donatedItems_${tagPrefix}` : "donatedItems";
@@ -111,17 +109,13 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
   const [donateItems, setDonateItems] = useState([]);
   const [donatedItems, setDonatedItems] = useState([]);
   const [section, setSection] = useState(SECTION_OPTIONS[0].value);
-  // Reset section when gender changes so we never fetch the wrong tag
-  useEffect(() => {
-    setSection(SECTION_OPTIONS[0].value);
-  }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sub-section within the current section card (e.g. Skirts under
   // Dresses/Skirts). null = "All" — every sub-section merged together.
   const [subSection, setSubSection] = useState(null);
   const donateEffectiveSection = tagPrefix ? `${tagPrefix}-${section}` : section;
-  const donateSubSections = getSubSections(donateEffectiveSection, gender);
-  useEffect(() => { setSubSection(null); }, [section, gender]);
+  const donateSubSections = getSubSections(donateEffectiveSection);
+  useEffect(() => { setSubSection(null); }, [section]);
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
@@ -625,7 +619,6 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, gender
         onClose={() => setIsSearchOpen(false)}
         target="donate"
         tagPrefix={tagPrefix}
-        gender={gender}
         onApplyItems={addSearchItems}
       />
 

@@ -19,22 +19,15 @@ import bagsAccessoriesImg from "../../assets/images/bags-accessories.jpg";
 import jacketsCoatsImg    from "../../assets/images/jackets-coats.jpg";
 import "./KidsClosetModal.css";
 
-const SECTIONS_FEMALE = [
-  { tag: "dresses-skirts",   label: "Dresses/Skirts",       placeholder: dressesSkirtsImg },
-  { tag: "shoes-sneakers",   label: "Shoes/Sneakers",       placeholder: shoesSneakersImg },
-  { tag: "pants-jeans",      label: "Pants/Jeans",          placeholder: pantsJeansImg },
-  { tag: "tops",             label: "Tops",                 placeholder: topsImg },
-  { tag: "bags-accessories", label: "Bags/Accessories",     placeholder: bagsAccessoriesImg },
-  { tag: "jackets-coats",    label: "Jackets/Coats",        placeholder: jacketsCoatsImg },
-];
-
-const SECTIONS_MALE = [
-  { tag: "dress-shirts-suits", label: "Button-Ups/Dress Clothes", placeholder: dressesSkirtsImg },
-  { tag: "shoes-sneakers",     label: "Shoes/Sneakers",           placeholder: shoesSneakersImg },
-  { tag: "pants-jeans",        label: "Pants/Jeans",              placeholder: pantsJeansImg },
-  { tag: "tops",               label: "Tops",                     placeholder: topsImg },
-  { tag: "bags-accessories",   label: "Bags/Accessories",         placeholder: bagsAccessoriesImg },
-  { tag: "jackets-coats",      label: "Jackets/Coats",            placeholder: jacketsCoatsImg },
+// Unisex kids closet: one fixed 7-category list, same for every child.
+const SECTIONS = [
+  { tag: "dresses-skirts",      label: "Dresses/Skirts",       placeholder: dressesSkirtsImg },
+  { tag: "dress-shirts-suits",  label: "Button-Ups/Dress Clothes", placeholder: dressesSkirtsImg },
+  { tag: "shoes-sneakers",      label: "Shoes/Sneakers",       placeholder: shoesSneakersImg },
+  { tag: "pants-jeans",         label: "Pants/Jeans",          placeholder: pantsJeansImg },
+  { tag: "tops",                label: "Tops",                 placeholder: topsImg },
+  { tag: "bags-accessories",    label: "Bags/Accessories",     placeholder: bagsAccessoriesImg },
+  { tag: "jackets-coats",       label: "Jackets/Coats",        placeholder: jacketsCoatsImg },
 ];
 
 const GROUP_ICONS = { baby: "👶", toddler: "🧒", kids: "🧑", teen: "🧑‍🎓" };
@@ -218,9 +211,6 @@ function KcmBgPicker({ bgKey, onClose: closePicker }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function KidsClosetModal({ child, onClose, onUpdateChild, siblings = [], onSwitchChild }) {
-  // ── Gender-aware sections ─────────────────────────────────────────────────
-  const SECTIONS = child?.gender === "male" ? SECTIONS_MALE : SECTIONS_FEMALE;
-
   // ── Background ────────────────────────────────────────────────────────────
   const { backgrounds } = useBackground();
   const bgKey = `kid-closet-${child?.id}`;
@@ -512,11 +502,11 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
           <div className="kcm-features">
             <h3 className="kcm-features__heading">Features</h3>
             <div className="kcm-features__panels">
-              <OutfitPreviewPanel tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPreviewIncoming} />
-              <OutfitPlanner      tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPlannerIncoming} />
-              <TravelPackPanel    tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsPackIncoming} />
-              <WishList           storageKey={`kid-${child.id}-wishlist`} gender={child?.gender || "female"} tagPrefix={`kid-${child.id}`} />
-              <DonateBin          tagPrefix={`kid-${child.id}`} gender={child?.gender || "female"} incomingItems={kidsDonateIncoming} />
+              <OutfitPreviewPanel tagPrefix={`kid-${child.id}`} incomingItems={kidsPreviewIncoming} />
+              <OutfitPlanner      tagPrefix={`kid-${child.id}`} incomingItems={kidsPlannerIncoming} />
+              <TravelPackPanel    tagPrefix={`kid-${child.id}`} incomingItems={kidsPackIncoming} />
+              <WishList           storageKey={`kid-${child.id}-wishlist`} tagPrefix={`kid-${child.id}`} />
+              <DonateBin          tagPrefix={`kid-${child.id}`} incomingItems={kidsDonateIncoming} />
             </div>
           </div>
         </div>
@@ -541,7 +531,6 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
             setIsAddOpen(true);
           }}
           recentUpload={recentUpload}
-          gender={child?.gender || "female"}
           allSections={SECTIONS.map((s) => ({
             label: s.label,
             tag: childTag(child.id, s.tag), // e.g. "kid-abc123-tops"
@@ -555,7 +544,6 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
           onClose={() => setIsSearchOpen(false)}
           onApplyItems={handleKidsApplyItems}
           tagPrefix={`kid-${child.id}`}
-          gender={child?.gender || "female"}
         />
 
         {/* ── Add clothing ── */}
@@ -576,10 +564,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
             // Expand each card into its sub-sections so uploads can target one.
             // Values are the un-prefixed sub-tag (slug, or the card's own tag
             // for the first one); AddClothingModal prepends `tagPrefix`.
-            const defs = getSubSectionDefs(s.tag, {
-              gender: child?.gender || "female",
-              kind: "kid",
-            });
+            const defs = getSubSectionDefs(s.tag, { kind: "kid" });
             if (defs) {
               return defs.map((d) => ({ value: d.slug || s.tag, label: d.label }));
             }

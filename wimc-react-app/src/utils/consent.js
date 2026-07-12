@@ -6,7 +6,7 @@
  *
  * Categories
  *   essential  — always ON (required to run the app: auth session, closet data).
- *   functional — remembers preferences (theme/background, closet gender, tabs).
+ *   functional — remembers preferences (theme/background, tabs).
  *   analytics  — Sentry error/performance monitoring.
  *   marketing  — reserved for future use; WIMC currently sets no marketing cookies.
  *

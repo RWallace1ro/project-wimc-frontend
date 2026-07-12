@@ -10,16 +10,9 @@ import { setVideoRefImage } from "../../utils/videoMeta";
 import AIStyleFeedback from "../AIStyleFeedback/AIStyleFeedback";
 import "./TryOnStudio.css";
 
-const SECTION_OPTIONS_FEMALE = [
+// Unisex closet: one fixed 7-option list, same for everyone.
+const SECTION_OPTIONS = [
   { value: "dresses-skirts", label: "Dresses/Skirts" },
-  { value: "shoes-sneakers", label: "Shoes/Sneakers" },
-  { value: "pants-jeans", label: "Pants/Jeans" },
-  { value: "tops", label: "Tops" },
-  { value: "bags-accessories", label: "Bags/Accessories" },
-  { value: "jackets-coats", label: "Jackets/Coats" },
-];
-
-const SECTION_OPTIONS_MALE = [
   { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
   { value: "shoes-sneakers", label: "Shoes/Sneakers" },
   { value: "pants-jeans", label: "Pants/Jeans" },
@@ -33,34 +26,19 @@ export default function TryOnStudio({
   onClose,
   initialImageUrl = null,
   initialSection = null,
-  gender = "female",
 }) {
-  // gender-aware section list + the male- tag prefix used everywhere else
-  const SECTION_OPTIONS = gender === "male" ? SECTION_OPTIONS_MALE : SECTION_OPTIONS_FEMALE;
-  const tagPrefix = gender === "male" ? "male-" : "";
-
   // Reference item
   const [section, setSection] = useState(
     initialSection || SECTION_OPTIONS[0].value,
   );
-  // Reset the picked section whenever gender changes AFTER mount, so we never
-  // fetch a stale tag from the other closet. Skips the initial mount so an
-  // explicit initialSection (e.g. "Try On" launched from a specific card)
-  // isn't immediately clobbered by this.
-  const skipFirstGenderReset = useRef(true);
-  useEffect(() => {
-    if (skipFirstGenderReset.current) { skipFirstGenderReset.current = false; return; }
-    setSection(SECTION_OPTIONS[0].value);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gender]);
   const [sectionItems, setSectionItems] = useState([]);
   const [sectionLoading, setSectionLoading] = useState(false);
   // Sub-section within the current section card (e.g. Skirts under
   // Dresses/Skirts). null = "All" — every sub-section merged together.
   const [subSection, setSubSection] = useState(null);
-  const effectiveSection = `${tagPrefix}${section}`;
-  const subSections = getSubSections(effectiveSection, gender);
-  useEffect(() => { setSubSection(null); }, [section, gender]);
+  const effectiveSection = section;
+  const subSections = getSubSections(effectiveSection);
+  useEffect(() => { setSubSection(null); }, [section]);
   const [refImage, setRefImage] = useState(initialImageUrl);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
@@ -106,17 +84,11 @@ export default function TryOnStudio({
     if (isOpen) {
       setRefImage(initialImageUrl);
       if (initialSection) {
-        // initialSection may arrive already gender-prefixed (e.g. "male-tops",
-        // since it's the card's own full tag) — strip it so `section` always
-        // holds the bare slug matching SECTION_OPTIONS values.
-        const bare = tagPrefix && initialSection.startsWith(tagPrefix)
-          ? initialSection.slice(tagPrefix.length)
-          : initialSection;
-        setSection(bare);
+        setSection(initialSection);
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, initialImageUrl, initialSection, tagPrefix]);
+  }, [isOpen, initialImageUrl, initialSection]);
 
   // ── Load section images for reference picker ─────────────────────────────
   useEffect(() => {
@@ -132,7 +104,7 @@ export default function TryOnStudio({
       .catch(() => setSectionItems([]))
       .finally(() => setSectionLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, section, subSection, tagPrefix]);
+  }, [isOpen, section, subSection]);
 
   // ── Camera helpers ───────────────────────────────────────────────────────
   const startCamera = useCallback(
@@ -575,7 +547,6 @@ export default function TryOnStudio({
       isOpen={isFeedbackOpen}
       onClose={() => setIsFeedbackOpen(false)}
       previewUrl={previewUrl}
-      gender={gender}
     />
     </>
   );

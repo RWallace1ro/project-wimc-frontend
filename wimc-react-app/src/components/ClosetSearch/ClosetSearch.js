@@ -17,32 +17,20 @@ const SECTIONS = [
   { tag: "jackets-coats",     label: "Jackets/Coats",     emoji: "🧥" },
 ];
 
-// Gender-specific quick-search examples + input placeholder
-function getQuickSearches(gender) {
-  if (gender === "male") {
-    return [
-      "Show me all my dress shirts",
-      "Find something casual for the weekend",
-      "A formal suit for a wedding",
-      "Comfortable travel outfit",
-      "Business casual for the office",
-      "Something light for summer",
-    ];
-  }
+// Quick-search examples + input placeholder — unisex, same for everyone.
+function getQuickSearches() {
   return [
     "Show me all my black dresses",
+    "Show me all my dress shirts",
     "Find something casual for the weekend",
     "A formal outfit for a wedding",
     "Comfortable travel outfit",
     "Business casual for the office",
-    "Something bright and summery",
   ];
 }
 
-function getPlaceholder(gender) {
-  return gender === "male"
-    ? "e.g. Show me all my dress shirts…"
-    : "e.g. Show me all my black dresses…";
+function getPlaceholder() {
+  return "e.g. Show me all my black dresses…";
 }
 
 const TARGET_LABELS = {
@@ -111,20 +99,18 @@ function normalizeForPanels(url, sectionTag) {
 }
 
 // ── Step 1: identify sections from query ─────────────────────────────────────
-async function identifySections(query, gender = "female", sectionOptions = null) {
+async function identifySections(query, sectionOptions = null) {
   // Only offer the categories that exist for THIS closet, so the AI never
   // returns a section that doesn't apply. sectionOptions (e.g. Pet Closet)
-  // overrides the gender-based default list with custom labels.
+  // overrides the default unisex list with custom labels.
   let categoryList;
   if (sectionOptions && sectionOptions.length) {
     categoryList = sectionOptions
       .map((o) => `- ${o.label.replace(/^[^\w]+\s*/, "")} (tag: ${o.value})`)
       .join("\n");
   } else {
-    const firstCat = gender === "male"
-      ? "- Dress Shirts/Suits (tag: dress-shirts-suits)"
-      : "- Dresses/Skirts (tag: dresses-skirts)";
-    categoryList = `${firstCat}
+    categoryList = `- Dresses/Skirts (tag: dresses-skirts)
+- Dress Shirts/Suits (tag: dress-shirts-suits)
 - Shoes/Sneakers (tag: shoes-sneakers)
 - Pants/Jeans (tag: pants-jeans)
 - Tops (tag: tops)
@@ -242,8 +228,7 @@ export default function ClosetSearch({
   onSectionSelect,
   onApplyItems,   // (items) — required when target is set
   target = null,  // "preview"|"planner"|"pack"|"donate"|null
-  tagPrefix = "", // Kids Closet: "kid-{id}" or main male closet: "male"
-  gender = "female", // restricts the AI to this closet's sections
+  tagPrefix = "", // Kids/Pet Closet: "kid-{id}" or "pet-{id}"
   sectionOptions = null, // Pet Closet: custom [{value,label}] section list
 }) {
   const [query, setQuery] = useState("");
@@ -262,7 +247,7 @@ export default function ClosetSearch({
 
   // ── Saved searches (persist results so they can be reopened later) ──
   // Scope per closet so kids/pet/main closets keep their own saved searches.
-  const savedKey = `wimc_saved_searches:${tagPrefix || gender || "main"}`;
+  const savedKey = `wimc_saved_searches:${tagPrefix || "main"}`;
   const [savedSearches, setSavedSearches] = useState([]);
   const [showSaved, setShowSaved] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
@@ -280,8 +265,8 @@ export default function ClosetSearch({
 
   // This component stays mounted (only its own `isOpen` toggles visibility),
   // so a search's results otherwise linger even after switching to a
-  // different closet (male/female toggle, or a different kid/pet). Clear the
-  // stale search whenever the closet identity changes.
+  // different closet (a different kid/pet). Clear the stale search whenever
+  // the closet identity changes.
   useEffect(() => {
     setQuery("");
     setResultText("");
@@ -290,7 +275,7 @@ export default function ClosetSearch({
     setNoMatches(false);
     setSelected(new Set());
     setError("");
-  }, [gender, tagPrefix]);
+  }, [tagPrefix]);
 
   const persistSaved = (list) => {
     setSavedSearches(list);
@@ -336,7 +321,7 @@ export default function ClosetSearch({
 
     try {
       // Step 1 — identify relevant sections
-      const { text, sections: secs } = await identifySections(q, gender, sectionOptions);
+      const { text, sections: secs } = await identifySections(q, sectionOptions);
       setResultText(text);
       setSections(secs);
       setStreaming(false);
@@ -496,7 +481,7 @@ export default function ClosetSearch({
               onClick={() => setShowSaved((v) => !v)}
               title="View your saved searches"
             >
-              {gender === "male" ? "👔" : "👗"} Saved{savedSearches.length ? ` (${savedSearches.length})` : ""}
+              👕 Saved{savedSearches.length ? ` (${savedSearches.length})` : ""}
             </button>
             {(query || hasResult || resultImages.length > 0) && (
               <button className="cs-header__reset" onClick={reset} title="Start a new search">🔄 New</button>
@@ -509,7 +494,7 @@ export default function ClosetSearch({
           {/* Saved searches drawer */}
           {showSaved && (
             <div className="cs-saved">
-              <p className="cs-saved__title">{gender === "male" ? "👔" : "👗"} Saved Searches</p>
+              <p className="cs-saved__title">👕 Saved Searches</p>
               {savedSearches.length === 0 ? (
                 <p className="cs-saved__empty">
                   No saved searches yet. Run a search, then tap 💾 Save to keep
@@ -553,7 +538,7 @@ export default function ClosetSearch({
               ref={inputRef}
               className="cs-input"
               type="text"
-              placeholder={getPlaceholder(gender)}
+              placeholder={getPlaceholder()}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}
@@ -574,7 +559,7 @@ export default function ClosetSearch({
             <div className="cs-quick">
               <p className="cs-quick__label">Try a quick search:</p>
               <div className="cs-quick__chips">
-                {getQuickSearches(gender).map((s) => (
+                {getQuickSearches().map((s) => (
                   <button key={s} className="cs-chip" onClick={() => { setQuery(s); handleSearch(s); }}>
                     {s}
                   </button>

@@ -8,7 +8,6 @@ import FormattedText from "../common/FormattedText";
 import { checkShoppingListAgainstCloset } from "../../utils/closetDupeCheck";
 import "./ShoppingList.css";
 
-const CLOSET_GENDER_KEY = "wimc_closet_gender";
 
 // ── Default categories ────────────────────────────────────────────────────────
 const DEFAULT_CATEGORIES = [
@@ -732,12 +731,8 @@ function AIPanel({ categories, items, activeCatId, onAddItems, onClose }) {
 
   const activeCat = categories.find((c) => c.id === activeCatId);
 
-  // Applies the same male/female closet toggle Closet Search and Try-On
-  // Studio already read, so suggestions lean toward the right style —
-  // skipped for "Kids Items" since that category isn't tied to the adult
-  // closet's gender at all (kids profiles have their own gender per child).
-  const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
-  const genderContext = activeCat?.id !== "kids" ? ` The shopper is ${gender === "male" ? "male" : "female"} — suggest items appropriate for ${gender === "male" ? "men's" : "women's"} fashion.` : "";
+  // Closet is unisex now — no more gender-based AI prompt context.
+  const genderContext = "";
 
   const saveFeedback = (kind, content) => {
     if (!content) return;
@@ -944,7 +939,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
           onClick={() => setSavedOpen(true)}
           title="Your saved AI feedback (all categories)"
         >
-          {gender === "male" ? "👔" : "👗"} Saved{savedFeedback.length ? ` (${savedFeedback.length})` : ""}
+          👕 Saved{savedFeedback.length ? ` (${savedFeedback.length})` : ""}
         </button>
         <button className="sl-ai-panel__close" onClick={onClose}>
           ×
@@ -1222,7 +1217,7 @@ If asked to add items to the list, respond with JSON at the end like: ITEMS:[{"n
             onClick={(e) => e.stopPropagation()}
           >
             <header className="opp-saved__head">
-              <h4 className="opp-saved__title">{gender === "male" ? "👔" : "👗"} Saved Feedback</h4>
+              <h4 className="opp-saved__title">👕 Saved Feedback</h4>
               <button className="opp__btn" onClick={() => setSavedOpen(false)} aria-label="Close">
                 ✕
               </button>
@@ -1525,8 +1520,7 @@ export default function ShoppingList() {
     setClosetChecking(true);
     setClosetCheckMsg("");
     try {
-      const gender = localStorage.getItem(CLOSET_GENDER_KEY) || "female";
-      const { matchesById, checkedCount, totalCount, errored, errorMessage } = await checkShoppingListAgainstCloset(unchecked, gender);
+      const { matchesById, checkedCount, totalCount, errored, errorMessage } = await checkShoppingListAgainstCloset(unchecked);
       if (errored) {
         setClosetCheckMsg(errorMessage || "Couldn't complete the check. Please try again.");
       } else {

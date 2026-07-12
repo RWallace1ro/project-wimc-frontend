@@ -566,18 +566,18 @@ exports.stripeWebhook = functions
 const CLOUDINARY_CLOUD_NAME = "djoh2vfhd";
 const CLOUDINARY_API_KEY = "258382581976839";
 
-// Every base closet-card tag + every sub-section slug across all 4 gender/age
-// profiles (adult/kid × female/male). Kids/Pet closets prefix these with a
-// per-profile id (kid-{id}-… / pet-{id}-…), making the resulting tag unique to
-// one user — safe to fetch & delete by tag. KEEP IN SYNC with
+// Every base closet-card tag + every sub-section slug across both unisex
+// profiles (adult/kid). Kids/Pet closets prefix these with a per-profile id
+// (kid-{id}-… / pet-{id}-…), making the resulting tag unique to one user —
+// safe to fetch & delete by tag. KEEP IN SYNC with
 // wimc-react-app/src/utils/closetSubsections.js (BASE_SLUGS + ALL_SUBSECTION_SLUGS).
 const KID_PET_SECTION_KEYS = [
   // base cards
   "dresses-skirts", "dress-shirts-suits", "shoes-sneakers",
   "pants-jeans", "tops", "bags-accessories", "jackets-coats",
-  // sub-section slugs (union of every profile)
-  "skirts", "sneakers", "heels", "sandals-slides", "jeans",
-  "shirts", "t-shirts", "suits", "sweaters", "dress-shirts", "coats",
+  // sub-section slugs (union of both profiles)
+  "skirts", "suits", "sneakers", "heels", "sandals-slides", "jeans",
+  "t-shirts", "sweaters", "dress-shirts", "coats",
   "accessories", "fragrance",
 ];
 

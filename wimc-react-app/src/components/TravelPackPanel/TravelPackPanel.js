@@ -28,13 +28,11 @@ const DAYS = [
 const LS_KEY = "wimc_travel_pack_v2";
 const LEGACY_LS_KEY = "wimc_travel_pack_v1";
 
-// Gender-aware section options (male first section = Dress Shirts/Suits)
-function getSectionOptions(gender) {
-  const first = gender === "male"
-    ? { value: "dress-shirts-suits", label: "Dress Shirts/Suits" }
-    : { value: "dresses-skirts", label: "Dresses/Skirts" };
+// Unisex closet: one fixed 7-option list, same for everyone.
+function getSectionOptions() {
   return [
-    first,
+    { value: "dresses-skirts", label: "Dresses/Skirts" },
+    { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
     { value: "shoes-sneakers", label: "Shoes/Sneakers" },
     { value: "pants-jeans", label: "Pants/Jeans" },
     { value: "tops", label: "Tops" },
@@ -87,10 +85,9 @@ export default function TravelPackPanel({
   onSyncToPlanner,
   tagPrefix = "",
   incomingItems = null,
-  gender = "female",
   sectionOptions = null,
 }) {
-  const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
+  const SECTION_OPTIONS = sectionOptions || getSectionOptions();
   // Child-specific localStorage key so each child has their own travel pack
   const lsKey = tagPrefix ? `wimc_travel_pack_${tagPrefix}_v2` : LS_KEY;
 
@@ -102,17 +99,13 @@ export default function TravelPackPanel({
   const [isAIPackOpen, setIsAIPackOpen] = useState(false);
   const [textItem, setTextItem] = useState("");
   const [pickerSection, setPickerSection] = useState(SECTION_OPTIONS[0].value);
-  // Reset picker section when gender changes so we never fetch the wrong tag
-  useEffect(() => {
-    setPickerSection(SECTION_OPTIONS[0].value);
-  }, [gender]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sub-section within the current picker card (e.g. Skirts under
   // Dresses/Skirts). null = "All" — every sub-section merged together.
   const [pickerSubSection, setPickerSubSection] = useState(null);
   const pickerEffectiveSection = tagPrefix ? `${tagPrefix}-${pickerSection}` : pickerSection;
-  const pickerSubSections = getSubSections(pickerEffectiveSection, gender);
-  useEffect(() => { setPickerSubSection(null); }, [pickerSection, gender]);
+  const pickerSubSections = getSubSections(pickerEffectiveSection);
+  useEffect(() => { setPickerSubSection(null); }, [pickerSection]);
   const [choices, setChoices] = useState([]);
   const [choicesLoading, setChoicesLoading] = useState(false);
   const [choicesError, setChoicesError] = useState("");
@@ -432,7 +425,6 @@ export default function TravelPackPanel({
         onClose={() => setIsSearchOpen(false)}
         target="pack"
         tagPrefix={tagPrefix}
-        gender={gender}
         onApplyItems={addItemsToDay}
       />
       {/* Move-to-day popover (fixed, centered — never clipped) */}
@@ -785,7 +777,6 @@ export default function TravelPackPanel({
         onAddImages={handleAIImages}
         onSaved={() => setIsAIPackOpen(false)}
         selectedDay={selectedDay}
-        gender={gender}
         sections={SECTION_OPTIONS.map((o) => ({
           label: o.label,
           tag: tagPrefix ? `${tagPrefix}-${o.value}` : o.value,

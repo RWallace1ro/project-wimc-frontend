@@ -8,14 +8,12 @@ import { extractSections } from "../../utils/outfitBuilder";
 import ImageUpload from "../ImageUpload/ImageUpload"; // uses your existing widget
 import "./WishList.css";
 
-// Gender-aware section options (male first section = Dress Shirts/Suits) —
-// same shape/convention as Donate Bin's getSectionOptions.
-function getSectionOptions(gender) {
-  const first = gender === "male"
-    ? { value: "dress-shirts-suits", label: "Dress Shirts/Suits" }
-    : { value: "dresses-skirts", label: "Dresses/Skirts" };
+// Unisex closet: one fixed 7-option list, same for everyone — same
+// shape/convention as Donate Bin's getSectionOptions.
+function getSectionOptions() {
   return [
-    first,
+    { value: "dresses-skirts", label: "Dresses/Skirts" },
+    { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
     { value: "shoes-sneakers", label: "Shoes/Sneakers" },
     { value: "pants-jeans", label: "Pants/Jeans" },
     { value: "tops", label: "Tops" },
@@ -53,14 +51,14 @@ const IconSave = (props) => (
   </svg>
 );
 
-export default function WishList({ storageKey, gender = "female", tagPrefix = "", sectionOptions = null }) {
+export default function WishList({ storageKey, tagPrefix = "", sectionOptions = null }) {
   // storageKey lets kids closets keep their own wish lists separate from the
   // parent's main list.  Falls back to the original key for backward-compat.
   const lsItemsKey = storageKey ? `${storageKey}_items`      : "wishListItems";
   const lsListsKey = storageKey ? `${storageKey}_savedLists` : "wimc_saved_wishlists";
   const lsMovedKey = storageKey ? `${storageKey}_movedToCloset` : "wimc_wishlist_moved_to_closet";
 
-  const SECTION_OPTIONS = sectionOptions || getSectionOptions(gender);
+  const SECTION_OPTIONS = sectionOptions || getSectionOptions();
 
   const [wishListItems, setWishListItems] = useState([]);
   const [newItem, setNewItem] = useState({
@@ -245,7 +243,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
   const [moveError, setMoveError] = useState("");
 
   const startMove = (item, listId = null) => {
-    const guess = extractSections(`${item.name || ""} ${item.description || ""}`, gender)[0];
+    const guess = extractSections(`${item.name || ""} ${item.description || ""}`)[0];
     setMovingContext({ itemId: item.id, listId });
     setMoveTargetTag(guess?.tag || SECTION_OPTIONS[0].value);
     setMoveError("");
@@ -570,7 +568,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                   onClick={() => setMovedOpen(true)}
                   title="Items you've moved to your closet"
                 >
-                  {gender === "male" ? "👔" : "👗"} Moved to Closet{movedItems.length ? ` (${movedItems.length})` : ""}
+                  👕 Moved to Closet{movedItems.length ? ` (${movedItems.length})` : ""}
                 </button>
               </div>
               <button className="wish-modal__btn wish-modal__close" onClick={closeModal} aria-label="Close">
@@ -913,7 +911,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
                                     title="Move to your closet"
                                     onClick={(e) => { e.stopPropagation(); startMove(it, l.id); }}
                                   >
-                                    {gender === "male" ? "👔" : "👗"}
+                                    👕
                                   </button>
                                 )}
 
@@ -978,7 +976,7 @@ export default function WishList({ storageKey, gender = "female", tagPrefix = ""
               >
                 <header className="opp-saved__head">
                   <h4 className="opp-saved__title">
-                    {gender === "male" ? "👔" : "👗"} Moved to Closet
+                    👕 Moved to Closet
                   </h4>
                   <button className="opp__btn" onClick={() => setMovedOpen(false)} aria-label="Close">
                     ✕
