@@ -1244,7 +1244,9 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
 
       <section
         className={
-          "outfit-preview-panel" + (isFloating ? " opp--floating" : "")
+          "outfit-preview-panel" +
+          (isFloating ? " opp--floating" : "") +
+          (!isOpen ? " opp--collapsed" : "")
         }
         aria-label="Outfit Preview"
       >
