@@ -1,5 +1,5 @@
 import { syncSetItem, syncRemoveItem } from '../../utils/syncStore';
-﻿import React, { useEffect, useState, useMemo } from "react";
+﻿import React, { useEffect, useState, useMemo, useRef } from "react";
 import AIDonationAdvisor from "../AIDonationAdvisor/AIDonationAdvisor";
 import {
   uploadRawJSON,
@@ -15,6 +15,7 @@ import { getSubSections } from "../../utils/closetSubsections";
 import { appShareUrl, createCollabDoc, shareAppLink } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./DonateBin.css";
 
 // Unisex closet: one fixed 8-option list, same for everyone.
@@ -104,6 +105,10 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, sectio
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
   const [showDonating, setShowDonating] = useState(false);
   const [showOpening, setShowOpening] = useState(false);
+
+  // horizontal-scroll hint refs
+  const sectionStripRef = useRef(null);
+  const subStripRef = useRef(null);
 
   const [collapsed, setCollapsed] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
@@ -703,7 +708,8 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, sectio
             )}
 
             {/* ── Horizontal section strip ── */}
-            <div className="donate-section-strip">
+            <div className="shint-wrap">
+            <div className="donate-section-strip" ref={sectionStripRef}>
               {SECTION_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -743,9 +749,12 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, sectio
                 ↩️ Donated Items
               </button>
             </div>
+            <ScrollHintArrows scrollRef={sectionStripRef} />
+            </div>
 
             {donateSubSections && (
-              <div className="donate-section-strip donate-section-strip--sub">
+              <div className="shint-wrap">
+              <div className="donate-section-strip donate-section-strip--sub" ref={subStripRef}>
                 <button
                   className={"donate-section-pill donate-section-pill--sub" + (!subSection ? " is-active" : "")}
                   type="button"
@@ -763,6 +772,8 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, sectio
                     {s.label}
                   </button>
                 ))}
+              </div>
+              <ScrollHintArrows scrollRef={subStripRef} />
               </div>
             )}
 

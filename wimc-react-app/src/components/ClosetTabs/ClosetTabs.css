@@ -1,3 +1,7 @@
+.closet-tabs {
+  position: relative;
+}
+
 .closet-tabs__container {
   /* Stickiness is handled by the parent .header — no separate sticky needed here.
      Having position:sticky on a child can cause it to render above position:fixed

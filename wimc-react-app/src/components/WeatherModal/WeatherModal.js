@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./WeatherModal.css";
 
 // ── WMO weather code lookup ───────────────────────────────────────────────────
@@ -97,6 +98,7 @@ function alertColor(severity) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function WeatherModal({ isOpen, onClose }) {
+  const hourlyStripRef = useRef(null);
   const [status,       setStatus]       = useState("idle");
   const [errMsg,       setErrMsg]       = useState("");
   const [location,     setLocation]     = useState(null);
@@ -460,7 +462,8 @@ export default function WeatherModal({ isOpen, onClose }) {
                 {/* ── Hourly — next 24h ── */}
                 <section className="weather-section">
                   <h3 className="weather-section__title">Hourly Forecast — Next 24h</h3>
-                  <div className="weather-hourly">
+                  <div className="shint-wrap">
+                  <div className="weather-hourly" ref={hourlyStripRef}>
                     {hourSlice.map((t, i) => (
                       <div key={t} className="weather-hour">
                         <div className="weather-hour__time">{fmtHour(t)}</div>
@@ -469,6 +472,8 @@ export default function WeatherModal({ isOpen, onClose }) {
                         <div className="weather-hour__precip">💧{precipSlice[i]}%</div>
                       </div>
                     ))}
+                  </div>
+                  <ScrollHintArrows scrollRef={hourlyStripRef} />
                   </div>
                 </section>
 

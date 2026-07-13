@@ -1,0 +1,50 @@
+/* Wrap a scrollable row in this so the arrows (siblings of the scroller,
+   not children of it) stay pinned at the edge instead of scrolling away
+   with the content. */
+.shint-wrap {
+  position: relative;
+}
+
+.scroll-hint {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(15, 23, 42, 0.6);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  animation: scroll-hint-pulse 1.6s ease-in-out infinite;
+}
+.scroll-hint:hover {
+  background: rgba(15, 23, 42, 0.85);
+}
+.scroll-hint--left {
+  left: 2px;
+}
+.scroll-hint--right {
+  right: 2px;
+}
+
+@keyframes scroll-hint-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* Desktop/mouse users already see a native scrollbar and don't need the
+   nudge — keep this purely a touch/mobile affordance. */
+@media (hover: hover) and (pointer: fine) {
+  .scroll-hint {
+    display: none;
+  }
+}

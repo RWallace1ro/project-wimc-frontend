@@ -6,6 +6,7 @@ import { aiProxyFetch } from "../../utils/aiProxy";
 import ApiErrorMessage from "../common/ApiErrorMessage";
 import FormattedText from "../common/FormattedText";
 import { checkShoppingListAgainstCloset } from "../../utils/closetDupeCheck";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./ShoppingList.css";
 
 
@@ -1399,6 +1400,7 @@ function PrioritizeResults({ items }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function ShoppingList() {
+  const catStripRef = useRef(null);
   const [collapsed, setCollapsed] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
@@ -1856,7 +1858,8 @@ export default function ShoppingList() {
         <div className="sl-layout">
           {/* Left: categories + AI panel */}
           <nav className="sl-sidebar">
-            <div className="sl-sidebar__cats">
+            <div className="shint-wrap">
+            <div className="sl-sidebar__cats" ref={catStripRef}>
               {categories.map((cat) => (
                 <div key={cat.id} className="sl-tab-wrap">
                   <CategoryTab
@@ -1885,6 +1888,8 @@ export default function ShoppingList() {
               >
                 + Add Category
               </button>
+            </div>
+            <ScrollHintArrows scrollRef={catStripRef} />
             </div>
 
             {showAI && (

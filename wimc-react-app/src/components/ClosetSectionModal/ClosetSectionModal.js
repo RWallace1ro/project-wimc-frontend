@@ -10,6 +10,7 @@ import {
 import { useBackground } from "../../context/BackgroundContext";
 import { syncSetItem } from "../../utils/syncStore";
 import { getSubSections, donatePrefixForTag } from "../../utils/closetSubsections";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./ClosetSectionModal.css";
 
 const BG_COLOR_PREFIX = "color:";
@@ -99,6 +100,10 @@ function ClosetSectionModal({
   // Keyed by section tag so switching sections never wipes fetched data and
   // so transfers can update both source and destination immediately without
   // waiting for Cloudinary's (stale) CDN tag-list cache to refresh.
+  // horizontal-scroll hint refs
+  const sectionNavRef = useRef(null);
+  const subNavRef = useRef(null);
+
   const [itemsByTag,   setItemsByTag]   = useState({}); // { [tag]: [url, ...] }
   const [videosByTag,  setVideosByTag]  = useState({}); // { [tag]: [url, ...] }
   const [loadingTags,  setLoadingTags]  = useState(new Set());
@@ -435,7 +440,8 @@ function ClosetSectionModal({
 
         {/* Section switcher — lets users navigate between sections without closing */}
         {allSections.length > 1 && onSwitchSection && (
-          <nav className="closet-section-modal__section-nav" aria-label="Switch section">
+          <div className="shint-wrap">
+          <nav className="closet-section-modal__section-nav" aria-label="Switch section" ref={sectionNavRef}>
             {allSections.map((s) => (
               <button
                 key={s.tag}
@@ -447,11 +453,14 @@ function ClosetSectionModal({
               </button>
             ))}
           </nav>
+          <ScrollHintArrows scrollRef={sectionNavRef} />
+          </div>
         )}
 
         {/* Sub-sections — each occupies the full card view */}
         {subSections && (
-          <nav className="csm-subnav" aria-label="Sub-section">
+          <div className="shint-wrap">
+          <nav className="csm-subnav" aria-label="Sub-section" ref={subNavRef}>
             {subSections.map((s) => (
               <button
                 key={s.tag}
@@ -463,6 +472,8 @@ function ClosetSectionModal({
               </button>
             ))}
           </nav>
+          <ScrollHintArrows scrollRef={subNavRef} />
+          </div>
         )}
 
         {/* Tabs */}

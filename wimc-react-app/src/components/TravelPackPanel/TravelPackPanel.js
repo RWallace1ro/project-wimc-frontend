@@ -14,6 +14,7 @@ import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../../u
 import AIPackingAssistant from "../AIPackingAssistant/AIPackingAssistant";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./TravelPackPanel.css";
 
 const DAYS = [
@@ -99,6 +100,11 @@ export default function TravelPackPanel({
   const [selectedDay, setSelectedDay] = useState("Friday");
   const [isAIPackOpen, setIsAIPackOpen] = useState(false);
   const [textItem, setTextItem] = useState("");
+  // horizontal-scroll hint refs
+  const dayStripRef = useRef(null);
+  const pickerStripRef = useRef(null);
+  const pickerSubStripRef = useRef(null);
+
   const [pickerSection, setPickerSection] = useState(SECTION_OPTIONS[0].value);
 
   // Sub-section within the current picker card (e.g. Skirts under
@@ -466,7 +472,8 @@ export default function TravelPackPanel({
         </header>
 
         {!collapsed && !doors.opening && (
-          <div className="tp__day-strip">
+          <div className="shint-wrap">
+          <div className="tp__day-strip" ref={dayStripRef}>
             {DAYS.map((d) => (
               <button
                 key={d}
@@ -476,6 +483,8 @@ export default function TravelPackPanel({
                 {d.slice(0, 3)}
               </button>
             ))}
+          </div>
+          <ScrollHintArrows scrollRef={dayStripRef} />
           </div>
         )}
 
@@ -590,7 +599,8 @@ export default function TravelPackPanel({
 
             {/* Inline picker */}
             <div className="tp__picker">
-              <div className="tp__section-strip">
+              <div className="shint-wrap">
+              <div className="tp__section-strip" ref={pickerStripRef}>
                 {SECTION_OPTIONS.map((o) => (
                   <button
                     key={o.value}
@@ -601,8 +611,11 @@ export default function TravelPackPanel({
                   </button>
                 ))}
               </div>
+              <ScrollHintArrows scrollRef={pickerStripRef} />
+              </div>
               {pickerSubSections && (
-                <div className="tp__section-strip tp__section-strip--sub">
+                <div className="shint-wrap">
+                <div className="tp__section-strip tp__section-strip--sub" ref={pickerSubStripRef}>
                   <button
                     className={`tp__section-tab tp__section-tab--sub${!pickerSubSection ? " is-active" : ""}`}
                     onClick={() => setPickerSubSection(null)}
@@ -618,6 +631,8 @@ export default function TravelPackPanel({
                       {s.label}
                     </button>
                   ))}
+                </div>
+                <ScrollHintArrows scrollRef={pickerSubStripRef} />
                 </div>
               )}
               <p className="tp__picker-tip">

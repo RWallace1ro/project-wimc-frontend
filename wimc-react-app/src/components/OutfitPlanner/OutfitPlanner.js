@@ -13,6 +13,7 @@ import { onImgError } from "../../utils/imgFallback";
 import { appShareUrl, createCollabDoc, shareAppLink, decodeShareSrc } from "../../utils/shareUtils";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./OutfitPlanner.css";
 
 const DAYS = [
@@ -113,6 +114,11 @@ export default function OutfitPlanner({
   const [dayShareUrl, setDayShareUrl] = useState("");
   const [dayShareError, setDayShareError] = useState("");
   const [shareNote, setShareNote] = useState("");
+
+  // horizontal-scroll hint refs
+  const dayStripRef = useRef(null);
+  const pickerStripRef = useRef(null);
+  const pickerSubStripRef = useRef(null);
 
   // inline picker
   const [pickerSection, setPickerSection] = useState(SECTION_OPTIONS[0].value);
@@ -460,7 +466,8 @@ export default function OutfitPlanner({
         </header>
 
         {!collapsed && !doors.opening && (
-          <div className="planner__day-strip">
+          <div className="shint-wrap">
+          <div className="planner__day-strip" ref={dayStripRef}>
             {DAYS.map((d) => (
               <button
                 key={d}
@@ -470,6 +477,8 @@ export default function OutfitPlanner({
                 {d.slice(0, 3)}
               </button>
             ))}
+          </div>
+          <ScrollHintArrows scrollRef={dayStripRef} />
           </div>
         )}
 
@@ -608,7 +617,8 @@ export default function OutfitPlanner({
 
             {/* Inline picker */}
             <div className="planner__picker">
-              <div className="planner__section-strip">
+              <div className="shint-wrap">
+              <div className="planner__section-strip" ref={pickerStripRef}>
                 {SECTION_OPTIONS.map((o) => (
                   <button
                     key={o.value}
@@ -619,8 +629,11 @@ export default function OutfitPlanner({
                   </button>
                 ))}
               </div>
+              <ScrollHintArrows scrollRef={pickerStripRef} />
+              </div>
               {pickerSubSections && (
-                <div className="planner__section-strip planner__section-strip--sub">
+                <div className="shint-wrap">
+                <div className="planner__section-strip planner__section-strip--sub" ref={pickerSubStripRef}>
                   <button
                     className={`planner__section-tab planner__section-tab--sub${!pickerSubSection ? " is-active" : ""}`}
                     onClick={() => setPickerSubSection(null)}
@@ -636,6 +649,8 @@ export default function OutfitPlanner({
                       {s.label}
                     </button>
                   ))}
+                </div>
+                <ScrollHintArrows scrollRef={pickerSubStripRef} />
                 </div>
               )}
               <p className="planner__picker-tip">

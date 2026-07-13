@@ -14,6 +14,7 @@ import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl, decodeShareSrc
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import { onImgError } from "../../utils/imgFallback";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 
 // Unisex closet: one fixed 8-option list, same for everyone.
 const SECTION_OPTIONS_UNISEX = [
@@ -198,6 +199,10 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const gridRef = useRef(null);
+
+  // horizontal-scroll hint refs
+  const sectionStripRef = useRef(null);
+  const subStripRef = useRef(null);
 
   // share/import (current outfit)
   const [sharing, setSharing] = useState(false);
@@ -1251,7 +1256,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
         aria-label="Outfit Preview"
       >
         <header className="opp__header">
-          <h3 className="opp__title">👗 Outfit Preview</h3>
+          <h3 className="opp__title">🪞 Outfit Preview</h3>
           <div className="opp__header-actions">
             <button
               className="opp__toggle"
@@ -1277,7 +1282,8 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
         ) : (
           <>
             {/* ── Section strip — horizontal scroll, always below header ── */}
-            <div className="opp__section-strip">
+            <div className="shint-wrap">
+            <div className="opp__section-strip" ref={sectionStripRef}>
               {SECTION_OPTIONS.map((opt) => (
                 <button
                   key={opt.value}
@@ -1303,10 +1309,13 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                 💾 Saved Looks
               </button>
             </div>
+            <ScrollHintArrows scrollRef={sectionStripRef} />
+            </div>
 
             {/* ── Sub-section pills — narrow the current card down ── */}
             {subSections && (
-              <div className="opp__section-strip opp__section-strip--sub">
+              <div className="shint-wrap">
+              <div className="opp__section-strip opp__section-strip--sub" ref={subStripRef}>
                 <button
                   className={"opp__section-pill opp__section-pill--sub" + (!subSection ? " is-active" : "")}
                   type="button"
@@ -1324,6 +1333,8 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
                     {s.label}
                   </button>
                 ))}
+              </div>
+              <ScrollHintArrows scrollRef={subStripRef} />
               </div>
             )}
 

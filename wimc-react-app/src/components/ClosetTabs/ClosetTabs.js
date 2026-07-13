@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./ClosetTabs.css";
 
 // Unisex closet: 8 fixed tabs, same for everyone — no more gender toggle.
@@ -17,6 +18,7 @@ const TABS = [
 function ClosetTabs({ selectedTab, onSelectTab }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = useRef(null);
 
   const handleTabClick = (tag) => {
     if (typeof onSelectTab === "function") onSelectTab(tag);
@@ -25,7 +27,7 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
 
   return (
     <section className="closet-tabs">
-      <nav className="closet-tabs__container">
+      <nav className="closet-tabs__container" ref={scrollRef}>
         {TABS.map(({ tag, label }) => (
           <button
             key={tag}
@@ -37,6 +39,7 @@ function ClosetTabs({ selectedTab, onSelectTab }) {
           </button>
         ))}
       </nav>
+      <ScrollHintArrows scrollRef={scrollRef} />
     </section>
   );
 }
