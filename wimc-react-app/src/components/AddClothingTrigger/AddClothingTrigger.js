@@ -17,13 +17,7 @@ export default function AddClothingTrigger({ onOpen }) {
     if (opening) return;
     setOpening(true);
     setDoorsArmed(false);
-    // Double rAF: the browser needs one full paint with the doors in their
-    // closed position before the "armed" class is added, or it can collapse
-    // the two states into one frame and skip straight to open (no visible
-    // ease/slide, just a "snap").
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setDoorsArmed(true));
-    });
+    requestAnimationFrame(() => setDoorsArmed(true));
     setTimeout(() => {
       setOpening(false);
       setDoorsArmed(false);
@@ -36,11 +30,9 @@ export default function AddClothingTrigger({ onOpen }) {
       {opening && <div className="act-backdrop" />}
       {opening && (
         <section className="act-panel act--floating" aria-label="Add New Clothing Item">
-          <div className="act__closed act__closed--animating">
-            <div className={"act__doors" + (doorsArmed ? " act__doors--open" : "")}>
-              <div className="act__door act__door--left" />
-              <div className="act__door act__door--right" />
-            </div>
+          <div className={"act__doors" + (doorsArmed ? " act__doors--open" : "")}>
+            <div className="act__door act__door--left" />
+            <div className="act__door act__door--right" />
           </div>
         </section>
       )}

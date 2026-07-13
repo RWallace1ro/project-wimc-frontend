@@ -55,26 +55,41 @@
   flex: 1;
   background: transparent;
 }
-.act__doors {
+/* Resting card: doors fill the .act__closed wrapper. */
+.act__closed .act__doors {
   position: absolute;
   inset: 0;
+}
+/* Floating overlay: doors ARE the panel body directly (matches Outfit of
+   the Day's .planner__doors structure exactly). */
+.act-panel.act--floating .act__doors {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.act__doors {
   display: flex;
   pointer-events: none;
   background-image: url("../../assets/images/closet-interior-background.jpg");
   background-size: cover;
   background-position: center;
+  overflow: hidden;
 }
 .act__door {
+  position: absolute;
+  top: 0;
   width: 50%;
   height: 100%;
   background-size: cover;
   transition: transform 3000ms ease;
 }
 .act__door--left {
+  left: 0;
   background-image: url("../../assets/images/main-background.jpg");
   transform-origin: left;
 }
 .act__door--right {
+  right: 0;
   background-image: url("../../assets/images/main-background.jpg");
   transform-origin: right;
 }

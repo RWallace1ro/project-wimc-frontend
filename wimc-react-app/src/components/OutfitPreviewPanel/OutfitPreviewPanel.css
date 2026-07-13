@@ -75,40 +75,38 @@
   border-color: #cbd5ff;
 }
 
-/* Doors / closed */
-.opp__closed {
-  position: relative;
-  flex: 1;
-  background: transparent;
-}
+/* Doors — structurally matches Outfit of the Day's .planner__doors so the
+   open transition behaves identically (previously a duplicate selector
+   here applied the OPEN transform unconditionally the instant the doors
+   mounted, before "armed" ever toggled — the doors jumped straight to
+   open with no visible slide, and the background just sat there static
+   for the full 3s until the swap to real content). */
 .opp__doors {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  pointer-events: none;
-  background-image: url("../../assets/images/closet-interior-background.jpg");
-  background-size: cover;
-  background-position: center;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: url("../../assets/images/closet-interior-background.jpg") center/cover no-repeat;
+  overflow: hidden;
 }
 .opp__door {
+  position: absolute;
+  top: 0;
   width: 50%;
   height: 100%;
-  background-size: cover;
+  background: url("../../assets/images/main-background.jpg") center/cover no-repeat;
   transition: transform 3000ms ease;
 }
 .opp__door--left {
-  background-image: url("../../assets/images/main-background.jpg");
+  left: 0;
   transform-origin: left;
 }
 .opp__door--right {
-  background-image: url("../../assets/images/main-background.jpg");
+  right: 0;
   transform-origin: right;
 }
-.opp__closed--animating .opp__door--left,
 .opp__doors--open .opp__door--left {
   transform: translateX(-100%);
 }
-.opp__closed--animating .opp__door--right,
 .opp__doors--open .opp__door--right {
   transform: translateX(100%);
 }

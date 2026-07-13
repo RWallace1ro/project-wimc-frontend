@@ -587,13 +587,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
     setIsOpen(true);
     setOpening(true);
     setDoorsArmed(false);
-    // Double rAF: the browser needs one full paint with the doors in their
-    // closed position before the "armed" class is added, or it can collapse
-    // the two states into one frame and skip straight to open (no visible
-    // ease/slide, just a "snap").
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => setDoorsArmed(true));
-    });
+    requestAnimationFrame(() => setDoorsArmed(true));
     setTimeout(() => {
       setOpening(false);
       setDoorsArmed(false);
@@ -1274,13 +1268,11 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
             Pick outfit pieces • {selected.length} item{selected.length !== 1 ? "s" : ""} selected
           </div>
         ) : opening ? (
-          <div className="opp__closed opp__closed--animating">
-            <div
-              className={"opp__doors" + (doorsArmed ? " opp__doors--open" : "")}
-            >
-              <div className="opp__door opp__door--left" />
-              <div className="opp__door opp__door--right" />
-            </div>
+          <div
+            className={"opp__doors" + (doorsArmed ? " opp__doors--open" : "")}
+          >
+            <div className="opp__door opp__door--left" />
+            <div className="opp__door opp__door--right" />
           </div>
         ) : (
           <>
