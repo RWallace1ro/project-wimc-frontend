@@ -1251,7 +1251,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
         aria-label="Outfit Preview"
       >
         <header className="opp__header">
-          <h3 className="opp__title">Outfit Preview</h3>
+          <h3 className="opp__title">Outfit Preview 👗</h3>
           <div className="opp__header-actions">
             <button
               className="opp__toggle"

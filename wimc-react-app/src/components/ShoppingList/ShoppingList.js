@@ -1695,8 +1695,8 @@ export default function ShoppingList() {
           onClick={() => setCollapsed((v) => !v)}
         >
           <div className="sl-stub__left">
-            <span className="sl-stub__icon">🛒</span>
             <h3 className="sl-stub__title">Shopping List</h3>
+            <span className="sl-stub__icon">🛒</span>
             {totalCount > 0 && (
               <span className="sl-stub__count">{totalCount}</span>
             )}
@@ -1750,9 +1750,8 @@ export default function ShoppingList() {
         {/* Header */}
         <header className="sl-header">
           <div className="sl-header__left">
-            <span className="sl-header__icon">🛒</span>
             <div>
-              <h2 className="sl-header__title">Shopping List</h2>
+              <h2 className="sl-header__title">Shopping List 🛒</h2>
               <p className="sl-header__sub">
                 {totalCount} item{totalCount !== 1 ? "s" : ""} to buy
               </p>

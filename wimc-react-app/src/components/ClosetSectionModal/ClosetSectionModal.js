@@ -12,6 +12,20 @@ import { syncSetItem } from "../../utils/syncStore";
 import { getSubSections, donatePrefixForTag } from "../../utils/closetSubsections";
 import "./ClosetSectionModal.css";
 
+const BG_COLOR_PREFIX = "color:";
+// Matches ClosetSectionCard's cardBgStyle — a saved section background can be
+// either an image URL or a "color:#hex" solid, and the two need different
+// CSS properties. This modal only ever applied backgroundImage, so a
+// color-only customization showed nothing once the section was opened
+// (the closed card handled colors fine, since it always used this same split).
+function sectionBgStyle(bg) {
+  if (!bg) return {};
+  if (bg.startsWith(BG_COLOR_PREFIX)) {
+    return { backgroundColor: bg.replace(BG_COLOR_PREFIX, "") };
+  }
+  return { backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" };
+}
+
 // Moving an item re-uploads it under a new Cloudinary public_id (new URL) and
 // deletes the old asset — Cloudinary can't rename in place. Anything that
 // captured the old URL (e.g. a pending/donated Donate Bin entry) would then
@@ -390,15 +404,7 @@ function ClosetSectionModal({
       <div
         className="closet-section-modal"
         onClick={(e) => { e.stopPropagation(); setMoveMenuFor(null); }}
-        style={
-          sectionBg
-            ? {
-                backgroundImage: `url(${sectionBg})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }
-            : {}
-        }
+        style={sectionBgStyle(sectionBg)}
       >
         <header className="closet-section-modal__header">
           <button

@@ -545,7 +545,7 @@ export default function VideoBin({ videos: propVideos = [] }) {
             <div className="vb-overlay" onClick={() => setIsOpen(false)} />
             <div className="vb-modal" role="dialog" aria-label="Video Bin">
               <header className="vb-modal__head">
-                <h2 className="vb-modal__title">🎬 Video Bin</h2>
+                <h2 className="vb-modal__title">Video Bin 🎬</h2>
                 <div className="vb-modal__controls">
                   <div className="vb-toggle">
                     <button

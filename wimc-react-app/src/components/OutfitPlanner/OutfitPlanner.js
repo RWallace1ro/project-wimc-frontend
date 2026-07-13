@@ -447,7 +447,7 @@ export default function OutfitPlanner({
         aria-label="Outfit Planner"
       >
         <header className="planner__header">
-          <h3 className="planner__title">Outfit of the Day</h3>
+          <h3 className="planner__title">Outfit of the Day 📅</h3>
           <div className="planner__header-actions">
             <button
               className="planner__toggle planner__close-toggle"

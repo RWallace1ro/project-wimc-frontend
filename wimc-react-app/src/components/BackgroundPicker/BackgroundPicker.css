@@ -164,6 +164,61 @@
   line-height: 1.5;
 }
 
+/* Preset wall-photo grid */
+.bgp-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.bgp-preset {
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.bgp-preset:hover {
+  border-color: #a78bfa;
+  transform: translateY(-2px);
+}
+.bgp-preset.is-active {
+  border-color: #7c3aed;
+}
+.bgp-preset__thumb {
+  width: 100%;
+  height: 64px;
+  background: center/cover no-repeat;
+  background-color: #f1f5f9;
+}
+.bgp-preset__name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  padding: 4px 4px 5px;
+  text-align: center;
+  background: #fff;
+  width: 100%;
+}
+.bgp-preset__check {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  background: #7c3aed;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+}
+
 /* Color palette */
 .bgp-color-grid {
   display: grid;

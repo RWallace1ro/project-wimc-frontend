@@ -11,6 +11,7 @@ import { auth } from "../../firebase";
 import { uploadImage } from "../../utils/CloudinaryAPI";
 import { deleteAllUserData, scheduleDeletion } from "../../utils/accountDeletion";
 import { useBackground } from "../../context/BackgroundContext";
+import { BACKGROUND_PRESETS } from "../../utils/backgroundPresets";
 import { useTier } from "../../context/TierContext";
 import { openBillingPortal } from "../../utils/billing";
 import Avatar from "../Avatar/Avatar";
@@ -31,48 +32,7 @@ const SECTION_OPTIONS = [
   { tag: "blazers", label: "Blazers" },
 ];
 
-const PRESETS = [
-  {
-    id: "dark-wood",
-    label: "Dark Wood",
-    url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=1200&q=80",
-  },
-  {
-    id: "marble-white",
-    label: "Marble White",
-    url: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=1200&q=80",
-  },
-  {
-    id: "blush-pink",
-    label: "Blush Pink",
-    url: "https://images.unsplash.com/photo-1595526051245-4506e0005bd0?w=1200&q=80",
-  },
-  {
-    id: "midnight-blue",
-    label: "Midnight Blue",
-    url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=1200&q=80",
-  },
-  {
-    id: "sage-green",
-    label: "Sage Green",
-    url: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200&q=80",
-  },
-  {
-    id: "warm-linen",
-    label: "Warm Linen",
-    url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&q=80",
-  },
-  {
-    id: "charcoal",
-    label: "Charcoal",
-    url: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=1200&q=80",
-  },
-  {
-    id: "rose-gold",
-    label: "Rose Gold",
-    url: "https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=1200&q=80",
-  },
-];
+const PRESETS = BACKGROUND_PRESETS;
 
 // Color palette — only shown for the closet page background
 const COLOR_PALETTE = [

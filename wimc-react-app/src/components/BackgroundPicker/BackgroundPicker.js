@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { uploadImage } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
+import { BACKGROUND_PRESETS } from "../../utils/backgroundPresets";
 import "./BackgroundPicker.css";
 
 const SECTION_LABELS = {
@@ -42,7 +43,7 @@ const COLOR_PALETTE = [
 
 export default function BackgroundPicker({ isOpen, onClose, section }) {
   const { getBackground, setBackground, resetBackground } = useBackground();
-  const [activeTab, setActiveTab] = useState("colors");
+  const [activeTab, setActiveTab] = useState("photos");
   const [uploading, setUploading] = useState(false);
   const [uploadErr, setUploadErr] = useState("");
   const [saved, setSaved] = useState(false);
@@ -56,6 +57,11 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
 
   const handleColor = (hex) => {
     setBackground(section, COLOR_PREFIX + hex);
+    flash();
+  };
+
+  const handlePreset = (url) => {
+    setBackground(section, url);
     flash();
   };
 
@@ -123,6 +129,12 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
         {/* Tabs */}
         <div className="bgp-tabs">
           <button
+            className={`bgp-tab${activeTab === "photos" ? " is-active" : ""}`}
+            onClick={() => setActiveTab("photos")}
+          >
+            🧱 Wall Photos
+          </button>
+          <button
             className={`bgp-tab${activeTab === "colors" ? " is-active" : ""}`}
             onClick={() => setActiveTab("colors")}
           >
@@ -137,6 +149,33 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
         </div>
 
         <div className="bgp-body">
+          {activeTab === "photos" && (
+            <>
+              <p className="bgp-tip">
+                Closet wall panels and wallpapers — shown <strong>behind</strong> your clothing images as a card background.
+              </p>
+              <div className="bgp-preset-grid">
+                {BACKGROUND_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    className={`bgp-preset${currentBg === p.url ? " is-active" : ""}`}
+                    onClick={() => handlePreset(p.url)}
+                    title={p.label}
+                  >
+                    <div
+                      className="bgp-preset__thumb"
+                      style={{ backgroundImage: `url(${p.url})` }}
+                    />
+                    <span className="bgp-preset__name">{p.label}</span>
+                    {currentBg === p.url && (
+                      <span className="bgp-preset__check">✓</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
           {activeTab === "colors" && (
             <>
               <p className="bgp-tip">
