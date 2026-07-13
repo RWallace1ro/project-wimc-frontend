@@ -1,6 +1,8 @@
 .receipts-page {
   min-height: 100vh;
-  background-image: url("../assets/images/closet-interior-background.jpg");
+  /* New default: same "Ivory Wave Wallpaper" preset offered in the
+     background picker — keep both in sync if that preset URL changes. */
+  background-image: url("https://images.unsplash.com/photo-1714636608872-048fc9231892?w=1920&q=80");
   background-size: cover;
   background-position: center;
   padding: 28px 24px;

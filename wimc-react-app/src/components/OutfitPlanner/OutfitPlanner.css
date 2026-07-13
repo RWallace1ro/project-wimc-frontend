@@ -313,7 +313,9 @@
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  background: url("../../assets/images/closet-interior-background.jpg")
+  /* New default: same "Ivory Wave Wallpaper" preset offered in the
+     background picker — keep both in sync if that preset URL changes. */
+  background: url("https://images.unsplash.com/photo-1714636608872-048fc9231892?w=1920&q=80")
     center/cover no-repeat;
   overflow: hidden;
 }
