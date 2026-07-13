@@ -117,7 +117,6 @@ const SHOE_SIZES_EU = [
 
 const EMPTY = {
   name: "",
-  gender: "female",
   ageGroup: "baby",
   age: "",
   clothingSizeUS: "",
@@ -197,27 +196,6 @@ export default function KidsProfileModal({ isOpen, onClose, onSave, profile }) {
               onChange={(e) => set("name", e.target.value)}
               required
             />
-          </div>
-
-          {/* Gender */}
-          <div className="kpm-field">
-            <label className="kpm-label">Gender</label>
-            <div className="kpm-gender-toggle">
-              <button
-                type="button"
-                className={`kpm-gender-btn${form.gender === "female" || !form.gender ? " is-active" : ""}`}
-                onClick={() => set("gender", "female")}
-              >
-                👧 Female
-              </button>
-              <button
-                type="button"
-                className={`kpm-gender-btn${form.gender === "male" ? " is-active" : ""}`}
-                onClick={() => set("gender", "male")}
-              >
-                👦 Male
-              </button>
-            </div>
           </div>
 
           {/* Age group */}

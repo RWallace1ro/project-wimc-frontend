@@ -571,7 +571,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, sectio
           }
           title="Toggle Donate Bin"
         >
-          <h3 className="panel-title">Donate Bin</h3>
+          <h3 className="panel-title">Donate Bin ♻️</h3>
           <div style={{ display: "flex", gap: 8 }}>
             <button
               type="button"
@@ -634,7 +634,7 @@ export default function DonateBin({ tagPrefix = "", incomingItems = null, sectio
             aria-label="Donate Bin"
           >
             <header className="donate-modal__head">
-              <h4 className="donate-modal__title">Donate Bin</h4>
+              <h4 className="donate-modal__title">Donate Bin ♻️</h4>
               <div className="donate-modal__actions">
                 <button
                   className="donate-modal__btn donate-modal__btn--primary"

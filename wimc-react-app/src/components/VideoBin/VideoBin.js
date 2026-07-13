@@ -55,6 +55,7 @@ function fmtDate(iso) {
 
 export default function VideoBin({ videos: propVideos = [] }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [stubCollapsed, setStubCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [allVideos, setAllVideos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -492,23 +493,49 @@ export default function VideoBin({ videos: propVideos = [] }) {
   return (
     <>
       {/* Docked stub */}
-      <section className="video-bin" aria-label="Videos">
-        <header className="video-bin__header">
-          <h3 className="video-bin__title">
-            Videos{" "}
+      <section className={`video-bin ${stubCollapsed ? "is-collapsed" : ""}`} aria-label="Videos">
+        <header
+          className="panel-header"
+          role="button"
+          tabIndex={0}
+          aria-expanded={!stubCollapsed}
+          onClick={() => setStubCollapsed((c) => !c)}
+          onKeyDown={(e) =>
+            (e.key === "Enter" || e.key === " ") && setStubCollapsed((c) => !c)
+          }
+          title="Toggle Videos"
+        >
+          <h3 className="panel-title">
+            Videos 🎬{" "}
             {mergedVideos.length > 0 && (
               <span className="vb-count">{mergedVideos.length}</span>
             )}
           </h3>
-          <button className="video-bin__btn" onClick={() => setIsOpen(true)}>
-            Open
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              type="button"
+              className="video-bin__btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(true);
+              }}
+            >
+              Open
+            </button>
+            <span className="panel-caret" aria-hidden="true">
+              {stubCollapsed ? "▸" : "▾"}
+            </span>
+          </div>
         </header>
-        <p className="video-bin__empty">
-          {mergedVideos.length === 0
-            ? "No videos yet. Record a try-on or upload a video."
-            : `${mergedVideos.length} video${mergedVideos.length !== 1 ? "s" : ""} saved.`}
-        </p>
+        {!stubCollapsed && (
+          <div className="panel-body">
+            <p className="video-bin__empty">
+              {mergedVideos.length === 0
+                ? "No videos yet. Record a try-on or upload a video."
+                : `${mergedVideos.length} video${mergedVideos.length !== 1 ? "s" : ""} saved.`}
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Main modal */}

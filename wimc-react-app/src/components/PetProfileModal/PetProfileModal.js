@@ -14,7 +14,6 @@ const APPAREL_SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL"];
 const EMPTY = {
   name: "",
   species: "dog",
-  gender: "female",
   breed: "",
   age: "",
   weight: "",
@@ -102,27 +101,6 @@ export default function PetProfileModal({ isOpen, onClose, onSave, profile }) {
                   <span className="kpm-age-btn__label">{s.icon} {s.label}</span>
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Gender */}
-          <div className="kpm-field">
-            <label className="kpm-label">Gender</label>
-            <div className="kpm-gender-toggle">
-              <button
-                type="button"
-                className={`kpm-gender-btn${form.gender === "female" || !form.gender ? " is-active" : ""}`}
-                onClick={() => set("gender", "female")}
-              >
-                ♀ Female
-              </button>
-              <button
-                type="button"
-                className={`kpm-gender-btn${form.gender === "male" ? " is-active" : ""}`}
-                onClick={() => set("gender", "male")}
-              >
-                ♂ Male
-              </button>
             </div>
           </div>
 

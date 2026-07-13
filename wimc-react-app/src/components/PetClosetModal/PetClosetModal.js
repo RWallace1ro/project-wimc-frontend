@@ -303,8 +303,6 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
   if (!pet) return null;
 
   const speciesIcon = SPECIES_ICONS[pet.species] || "🐾";
-  const petGender = pet.gender || "female";
-  const genderIcon = petGender === "male" ? "♂" : "♀";
   // Pet-twist section labels with standard underlying tags (gender-agnostic —
   // pet apparel categories are the same regardless of the pet's sex).
   const SECTION_OPTIONS = SECTIONS.map((s) => ({ value: s.tag, label: s.label }));
@@ -353,7 +351,7 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
             <div>
               <h2 className="kcm-header__title">{pet.name}'s Closet</h2>
               <p className="kcm-header__sub">
-                {speciesIcon} {genderIcon} {pet.breed || pet.species}
+                {speciesIcon} {pet.breed || pet.species}
                 {pet.age ? ` · ${pet.age}` : ""}
                 {pet.weight ? ` · ${pet.weight}` : ""}
                 &nbsp;|&nbsp; 🧥 {pet.apparelSize || "—"}

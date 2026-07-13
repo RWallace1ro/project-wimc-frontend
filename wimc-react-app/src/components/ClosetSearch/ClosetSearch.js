@@ -328,7 +328,10 @@ export default function ClosetSearch({
       setSections(secs);
       setStreaming(false);
 
-      if (!secs.length) return;
+      if (!secs.length) {
+        setNoMatches(true);
+        return;
+      }
 
       // Step 2 — fetch all images from matched sections (incl. their
       // sub-sections, so items sorted into sub-sections are still found).
@@ -346,7 +349,14 @@ export default function ClosetSearch({
       const flat = dedupeByUrl(nested.flat());
       setLoadingImages(false);
 
-      if (!flat.length) return;
+      // No photos at all in the matched section(s) — say so plainly instead
+      // of silently falling through to the "jump to this section" nav links,
+      // which read as if the search had failed/redirected rather than told
+      // the user their closet has nothing there.
+      if (!flat.length) {
+        setNoMatches(true);
+        return;
+      }
 
       // Step 3 — visually filter images to match the query
       setFilteringImages(true);

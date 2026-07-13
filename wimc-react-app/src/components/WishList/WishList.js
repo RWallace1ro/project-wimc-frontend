@@ -503,7 +503,7 @@ export default function WishList({ storageKey, tagPrefix = "", sectionOptions = 
           }
           title="Toggle Wish List"
         >
-          <h3 className="panel-title">Wish List</h3>
+          <h3 className="panel-title">Wish List 🛍️</h3>
           <div style={{ display: "flex", gap: 8 }}>
             <button
               type="button"
@@ -542,7 +542,7 @@ export default function WishList({ storageKey, tagPrefix = "", sectionOptions = 
             aria-label="Wish List"
           >
             <header className="wish-modal__head">
-              <h4 className="wish-modal__title">Wish List</h4>
+              <h4 className="wish-modal__title">Wish List 🛍️</h4>
               <div className="wish-modal__actions">
                 <ImageUpload
                   folder="wimc/wish-list"
