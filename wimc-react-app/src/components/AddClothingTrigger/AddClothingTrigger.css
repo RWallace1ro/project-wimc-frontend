@@ -49,12 +49,21 @@
   width: 50%;
   height: 100%;
   background-size: cover;
+  transition: transform 3000ms ease;
 }
 .act__door--left {
   background-image: url("../../assets/images/main-background.jpg");
+  transform-origin: left;
 }
 .act__door--right {
   background-image: url("../../assets/images/main-background.jpg");
+  transform-origin: right;
+}
+.act__doors--open .act__door--left {
+  transform: translateX(-100%);
+}
+.act__doors--open .act__door--right {
+  transform: translateX(100%);
 }
 .act__cta {
   position: absolute;

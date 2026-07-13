@@ -579,16 +579,18 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
     [commitHistory, note],
   );
 
-  // doors
+  // doors — isOpen flips true immediately (so the header toggle switches to
+  // "✕" right away, matching Outfit of the Day/Travel Pack); "opening" only
+  // controls the brief door-slide overlay in the body while it plays.
   const startOpen = useCallback(() => {
     setIsFloating(true);
+    setIsOpen(true);
     setOpening(true);
-    setIsOpen(false);
+    setDoorsArmed(false);
     requestAnimationFrame(() => setDoorsArmed(true));
     setTimeout(() => {
       setOpening(false);
       setDoorsArmed(false);
-      setIsOpen(true);
     }, DOOR_MS);
   }, []);
   const closePanel = useCallback(() => {
@@ -1259,11 +1261,11 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
           </div>
         </header>
 
-        {!isOpen && !opening ? (
+        {!isOpen ? (
           <div className="opp__collapsed-row">
             Pick outfit pieces • {selected.length} item{selected.length !== 1 ? "s" : ""} selected
           </div>
-        ) : !isOpen && opening ? (
+        ) : opening ? (
           <div className="opp__closed opp__closed--animating">
             <div
               className={"opp__doors" + (doorsArmed ? " opp__doors--open" : "")}

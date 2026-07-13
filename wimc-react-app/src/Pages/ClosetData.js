@@ -265,14 +265,14 @@ function ClosetData({
 
       <section className="closet-data">
         <aside className="closet-data__side-left">
+          <AddClothingTrigger
+            onOpen={() => {
+              resetModals();
+              setIsAddModalOpen(true);
+            }}
+          />
           <OutfitPreviewPanel onSelectionChange={setPreviewSelection} incomingItems={previewIncoming} />
           <aside className="closet-data__side-container">
-            <AddClothingTrigger
-              onOpen={() => {
-                resetModals();
-                setIsAddModalOpen(true);
-              }}
-            />
             <ProGate feature="Outfit of the Day planner">
               <OutfitPlanner
                 weekPlan={weekPlan}
