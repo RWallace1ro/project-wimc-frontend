@@ -459,7 +459,7 @@ export default function TravelPackPanel({
         }
       >
         <header className="tp__header">
-          <h3 className="tp__title">Travel Pack 🧳</h3>
+          <h3 className="tp__title">🧳 Travel Pack</h3>
           <button className="tp__toggle tp__close-toggle" onClick={collapsed ? open : close} aria-label={collapsed ? "Open" : "Close"}>
             {collapsed ? "Open" : "✕"}
           </button>
