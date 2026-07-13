@@ -10,6 +10,7 @@ import { fetchImagesByTag, fetchVideosByTag } from "../utils/CloudinaryAPI";
 import VideoBin from "../components/VideoBin/VideoBin";
 import { ProGate, useTier } from "../context/TierContext";
 import OutfitPreviewPanel from "../components/OutfitPreviewPanel/OutfitPreviewPanel";
+import AddClothingTrigger from "../components/AddClothingTrigger/AddClothingTrigger";
 import OutfitPlanner from "../components/OutfitPlanner/OutfitPlanner";
 import TravelPackPanel from "../components/TravelPackPanel/TravelPackPanel";
 import TryOnStudio from "../components/TryOnStudio/TryOnStudio";
@@ -35,12 +36,15 @@ function getSectionTagToDisplayName() {
     tops: "Tops",
     "bags-accessories": "Bags/Accessories",
     "jackets-coats": "Jackets/Coats",
+    blazers: "Blazers",
   };
 }
 
-// Unisex closet: 7 fixed categories, always the same for everyone — no more
+// Unisex closet: 8 fixed categories, always the same for everyone — no more
 // gender-based tag prefix or category swap. Dresses/Skirts and Dress
-// Shirts/Suits are both permanent, always-visible categories now.
+// Shirts/Suits are both permanent, always-visible categories now. Blazers is
+// its own standalone card (not a Jackets/Coats sub-section) so the grid ends
+// on a full, centered last row instead of one lone odd card.
 function getClosetSections() {
   return [
     { name: "dresses-skirts",    tag: "dresses-skirts",       placeholderUrl: dressesSkirtsImg },
@@ -50,6 +54,7 @@ function getClosetSections() {
     { name: "tops",              tag: "tops",                 placeholderUrl: topsImg },
     { name: "bags-accessories",  tag: "bags-accessories",     placeholderUrl: bagsAccessoriesImg },
     { name: "jackets-coats",     tag: "jackets-coats",        placeholderUrl: jacketsCoatsImg },
+    { name: "blazers",           tag: "blazers",              placeholderUrl: jacketsCoatsImg },
   ];
 }
 
@@ -253,15 +258,6 @@ function ClosetData({
         >
           🔍 Search My Closet
         </button>
-        <button
-          onClick={() => {
-            resetModals();
-            setIsAddModalOpen(true);
-          }}
-          className="add-clothing-button"
-        >
-          Add New Clothing Item
-        </button>
       </header>
 
       {error && <p className="error-message">{error}</p>}
@@ -271,6 +267,12 @@ function ClosetData({
         <aside className="closet-data__side-left">
           <OutfitPreviewPanel onSelectionChange={setPreviewSelection} incomingItems={previewIncoming} />
           <aside className="closet-data__side-container">
+            <AddClothingTrigger
+              onOpen={() => {
+                resetModals();
+                setIsAddModalOpen(true);
+              }}
+            />
             <ProGate feature="Outfit of the Day planner">
               <OutfitPlanner
                 weekPlan={weekPlan}
@@ -300,9 +302,6 @@ function ClosetData({
               />
             </ProGate>
           </aside>
-          <ProGate feature="Donate Bin">
-            <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} />
-          </ProGate>
         </aside>
 
         <div className="closet-data__cards-container">
@@ -342,6 +341,9 @@ function ClosetData({
           <ShoppingList />
           <ProGate feature="Video Bin">
             <VideoBin videos={sectionVideos} />
+          </ProGate>
+          <ProGate feature="Donate Bin">
+            <DonateBin clothingItems={closetItems} incomingItems={donateIncoming} />
           </ProGate>
         </aside>
 

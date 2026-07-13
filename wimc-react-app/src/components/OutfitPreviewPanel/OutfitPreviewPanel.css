@@ -122,6 +122,17 @@
   background: #4cae4c;
 }
 
+/* Resting collapsed state — plain summary row, matches Outfit of the
+   Day / Travel Pack's collapsed look (doors only show during the brief
+   open transition above, not while sitting closed). */
+.opp__collapsed-row {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #444;
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
 /* ── Section strip: horizontal scroll bar directly below header ──────────── */
 .opp__section-strip {
   display: flex !important;

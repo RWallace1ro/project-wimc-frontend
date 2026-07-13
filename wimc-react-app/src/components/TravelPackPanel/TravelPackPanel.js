@@ -28,7 +28,7 @@ const DAYS = [
 const LS_KEY = "wimc_travel_pack_v2";
 const LEGACY_LS_KEY = "wimc_travel_pack_v1";
 
-// Unisex closet: one fixed 7-option list, same for everyone.
+// Unisex closet: one fixed 8-option list, same for everyone.
 function getSectionOptions() {
   return [
     { value: "dresses-skirts", label: "Dresses/Skirts" },
@@ -38,6 +38,7 @@ function getSectionOptions() {
     { value: "tops", label: "Tops" },
     { value: "bags-accessories", label: "Bags/Accessories" },
     { value: "jackets-coats", label: "Jackets/Coats" },
+    { value: "blazers", label: "Blazers" },
   ];
 }
 

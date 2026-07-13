@@ -23,20 +23,24 @@ import "./VideoBin.css";
 
 const SECTIONS = [
   "dresses-skirts",
+  "dress-shirts-suits",
   "shoes-sneakers",
   "pants-jeans",
   "tops",
   "bags-accessories",
   "jackets-coats",
+  "blazers",
 ];
 
 const SECTION_LABELS = {
   "dresses-skirts": "Dresses/Skirts",
+  "dress-shirts-suits": "Dress Shirts/Suits",
   "shoes-sneakers": "Shoes/Sneakers",
   "pants-jeans": "Pants/Jeans",
   tops: "Tops",
   "bags-accessories": "Bags/Accessories",
   "jackets-coats": "Jackets/Coats",
+  blazers: "Blazers",
 };
 
 function fmtDate(iso) {

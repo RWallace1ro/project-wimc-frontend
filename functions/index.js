@@ -574,7 +574,7 @@ const CLOUDINARY_API_KEY = "258382581976839";
 const KID_PET_SECTION_KEYS = [
   // base cards
   "dresses-skirts", "dress-shirts-suits", "shoes-sneakers",
-  "pants-jeans", "tops", "bags-accessories", "jackets-coats",
+  "pants-jeans", "tops", "bags-accessories", "jackets-coats", "blazers",
   // sub-section slugs (union of both profiles)
   "skirts", "suits", "sneakers", "heels", "sandals-slides", "jeans",
   "t-shirts", "sweaters", "dress-shirts", "coats",

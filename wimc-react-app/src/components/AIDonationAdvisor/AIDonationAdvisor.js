@@ -8,12 +8,14 @@ import "./AIDonationAdvisor.css";
 // Default section labels for the prompt. Actual fetch tags come from the
 // `sections` prop so kids/pet/male closets resolve correctly.
 const DEFAULT_SECTIONS = [
-  { label: "Dresses/Skirts",   tag: "dresses-skirts" },
-  { label: "Shoes/Sneakers",   tag: "shoes-sneakers" },
-  { label: "Pants/Jeans",      tag: "pants-jeans" },
-  { label: "Tops",             tag: "tops" },
-  { label: "Bags/Accessories", tag: "bags-accessories" },
-  { label: "Jackets/Coats",    tag: "jackets-coats" },
+  { label: "Dresses/Skirts",     tag: "dresses-skirts" },
+  { label: "Dress Shirts/Suits", tag: "dress-shirts-suits" },
+  { label: "Shoes/Sneakers",     tag: "shoes-sneakers" },
+  { label: "Pants/Jeans",        tag: "pants-jeans" },
+  { label: "Tops",               tag: "tops" },
+  { label: "Bags/Accessories",   tag: "bags-accessories" },
+  { label: "Jackets/Coats",      tag: "jackets-coats" },
+  { label: "Blazers",            tag: "blazers" },
 ];
 
 const isPhone = () =>

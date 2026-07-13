@@ -45,15 +45,22 @@
   min-width: 0;
 }
 
+/* Flexbox instead of grid so an incomplete last row (e.g. Jackets/Coats +
+   Blazers on their own row) centers itself automatically instead of
+   left-aligning under a fixed column count. */
 .closet-data__cards-container {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: auto;
-  gap: 20px;
-  justify-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: start;
+  gap: 20px;
   padding: 25px 20px;
   box-sizing: border-box;
+}
+
+.closet-data__cards-container > .closet-section-card {
+  flex: 0 1 calc(33.333% - 13.34px);
+  min-width: 220px;
 }
 
 .closet-data__side-container {
@@ -184,9 +191,12 @@
   }
 
   .closet-data__cards-container {
-    grid-template-columns: repeat(2, 1fr);
     gap: 20px;
     order: 1;
+  }
+
+  .closet-data__cards-container > .closet-section-card {
+    flex-basis: calc(50% - 10px);
   }
 
   .closet-data__side-right {
@@ -234,9 +244,13 @@
 
   /* Two cards per row on phone — compact tiles, not full-width */
   .closet-data__cards-container {
-    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
     padding: 12px 8px;
+  }
+
+  .closet-data__cards-container > .closet-section-card {
+    flex-basis: calc(50% - 6px);
+    min-width: 130px;
   }
 
   .closet-data__side-container {

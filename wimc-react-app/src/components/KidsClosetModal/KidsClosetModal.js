@@ -19,7 +19,7 @@ import bagsAccessoriesImg from "../../assets/images/bags-accessories.jpg";
 import jacketsCoatsImg    from "../../assets/images/jackets-coats.jpg";
 import "./KidsClosetModal.css";
 
-// Unisex kids closet: one fixed 7-category list, same for every child.
+// Unisex kids closet: one fixed 8-category list, same for every child.
 const SECTIONS = [
   { tag: "dresses-skirts",      label: "Dresses/Skirts",       placeholder: dressesSkirtsImg },
   { tag: "dress-shirts-suits",  label: "Button-Ups/Dress Clothes", placeholder: dressesSkirtsImg },
@@ -28,6 +28,7 @@ const SECTIONS = [
   { tag: "tops",                label: "Tops",                 placeholder: topsImg },
   { tag: "bags-accessories",    label: "Bags/Accessories",     placeholder: bagsAccessoriesImg },
   { tag: "jackets-coats",       label: "Jackets/Coats",        placeholder: jacketsCoatsImg },
+  { tag: "blazers",             label: "Blazers",              placeholder: jacketsCoatsImg },
 ];
 
 const GROUP_ICONS = { baby: "👶", toddler: "🧒", kids: "🧑", teen: "🧑‍🎓" };

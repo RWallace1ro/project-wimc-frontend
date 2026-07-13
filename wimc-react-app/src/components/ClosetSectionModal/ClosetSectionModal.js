@@ -64,6 +64,7 @@ const LABEL_TO_TAG = {
   Tops:                      "tops",
   "Bags/Accessories":        "bags-accessories",
   "Jackets/Coats":           "jackets-coats",
+  Blazers:                   "blazers",
 };
 
 function ClosetSectionModal({

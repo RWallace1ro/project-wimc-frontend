@@ -28,6 +28,7 @@ const DEFAULT_SECTIONS = [
   { label: "Tops",               tag: "tops" },
   { label: "Bags/Accessories",   tag: "bags-accessories" },
   { label: "Jackets/Coats",      tag: "jackets-coats" },
+  { label: "Blazers",            tag: "blazers" },
 ];
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];

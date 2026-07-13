@@ -7,12 +7,14 @@ import "./AddClothingModal.css";
 // function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
 // Default (female) section options — used when no `sections` prop is provided
 const DEFAULT_SECTIONS = [
-  { value: "dresses-skirts",   label: "Dresses/Skirts" },
-  { value: "shoes-sneakers",   label: "Shoes/Sneakers" },
-  { value: "pants-jeans",      label: "Pants/Jeans" },
-  { value: "tops",             label: "Tops" },
-  { value: "bags-accessories", label: "Bags/Accessories" },
-  { value: "jackets-coats",    label: "Jackets/Coats" },
+  { value: "dresses-skirts",     label: "Dresses/Skirts" },
+  { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
+  { value: "shoes-sneakers",     label: "Shoes/Sneakers" },
+  { value: "pants-jeans",        label: "Pants/Jeans" },
+  { value: "tops",               label: "Tops" },
+  { value: "bags-accessories",   label: "Bags/Accessories" },
+  { value: "jackets-coats",      label: "Jackets/Coats" },
+  { value: "blazers",            label: "Blazers" },
 ];
 
 function AddClothingModal({

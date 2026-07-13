@@ -89,7 +89,17 @@ const KID = {
 };
 
 const PROFILES = [ADULT, KID];
-const BASE_SLUGS = Array.from(new Set(PROFILES.flatMap((p) => Object.keys(p))));
+
+// Base cards with no sub-sections of their own — still need to be recognized
+// by splitSectionTag/kindOf (so donatePrefixForTag and account-deletion sweeps
+// work for kid-{id}-blazers / pet-{id}-blazers tags), but deliberately absent
+// from ADULT/KID above so getSubSectionDefs returns null and no redundant
+// single-item sub-tab renders.
+const EXTRA_BASE_SLUGS = ["blazers"];
+
+const BASE_SLUGS = Array.from(
+  new Set([...PROFILES.flatMap((p) => Object.keys(p)), ...EXTRA_BASE_SLUGS])
+);
 
 // Every sub-section slug across both profiles (excludes the null "main tag"
 // entries). Single source of truth for anything that needs to enumerate every

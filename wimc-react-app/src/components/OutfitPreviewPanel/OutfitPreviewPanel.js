@@ -15,7 +15,7 @@ import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import { onImgError } from "../../utils/imgFallback";
 
-// Unisex closet: one fixed 7-option list, same for everyone.
+// Unisex closet: one fixed 8-option list, same for everyone.
 const SECTION_OPTIONS_UNISEX = [
   { value: "dresses-skirts",     label: "Dresses/Skirts" },
   { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
@@ -24,6 +24,7 @@ const SECTION_OPTIONS_UNISEX = [
   { value: "tops",               label: "Tops" },
   { value: "bags-accessories",   label: "Bags/Accessories" },
   { value: "jackets-coats",      label: "Jackets/Coats" },
+  { value: "blazers",            label: "Blazers" },
 ];
 
 const DEFAULT_SECTION_FALLBACK = "Uncategorized";
@@ -1258,23 +1259,18 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
           </div>
         </header>
 
-        {!isOpen ? (
-          <div
-            className={
-              "opp__closed" + (opening ? " opp__closed--animating" : "")
-            }
-          >
+        {!isOpen && !opening ? (
+          <div className="opp__collapsed-row">
+            Pick outfit pieces • {selected.length} item{selected.length !== 1 ? "s" : ""} selected
+          </div>
+        ) : !isOpen && opening ? (
+          <div className="opp__closed opp__closed--animating">
             <div
               className={"opp__doors" + (doorsArmed ? " opp__doors--open" : "")}
             >
               <div className="opp__door opp__door--left" />
               <div className="opp__door opp__door--right" />
             </div>
-            {!opening && (
-              <button className="opp__cta" onClick={startOpen}>
-                Pick Clothing
-              </button>
-            )}
           </div>
         ) : (
           <>

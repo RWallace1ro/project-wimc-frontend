@@ -22,11 +22,13 @@ const PAGE_BG_KEY = "closet-page";
 
 const SECTION_OPTIONS = [
   { tag: "dresses-skirts", label: "Dresses/Skirts" },
+  { tag: "dress-shirts-suits", label: "Dress Shirts/Suits" },
   { tag: "shoes-sneakers", label: "Shoes/Sneakers" },
   { tag: "pants-jeans", label: "Pants/Jeans" },
   { tag: "tops", label: "Tops" },
   { tag: "bags-accessories", label: "Bags/Accessories" },
   { tag: "jackets-coats", label: "Jackets/Coats" },
+  { tag: "blazers", label: "Blazers" },
 ];
 
 const PRESETS = [

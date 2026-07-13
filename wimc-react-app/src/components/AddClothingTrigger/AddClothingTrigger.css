@@ -1,0 +1,76 @@
+.act-panel {
+  width: 300px;
+  height: 250px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .act-panel {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+.act__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eee;
+}
+.act__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.act__closed {
+  position: relative;
+  flex: 1;
+  background: transparent;
+}
+.act__doors {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+  background-image: url("../../assets/images/closet-interior-background.jpg");
+  background-size: cover;
+  background-position: center;
+}
+.act__door {
+  width: 50%;
+  height: 100%;
+  background-size: cover;
+}
+.act__door--left {
+  background-image: url("../../assets/images/main-background.jpg");
+}
+.act__door--right {
+  background-image: url("../../assets/images/main-background.jpg");
+}
+.act__cta {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 10px 16px;
+  border: none;
+  background: #5cb85c;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
+}
+.act__cta:hover {
+  background: #4cae4c;
+}

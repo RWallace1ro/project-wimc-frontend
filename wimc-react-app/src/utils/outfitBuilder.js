@@ -7,7 +7,7 @@
  */
 import { aiProxyFetch } from "./aiProxy";
 
-// Unisex closet: one fixed 7-section list, same for everyone.
+// Unisex closet: one fixed 8-section list, same for everyone.
 export function getClosetSections() {
   return [
     { label: "Dresses/Skirts",     tag: "dresses-skirts" },
@@ -17,18 +17,20 @@ export function getClosetSections() {
     { label: "Tops",               tag: "tops" },
     { label: "Bags/Accessories",   tag: "bags-accessories" },
     { label: "Jackets/Coats",      tag: "jackets-coats" },
+    { label: "Blazers",            tag: "blazers" },
   ];
 }
 
 // Keywords that map to each base tag
 const SECTION_KEYWORDS = {
   "dresses-skirts":   ["dress", "dresses", "skirt", "skirts", "gown"],
-  "dress-shirts-suits": ["suit", "suits", "dress shirt", "dress shirts", "blazer", "blazers", "tie", "ties"],
+  "dress-shirts-suits": ["suit", "suits", "dress shirt", "dress shirts", "tie", "ties"],
   "shoes-sneakers":   ["shoe", "shoes", "sneaker", "sneakers", "boot", "boots", "heel", "heels", "loafer", "loafers", "sandal", "sandals"],
   "pants-jeans":      ["pant", "pants", "jean", "jeans", "trouser", "trousers", "chino", "chinos", "legging", "leggings", "shorts"],
   "tops":             ["top", "tops", "shirt", "shirts", "blouse", "blouses", "t-shirt", "tee", "tees", "sweater", "sweaters", "tank", "polo"],
   "bags-accessories": ["bag", "bags", "handbag", "accessory", "accessories", "purse", "clutch", "belt", "belts", "scarf", "scarves", "hat", "hats"],
-  "jackets-coats":    ["jacket", "jackets", "coat", "coats", "blazer", "blazers", "cardigan", "cardigans", "hoodie", "hoodies", "vest", "vests"],
+  "jackets-coats":    ["jacket", "jackets", "coat", "coats", "cardigan", "cardigans", "hoodie", "hoodies", "vest", "vests"],
+  "blazers":          ["blazer", "blazers", "sport coat", "sport coats"],
 };
 
 // Find which closet sections are mentioned in an AI message.

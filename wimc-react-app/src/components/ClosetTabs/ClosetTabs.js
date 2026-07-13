@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./ClosetTabs.css";
 
-// Unisex closet: 7 fixed tabs, same for everyone — no more gender toggle.
+// Unisex closet: 8 fixed tabs, same for everyone — no more gender toggle.
 const TABS = [
   { tag: "dresses-skirts",      label: "Dresses/Skirts" },
   { tag: "dress-shirts-suits",  label: "Dress Shirts/Suits" },
@@ -11,6 +11,7 @@ const TABS = [
   { tag: "tops",                label: "Tops" },
   { tag: "bags-accessories",    label: "Bags/Accessories" },
   { tag: "jackets-coats",       label: "Jackets/Coats" },
+  { tag: "blazers",             label: "Blazers" },
 ];
 
 function ClosetTabs({ selectedTab, onSelectTab }) {

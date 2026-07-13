@@ -5,11 +5,13 @@ const LS_KEY = "wimc_section_backgrounds";
 
 const SECTIONS = [
   "dresses-skirts",
+  "dress-shirts-suits",
   "shoes-sneakers",
   "pants-jeans",
   "tops",
   "bags-accessories",
   "jackets-coats",
+  "blazers",
 ];
 
 function load() {

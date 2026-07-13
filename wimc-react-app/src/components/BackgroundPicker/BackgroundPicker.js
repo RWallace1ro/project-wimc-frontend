@@ -11,6 +11,7 @@ const SECTION_LABELS = {
   tops:                "Tops",
   "bags-accessories":  "Bags/Accessories",
   "jackets-coats":     "Jackets/Coats",
+  blazers:             "Blazers",
 };
 
 const COLOR_PREFIX = "color:";

@@ -8,7 +8,7 @@ import { extractSections } from "../../utils/outfitBuilder";
 import ImageUpload from "../ImageUpload/ImageUpload"; // uses your existing widget
 import "./WishList.css";
 
-// Unisex closet: one fixed 7-option list, same for everyone — same
+// Unisex closet: one fixed 8-option list, same for everyone — same
 // shape/convention as Donate Bin's getSectionOptions.
 function getSectionOptions() {
   return [
@@ -19,6 +19,7 @@ function getSectionOptions() {
     { value: "tops", label: "Tops" },
     { value: "bags-accessories", label: "Bags/Accessories" },
     { value: "jackets-coats", label: "Jackets/Coats" },
+    { value: "blazers", label: "Blazers" },
   ];
 }
 

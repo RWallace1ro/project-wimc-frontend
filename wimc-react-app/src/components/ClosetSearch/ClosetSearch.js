@@ -15,6 +15,7 @@ const SECTIONS = [
   { tag: "tops",              label: "Tops",              emoji: "👕" },
   { tag: "bags-accessories",  label: "Bags/Accessories",  emoji: "👜" },
   { tag: "jackets-coats",     label: "Jackets/Coats",     emoji: "🧥" },
+  { tag: "blazers",           label: "Blazers",           emoji: "🧥" },
 ];
 
 // Quick-search examples + input placeholder — unisex, same for everyone.
@@ -115,7 +116,8 @@ async function identifySections(query, sectionOptions = null) {
 - Pants/Jeans (tag: pants-jeans)
 - Tops (tag: tops)
 - Bags/Accessories (tag: bags-accessories)
-- Jackets/Coats (tag: jackets-coats)`;
+- Jackets/Coats (tag: jackets-coats)
+- Blazers (tag: blazers)`;
   }
   const systemPrompt = `You are WIMC's Natural Language Closet Search assistant.
 The user's closet has these categories:

@@ -10,7 +10,7 @@ import { setVideoRefImage } from "../../utils/videoMeta";
 import AIStyleFeedback from "../AIStyleFeedback/AIStyleFeedback";
 import "./TryOnStudio.css";
 
-// Unisex closet: one fixed 7-option list, same for everyone.
+// Unisex closet: one fixed 8-option list, same for everyone.
 const SECTION_OPTIONS = [
   { value: "dresses-skirts", label: "Dresses/Skirts" },
   { value: "dress-shirts-suits", label: "Dress Shirts/Suits" },
@@ -19,6 +19,7 @@ const SECTION_OPTIONS = [
   { value: "tops", label: "Tops" },
   { value: "bags-accessories", label: "Bags/Accessories" },
   { value: "jackets-coats", label: "Jackets/Coats" },
+  { value: "blazers", label: "Blazers" },
 ];
 
 export default function TryOnStudio({

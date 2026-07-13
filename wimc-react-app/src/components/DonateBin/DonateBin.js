@@ -17,7 +17,7 @@ import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import "./DonateBin.css";
 
-// Unisex closet: one fixed 7-option list, same for everyone.
+// Unisex closet: one fixed 8-option list, same for everyone.
 function getSectionOptions() {
   return [
     { value: "dresses-skirts", label: "Dresses/Skirts" },
@@ -27,6 +27,7 @@ function getSectionOptions() {
     { value: "tops", label: "Tops" },
     { value: "bags-accessories", label: "Bags/Accessories" },
     { value: "jackets-coats", label: "Jackets/Coats" },
+    { value: "blazers", label: "Blazers" },
   ];
 }
 
