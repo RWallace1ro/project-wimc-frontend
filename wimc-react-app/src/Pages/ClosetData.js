@@ -256,7 +256,7 @@ function ClosetData({
           className="add-clothing-button"
           onClick={() => setIsSearchOpen(true)}
         >
-          🔍 Search My Closet
+          <span className="search-icon-wiggle" aria-hidden="true">🔍</span> Search My Closet
         </button>
       </header>
 

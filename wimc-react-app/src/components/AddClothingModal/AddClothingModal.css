@@ -212,3 +212,10 @@
 .modal-overlay.add-clothing-overlay {
   z-index: 10010;
 }
+
+/* Wider than the shared .modal default — scoped to this overlay only so
+   ModalWithForm/ChangeUserInfoModal (which also use .modal) aren't affected. */
+.modal-overlay.add-clothing-overlay .modal {
+  width: 600px;
+  max-width: 92%;
+}

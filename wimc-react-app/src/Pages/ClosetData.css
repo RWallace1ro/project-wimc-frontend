@@ -141,6 +141,19 @@
   background-color: #0056b3;
 }
 
+/* Magnifying glass on "Search My Closet" — subtle idle sweep, like the
+   handle is being waved back and forth to scan the closet. */
+.search-icon-wiggle {
+  display: inline-block;
+  animation: search-icon-wave 2.2s ease-in-out infinite;
+  transform-origin: 70% 70%;
+}
+@keyframes search-icon-wave {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  25%      { transform: rotate(-14deg) translateY(-1px); }
+  75%      { transform: rotate(14deg) translateY(1px); }
+}
+
 /* Remove old change-user-info-button (kept for safety if referenced elsewhere) */
 .change-user-info-button {
   display: none;
