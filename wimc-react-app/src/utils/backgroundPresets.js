@@ -56,6 +56,42 @@ function stripeWallpaperSVG(base, stripe) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+// Multi-color pastel stripes — playful, kid-friendly variant of stripeWallpaperSVG.
+function rainbowStripeWallpaperSVG(base, colors) {
+  const W = 900, H = 600, PITCH = 40;
+  const count = Math.floor(W / PITCH);
+  const stripes = Array.from({ length: count }, (_, i) =>
+    `<rect x="${i * PITCH}" y="0" width="10" height="${H}" fill="${colors[i % colors.length]}" opacity="0.4"/>`
+  ).join("");
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+    <rect width="${W}" height="${H}" fill="${base}"/>
+    ${stripes}
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+// Small 4-point stars scattered on a plain field — playful, minor-detail
+// wallpaper aimed at kids' closets.
+function starWallpaperSVG(base, star) {
+  const W = 900, H = 600, PITCH = 60;
+  const cols = Math.ceil(W / PITCH) + 1;
+  const rows = Math.ceil(H / PITCH) + 1;
+  const starPath = (cx, cy, s) =>
+    `M${cx} ${cy - s} L${cx + s * 0.28} ${cy - s * 0.28} L${cx + s} ${cy} L${cx + s * 0.28} ${cy + s * 0.28} L${cx} ${cy + s} L${cx - s * 0.28} ${cy + s * 0.28} L${cx - s} ${cy} L${cx - s * 0.28} ${cy - s * 0.28} Z`;
+  const stars = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const offset = r % 2 === 0 ? 0 : PITCH / 2;
+      stars.push(`<path d="${starPath(c * PITCH + offset, r * PITCH, 6)}" fill="${star}" opacity="${r % 2 === 0 ? 0.8 : 0.45}"/>`);
+    }
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+    <rect width="${W}" height="${H}" fill="${base}"/>
+    ${stars.join("")}
+  </svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
 export const BACKGROUND_PRESETS = [
   // ── Wood-tone wall panels (real photos, verified decor-free) ──
   {
@@ -126,5 +162,41 @@ export const BACKGROUND_PRESETS = [
     id: "pinstripe-wallpaper",
     label: "Powder Blue Pinstripe Wallpaper",
     url: stripeWallpaperSVG("#EFF4F8", "#8FA8C4"),
+  },
+];
+
+// Same closet-wall photos/panels as the main list, plus extra bright,
+// playful colors and patterns for Kids Closet backgrounds.
+export const KID_BACKGROUND_PRESETS = [
+  ...BACKGROUND_PRESETS,
+  {
+    id: "sunny-yellow-panels",
+    label: "Sunny Yellow Wall Panels",
+    url: slatPanelSVG("#F4C84C", "#D9A934"),
+  },
+  {
+    id: "coral-panels",
+    label: "Coral Wall Panels",
+    url: slatPanelSVG("#F08A6C", "#D46B4C"),
+  },
+  {
+    id: "mint-panels",
+    label: "Bright Mint Wall Panels",
+    url: slatPanelSVG("#7FD8BE", "#5CB89E"),
+  },
+  {
+    id: "lavender-panels",
+    label: "Lavender Wall Panels",
+    url: slatPanelSVG("#B8A9E3", "#9683C9"),
+  },
+  {
+    id: "star-wallpaper",
+    label: "Starry Wallpaper",
+    url: starWallpaperSVG("#EAF2FB", "#6E88A6"),
+  },
+  {
+    id: "rainbow-stripe-wallpaper",
+    label: "Rainbow Stripe Wallpaper",
+    url: rainbowStripeWallpaperSVG("#FFFDF7", ["#F4C84C", "#F08A6C", "#7FD8BE", "#8FA8C4", "#B8A9E3"]),
   },
 ];

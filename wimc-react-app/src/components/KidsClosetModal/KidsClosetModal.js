@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchImagesByTag, uploadImage } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
-import { BACKGROUND_PRESETS } from "../../utils/backgroundPresets";
+import { KID_BACKGROUND_PRESETS } from "../../utils/backgroundPresets";
 import ClosetSectionCard from "../ClosetSectionCard/ClosetSectionCard";
 import ClosetSectionModal from "../ClosetSectionModal/ClosetSectionModal";
 import AddClothingModal from "../AddClothingModal/AddClothingModal";
@@ -41,7 +41,7 @@ function childTag(childId, section) {
 const DOOR_MS = 3000;
 
 // ── Background picker data (mirrored from Appearance tab in Settings) ─────────
-const PRESETS = BACKGROUND_PRESETS;
+const PRESETS = KID_BACKGROUND_PRESETS;
 
 const COLOR_PALETTE = [
   { id: "col-ivory",      label: "Ivory",      value: "#FFFFF0" },

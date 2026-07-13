@@ -70,18 +70,6 @@ function saveOrder(tag, urls) {
   try { syncSetItem(getOrderKey(tag), JSON.stringify(urls)); } catch {}
 }
 
-const LABEL_TO_TAG = {
-  "Dresses/Skirts":          "dresses-skirts",
-  "Dress Shirts/Suits":      "dress-shirts-suits",
-  "Button-Ups/Dress Clothes":"dress-shirts-suits",
-  "Shoes/Sneakers":          "shoes-sneakers",
-  "Pants/Jeans":             "pants-jeans",
-  Tops:                      "tops",
-  "Bags/Accessories":        "bags-accessories",
-  "Jackets/Coats":           "jackets-coats",
-  Blazers:                   "blazers",
-};
-
 function ClosetSectionModal({
   isOpen,
   sectionName,
@@ -118,10 +106,6 @@ function ClosetSectionModal({
 
   const { getBackground } = useBackground();
 
-  const sectionBg = sectionName
-    ? getBackground(LABEL_TO_TAG[sectionName] || null)
-    : null;
-
   const sectionTag = useMemo(() => {
     if (tagProp) return tagProp;
     if (!sectionName) return "";
@@ -130,6 +114,14 @@ function ClosetSectionModal({
       ? s.replace(/\s+/g, "-").toLowerCase()
       : s.toLowerCase();
   }, [sectionName, tagProp]);
+
+  // Keyed by the FULL section tag (not the bare display-label lookup this
+  // used to use) — the bare tag ("tops") is shared across every closet, so
+  // a kid/pet closet section reading it showed whatever the MAIN closet had
+  // customized for that same card name. The full tag (e.g. "kid-{id}-tops")
+  // is unique per closet, matching how ClosetSectionCard's own per-card
+  // background already works.
+  const sectionBg = sectionTag ? getBackground(sectionTag) : null;
 
   // ── Sub-sections ──────────────────────────────────────────────────────────
   // Every card is split into fixed full-view sub-collections (e.g. Dresses /
