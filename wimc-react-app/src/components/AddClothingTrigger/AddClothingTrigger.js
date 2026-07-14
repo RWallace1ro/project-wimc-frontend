@@ -38,6 +38,7 @@ export default function AddClothingTrigger({ onOpen }) {
             <ClosetDoorCarousel />
             <div className="act__door act__door--left" />
             <div className="act__door act__door--right" />
+            <span className="act__doors-label">Add New Clothing Item</span>
           </div>
         </section>
       )}

@@ -144,3 +144,26 @@
 .act__cta:hover {
   background: #4cae4c;
 }
+
+/* Centered on the animating doors themselves (like the resting card's CTA
+   sits on its static doors) — fades out as the doors slide open so it
+   doesn't linger over the revealed carousel/photo. */
+.act__doors-label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+  padding: 10px 16px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 600ms ease;
+}
+.act__doors--open .act__doors-label {
+  opacity: 0;
+}
