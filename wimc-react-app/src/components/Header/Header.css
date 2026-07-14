@@ -390,8 +390,15 @@
   }
 }
 
-/* ── Switch to hamburger at 768px ── */
-@media screen and (max-width: 768px) {
+/* ── Switch to hamburger at 1400px ──
+   The desktop nav packs ~10 buttons + avatar/username inline with
+   flex-shrink:0 on every one (so none of them compress) — that simply
+   doesn't fit in less than roughly 1400px of width. Below 768px this used
+   to be fine since the hamburger already took over, but everything from
+   768px up through common tablet/laptop sizes (932, 1024, 1280) was still
+   using the desktop nav and getting the tail end of the button row (About/
+   Settings/Logout) pushed off the right edge with no way to reach it. */
+@media screen and (max-width: 1400px) {
   .header__nav--desktop {
     display: none;
   }
@@ -421,7 +428,7 @@
   align-items: center;
   gap: 6px;
 }
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1400px) {
   .header__mobile-auth {
     display: flex;
   }
