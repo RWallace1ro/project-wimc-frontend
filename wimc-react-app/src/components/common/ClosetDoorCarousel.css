@@ -1,0 +1,42 @@
+.door-carousel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
+  background: rgba(15, 15, 15, 0.35);
+}
+.door-carousel__track {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+  align-items: center;
+  padding: 0 12px;
+  width: max-content;
+  animation: door-carousel-scroll 16s linear infinite;
+}
+.door-carousel__item {
+  flex: 0 0 auto;
+  width: 110px;
+  height: 78%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+.door-carousel__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@keyframes door-carousel-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door-carousel__track {
+    animation: none;
+  }
+}

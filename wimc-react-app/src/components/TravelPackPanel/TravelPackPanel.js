@@ -15,6 +15,7 @@ import AIPackingAssistant from "../AIPackingAssistant/AIPackingAssistant";
 import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import ScrollHintArrows from "../common/ScrollHintArrows";
+import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
 import "./TravelPackPanel.css";
 
 const DAYS = [
@@ -494,6 +495,7 @@ export default function TravelPackPanel({
           <div
             className={"tp__doors" + (doors.armed ? " tp__doors--open" : "")}
           >
+            <ClosetDoorCarousel tagPrefix={tagPrefix} />
             <div className="tp__door tp__door--left" />
             <div className="tp__door tp__door--right" />
           </div>

@@ -329,6 +329,7 @@
   top: 0;
   width: 50%;
   height: 100%;
+  z-index: 2;
   background: url("../../assets/images/main-background.jpg") center/cover
     no-repeat;
   transition: transform 3000ms ease;

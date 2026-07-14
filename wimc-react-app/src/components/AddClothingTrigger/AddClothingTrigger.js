@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from "react";
+import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
 import "./AddClothingTrigger.css";
 
 const DOOR_MS = 3000;
@@ -31,6 +32,7 @@ export default function AddClothingTrigger({ onOpen }) {
       {opening && (
         <section className="act-panel act--floating" aria-label="Add New Clothing Item">
           <div className={"act__doors" + (doorsArmed ? " act__doors--open" : "")}>
+            <ClosetDoorCarousel />
             <div className="act__door act__door--left" />
             <div className="act__door act__door--right" />
           </div>

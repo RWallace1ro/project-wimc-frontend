@@ -15,6 +15,7 @@ import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import { onImgError } from "../../utils/imgFallback";
 import ScrollHintArrows from "../common/ScrollHintArrows";
+import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
 
 // Unisex closet: one fixed 8-option list, same for everyone.
 const SECTION_OPTIONS_UNISEX = [
@@ -1276,6 +1277,7 @@ export default function OutfitPreviewPanel({ onSelectionChange, tagPrefix = "", 
           <div
             className={"opp__doors" + (doorsArmed ? " opp__doors--open" : "")}
           >
+            <ClosetDoorCarousel tagPrefix={tagPrefix} />
             <div className="opp__door opp__door--left" />
             <div className="opp__door opp__door--right" />
           </div>
