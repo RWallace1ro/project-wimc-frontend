@@ -145,9 +145,15 @@
   background: #4cae4c;
 }
 
-/* Centered on the animating doors themselves (like the resting card's CTA
-   sits on its static doors) — fades out as the doors slide open so it
-   doesn't linger over the revealed carousel/photo. */
+/* Centered on the closed doors (like the resting card's CTA sits on its
+   static doors), then fades out as they slide open. A transition tied to
+   the "--open" class toggle doesn't work here: that class gets added on
+   the very next requestAnimationFrame after mount, so the browser can
+   collapse the opacity:1 starting frame and the opacity:0 end frame into
+   a single paint — the label never actually renders visible. A CSS
+   animation avoids the race entirely: it always plays from its own 0%
+   keyframe the instant the element mounts, independent of any class
+   toggle timing. */
 .act__doors-label {
   position: absolute;
   left: 50%;
@@ -161,16 +167,10 @@
   font-weight: 600;
   white-space: nowrap;
   pointer-events: none;
-  opacity: 1;
-  /* Matches the doors' own 3000ms slide-open duration — the "--open" class
-     is added almost instantly (a single requestAnimationFrame after mount)
-     while the door leaves take the full 3s to visually finish sliding via
-     their own transform transition. A short opacity transition here faded
-     the label out in the first fraction of a second, long before the
-     doors had visibly opened, leaving nothing on screen for most of the
-     animation. Fading over the same 3s keeps it in sync. */
-  transition: opacity 3000ms ease;
+  animation: act-doors-label-fade 3000ms ease forwards;
 }
-.act__doors--open .act__doors-label {
-  opacity: 0;
+@keyframes act-doors-label-fade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
 }
