@@ -162,7 +162,14 @@
   white-space: nowrap;
   pointer-events: none;
   opacity: 1;
-  transition: opacity 600ms ease;
+  /* Matches the doors' own 3000ms slide-open duration — the "--open" class
+     is added almost instantly (a single requestAnimationFrame after mount)
+     while the door leaves take the full 3s to visually finish sliding via
+     their own transform transition. A short opacity transition here faded
+     the label out in the first fraction of a second, long before the
+     doors had visibly opened, leaving nothing on screen for most of the
+     animation. Fading over the same 3s keeps it in sync. */
+  transition: opacity 3000ms ease;
 }
 .act__doors--open .act__doors-label {
   opacity: 0;
