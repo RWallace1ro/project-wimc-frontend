@@ -31,6 +31,9 @@ export default function AddClothingTrigger({ onOpen }) {
       {opening && <div className="act-backdrop" />}
       {opening && (
         <section className="act-panel act--floating" aria-label="Add New Clothing Item">
+          <header className="act__header">
+            <h3 className="act__title">Add New Clothing Item</h3>
+          </header>
           <div className={"act__doors" + (doorsArmed ? " act__doors--open" : "")}>
             <ClosetDoorCarousel />
             <div className="act__door act__door--left" />

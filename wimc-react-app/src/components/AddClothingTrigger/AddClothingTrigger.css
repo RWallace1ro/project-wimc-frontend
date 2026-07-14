@@ -50,6 +50,23 @@
   }
 }
 
+/* Header — only rendered on the floating door-animation panel (the resting
+   sidebar card relies on its CTA button text instead, so it doesn't get a
+   redundant header). Matches Outfit of the Day's floating header style. */
+.act__header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #0f172a, #1e3a5f);
+  border-bottom: 1px solid #1e3a5f;
+  flex: 0 0 auto;
+}
+.act__title {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+}
+
 .act__closed {
   position: relative;
   flex: 1;
