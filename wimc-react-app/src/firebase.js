@@ -6,7 +6,11 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
@@ -21,7 +25,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// IndexedDB-backed local cache (with multi-tab support) — without this,
+// onSnapshot has nothing to fall back to when offline and immediately hits
+// its error callback instead of serving cached data. That was silently
+// downgrading a paying user's tier to "free" the moment their connection
+// blipped (see TierContext.js), since there was no cached read available.
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 
 // Firebase Analytics — lazily initialized only after user consent.
 // Call initFirebaseAnalytics() from utils/analytics.js once consent is given.

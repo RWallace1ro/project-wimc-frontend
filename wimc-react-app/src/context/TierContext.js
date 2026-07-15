@@ -86,7 +86,12 @@ export function TierProvider({ uid, children }) {
         setPriceId(d.stripePriceId || null);
         setReady(true);
       },
-      () => { setTier("free"); setPriceId(null); setReady(true); }, // offline → free
+      // A genuine snapshot error (not "offline" — Firestore's persistent
+      // local cache now serves cached data for that case, so onSnapshot
+      // still fires the success callback above while offline). Don't
+      // downgrade a paying user's tier just because one refresh failed —
+      // keep whatever the last known value was and let the UI proceed.
+      () => { setReady(true); },
     );
     return () => unsub();
   }, [uid]);

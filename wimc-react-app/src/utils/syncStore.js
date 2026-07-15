@@ -34,16 +34,81 @@ function getUid() {
   return auth.currentUser?.uid ?? null;
 }
 
+// ── Pending-write queue ──────────────────────────────────────────────────────
+// A Firestore write made while offline used to just fail silently — the
+// localStorage write still succeeded, so the UI looked correct, but the very
+// next hydrateFromFirestore() (which runs on every page refresh/login) would
+// overwrite localStorage with the stale cloud copy that never got the change,
+// silently erasing anything added while offline. Queue failed writes here and
+// replay them — on reconnect and before every hydrate — so the cloud catches
+// up before anything can stomp the local copy.
+const QUEUE_KEY = "__wimc_sync_queue";
+
+function readQueue() {
+  try {
+    return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function writeQueue(queue) {
+  try {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+  } catch {}
+}
+
+// Queue by key — a later write to the same key replaces the earlier queued
+// entry rather than piling up redundant retries.
+function enqueue(entry) {
+  const queue = readQueue().filter((q) => q.key !== entry.key);
+  queue.push(entry);
+  writeQueue(queue);
+}
+
+// Attempt to push every queued entry to Firestore. Entries that still fail
+// (still offline) stay queued for the next flush attempt.
+export async function flushPendingSync() {
+  const queue = readQueue();
+  if (!queue.length) return;
+  const uid = getUid();
+  if (!uid) return;
+
+  const stillPending = [];
+  for (const entry of queue) {
+    try {
+      await setDoc(doc(db, "users", uid, "syncdata", fsKey(entry.key)), {
+        key: entry.key,
+        value: entry.deleted ? null : entry.value,
+        deleted: entry.deleted,
+        updatedAt: entry.updatedAt,
+      });
+    } catch {
+      stillPending.push(entry);
+    }
+  }
+  writeQueue(stillPending);
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => { flushPendingSync(); });
+}
+
 // ── Write ────────────────────────────────────────────────────────────────────
 export function syncSetItem(key, value) {
   localStorage.setItem(key, value);
   if (NO_SYNC.has(key)) return;
   const uid = getUid();
   if (!uid) return;
+  const updatedAt = Date.now();
   setDoc(
     doc(db, "users", uid, "syncdata", fsKey(key)),
-    { key, value, updatedAt: Date.now(), deleted: false }
-  ).catch(() => {}); // fail silently — localStorage is always written first
+    { key, value, updatedAt, deleted: false }
+  ).catch(() => {
+    // Offline or otherwise unreachable — localStorage already has the
+    // correct value; queue the cloud write so it isn't lost on next hydrate.
+    enqueue({ key, value, deleted: false, updatedAt });
+  });
 }
 
 export function syncRemoveItem(key) {
@@ -51,10 +116,13 @@ export function syncRemoveItem(key) {
   if (NO_SYNC.has(key)) return;
   const uid = getUid();
   if (!uid) return;
+  const updatedAt = Date.now();
   setDoc(
     doc(db, "users", uid, "syncdata", fsKey(key)),
-    { key, value: null, deleted: true, updatedAt: Date.now() }
-  ).catch(() => {});
+    { key, value: null, deleted: true, updatedAt }
+  ).catch(() => {
+    enqueue({ key, value: null, deleted: true, updatedAt });
+  });
 }
 
 // ── Hydrate ──────────────────────────────────────────────────────────────────
@@ -62,12 +130,20 @@ export function syncRemoveItem(key) {
 // Pulls all Firestore syncdata docs into localStorage so every page reads
 // the latest cross-device state.
 export async function hydrateFromFirestore(uid) {
+  // Replay any writes that failed (offline) during a previous session FIRST —
+  // otherwise this hydrate would immediately overwrite localStorage with the
+  // stale cloud copy those queued writes were trying to correct.
+  await flushPendingSync();
   try {
     const colRef = collection(db, "users", uid, "syncdata");
     const snap = await getDocs(colRef);
+    const pendingKeys = new Set(readQueue().map((q) => q.key));
     snap.forEach((docSnap) => {
       const { key, value, deleted } = docSnap.data();
       if (!key) return;
+      // Still queued (flush above failed again, e.g. still offline) — don't
+      // let this stale cloud read clobber the not-yet-synced local value.
+      if (pendingKeys.has(key)) return;
       if (deleted) {
         localStorage.removeItem(key);
       } else if (value !== null && value !== undefined) {
