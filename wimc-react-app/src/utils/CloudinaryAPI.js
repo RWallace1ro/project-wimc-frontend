@@ -15,6 +15,15 @@ import { sectionTagsWithSubs } from "./closetSubsections";
 // closetSubsections.js has already done its sub-section tag expansion (that
 // logic only ever sees the original bare tags), nothing there needs to
 // change either.
+//
+// One call site was missed on the first pass: components/ImageUpload/
+// ImageUpload.js drives Cloudinary's hosted upload WIDGET directly
+// (window.cloudinary.createUploadWidget) for the "web search"/URL/cloud-
+// drive picker — it never calls uploadImage() here, so it was building its
+// own unscoped `tags: [tag]` config and re-opening the exact same
+// cross-account collision this file exists to prevent, just for that one
+// upload path. Exported scopedTag() so that call site can scope its own
+// tag before handing it to the widget.
 function currentUid() {
   const uid = auth.currentUser?.uid;
   if (!uid) {
@@ -28,7 +37,7 @@ function currentUid() {
   }
   return uid;
 }
-function scopedTag(tag) {
+export function scopedTag(tag) {
   return `${currentUid()}-${tag}`;
 }
 

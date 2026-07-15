@@ -1,4 +1,5 @@
 import React from "react";
+import { scopedTag } from "../../utils/CloudinaryAPI";
 import "./ImageUpload.css";
 
 // Default sources — restores the full set the widget had before, including the
@@ -30,7 +31,15 @@ const ImageUpload = ({ folder, tag, onUploadSuccess, sources }) => {
       cloudName: process.env.REACT_APP_CLOUD_NAME,
       uploadPreset: process.env.REACT_APP_UPLOAD_PRESET,
       folder,
-      tags: [tag],
+      // Scoped the same way every other upload path in the app is (see
+      // CloudinaryAPI.js) — this widget bypasses uploadImage() entirely, so
+      // it needs its own explicit scoping or every photo added through
+      // "web search"/URL/cloud-drive lands under a bare, unscoped tag:
+      // invisible to this user's own fetches (which always query the
+      // scoped tag) AND visible to every other user querying that same
+      // bare tag — the exact cross-account leak this app already fixed
+      // everywhere else.
+      tags: [scopedTag(tag)],
       // Explicit sources so "Search the web" (image_search) is always offered
       // alongside the URL/web-address option. Callers can still override.
       sources: sources || DEFAULT_SOURCES,
