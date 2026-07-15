@@ -155,17 +155,34 @@ export default function TryOnStudio({
   };
 
   // ── Recording ────────────────────────────────────────────────────────────
+  // Safari (desktop + iOS) doesn't support WebM at all — MediaRecorder throws
+  // immediately if given an unsupported mimeType. Feature-detect instead of
+  // hardcoding, preferring WebM/VP9 where available and falling back to MP4
+  // for Safari. Cloudinary accepts either format, so no upload-side change
+  // is needed — just record in whatever format the browser actually supports.
+  const pickRecorderMimeType = () => {
+    const candidates = [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/webm",
+      "video/mp4",
+    ];
+    return candidates.find((t) => window.MediaRecorder?.isTypeSupported?.(t)) || "";
+  };
+
   const startRecording = () => {
     if (!streamRef.current) return;
     chunksRef.current = [];
-    const recorder = new MediaRecorder(streamRef.current, {
-      mimeType: "video/webm",
-    });
+    const mimeType = pickRecorderMimeType();
+    const recorder = mimeType
+      ? new MediaRecorder(streamRef.current, { mimeType })
+      : new MediaRecorder(streamRef.current); // let the browser pick its own default
+    const recordedType = recorder.mimeType || mimeType || "video/webm";
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
     recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      const blob = new Blob(chunksRef.current, { type: recordedType });
       setRecordedBlob(blob);
       setPreviewUrl(URL.createObjectURL(blob));
       stopCamera();
