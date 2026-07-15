@@ -11,7 +11,7 @@
     -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' https://upload-widget.cloudinary.com 'sha256-gEJJ3znKpnHML/iTUXZM0ij/4govdgqYo3+a6Nx0+l4=';
+      script-src 'self' https://upload-widget.cloudinary.com https://www.googletagmanager.com 'sha256-gEJJ3znKpnHML/iTUXZM0ij/4govdgqYo3+a6Nx0+l4=';
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: blob:
         https://res.cloudinary.com
@@ -29,7 +29,11 @@
         https://nominatim.openstreetmap.org
         https://*.sentry.io
         https://api.stripe.com
-        https://*.stripe.com;
+        https://*.stripe.com
+        https://www.googletagmanager.com
+        https://www.google-analytics.com
+        https://*.google-analytics.com
+        https://*.analytics.google.com;
       media-src 'self' blob: https://res.cloudinary.com;
       worker-src 'self' blob:;
       font-src 'self';
