@@ -91,21 +91,23 @@ function ClosetSectionCard({
     };
   }, [propImageUrl, tag]);
 
-  // Show a freshly uploaded item immediately instead of waiting on Cloudinary's
-  // tag-list CDN cache (which can lag ~1 minute, or longer under a busy
-  // upload batch) — this card only ever re-fetches once on mount, so without
-  // this it wouldn't pick up new uploads made during the same session at all.
-  useEffect(() => {
-    if (propImageUrl || !latestUploadUrl) return;
-    setMedia((prev) => (prev?.url === latestUploadUrl ? prev : {
+  // Derived directly from the latestUploadUrl prop on every render (not routed
+  // through state via an effect) — the mount-time fetchImageForSection() call
+  // below is async and can resolve well after a fresh upload (Cloudinary's
+  // tag-list index lags), which would otherwise clobber a state-based update
+  // with stale/empty results. Deriving it live means it can never be
+  // overwritten by that race, no matter how many uploads land in a row.
+  const latestMedia = useMemo(() => {
+    if (!latestUploadUrl) return null;
+    return {
       type: "image",
       url: latestUploadUrl,
       thumb: toThumb(latestUploadUrl),
       poster: "",
-    }));
-  }, [propImageUrl, latestUploadUrl]);
+    };
+  }, [latestUploadUrl]);
 
-  const display = normalizedFromProp || media;
+  const display = normalizedFromProp || latestMedia || media;
 
   const handleShareImage = async (e) => {
     e.stopPropagation();
