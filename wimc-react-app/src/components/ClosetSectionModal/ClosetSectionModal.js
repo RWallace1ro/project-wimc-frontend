@@ -80,9 +80,11 @@ function ClosetSectionModal({
   allSections = [],
   /** Called with a section tag when the user picks a different section from within the modal */
   onSwitchSection,
-  /** {tag, url, mediaType, ts} — most recent upload; injected into the cache so
-   *  new items show immediately (Cloudinary's tag-list CDN cache lags ~1 min). */
-  recentUpload = null,
+  /** [{tag, url, mediaType, ts}] — every upload made this session (not just the
+   *  latest); injected into the cache so new items show immediately (Cloudinary's
+   *  tag-list CDN cache lags ~1 min, and a single-slot "latest" value dropped
+   *  everything but the last item of a multi-item upload batch). */
+  recentUploads = [],
 }) {
   // ── Per-tag item cache ────────────────────────────────────────────────────
   // Keyed by section tag so switching sections never wipes fetched data and
@@ -132,29 +134,34 @@ function ClosetSectionModal({
   const [subTag, setSubTag] = useState(null);
   useEffect(() => { setSubTag(null); }, [sectionTag, isOpen]);
 
-  // Keep latest recentUpload available to the fetch effect without re-running it
-  const recentUploadRef = useRef(recentUpload);
-  useEffect(() => { recentUploadRef.current = recentUpload; }, [recentUpload]);
+  // Keep latest recentUploads available to the fetch effect without re-running it
+  const recentUploadsRef = useRef(recentUploads);
+  useEffect(() => { recentUploadsRef.current = recentUploads; }, [recentUploads]);
 
   // Inject freshly uploaded items into the per-tag cache so they appear
   // without waiting for Cloudinary's stale CDN tag list (or a page refresh).
+  // Iterates the whole array every time it changes — a batch of many uploads
+  // must all get merged in, not just whichever one happened to be "latest".
   useEffect(() => {
-    if (!recentUpload?.url || !recentUpload?.tag) return;
-    const { tag: upTag, url, mediaType } = recentUpload;
-    if (mediaType === "video") {
-      setVideosByTag((prev) => {
-        const cur = prev[upTag];
-        if (cur === undefined || cur.includes(url)) return prev; // not cached yet / dup
-        return { ...prev, [upTag]: [...cur, url] };
-      });
-    } else {
-      setItemsByTag((prev) => {
-        const cur = prev[upTag];
-        if (cur === undefined || cur.includes(url)) return prev; // not cached yet / dup
-        return { ...prev, [upTag]: [url, ...cur] };
-      });
+    if (!recentUploads.length) return;
+    for (const ru of recentUploads) {
+      if (!ru?.url || !ru?.tag) continue;
+      const { tag: upTag, url, mediaType } = ru;
+      if (mediaType === "video") {
+        setVideosByTag((prev) => {
+          const cur = prev[upTag];
+          if (cur === undefined || cur.includes(url)) return prev; // not cached yet / dup
+          return { ...prev, [upTag]: [...cur, url] };
+        });
+      } else {
+        setItemsByTag((prev) => {
+          const cur = prev[upTag];
+          if (cur === undefined || cur.includes(url)) return prev; // not cached yet / dup
+          return { ...prev, [upTag]: [url, ...cur] };
+        });
+      }
     }
-  }, [recentUpload]);
+  }, [recentUploads]);
 
   // Purge items deleted elsewhere (e.g. Donate Bin's "Confirm removed from
   // closet") from every cached tag — otherwise the deleted photos keep
@@ -217,9 +224,9 @@ function ClosetSectionModal({
         if (!cancelled) {
           let ordered = applyStoredOrder(fetchedImages || [], tag);
           let vids = fetchedVideos || [];
-          // Merge a just-uploaded item the stale CDN list may not include yet
-          const ru = recentUploadRef.current;
-          if (ru?.tag === tag && ru?.url) {
+          // Merge any just-uploaded items the stale CDN list may not include yet
+          const matching = recentUploadsRef.current.filter((ru) => ru?.tag === tag && ru?.url);
+          for (const ru of matching) {
             if (ru.mediaType === "video" && !vids.includes(ru.url)) {
               vids = [...vids, ru.url];
             } else if (ru.mediaType !== "video" && !ordered.includes(ru.url)) {

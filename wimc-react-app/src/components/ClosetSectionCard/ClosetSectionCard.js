@@ -23,6 +23,7 @@ function ClosetSectionCard({
   onTryOn,
   onCustomizeBg,
   sectionBackground, // ✅ passed directly from parent — guarantees re-render
+  latestUploadUrl, // most recent item uploaded into this card this session
 }) {
   const [media, setMedia] = useState(null);
   const [sharing, setSharing] = useState(false);
@@ -89,6 +90,20 @@ function ClosetSectionCard({
       ignore = true;
     };
   }, [propImageUrl, tag]);
+
+  // Show a freshly uploaded item immediately instead of waiting on Cloudinary's
+  // tag-list CDN cache (which can lag ~1 minute, or longer under a busy
+  // upload batch) — this card only ever re-fetches once on mount, so without
+  // this it wouldn't pick up new uploads made during the same session at all.
+  useEffect(() => {
+    if (propImageUrl || !latestUploadUrl) return;
+    setMedia((prev) => (prev?.url === latestUploadUrl ? prev : {
+      type: "image",
+      url: latestUploadUrl,
+      thumb: toThumb(latestUploadUrl),
+      poster: "",
+    }));
+  }, [propImageUrl, latestUploadUrl]);
 
   const display = normalizedFromProp || media;
 

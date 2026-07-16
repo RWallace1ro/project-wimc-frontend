@@ -102,7 +102,11 @@ function ClosetData({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [recentUpload, setRecentUpload] = useState(null); // {tag, url, mediaType, ts}
+  // Every upload made this session, not just the latest — a single-slot
+  // "most recent upload" got silently overwritten by the next upload before
+  // the section modal/card had necessarily processed it, so of a 43-item
+  // batch only the very last one ever showed up without a full page refresh.
+  const [recentUploads, setRecentUploads] = useState([]); // [{tag, url, mediaType, ts}]
   const [addCategory, setAddCategory] = useState(null); // category for AddClothingModal
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -222,13 +226,15 @@ function ClosetData({
       const url = item?.mediaThumb || item?.mediaUrl || item?.imageUrl || item;
       if (url) setClosetItems((prev) => [...prev, url]);
     }
-    // Tell the section modal about the new item so it appears immediately
-    // (Cloudinary's tag-list CDN cache can lag for ~1 minute).
+    // Tell the section modal/cards about the new item so it appears
+    // immediately (Cloudinary's tag-list CDN cache can lag for ~1 minute).
+    // Appended, not overwritten — uploading several items in a row must not
+    // lose track of anything but the last one.
     {
       const url = item?.mediaUrl || item?.imageUrl || item?.mediaThumb;
       const tag = (item?.category || "").trim().toLowerCase();
       if (url && tag) {
-        setRecentUpload({ tag, url, mediaType: item?.mediaType || "image", ts: Date.now() });
+        setRecentUploads((prev) => [...prev, { tag, url, mediaType: item?.mediaType || "image", ts: Date.now() }]);
       }
     }
     logAppEvent("add_clothing_item", {
@@ -312,12 +318,26 @@ function ClosetData({
             const pinnedCardUrl = (() => {
               try { return localStorage.getItem(`wimc_card_image_${section.tag}`) || null; } catch { return null; }
             })();
+            // Most recent upload into THIS card's base tag or any of its
+            // sub-sections (e.g. an item added to "Sweaters" still counts
+            // as a new Tops upload — sub-section tags are bare slugs like
+            // "sweaters", not prefixed with the card's own tag) — lets the
+            // card's own thumbnail update live for every upload in a batch,
+            // not just the very last one.
+            const cardTags = new Set([
+              section.tag,
+              ...(getSubSections(section.tag) || []).map((s) => s.tag),
+            ]);
+            const latestUpload = [...recentUploads]
+              .reverse()
+              .find((u) => u.mediaType !== "video" && cardTags.has(u.tag));
             return (
               <ClosetSectionCard
                 key={section.tag}
                 sectionName={sectionTagToDisplayName[section.name]}
                 tag={section.tag}
                 imageUrl={pinnedCardUrl || undefined}
+                latestUploadUrl={latestUpload?.url || null}
                 placeholderUrl={section.placeholderUrl}
                 onClick={() => handleCardClick(section.tag)}
                 onAdd={() => {
@@ -354,7 +374,7 @@ function ClosetData({
           placeholderUrl={topsImg}
           onClose={handleModalClose}
           onAddItem={openAddForSection}
-          recentUpload={recentUpload}
+          recentUploads={recentUploads}
           onSwitchSection={(tag) => setSelectedSection(tag)}
           allSections={closetSections.map((s) => ({
             label: sectionTagToDisplayName[s.name] || s.tag,
