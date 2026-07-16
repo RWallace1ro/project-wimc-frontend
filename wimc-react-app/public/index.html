@@ -11,7 +11,7 @@
     -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' https://upload-widget.cloudinary.com https://www.googletagmanager.com 'sha256-gEJJ3znKpnHML/iTUXZM0ij/4govdgqYo3+a6Nx0+l4=';
+      script-src 'self' https://upload-widget.cloudinary.com https://www.googletagmanager.com https://apis.google.com 'sha256-gEJJ3znKpnHML/iTUXZM0ij/4govdgqYo3+a6Nx0+l4=';
       style-src 'self' 'unsafe-inline';
       img-src 'self' data: blob:
         https://res.cloudinary.com
@@ -19,6 +19,7 @@
         https://*.googleusercontent.com;
       connect-src 'self'
         https://*.googleapis.com
+        https://apis.google.com
         https://*.firebaseapp.com
         https://*.cloudfunctions.net
         https://api.cloudinary.com
@@ -42,7 +43,9 @@
         https://player.vimeo.com
         https://upload-widget.cloudinary.com
         https://widget.cloudinary.com
-        https://*.cloudinary.com;
+        https://*.cloudinary.com
+        https://accounts.google.com
+        https://*.firebaseapp.com;
       object-src 'none';
       base-uri 'self';
       form-action 'self';
