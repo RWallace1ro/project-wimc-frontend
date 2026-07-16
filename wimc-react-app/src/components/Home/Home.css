@@ -148,6 +148,12 @@
   height: 100%;
   background-size: cover;
   /* no CSS transition — we use animation so the from-keyframe is always honoured */
+  /* Must beat ClosetDoorCarousel's z-index:1 — a sibling with an explicit
+     z-index always paints above one left at the default (auto), regardless
+     of DOM order, so without this the carousel would show through the
+     closed doors instead of only being revealed as they slide open. */
+  position: relative;
+  z-index: 2;
 }
 
 .door-left {
