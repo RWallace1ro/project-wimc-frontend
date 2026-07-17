@@ -55,6 +55,15 @@ function patchDonateBinUrl(sourceTag, oldUrl, newUrl) {
 function getPinnedKey(tag)  { return `wimc_card_image_${tag}`; }
 function getOrderKey(tag)   { return `wimc_image_order_${tag}`; }
 
+// Grid tiles only ever display at a small fixed size — serving the raw
+// full-resolution upload for every item in a large closet section was
+// needlessly slow and un-optimized. Cloudinary's f_auto/q_auto pick the best
+// format/quality for the viewer automatically. The lightbox ("click to
+// enlarge") intentionally keeps the untouched full-resolution URL.
+function toThumb(url) {
+  return url ? url.replace("/upload/", "/upload/f_auto,q_auto,w_400,c_limit/") : url;
+}
+
 function applyStoredOrder(fetchedUrls, tag) {
   try {
     const stored = JSON.parse(localStorage.getItem(getOrderKey(tag)) || "null");
@@ -527,7 +536,7 @@ function ClosetSectionModal({
                       className="closet-section-modal__item"
                     >
                       <img
-                        src={url}
+                        src={toThumb(url)}
                         alt={`image-${i}`}
                         className="closet-section-modal__item-image csm-zoomable"
                         loading="lazy"

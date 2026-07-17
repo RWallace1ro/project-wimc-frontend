@@ -392,7 +392,14 @@ export default function TryOnStudio({
                     onClick={() => setRefImage(url)}
                     title="Use as reference"
                   >
-                    <img src={url} alt="item" className="tryon-ref__thumb" />
+                    {/* Display-only optimization — refImage/setRefImage keep the
+                        raw url untouched so downstream keying (see the
+                        f_auto,q_auto note above) isn't affected. */}
+                    <img
+                      src={url ? url.replace("/upload/", "/upload/f_auto,q_auto,w_200,c_limit/") : url}
+                      alt="item"
+                      className="tryon-ref__thumb"
+                    />
                   </button>
                 ))}
               </div>
