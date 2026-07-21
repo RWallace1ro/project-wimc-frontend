@@ -1,9 +1,9 @@
 {
   "files": {
     "main.css": "/project-wimc-frontend/static/css/main.0064b69b.css",
-    "main.js": "/project-wimc-frontend/static/js/main.66c9e7c6.js",
-    "static/css/136.781ab8e8.chunk.css": "/project-wimc-frontend/static/css/136.781ab8e8.chunk.css",
-    "static/js/136.42d4b781.chunk.js": "/project-wimc-frontend/static/js/136.42d4b781.chunk.js",
+    "main.js": "/project-wimc-frontend/static/js/main.fa9924fb.js",
+    "static/css/136.e1154543.chunk.css": "/project-wimc-frontend/static/css/136.e1154543.chunk.css",
+    "static/js/136.126a8b97.chunk.js": "/project-wimc-frontend/static/js/136.126a8b97.chunk.js",
     "static/css/785.e244d8c6.chunk.css": "/project-wimc-frontend/static/css/785.e244d8c6.chunk.css",
     "static/js/785.859189e0.chunk.js": "/project-wimc-frontend/static/js/785.859189e0.chunk.js",
     "static/css/208.17de9171.chunk.css": "/project-wimc-frontend/static/css/208.17de9171.chunk.css",
@@ -41,8 +41,8 @@
     "static/js/594.d74940ea.chunk.js": "/project-wimc-frontend/static/js/594.d74940ea.chunk.js",
     "static/css/489.c4b44504.chunk.css": "/project-wimc-frontend/static/css/489.c4b44504.chunk.css",
     "static/js/489.c00694e2.chunk.js": "/project-wimc-frontend/static/js/489.c00694e2.chunk.js",
-    "static/css/57.54f3a9a7.chunk.css": "/project-wimc-frontend/static/css/57.54f3a9a7.chunk.css",
-    "static/js/57.f5b9ae9a.chunk.js": "/project-wimc-frontend/static/js/57.f5b9ae9a.chunk.js",
+    "static/css/57.fa5f1bfe.chunk.css": "/project-wimc-frontend/static/css/57.fa5f1bfe.chunk.css",
+    "static/js/57.1dccf2bc.chunk.js": "/project-wimc-frontend/static/js/57.1dccf2bc.chunk.js",
     "static/js/117.bc96101e.chunk.js": "/project-wimc-frontend/static/js/117.bc96101e.chunk.js",
     "static/css/540.b49e1dc4.chunk.css": "/project-wimc-frontend/static/css/540.b49e1dc4.chunk.css",
     "static/media/bags-accessories.jpg": "/project-wimc-frontend/static/media/bags-accessories.260d0f1db7382f2ee855.jpg",
@@ -56,9 +56,9 @@
     "index.html": "/project-wimc-frontend/index.html",
     "static/media/home-icon.svg": "/project-wimc-frontend/static/media/home-icon.590a91c51c7e28b5b3cc4d453f1e11ef.svg",
     "main.0064b69b.css.map": "/project-wimc-frontend/static/css/main.0064b69b.css.map",
-    "main.66c9e7c6.js.map": "/project-wimc-frontend/static/js/main.66c9e7c6.js.map",
-    "136.781ab8e8.chunk.css.map": "/project-wimc-frontend/static/css/136.781ab8e8.chunk.css.map",
-    "136.42d4b781.chunk.js.map": "/project-wimc-frontend/static/js/136.42d4b781.chunk.js.map",
+    "main.fa9924fb.js.map": "/project-wimc-frontend/static/js/main.fa9924fb.js.map",
+    "136.e1154543.chunk.css.map": "/project-wimc-frontend/static/css/136.e1154543.chunk.css.map",
+    "136.126a8b97.chunk.js.map": "/project-wimc-frontend/static/js/136.126a8b97.chunk.js.map",
     "785.e244d8c6.chunk.css.map": "/project-wimc-frontend/static/css/785.e244d8c6.chunk.css.map",
     "785.859189e0.chunk.js.map": "/project-wimc-frontend/static/js/785.859189e0.chunk.js.map",
     "208.17de9171.chunk.css.map": "/project-wimc-frontend/static/css/208.17de9171.chunk.css.map",
@@ -96,13 +96,13 @@
     "594.d74940ea.chunk.js.map": "/project-wimc-frontend/static/js/594.d74940ea.chunk.js.map",
     "489.c4b44504.chunk.css.map": "/project-wimc-frontend/static/css/489.c4b44504.chunk.css.map",
     "489.c00694e2.chunk.js.map": "/project-wimc-frontend/static/js/489.c00694e2.chunk.js.map",
-    "57.54f3a9a7.chunk.css.map": "/project-wimc-frontend/static/css/57.54f3a9a7.chunk.css.map",
-    "57.f5b9ae9a.chunk.js.map": "/project-wimc-frontend/static/js/57.f5b9ae9a.chunk.js.map",
+    "57.fa5f1bfe.chunk.css.map": "/project-wimc-frontend/static/css/57.fa5f1bfe.chunk.css.map",
+    "57.1dccf2bc.chunk.js.map": "/project-wimc-frontend/static/js/57.1dccf2bc.chunk.js.map",
     "117.bc96101e.chunk.js.map": "/project-wimc-frontend/static/js/117.bc96101e.chunk.js.map",
     "540.b49e1dc4.chunk.css.map": "/project-wimc-frontend/static/css/540.b49e1dc4.chunk.css.map"
   },
   "entrypoints": [
     "static/css/main.0064b69b.css",
-    "static/js/main.66c9e7c6.js"
+    "static/js/main.fa9924fb.js"
   ]
 }
