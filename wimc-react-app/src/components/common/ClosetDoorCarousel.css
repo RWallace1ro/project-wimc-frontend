@@ -20,19 +20,13 @@
   height: 78%;
   border-radius: 8px;
   overflow: hidden;
-  /* A light, near-white mat instead of the previous dark tint — gives
-     uploaded photos a clean "product shot" backdrop instead of letting a
-     cluttered/dim home background fill the whole tile. */
-  background: #f5f3ef;
+  background: rgba(255, 255, 255, 0.12);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-  padding: 6px;
 }
 .door-carousel__item img {
   width: 100%;
   height: 100%;
-  /* contain (not cover) so the whole garment is visible sitting on the mat,
-     instead of cropping it edge-to-edge like a full-bleed photo. */
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 
