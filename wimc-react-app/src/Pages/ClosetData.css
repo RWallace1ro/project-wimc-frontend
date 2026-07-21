@@ -147,6 +147,7 @@
    handle is being waved back and forth to scan the closet. */
 .search-icon-wiggle {
   display: inline-block;
+  font-size: 1.3em;
   animation: search-icon-wave 2.2s ease-in-out infinite;
   transform-origin: 70% 70%;
 }
