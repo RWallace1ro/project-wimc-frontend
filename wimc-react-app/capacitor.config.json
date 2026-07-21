@@ -1,0 +1,10 @@
+{
+  "appId": "com.gingerfaith.wimc",
+  "appName": "What's In My Closet",
+  "webDir": "build",
+  "server": {
+    "url": "https://rwallace1ro.github.io/project-wimc-frontend/",
+    "androidScheme": "https",
+    "iosScheme": "https"
+  }
+}
