@@ -61,7 +61,7 @@ function getOrderKey(tag)   { return `wimc_image_order_${tag}`; }
 // format/quality for the viewer automatically. The lightbox ("click to
 // enlarge") intentionally keeps the untouched full-resolution URL.
 function toThumb(url) {
-  return url ? url.replace("/upload/", "/upload/f_auto,q_auto,w_400,c_limit/") : url;
+  return url ? url.replace("/upload/", "/upload/f_auto,q_auto,e_improve,w_400,c_limit/") : url;
 }
 
 function applyStoredOrder(fetchedUrls, tag) {

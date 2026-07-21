@@ -32,8 +32,11 @@ function ClosetSectionCard({
   // so_0 (first frame), not so_3 — a fixed 3s offset 404s for shorter videos.
   const toPoster = (u) =>
     u ? u.replace("/upload/", "/upload/so_0,du_0/") + ".jpg" : "";
+  // e_improve auto-corrects brightness/contrast/color (free, base-plan
+  // Cloudinary effect) — makes user-uploaded photos read closer to a clean
+  // product shot instead of a dim/uneven phone photo.
   const toThumb = (u) =>
-    u ? u.replace("/upload/", "/upload/f_auto,q_auto,w_600,c_limit/") : "";
+    u ? u.replace("/upload/", "/upload/f_auto,q_auto,e_improve,w_600,c_limit/") : "";
 
   const normalizedFromProp = useMemo(() => {
     if (!propImageUrl) return null;
