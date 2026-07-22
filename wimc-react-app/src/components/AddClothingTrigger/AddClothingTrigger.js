@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from "react";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
+import ClosetInteriorBackdrop from "../common/ClosetInteriorBackdrop";
 import "./AddClothingTrigger.css";
 
 const DOOR_MS = 3000;
@@ -35,6 +36,7 @@ export default function AddClothingTrigger({ onOpen }) {
             <h3 className="act__title">Add New Clothing Item</h3>
           </header>
           <div className={"act__doors" + (doorsArmed ? " act__doors--open" : "")}>
+            <ClosetInteriorBackdrop />
             <ClosetDoorCarousel />
             <div className="act__door act__door--left" />
             <div className="act__door act__door--right" />

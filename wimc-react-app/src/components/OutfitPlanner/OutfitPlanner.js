@@ -15,6 +15,7 @@ import Lightbox from "../Lightbox/Lightbox";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import ScrollHintArrows from "../common/ScrollHintArrows";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
+import ClosetInteriorBackdrop from "../common/ClosetInteriorBackdrop";
 import "./OutfitPlanner.css";
 
 const DAYS = [
@@ -493,6 +494,7 @@ export default function OutfitPlanner({
               "planner__doors" + (doors.armed ? " planner__doors--open" : "")
             }
           >
+            <ClosetInteriorBackdrop />
             <ClosetDoorCarousel tagPrefix={tagPrefix} />
             <div className="planner__door planner__door--left" />
             <div className="planner__door planner__door--right" />

@@ -13,6 +13,7 @@ import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import WishList from "../WishList/WishList";
 import DonateBin from "../DonateBin/DonateBin";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
+import ClosetInteriorBackdrop from "../common/ClosetInteriorBackdrop";
 import { resolveBackgroundValue } from "../../utils/backgroundPresets";
 import dressesSkirtsImg   from "../../assets/images/dresses-skirts.jpg";
 import shoesSneakersImg   from "../../assets/images/shoes-sneakers.jpg";
@@ -364,6 +365,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
         {/* ── Door animation ── */}
         {!doorsGone && (
           <div className="kcm-doors">
+            <ClosetInteriorBackdrop />
             <ClosetDoorCarousel tagPrefix={`kid-${child.id}`} />
             <div className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`} />
             <div className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`} />
