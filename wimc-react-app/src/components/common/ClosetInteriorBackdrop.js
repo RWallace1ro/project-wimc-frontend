@@ -11,10 +11,18 @@ import "./ClosetInteriorBackdrop.css";
 //
 // tint is an optional CSS color (e.g. a kid/pet palette accent) washed over
 // the panels so the same base photo can still feel different per closet.
-export default function ClosetInteriorBackdrop({ tint }) {
+//
+// fixed=true renders as a page-level backdrop (position:fixed, covers the
+// viewport, sits behind scrolling content) — used when this is chosen as the
+// closet/kids/pet PAGE background rather than the door-open reveal moment
+// (which is already inside its own positioned door-container).
+export default function ClosetInteriorBackdrop({ tint, fixed = false }) {
   const doorStyle = tint ? { "--wimc-backdrop-tint": tint } : undefined;
   return (
-    <div className="closet-interior-backdrop" aria-hidden="true">
+    <div
+      className={`closet-interior-backdrop${fixed ? " closet-interior-backdrop--fixed" : ""}`}
+      aria-hidden="true"
+    >
       <div className="closet-interior-backdrop__photo" />
       <div className="closet-interior-backdrop__door closet-interior-backdrop__door--left" style={doorStyle} />
       <div className="closet-interior-backdrop__door closet-interior-backdrop__door--right" style={doorStyle} />

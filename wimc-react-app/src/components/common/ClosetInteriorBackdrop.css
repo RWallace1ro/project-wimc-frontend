@@ -5,6 +5,13 @@
   z-index: 0; /* below ClosetDoorCarousel's z-index:1 and the swinging doors' z-index:2 */
 }
 
+/* Page-background mode — fixed to the viewport, behind all scrolling
+   content, instead of filling a specific (already-positioned) container. */
+.closet-interior-backdrop--fixed {
+  position: fixed;
+  z-index: -1;
+}
+
 .closet-interior-backdrop__photo {
   position: absolute;
   inset: 0;

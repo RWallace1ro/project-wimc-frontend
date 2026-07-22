@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { uploadImage, uploadRawJSON } from "../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../utils/shareUtils";
 import { useBackground } from "../context/BackgroundContext";
-import { KID_BACKGROUND_PRESETS } from "../utils/backgroundPresets";
+import { KID_BACKGROUND_PRESETS, CLOSET_INTERIOR_BACKDROP_VALUE } from "../utils/backgroundPresets";
+import ClosetInteriorBackdrop from "../components/common/ClosetInteriorBackdrop";
 import KidsClosetModal from "../components/KidsClosetModal/KidsClosetModal";
 import KidsProfileModal from "../components/KidsProfileModal/KidsProfileModal";
 import { auth, db } from "../firebase";
@@ -213,7 +214,9 @@ export default function KidsCloset() {
   const pageStyle = currentBg
     ? isColor(currentBg)
       ? { backgroundImage: "none", backgroundColor: colorVal(currentBg) }
-      : { backgroundImage: `url(${currentBg})` }
+      : currentBg === CLOSET_INTERIOR_BACKDROP_VALUE
+        ? {} // rendered as a real component below, not a flat CSS background
+        : { backgroundImage: `url(${currentBg})` }
     : {};
 
   // ── Load from Firestore on mount (source of truth for cross-device sync) ──
@@ -570,6 +573,9 @@ export default function KidsCloset() {
 
   return (
     <main className="kids-closet" style={pageStyle}>
+      {currentBg === CLOSET_INTERIOR_BACKDROP_VALUE && (
+        <ClosetInteriorBackdrop fixed />
+      )}
       <header className="kids-closet__header">
         <div className="kids-closet__header-left">
           <button

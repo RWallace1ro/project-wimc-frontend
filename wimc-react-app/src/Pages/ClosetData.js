@@ -18,6 +18,8 @@ import BackgroundPicker from "../components/BackgroundPicker/BackgroundPicker";
 import ClosetSearch from "../components/ClosetSearch/ClosetSearch";
 import { useBackground } from "../context/BackgroundContext";
 import { getSubSections } from "../utils/closetSubsections";
+import { CLOSET_INTERIOR_BACKDROP_VALUE } from "../utils/backgroundPresets";
+import ClosetInteriorBackdrop from "../components/common/ClosetInteriorBackdrop";
 import "./ClosetData.css";
 
 import dressesSkirtsImg from "../assets/images/dresses-skirts.jpg";
@@ -69,6 +71,10 @@ const COLOR_PREFIX = "color:";
 
 function getPageBgStyle(bgValue) {
   if (!bgValue) return {};
+  // Rendered as a real layered component (see <ClosetInteriorBackdrop>
+  // below), not a flat CSS background — leave the page's own background
+  // alone so the component shows through underneath the content.
+  if (bgValue === CLOSET_INTERIOR_BACKDROP_VALUE) return {};
   if (bgValue.startsWith(COLOR_PREFIX)) {
     return {
       backgroundColor: bgValue.replace(COLOR_PREFIX, ""),
@@ -257,6 +263,9 @@ function ClosetData({
       className="closet-data-page"
       style={getPageBgStyle(backgrounds[PAGE_BG_KEY])}
     >
+      {backgrounds[PAGE_BG_KEY] === CLOSET_INTERIOR_BACKDROP_VALUE && (
+        <ClosetInteriorBackdrop fixed />
+      )}
       <header className="closet-data__header-actions">
         <button
           className="add-clothing-button"

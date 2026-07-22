@@ -11,7 +11,7 @@ import { auth } from "../../firebase";
 import { uploadImage } from "../../utils/CloudinaryAPI";
 import { deleteAllUserData, scheduleDeletion } from "../../utils/accountDeletion";
 import { useBackground } from "../../context/BackgroundContext";
-import { BACKGROUND_PRESETS } from "../../utils/backgroundPresets";
+import { BACKGROUND_PRESETS, resolveBackgroundValue } from "../../utils/backgroundPresets";
 import { useTier } from "../../context/TierContext";
 import { openBillingPortal } from "../../utils/billing";
 import Avatar from "../Avatar/Avatar";
@@ -112,14 +112,14 @@ function BgPicker({ targetKey, label, showColorPalette = false }) {
   const previewStyle = current
     ? isColor(current)
       ? { backgroundColor: colorValue(current) }
-      : { backgroundImage: `url(${current})` }
+      : { backgroundImage: `url(${resolveBackgroundValue(current)})` }
     : {};
 
   // Mini thumbnail in the header row
   const thumbStyle = current
     ? isColor(current)
       ? { backgroundColor: colorValue(current) }
-      : { backgroundImage: `url(${current})` }
+      : { backgroundImage: `url(${resolveBackgroundValue(current)})` }
     : {};
 
   return (
@@ -184,7 +184,7 @@ function BgPicker({ targetKey, label, showColorPalette = false }) {
                 >
                   <div
                     className="usm-bg-preset__thumb"
-                    style={{ backgroundImage: `url(${p.url})` }}
+                    style={{ backgroundImage: `url(${p.preview || p.url})` }}
                   />
                   <span className="usm-bg-preset__name">{p.label}</span>
                   {current === p.url && (

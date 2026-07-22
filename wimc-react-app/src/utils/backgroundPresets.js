@@ -94,13 +94,29 @@ function starWallpaperSVG(base, star) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+// A sentinel value (not a real image URL) stored when the user picks the
+// "Closet Interior" preset. Flat CSS-background consumers (section cards,
+// the picker's own small preview swatches) can't render the full layered
+// look (blurred photo + translucent ajar doors + handles), so they fall
+// back to the plain photo via resolveBackgroundValue() below. Only the
+// closet-data/kids/pet PAGE background actually renders the full
+// <ClosetInteriorBackdrop> component when it sees this exact value.
+export const CLOSET_INTERIOR_BACKDROP_VALUE = "closet-interior-backdrop";
+
+// Any consumer that can only apply a flat CSS background (not render a real
+// component) should route the stored background value through this first.
+export function resolveBackgroundValue(value) {
+  return value === CLOSET_INTERIOR_BACKDROP_VALUE ? closetInteriorImg : value;
+}
+
 export const BACKGROUND_PRESETS = [
   // ── Real closet interior (same photo used behind the door-open reveal
   //    animation — real clothes, shelving, and lighting) ──
   {
     id: "closet-interior-photo",
     label: "Closet Interior",
-    url: closetInteriorImg,
+    url: CLOSET_INTERIOR_BACKDROP_VALUE,
+    preview: closetInteriorImg, // thumbnail image — url itself isn't a real image
   },
 
   // ── Wood-tone wall panels (real photos, verified decor-free) ──

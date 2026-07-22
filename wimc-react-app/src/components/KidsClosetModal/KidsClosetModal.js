@@ -13,6 +13,7 @@ import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import WishList from "../WishList/WishList";
 import DonateBin from "../DonateBin/DonateBin";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
+import { resolveBackgroundValue } from "../../utils/backgroundPresets";
 import dressesSkirtsImg   from "../../assets/images/dresses-skirts.jpg";
 import shoesSneakersImg   from "../../assets/images/shoes-sneakers.jpg";
 import pantsJeansImg      from "../../assets/images/pants-jeans.jpg";
@@ -253,7 +254,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
   const bodyStyle = currentBg
     ? isColor(currentBg)
       ? { backgroundColor: colorValue(currentBg) }
-      : { backgroundImage: `url(${currentBg})`, backgroundSize: "cover", backgroundPosition: "center" }
+      : { backgroundImage: `url(${resolveBackgroundValue(currentBg)})`, backgroundSize: "cover", backgroundPosition: "center" }
     : {};
 
   // ── Door animation ────────────────────────────────────────────────────────

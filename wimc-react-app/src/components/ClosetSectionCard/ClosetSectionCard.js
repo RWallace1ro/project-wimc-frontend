@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import { shareItemImage } from "../../utils/shareUtils";
 import { onImgError } from "../../utils/imgFallback";
+import { resolveBackgroundValue } from "../../utils/backgroundPresets";
 import "./ClosetSectionCard.css";
 
 const COLOR_PREFIX = "color:";
@@ -10,7 +11,10 @@ function cardBgStyle(bg) {
   if (bg.startsWith(COLOR_PREFIX)) {
     return { backgroundColor: bg.replace(COLOR_PREFIX, "") };
   }
-  return { backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" };
+  // "Closet Interior" is a sentinel that renders a real layered component at
+  // page scale — a card-sized swatch can't show that, so fall back to the
+  // plain photo here.
+  return { backgroundImage: `url(${resolveBackgroundValue(bg)})`, backgroundSize: "cover", backgroundPosition: "center" };
 }
 
 function ClosetSectionCard({

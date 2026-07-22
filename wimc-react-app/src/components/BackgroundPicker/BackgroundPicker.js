@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { uploadImage } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
-import { BACKGROUND_PRESETS } from "../../utils/backgroundPresets";
+import { BACKGROUND_PRESETS, resolveBackgroundValue } from "../../utils/backgroundPresets";
 import "./BackgroundPicker.css";
 
 const SECTION_LABELS = {
@@ -98,7 +98,7 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
   const previewStyle = isColor
     ? { backgroundColor: currentColor }
     : currentBg
-      ? { backgroundImage: `url(${currentBg})`, backgroundSize: "cover", backgroundPosition: "center" }
+      ? { backgroundImage: `url(${resolveBackgroundValue(currentBg)})`, backgroundSize: "cover", backgroundPosition: "center" }
       : {};
 
   return (
@@ -164,7 +164,7 @@ export default function BackgroundPicker({ isOpen, onClose, section }) {
                   >
                     <div
                       className="bgp-preset__thumb"
-                      style={{ backgroundImage: `url(${p.url})` }}
+                      style={{ backgroundImage: `url(${p.preview || p.url})` }}
                     />
                     <span className="bgp-preset__name">{p.label}</span>
                     {currentBg === p.url && (

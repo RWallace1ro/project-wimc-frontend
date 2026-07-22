@@ -10,6 +10,7 @@ import {
 import { useBackground } from "../../context/BackgroundContext";
 import { syncSetItem } from "../../utils/syncStore";
 import { getSubSections, donatePrefixForTag } from "../../utils/closetSubsections";
+import { resolveBackgroundValue } from "../../utils/backgroundPresets";
 import ScrollHintArrows from "../common/ScrollHintArrows";
 import "./ClosetSectionModal.css";
 
@@ -24,7 +25,9 @@ function sectionBgStyle(bg) {
   if (bg.startsWith(BG_COLOR_PREFIX)) {
     return { backgroundColor: bg.replace(BG_COLOR_PREFIX, "") };
   }
-  return { backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" };
+  // "Closet Interior" is a sentinel value rendered as a real layered
+  // component at page scale — fall back to the plain photo here.
+  return { backgroundImage: `url(${resolveBackgroundValue(bg)})`, backgroundSize: "cover", backgroundPosition: "center" };
 }
 
 // Moving an item re-uploads it under a new Cloudinary public_id (new URL) and

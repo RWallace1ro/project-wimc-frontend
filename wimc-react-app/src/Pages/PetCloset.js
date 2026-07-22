@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { uploadImage, uploadRawJSON } from "../utils/CloudinaryAPI";
 import { appShareUrl, createCollabDoc, shareAppLink, smsShareUrl } from "../utils/shareUtils";
 import { useBackground } from "../context/BackgroundContext";
-import { BACKGROUND_PRESETS } from "../utils/backgroundPresets";
+import { BACKGROUND_PRESETS, CLOSET_INTERIOR_BACKDROP_VALUE } from "../utils/backgroundPresets";
+import ClosetInteriorBackdrop from "../components/common/ClosetInteriorBackdrop";
 import PetClosetModal from "../components/PetClosetModal/PetClosetModal";
 import PetProfileModal from "../components/PetProfileModal/PetProfileModal";
 import { auth, db } from "../firebase";
@@ -197,7 +198,9 @@ export default function PetCloset() {
   const pageStyle = currentBg
     ? isColor(currentBg)
       ? { backgroundImage: "none", backgroundColor: colorVal(currentBg) }
-      : { backgroundImage: `url(${currentBg})` }
+      : currentBg === CLOSET_INTERIOR_BACKDROP_VALUE
+        ? {}
+        : { backgroundImage: `url(${currentBg})` }
     : {};
 
   // ── Load from Firestore on mount ──
@@ -497,6 +500,9 @@ export default function PetCloset() {
 
   return (
     <main className="kids-closet" style={pageStyle}>
+      {currentBg === CLOSET_INTERIOR_BACKDROP_VALUE && (
+        <ClosetInteriorBackdrop fixed />
+      )}
       <header className="kids-closet__header">
         <div className="kids-closet__header-left">
           <button
