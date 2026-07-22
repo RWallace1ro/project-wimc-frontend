@@ -166,7 +166,7 @@ const SECTIONS = [
     items: [
       {
         q: "How is my data stored?",
-        a: "Your account information is stored in Firebase (Google Cloud). Your clothing photos and videos are stored on Cloudinary, a secure media hosting service. GingerFaith LLC does not sell or share your personal data with third parties.",
+        a: "Your account information is stored in Firebase (Google Cloud). Your clothing photos and videos are stored on Cloudinary, a secure media hosting service. GingerFaith™ LLC does not sell or share your personal data with third parties.",
       },
       {
         q: "Can I delete my account?",
