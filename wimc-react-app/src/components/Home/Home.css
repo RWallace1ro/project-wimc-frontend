@@ -125,12 +125,11 @@
   visibility: hidden;
 }
 
-/* Phase 1: make container visible with doors in CLOSED position */
+/* Phase 1: make container visible with doors in CLOSED position.
+   Background now comes from ClosetInteriorBackdrop (a real closet photo,
+   blurred, with translucent ajar door panels) instead of a flat stock image. */
 .door-container.is-visible {
   visibility: visible;
-  /* New default: same "Ivory Wave Wallpaper" preset offered in the
-     background picker — keep both in sync if that preset URL changes. */
-  background-image: url("https://images.unsplash.com/photo-1714636608872-048fc9231892?w=1920&q=80");
 }
 
 @keyframes door-open-left {

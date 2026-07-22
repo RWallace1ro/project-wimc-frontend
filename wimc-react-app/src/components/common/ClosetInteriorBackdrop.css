@@ -1,0 +1,53 @@
+.closet-interior-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0; /* below ClosetDoorCarousel's z-index:1 and the swinging doors' z-index:2 */
+}
+
+.closet-interior-backdrop__photo {
+  position: absolute;
+  inset: 0;
+  background: url("../../assets/images/closet-door-reveal.jpg") center/cover no-repeat;
+  filter: blur(3px) brightness(0.9);
+  /* Slight scale-up so the blur's soft edge never shows a sliver of the
+     container's own background at the frame edges. */
+  transform: scale(1.05);
+}
+
+/* Two static, slightly-ajar translucent panels "peeking" over the real
+   photo — same molding/handle language as the animated swinging doors, just
+   see-through instead of opaque, and NOT the doors that actually animate. */
+.closet-interior-backdrop__door {
+  position: absolute;
+  top: 4%;
+  bottom: 4%;
+  width: 42%;
+  background: color-mix(in srgb, var(--wimc-backdrop-tint, #f5f3ef) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wimc-backdrop-tint, #1F3864) 35%, transparent);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+.closet-interior-backdrop__door--left {
+  left: 2%;
+}
+.closet-interior-backdrop__door--right {
+  right: 2%;
+}
+/* Handles */
+.closet-interior-backdrop__door::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 30px;
+  border-radius: 3px;
+  background: #c9a24b;
+  transform: translateY(-50%);
+}
+.closet-interior-backdrop__door--left::after {
+  right: 6%;
+}
+.closet-interior-backdrop__door--right::after {
+  left: 6%;
+}

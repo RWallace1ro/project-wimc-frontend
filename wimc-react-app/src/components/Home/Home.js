@@ -2,6 +2,7 @@ import React, { useState, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWIMCTour } from "../WIMCTourVideo/useTour";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
+import ClosetInteriorBackdrop from "../common/ClosetInteriorBackdrop";
 import "./Home.css";
 
 const WIMCTourVideo = lazy(() => import("../WIMCTourVideo/WIMCTourVideo"));
@@ -65,6 +66,7 @@ function Home() {
         {/* door-container: is-visible shows the container (doors CLOSED);
             is-open triggers the CSS keyframe animation from closed → open. */}
         <div className={`door-container${doorsVisible ? " is-visible" : ""}${doorsOpen ? " is-open" : ""}`}>
+          <ClosetInteriorBackdrop />
           <ClosetDoorCarousel />
           <div className="door-left"></div>
           <div className="door-right"></div>
