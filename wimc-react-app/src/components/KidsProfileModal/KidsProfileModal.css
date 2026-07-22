@@ -224,17 +224,19 @@
   z-index: 10;
   display: flex;
   pointer-events: none;
-  /* New default: same "Ivory Wave Wallpaper" preset offered in the
-     background picker — keep both in sync if that preset URL changes. */
-  background-image: url("https://images.unsplash.com/photo-1714636608872-048fc9231892?w=1920&q=80");
   background-size: cover;
   background-position: center;
 }
 .kcm-door {
   width: 50%;
   height: 100%;
-  background: url("../../assets/images/main-background.jpg") center/cover
-    no-repeat;
+  /* Background now set inline per-render (doorBgStyle in KidsClosetModal.js)
+     from the closet's own chosen background/color — no more hardcoded stock
+     photo. z-index must beat ClosetDoorCarousel's z-index:1 (see
+     ClosetDoorCarousel.css) or the carousel would show through the closed
+     doors instead of only being revealed as they slide open. */
+  position: relative;
+  z-index: 2;
   transition: transform 3000ms ease;
 }
 .kcm-door--left {

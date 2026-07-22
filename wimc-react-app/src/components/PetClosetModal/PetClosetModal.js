@@ -11,6 +11,7 @@ import TravelPackPanel from "../TravelPackPanel/TravelPackPanel";
 import ClosetSearch from "../ClosetSearch/ClosetSearch";
 import WishList from "../WishList/WishList";
 import DonateBin from "../DonateBin/DonateBin";
+import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
 import dressesSkirtsImg   from "../../assets/images/dresses-skirts.jpg";
 import shoesSneakersImg   from "../../assets/images/shoes-sneakers.jpg";
 import pantsJeansImg      from "../../assets/images/pants-jeans.jpg";
@@ -219,6 +220,13 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
     }
   };
 
+  // See KidsClosetModal.js for why this replaced a hardcoded stock photo.
+  const doorBgStyle = currentBg
+    ? isColor(currentBg)
+      ? { backgroundColor: colorValue(currentBg) }
+      : { backgroundImage: `url(${currentBg})`, backgroundSize: "cover", backgroundPosition: "center" }
+    : { backgroundColor: "#1F3864" };
+
   const bodyStyle = currentBg
     ? isColor(currentBg)
       ? { backgroundColor: colorValue(currentBg) }
@@ -308,8 +316,9 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
         {/* ── Door animation ── */}
         {!doorsGone && (
           <div className="kcm-doors">
-            <div className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`} />
-            <div className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`} />
+            <ClosetDoorCarousel tagPrefix={`pet-${pet.id}`} />
+            <div className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`} style={doorBgStyle} />
+            <div className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`} style={doorBgStyle} />
           </div>
         )}
 
