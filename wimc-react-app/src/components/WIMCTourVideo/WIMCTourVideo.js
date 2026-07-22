@@ -888,12 +888,9 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
             </button>
 
             <p className="tour-lobby-voicenote">
-              🔊 The guide's voice uses your device's built-in text-to-speech, so
-              it sounds different on each device. For the most natural voice,
-              install a "Natural" / "Neural" voice in your system settings
-              (e.g. Windows: Settings → Time &amp; Language → Speech; iPhone:
-              Settings → Accessibility → Spoken Content → Voices). You can also
-              mute narration anytime with the 🔊 button during the tour.
+              🔊 The guide's narration is pre-recorded for a consistent, natural
+              voice on every device. You can mute it anytime with the 🔊 button
+              during the tour.
             </p>
           </div>
         )}
