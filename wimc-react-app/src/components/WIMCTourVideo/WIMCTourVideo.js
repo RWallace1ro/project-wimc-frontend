@@ -178,6 +178,7 @@ const TAG_TO_SLIDE = {
 const SPEED_OPTIONS = [
   { label: "0.5×", val: 0.5 },
   { label: "0.75×", val: 0.75 },
+  { label: "0.9×", val: 0.9 },
   { label: "1×",   val: 1   },
   { label: "1.5×", val: 1.5 },
   { label: "2×",   val: 2   },

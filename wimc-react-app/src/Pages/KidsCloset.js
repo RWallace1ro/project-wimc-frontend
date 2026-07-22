@@ -229,18 +229,21 @@ export default function KidsCloset() {
         const snap = await getDoc(doc(db, "users", currentUid));
         if (snap.exists()) {
           const data = snap.data();
-          if (data.kidsProfiles) {
-            setProfiles(data.kidsProfiles);
-          }
-          if (data.kidsDeleted) {
-            setDeleted(
-              data.kidsDeleted.filter((p) => daysLeft(p.deletedAt) > 0)
-            );
-          } else {
-            setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
-          }
+          // profiles/deleted both start seeded from a bare, non-account-scoped
+          // localStorage key (LS_KEY) — on a browser previously used by a
+          // DIFFERENT account, that seed is that other account's leftover
+          // data. Firestore (keyed by currentUid) is the actual source of
+          // truth here, so an account with no kidsProfiles field must clear
+          // to empty, not silently keep whatever the stale local seed had —
+          // otherwise that leftover data gets written right back into THIS
+          // account's Firestore doc by the save effect below.
+          setProfiles(data.kidsProfiles || []);
+          setDeleted(
+            (data.kidsDeleted || []).filter((p) => daysLeft(p.deletedAt) > 0)
+          );
         } else {
-          setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
+          setProfiles([]);
+          setDeleted([]);
         }
       } catch (e) {
         console.warn("KidsCloset: could not load from Firestore:", e);

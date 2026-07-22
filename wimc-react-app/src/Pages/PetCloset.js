@@ -211,16 +211,19 @@ export default function PetCloset() {
         const snap = await getDoc(doc(db, "users", currentUid));
         if (snap.exists()) {
           const data = snap.data();
-          if (data.petProfiles) {
-            setProfiles(data.petProfiles);
-          }
-          if (data.petDeleted) {
-            setDeleted(data.petDeleted.filter((p) => daysLeft(p.deletedAt) > 0));
-          } else {
-            setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
-          }
+          // See KidsCloset.js's identical fix — profiles/deleted are seeded
+          // from a bare, non-account-scoped localStorage key, which on a
+          // shared browser can be a DIFFERENT account's leftover data.
+          // Firestore (keyed by currentUid) must always win, clearing to
+          // empty rather than keeping a stale cross-account local seed that
+          // the save effect below would otherwise write back into Firestore.
+          setProfiles(data.petProfiles || []);
+          setDeleted(
+            (data.petDeleted || []).filter((p) => daysLeft(p.deletedAt) > 0)
+          );
         } else {
-          setDeleted((prev) => prev.filter((p) => daysLeft(p.deletedAt) > 0));
+          setProfiles([]);
+          setDeleted([]);
         }
       } catch (e) {
         console.warn("PetCloset: could not load from Firestore:", e);
