@@ -233,17 +233,8 @@ function ClosetData({
     {
       const url = item?.mediaUrl || item?.imageUrl || item?.mediaThumb;
       const tag = (item?.category || "").trim().toLowerCase();
-      // TEMP DIAGNOSTIC — remove once the live-update bug is confirmed fixed.
-      console.log("[WIMC diag] handleAddClothing item:", item);
-      console.log("[WIMC diag] resolved url:", url, "resolved tag:", tag);
       if (url && tag) {
-        setRecentUploads((prev) => {
-          const next = [...prev, { tag, url, mediaType: item?.mediaType || "image", ts: Date.now() }];
-          console.log("[WIMC diag] recentUploads now:", next);
-          return next;
-        });
-      } else {
-        console.warn("[WIMC diag] SKIPPED — missing url or tag, item never entered recentUploads");
+        setRecentUploads((prev) => [...prev, { tag, url, mediaType: item?.mediaType || "image", ts: Date.now() }]);
       }
     }
     logAppEvent("add_clothing_item", {
@@ -340,10 +331,6 @@ function ClosetData({
             const latestUpload = [...recentUploads]
               .reverse()
               .find((u) => u.mediaType !== "video" && cardTags.has(u.tag));
-            // TEMP DIAGNOSTIC — remove once the live-update bug is confirmed fixed.
-            if (recentUploads.length) {
-              console.log(`[WIMC diag] card "${section.tag}" cardTags:`, [...cardTags], "pinnedCardUrl:", pinnedCardUrl, "latestUpload match:", latestUpload);
-            }
             return (
               <ClosetSectionCard
                 key={section.tag}

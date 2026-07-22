@@ -230,11 +230,14 @@
 .kcm-door {
   width: 50%;
   height: 100%;
-  /* Background now set inline per-render (doorBgStyle in KidsClosetModal.js)
-     from the closet's own chosen background/color — no more hardcoded stock
-     photo. z-index must beat ClosetDoorCarousel's z-index:1 (see
-     ClosetDoorCarousel.css) or the carousel would show through the closed
-     doors instead of only being revealed as they slide open. */
+  /* Same fixed door texture used everywhere else (Home, Outfit Preview) —
+     the swinging door panel's own look is NOT tied to the closet's chosen
+     background; that background is a separate layer (the modal body, via
+     bodyStyle) revealed once the doors are open. z-index must beat
+     ClosetDoorCarousel's z-index:1 (see ClosetDoorCarousel.css) or the
+     carousel would show through the closed doors instead of only being
+     revealed as they slide open. */
+  background: url("../../assets/images/main-background.jpg") center/cover no-repeat;
   position: relative;
   z-index: 2;
   transition: transform 3000ms ease;

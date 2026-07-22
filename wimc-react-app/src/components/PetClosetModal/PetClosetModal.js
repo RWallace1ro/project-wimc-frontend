@@ -220,13 +220,6 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
     }
   };
 
-  // See KidsClosetModal.js for why this replaced a hardcoded stock photo.
-  const doorBgStyle = currentBg
-    ? isColor(currentBg)
-      ? { backgroundColor: colorValue(currentBg) }
-      : { backgroundImage: `url(${currentBg})`, backgroundSize: "cover", backgroundPosition: "center" }
-    : { backgroundColor: "#1F3864" };
-
   const bodyStyle = currentBg
     ? isColor(currentBg)
       ? { backgroundColor: colorValue(currentBg) }
@@ -317,8 +310,8 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
         {!doorsGone && (
           <div className="kcm-doors">
             <ClosetDoorCarousel tagPrefix={`pet-${pet.id}`} />
-            <div className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`} style={doorBgStyle} />
-            <div className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`} style={doorBgStyle} />
+            <div className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`} />
+            <div className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`} />
           </div>
         )}
 

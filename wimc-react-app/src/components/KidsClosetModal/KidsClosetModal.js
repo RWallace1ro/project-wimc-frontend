@@ -250,17 +250,6 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
     }
   };
 
-  // Door panels previously always showed a hardcoded stock closet photo
-  // (main-background.jpg) no matter what background the user picked for this
-  // child's closet. Now they use the SAME chosen background as the rest of
-  // the closet, falling back to the app's own theme color (not a photo) when
-  // nothing's been customized yet.
-  const doorBgStyle = currentBg
-    ? isColor(currentBg)
-      ? { backgroundColor: colorValue(currentBg) }
-      : { backgroundImage: `url(${currentBg})`, backgroundSize: "cover", backgroundPosition: "center" }
-    : { backgroundColor: "#1F3864" };
-
   const bodyStyle = currentBg
     ? isColor(currentBg)
       ? { backgroundColor: colorValue(currentBg) }
@@ -375,8 +364,8 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
         {!doorsGone && (
           <div className="kcm-doors">
             <ClosetDoorCarousel tagPrefix={`kid-${child.id}`} />
-            <div className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`} style={doorBgStyle} />
-            <div className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`} style={doorBgStyle} />
+            <div className={`kcm-door kcm-door--left  ${doorsOpen ? "is-open" : ""}`} />
+            <div className={`kcm-door kcm-door--right ${doorsOpen ? "is-open" : ""}`} />
           </div>
         )}
 

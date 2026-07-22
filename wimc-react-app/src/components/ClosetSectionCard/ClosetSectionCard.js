@@ -112,18 +112,6 @@ function ClosetSectionCard({
 
   const display = normalizedFromProp || latestMedia || media;
 
-  // TEMP DIAGNOSTIC — remove once the live-update bug is confirmed fixed.
-  useEffect(() => {
-    if (latestUploadUrl) {
-      console.log(
-        `[WIMC diag] ClosetSectionCard tag="${tag}" received latestUploadUrl:`, latestUploadUrl,
-        "| normalizedFromProp:", normalizedFromProp,
-        "| resulting display:", display,
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [latestUploadUrl, tag]);
-
   const handleShareImage = async (e) => {
     e.stopPropagation();
     if (!display?.url || sharing) return;
