@@ -24,6 +24,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../../firebase";
 import { logAppEvent } from "../../utils/analytics";
+import { clearLocalAppData } from "../../utils/syncStore";
 
 import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
@@ -312,6 +313,10 @@ function AppInner() {
 
   const handleLogout = async () => {
     await signOut(auth);
+    // Structural safety net against cross-account data leaks on a shared
+    // browser (see syncStore.js's clearLocalAppData) — a fresh login must
+    // never start with anything still sitting in localStorage from before.
+    clearLocalAppData();
     setLoginData({ email: "", password: "" });
     setLoginError("");
     setSignUpError("");
@@ -383,6 +388,7 @@ function AppInner() {
 
   const handleVerifyCancel = async () => {
     try { await signOut(auth); } catch {}
+    clearLocalAppData();
     setNeedsVerification(false);
     setVerifyMsg("");
     navigate("/");

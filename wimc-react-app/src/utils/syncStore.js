@@ -175,6 +175,27 @@ export async function hydrateFromFirestore(uid) {
   }
 }
 
+// ── Logout safety net ─────────────────────────────────────────────────────────
+// Two separate bugs this session (this queue, and KidsCloset/PetCloset) both
+// came from the same root risk: a bare, non-account-scoped localStorage key
+// left over from a PREVIOUS account on a shared browser silently getting
+// treated as the newly-logged-in account's own data. Auditing every component
+// for this pattern helps, but the durable fix is structural — never let a new
+// login start with anything still sitting in localStorage from before.
+//
+// Keys in KEEP_ON_LOGOUT are device-level preferences (not account data) that
+// should legitimately survive a logout — e.g. cookie consent, which is a
+// per-browser legal preference, not something tied to who's signed in.
+const KEEP_ON_LOGOUT = new Set(["wimc_cookie_prefs", "wimc_cookie_consent"]);
+
+export function clearLocalAppData() {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (!KEEP_ON_LOGOUT.has(key)) localStorage.removeItem(key);
+    }
+  } catch {}
+}
+
 // ── Real-time listener ───────────────────────────────────────────────────────
 // Subscribe to remote changes. When another device writes, the callback fires
 // with the changed key so the app can react (e.g. show a "refresh" banner).
