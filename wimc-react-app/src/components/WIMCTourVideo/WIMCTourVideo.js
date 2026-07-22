@@ -555,11 +555,27 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
     setTalking(false);
   }, []);
  
-  // ── Web Speech API helpers ──────────────────────────────────────────────────
+  // ── Pre-recorded narration (Google Cloud TTS Neural2) ───────────────────────
+  // Generated once via scripts/gen-tour-audio (see public/tour-audio/), far
+  // more natural than live browser text-to-speech and identical across every
+  // device/browser instead of depending on whatever voices happen to be
+  // installed locally. Falls back to the old Web Speech API approach below if
+  // a file is missing or fails to play for any reason.
+  const audioRef = useRef(null);
+
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  }, []);
+
+  // ── Web Speech API helpers (fallback only) ──────────────────────────────────
   const stopSpeech = useCallback(() => {
     speechTokenRef.current++; // invalidate any in-flight sentence chain
     if (window.speechSynthesis) window.speechSynthesis.cancel();
-  }, []);
+    stopAudio();
+  }, [stopAudio]);
 
   // Pick the most human-sounding English voice available, in priority order.
   const pickVoice = useCallback(() => {
@@ -585,7 +601,7 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
   // Captions still display the real "WIMC" text; this only affects speech.
   const spokenForm = (s) => s.replace(/WIMC/g, "W I M C");
 
-  const speak = useCallback((text) => {
+  const speakBrowserTTS = useCallback((text) => {
     if (!window.speechSynthesis || mutedRef.current) return;
     window.speechSynthesis.cancel();
     const myToken = ++speechTokenRef.current;
@@ -615,7 +631,25 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
     };
     speakSentence(0);
   }, [pickVoice]);
- 
+
+  // slideIndex is optional — omit it (or pass -1) to force the browser-TTS
+  // fallback, e.g. for any text that isn't one of the pre-generated slides.
+  const speak = useCallback((text, slideIndex) => {
+    if (mutedRef.current) return;
+    speechTokenRef.current++; // invalidate any in-flight browser-TTS chain
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    if (typeof slideIndex === "number" && slideIndex >= 0) {
+      const audio = new Audio(`${process.env.PUBLIC_URL}/tour-audio/slide-${slideIndex}.mp3`);
+      audio.playbackRate = Math.min(2, speedRef.current);
+      audioRef.current = audio;
+      audio.play().catch(() => speakBrowserTTS(text)); // e.g. autoplay blocked
+      audio.onerror = () => speakBrowserTTS(text); // file missing/failed to load
+      return;
+    }
+    speakBrowserTTS(text);
+  }, [speakBrowserTTS]);
+
   // Voices load async — re-render when ready
   useEffect(() => {
     const load = () => setVoiceReady(true);
@@ -640,13 +674,13 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
     talkRef.current = setTimeout(animateTalk, 150);
   }, []);
  
-  const typeCaption = useCallback((text) => {
+  const typeCaption = useCallback((text, slideIndex) => {
     clearTimeout(typeRef.current);
     setCaption("");
     setTalking(true);
     clearTimeout(talkRef.current);
     animateTalk();
-    speak(text);
+    speak(text, slideIndex);
     let i = 0;
     const step = () => {
       if (i <= text.length) {
@@ -662,7 +696,7 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
  
   const showSlide = useCallback((n) => {
     setCurSlide(n);
-    typeCaption(SCRIPTS[n]);
+    typeCaption(SCRIPTS[n], n);
   }, [typeCaption]);
  
   const stopPlayback = useCallback(() => {
@@ -681,7 +715,7 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
       setElapsed(elapsedRef.current);
       const n = getSlideAt(elapsedRef.current);
       setCurSlide((prev) => {
-        if (n !== prev) { typeCaption(SCRIPTS[n]); return n; }
+        if (n !== prev) { typeCaption(SCRIPTS[n], n); return n; }
         return prev;
       });
     }
@@ -691,7 +725,7 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
       setElapsed(0);
       elapsedRef.current = 0;
       setCurSlide(0);
-      typeCaption(SCRIPTS[0]);
+      typeCaption(SCRIPTS[0], 0);
       return;
     }
     rafRef.current = requestAnimationFrame(tick);
@@ -774,6 +808,10 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
   const handleSpeedChange = (val) => {
     speedRef.current = val;
     setSpeed(val);
+    // Update the currently-playing pre-recorded narration in place — it's one
+    // continuous audio file per slide, unlike the sentence-chained browser-TTS
+    // fallback which already picks up a new rate on its next sentence.
+    if (audioRef.current) audioRef.current.playbackRate = Math.min(2, val);
   };
 
   if (!isOpen) return null;
