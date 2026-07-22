@@ -58,16 +58,22 @@ function writeQueue(queue) {
   } catch {}
 }
 
-// Queue by key — a later write to the same key replaces the earlier queued
-// entry rather than piling up redundant retries.
+// Queue by (uid, key) — a later write to the same key replaces the earlier
+// queued entry rather than piling up redundant retries. The queue is a single
+// shared localStorage list across whoever is logged in on this browser, so
+// every entry MUST remember which account it belongs to.
 function enqueue(entry) {
-  const queue = readQueue().filter((q) => q.key !== entry.key);
+  const queue = readQueue().filter((q) => !(q.key === entry.key && q.uid === entry.uid));
   queue.push(entry);
   writeQueue(queue);
 }
 
-// Attempt to push every queued entry to Firestore. Entries that still fail
-// (still offline) stay queued for the next flush attempt.
+// Attempt to push every queued entry belonging to the CURRENTLY logged-in
+// account to Firestore. Entries queued under a different (e.g. previously
+// logged-out) account are left untouched — flushing them under whoever
+// happens to be signed in now would silently copy one user's private data
+// into another user's Firestore document the next time they share a
+// browser. Those entries simply wait until their own owner logs back in.
 export async function flushPendingSync() {
   const queue = readQueue();
   if (!queue.length) return;
@@ -76,6 +82,10 @@ export async function flushPendingSync() {
 
   const stillPending = [];
   for (const entry of queue) {
+    if (entry.uid !== uid) {
+      stillPending.push(entry); // not ours — leave queued for its real owner
+      continue;
+    }
     try {
       await setDoc(doc(db, "users", uid, "syncdata", fsKey(entry.key)), {
         key: entry.key,
@@ -107,7 +117,7 @@ export function syncSetItem(key, value) {
   ).catch(() => {
     // Offline or otherwise unreachable — localStorage already has the
     // correct value; queue the cloud write so it isn't lost on next hydrate.
-    enqueue({ key, value, deleted: false, updatedAt });
+    enqueue({ key, value, deleted: false, updatedAt, uid });
   });
 }
 
@@ -121,7 +131,7 @@ export function syncRemoveItem(key) {
     doc(db, "users", uid, "syncdata", fsKey(key)),
     { key, value: null, deleted: true, updatedAt }
   ).catch(() => {
-    enqueue({ key, value: null, deleted: true, updatedAt });
+    enqueue({ key, value: null, deleted: true, updatedAt, uid });
   });
 }
 
@@ -137,7 +147,13 @@ export async function hydrateFromFirestore(uid) {
   try {
     const colRef = collection(db, "users", uid, "syncdata");
     const snap = await getDocs(colRef);
-    const pendingKeys = new Set(readQueue().map((q) => q.key));
+    // Only THIS account's still-pending keys should block a cloud read from
+    // landing in localStorage — a stray entry left behind by a different
+    // account that previously used this browser must never suppress or
+    // otherwise interact with this account's own hydrate.
+    const pendingKeys = new Set(
+      readQueue().filter((q) => q.uid === uid).map((q) => q.key)
+    );
     snap.forEach((docSnap) => {
       const { key, value, deleted } = docSnap.data();
       if (!key) return;
