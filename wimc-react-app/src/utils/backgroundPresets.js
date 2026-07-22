@@ -1,3 +1,5 @@
+import closetInteriorImg from "../assets/images/closet-door-reveal.jpg";
+
 // Closet-buildout-style backgrounds — real wall panel finishes + subtle,
 // minor-detail wallpapers (not busy/loud prints that would distract from
 // the clothing items shown on top of them). Shared by the closet page
@@ -93,6 +95,14 @@ function starWallpaperSVG(base, star) {
 }
 
 export const BACKGROUND_PRESETS = [
+  // ── Real closet interior (same photo used behind the door-open reveal
+  //    animation — real clothes, shelving, and lighting) ──
+  {
+    id: "closet-interior-photo",
+    label: "Closet Interior",
+    url: closetInteriorImg,
+  },
+
   // ── Wood-tone wall panels (real photos, verified decor-free) ──
   {
     id: "pine-slat-panels",
