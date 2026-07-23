@@ -267,3 +267,41 @@ html:has(
   overflow: hidden;
   overscroll-behavior: none;
 }
+
+/* ── Notch/Dynamic-Island safety for modals ──────────────────────────────────
+   body's own safe-area padding (above) only helps normal in-flow content —
+   these overlays are all position:fixed, which is positioned relative to the
+   viewport and completely ignores an ancestor's padding. Without this, a
+   modal's close button/heading near the top edge renders directly under the
+   notch/status bar in installed standalone mode and can't be tapped. Same
+   class list as the scroll-lock rule above, so any new modal added there
+   automatically gets this protection too. */
+.modal-overlay,
+.opp-backdrop,
+.planner__backdrop,
+.tp__backdrop,
+.closet-section-modal__overlay,
+.vb-overlay,
+.vb-player-overlay,
+.sl-backdrop,
+.sl-cat-modal__overlay,
+.wish-overlay,
+.stylist-overlay,
+.aida-overlay,
+.aisf-overlay,
+.aipa-overlay,
+.cs-overlay,
+.bgp-overlay,
+.tryon-overlay,
+.weather-overlay,
+.tour-overlay,
+.usm-overlay,
+.kcm-overlay,
+.kpm-overlay,
+.receipts-overlay,
+.opp-favs__backdrop,
+.opp-saved__backdrop,
+.lb__overlay {
+  padding-top: env(safe-area-inset-top, 0px);
+  box-sizing: border-box;
+}
