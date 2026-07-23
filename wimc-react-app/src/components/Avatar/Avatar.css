@@ -8,15 +8,41 @@
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
   color: #fff;
   font-weight: 700;
-  font-size: 0.9em;
-  /* A default/inherited line-height (e.g. 1.4-1.5 from surrounding text
-     styles) makes the glyph's own box taller than the circle, so the top of
-     each letter gets clipped by whatever ancestor has overflow:hidden or
-     a fixed height (e.g. Settings' 72px usm-avatar-preview). line-height:1
-     keeps the text's own box exactly glyph-height, centered cleanly
-     regardless of what size circle it's dropped into. */
+  /* Fixed px, NOT em/rem — a relative unit inherits whatever font-size is
+     active in that render context, and on at least one real device this
+     computed to something far larger than intended (confirmed via
+     screenshot: glyphs filling most of the circle, clipped at the top),
+     despite every remote/automated test showing a correct small value.
+     Since the visible ancestor font-size can't be fully controlled or
+     predicted (OS-level text-size settings, unknown cascade differences),
+     a fixed px value per known avatar size is the only way to guarantee
+     this can never again depend on inherited context. Default below is a
+     fallback; specific sizes are set per usage context beneath it. */
+  font-size: 16px;
   line-height: 1;
   letter-spacing: 0.5px;
   overflow: hidden;
   user-select: none;
+  /* Opt this element out of iOS Safari's automatic text-size boosting —
+     a likely contributor to the oversized real-device rendering above,
+     since that feature specifically rescales what it heuristically detects
+     as body text, independent of any font-size value set in CSS. */
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+}
+
+/* Header avatar — 48px circle (see Header.css), 42px on the sub-1400px
+   breakpoint where the mobile header controls take over. */
+.header__avatar.avatar-initials {
+  font-size: 18px;
+}
+@media screen and (max-width: 1400px) {
+  .header__avatar.avatar-initials {
+    font-size: 16px;
+  }
+}
+
+/* Settings "Edit Profile" avatar — 72px circle (see UserSettingsModal.css). */
+.usm-avatar-preview.avatar-initials {
+  font-size: 26px;
 }
