@@ -9,6 +9,14 @@
   color: #fff;
   font-weight: 700;
   font-size: 0.9em;
+  /* A default/inherited line-height (e.g. 1.4-1.5 from surrounding text
+     styles) makes the glyph's own box taller than the circle, so the top of
+     each letter gets clipped by whatever ancestor has overflow:hidden or
+     a fixed height (e.g. Settings' 72px usm-avatar-preview). line-height:1
+     keeps the text's own box exactly glyph-height, centered cleanly
+     regardless of what size circle it's dropped into. */
+  line-height: 1;
   letter-spacing: 0.5px;
+  overflow: hidden;
   user-select: none;
 }
