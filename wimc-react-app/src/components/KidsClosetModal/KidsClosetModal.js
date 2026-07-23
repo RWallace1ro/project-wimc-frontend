@@ -151,7 +151,7 @@ function KcmBgPicker({ bgKey, onClose: closePicker }) {
             >
               <div
                 className="kcm-bg-preset__thumb"
-                style={{ backgroundImage: `url(${p.url})` }}
+                style={{ backgroundImage: `url(${p.preview || resolveBackgroundValue(p.url)})` }}
               />
               <span className="kcm-bg-preset__name">{p.label}</span>
               {current === p.url && <span className="kcm-bg-preset__check">✓</span>}

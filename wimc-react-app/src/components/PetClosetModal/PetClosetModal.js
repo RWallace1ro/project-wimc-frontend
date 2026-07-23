@@ -134,7 +134,7 @@ function PcmBgPicker({ bgKey, onClose: closePicker }) {
               onClick={() => pick(p.url)}
               title={p.label}
             >
-              <div className="kcm-bg-preset__thumb" style={{ backgroundImage: `url(${p.url})` }} />
+              <div className="kcm-bg-preset__thumb" style={{ backgroundImage: `url(${p.preview || resolveBackgroundValue(p.url)})` }} />
               <span className="kcm-bg-preset__name">{p.label}</span>
               {current === p.url && <span className="kcm-bg-preset__check">✓</span>}
             </button>
