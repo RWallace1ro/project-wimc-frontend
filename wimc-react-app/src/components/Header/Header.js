@@ -9,6 +9,11 @@ import { listMyShares, countUnreadShares } from "../../utils/shareUtils";
 import Avatar from "../Avatar/Avatar";
 import "./Header.css";
 
+// "Amber's Closet" reads friendlier and more personal than a full name, and
+// keeps the header shorter — matters most on the desktop nav where space is
+// already tight (see the 1400px breakpoint fix elsewhere in this file).
+const firstName = (name) => (name || "").trim().split(/\s+/)[0] || "";
+
 // Heavy modal components — lazy loaded so they don't bloat the initial bundle.
 // Each only downloads when the user first opens it.
 const WeatherModal      = lazy(() => import("../WeatherModal/WeatherModal"));
@@ -153,7 +158,7 @@ function Header({
           <nav className="header__nav header__nav--desktop" aria-label="Main navigation">
             {isLoggedIn ? (
               <div className="header__user">
-                <span className="header__user-name">{currentUserName ? `${currentUserName}'s Closet` : "Your Closet"}</span>
+                <span className="header__user-name">{currentUserName ? `${firstName(currentUserName)}'s Closet` : "Your Closet"}</span>
                 <Avatar url={currentAvatarUrl} name={currentUserName} className="header__avatar" />
                 <div className="header__divider" />
                 {loggedInButtons}
@@ -189,7 +194,7 @@ function Header({
             {isMobileMenuOpen && (
               <nav className="header__mobile-menu" aria-label="Mobile navigation">
                 {isLoggedIn && (
-                  <p className="header__mobile-username">{currentUserName ? `${currentUserName}'s Closet` : "Your Closet"}</p>
+                  <p className="header__mobile-username">{currentUserName ? `${firstName(currentUserName)}'s Closet` : "Your Closet"}</p>
                 )}
                 {isLoggedIn ? loggedInButtons : loggedOutButtons}
               </nav>
