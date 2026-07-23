@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, getDocFromServer } from "firebase/firestore";
 import { db } from "../firebase";
 import UpgradeModal from "../components/UpgradeModal/UpgradeModal";
 
@@ -74,26 +74,36 @@ export function TierProvider({ uid, children }) {
   const [modal, setModal] = useState({ open: false, feature: "", requiredTier: "pro" });
 
   useEffect(() => {
-    // TEMP DIAGNOSTIC — remove once the tier-display bug is confirmed fixed.
-    console.log("[WIMC tier-diag] effect running, uid:", uid);
-    if (!uid) {
-      console.log("[WIMC tier-diag] no uid — defaulting to free");
-      setTier("free"); setPriceId(null); setReady(true); return;
-    }
+    if (!uid) { setTier("free"); setPriceId(null); setReady(true); return; }
     setReady(false);
     const ref = doc(db, "users", uid);
     const unsub = onSnapshot(
       ref,
-      (snap) => {
+      async (snap) => {
+        // A cached snapshot claiming the document doesn't exist at all is
+        // suspicious in a way an actual empty/missing doc from the SERVER
+        // isn't — a real user account always has a doc (created at signup).
+        // Confirmed via diagnostic logging: some devices get stuck serving a
+        // stale "not found" result from local persistence indefinitely,
+        // silently downgrading a paying user to Free forever since nothing
+        // ever prompts a real server check. Explicitly bypass the cache with
+        // one direct server read whenever this specific pattern shows up.
+        if (snap.metadata.fromCache && !snap.exists()) {
+          try {
+            const serverSnap = await getDocFromServer(ref);
+            const sd = serverSnap.exists() ? serverSnap.data() : {};
+            const st = sd.tier;
+            setTier(st === "pro" || st === "pro_ai" ? st : "free");
+            setPriceId(sd.stripePriceId || null);
+            setReady(true);
+            return;
+          } catch {
+            // Genuinely offline with nothing cached — fall through to the
+            // (also "free") value below; there's nothing better to show.
+          }
+        }
         const d = snap.exists() ? snap.data() : {};
         const t = d.tier;
-        console.log(
-          "[WIMC tier-diag] snapshot received — exists:", snap.exists(),
-          "| fromCache:", snap.metadata.fromCache,
-          "| hasPendingWrites:", snap.metadata.hasPendingWrites,
-          "| raw tier field:", JSON.stringify(t),
-          "| full doc:", JSON.stringify(d),
-        );
         setTier(t === "pro" || t === "pro_ai" ? t : "free");
         setPriceId(d.stripePriceId || null);
         setReady(true);
@@ -103,10 +113,7 @@ export function TierProvider({ uid, children }) {
       // still fires the success callback above while offline). Don't
       // downgrade a paying user's tier just because one refresh failed —
       // keep whatever the last known value was and let the UI proceed.
-      (err) => {
-        console.log("[WIMC tier-diag] onSnapshot ERROR:", err?.code, err?.message);
-        setReady(true);
-      },
+      () => { setReady(true); },
     );
     return () => unsub();
   }, [uid]);
