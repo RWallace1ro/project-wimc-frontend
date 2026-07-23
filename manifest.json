@@ -5,13 +5,13 @@
   "description": "Organize your wardrobe, build outfits, and manage your closet with AI.",
   "icons": [
     {
-      "src": "logo192.png?v=2",
+      "src": "logo192-v2.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "logo512.png?v=2",
+      "src": "logo512-v2.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
