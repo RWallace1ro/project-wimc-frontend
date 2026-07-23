@@ -199,7 +199,10 @@ export default function PetCloset() {
     ? isColor(currentBg)
       ? { backgroundImage: "none", backgroundColor: colorVal(currentBg) }
       : currentBg === CLOSET_INTERIOR_BACKDROP_VALUE
-        ? {}
+        // Rendered as a real component below — see KidsCloset.js's identical
+        // fix; the shared .kids-closet CSS class has a hardcoded fallback
+        // background-image that an empty style object wouldn't override.
+        ? { backgroundImage: "none", backgroundColor: "transparent" }
         : { backgroundImage: `url(${currentBg})` }
     : {};
 

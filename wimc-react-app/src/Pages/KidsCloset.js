@@ -215,7 +215,11 @@ export default function KidsCloset() {
     ? isColor(currentBg)
       ? { backgroundImage: "none", backgroundColor: colorVal(currentBg) }
       : currentBg === CLOSET_INTERIOR_BACKDROP_VALUE
-        ? {} // rendered as a real component below, not a flat CSS background
+        // Rendered as a real component below — .kids-closet has its own
+        // hardcoded fallback background-image (Ivory Wave) baked into the
+        // CSS class itself, so an empty style object here wouldn't override
+        // it. Explicitly clear it via inline style so the component shows.
+        ? { backgroundImage: "none", backgroundColor: "transparent" }
         : { backgroundImage: `url(${currentBg})` }
     : {};
 

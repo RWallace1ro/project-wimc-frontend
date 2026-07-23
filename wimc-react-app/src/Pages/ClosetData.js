@@ -72,9 +72,16 @@ const COLOR_PREFIX = "color:";
 function getPageBgStyle(bgValue) {
   if (!bgValue) return {};
   // Rendered as a real layered component (see <ClosetInteriorBackdrop>
-  // below), not a flat CSS background — leave the page's own background
-  // alone so the component shows through underneath the content.
-  if (bgValue === CLOSET_INTERIOR_BACKDROP_VALUE) return {};
+  // below), not a flat CSS background. .closet-data-page has its own
+  // hardcoded fallback background-image (the "Ivory Wave" photo) baked
+  // into the CSS class itself as the default-before-customization look —
+  // an empty style object here does NOT override that class-level rule,
+  // so the fixed backdrop would render correctly but stay hidden behind
+  // it. Explicitly clearing backgroundImage via inline style beats the
+  // class rule and lets the component underneath actually show.
+  if (bgValue === CLOSET_INTERIOR_BACKDROP_VALUE) {
+    return { backgroundImage: "none", backgroundColor: "transparent" };
+  }
   if (bgValue.startsWith(COLOR_PREFIX)) {
     return {
       backgroundColor: bgValue.replace(COLOR_PREFIX, ""),
