@@ -20,7 +20,7 @@ function About() {
           <h1>About WIMC</h1>
         </header>
         <p>
-          What's in My Closet (WIMC) is your personal closet organizer,
+          What's In My Closet (WIMC) is your personal closet organizer,
           designed to help you manage your clothing items efficiently. With
           WIMC, you can categorize items, track designers and sizes, plan
           outfits for different occasions, and even create a seasonal capsule

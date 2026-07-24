@@ -7,8 +7,8 @@ const SECTIONS = [
     heading: "Getting Started",
     items: [
       {
-        q: "What is What's in My Closet (WIMC)?",
-        a: "What's in My Closet is a personal closet management app that lets you photograph, organize, and plan outfits from your clothing collection. It includes AI-powered styling advice, a Try-On Studio for recording outfit videos with AI style feedback, a travel packing planner, a donation manager, a wish list, a shopping list, and more — all in one place.",
+        q: "What is What's In My Closet (WIMC)?",
+        a: "What's In My Closet is a personal closet management app that lets you photograph, organize, and plan outfits from your clothing collection. It includes AI-powered styling advice, a Try-On Studio for recording outfit videos with AI style feedback, a travel packing planner, a donation manager, a wish list, a shopping list, and more — all in one place.",
       },
       {
         q: "Do I need an account to use the app?",
@@ -224,7 +224,7 @@ export default function FAQ() {
         </button>
         <h1 className="faq-page__title">Frequently Asked Questions</h1>
         <p className="faq-page__subtitle">
-          Everything you need to know about What's in My Closet.
+          Everything you need to know about What's In My Closet.
           Can't find your answer?{" "}
           <a href="mailto:wimcsupport@gingerfaith.com" className="faq-page__link">
             Email us

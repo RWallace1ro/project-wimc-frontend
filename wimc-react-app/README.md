@@ -1,6 +1,6 @@
 # Final Project
 
-# Project Name: What's in my Closet (WIMC)
+# Project Name: What's In My Closet (WIMC)
 
 ### Third-Party API: Cloudinary.com
 

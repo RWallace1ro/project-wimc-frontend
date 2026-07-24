@@ -22,7 +22,7 @@ export default function TermsOfService() {
       <section className="legal-page__section">
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By creating an account or using What's in My Closet ("the App"), you
+          By creating an account or using What's In My Closet ("the App"), you
           agree to these Terms of Service. If you do not agree, please do not
           use the App.
         </p>
