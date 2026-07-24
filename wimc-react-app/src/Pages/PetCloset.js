@@ -105,7 +105,7 @@ function PetPageBgPicker({ onClose }) {
               onClick={() => pick(p.url)}
               title={p.label}
             >
-              <div className="kcp-bg-preset__thumb" style={{ backgroundImage: `url(${p.url})` }} />
+              <div className="kcp-bg-preset__thumb" style={{ backgroundImage: `url(${p.preview || p.url})` }} />
               <span className="kcp-bg-preset__name">{p.label}</span>
               {current === p.url && <span className="kcp-bg-preset__check">✓</span>}
             </button>
