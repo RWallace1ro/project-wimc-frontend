@@ -675,6 +675,10 @@
     transform: none;
     border-radius: 0;
     animation: none;
+    /* Own top:50%/transform centering ignores the shared notch fix in
+       index.css — only relevant once fullscreen (top:0) on phone. */
+    padding-top: env(safe-area-inset-top, 0px);
+    box-sizing: border-box;
   }
   .donate-grid {
     grid-template-columns: 1fr;

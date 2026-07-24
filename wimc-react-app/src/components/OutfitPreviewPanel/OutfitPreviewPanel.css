@@ -1018,6 +1018,11 @@
     transform: none;
     border-radius: 0;
     animation: none;
+    /* Own top:50%/transform centering ignores .opp-backdrop's flex, so the
+       shared notch fix in index.css never reached it — only relevant once
+       fullscreen (top:0) on phone. */
+    padding-top: env(safe-area-inset-top, 0px);
+    box-sizing: border-box;
   }
 
   /* Compact header — desktop 14 px padding is too tall on a phone */

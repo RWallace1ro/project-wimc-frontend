@@ -762,5 +762,11 @@
     transform: none;
     border-radius: 0;
     animation: none;
+    /* This panel's own centering (top:50%/transform) is independent of
+       .opp-backdrop's flex settings, so the shared notch-safety fix in
+       index.css never reached it — it needs its own padding here, only
+       relevant once it goes fullscreen (top:0) on phone. */
+    padding-top: env(safe-area-inset-top, 0px);
+    box-sizing: border-box;
   }
 }
