@@ -1,0 +1,36 @@
+.update-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  transform: translateX(-50%);
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #1e293b;
+  color: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  max-width: min(92vw, 420px);
+}
+
+.update-banner__text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.update-banner__btn {
+  flex-shrink: 0;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.update-banner__btn:hover {
+  background: #6d28d9;
+}

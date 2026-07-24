@@ -30,6 +30,7 @@ import Header from "../Header/Header";
 import Footer from "../Footer/Footer";
 import CookieConsent from "../CookieConsent/CookieConsent";
 import CookiePreferences from "../CookiePreferences/CookiePreferences";
+import UpdateBanner from "../UpdateBanner/UpdateBanner";
 import PendingDeletionBanner from "../PendingDeletionBanner/PendingDeletionBanner";
 import Main from "../Main/Main";
 import ModalWithForm from "../ModalWithForm/ModalWithForm";
@@ -604,6 +605,7 @@ function AppInner() {
           )}
           <CookieConsent />
           <CookiePreferences />
+          <UpdateBanner />
           <ModalWithForm
             isOpen={isSignUpModalOpen}
             onClose={() => setIsSignUpModalOpen(false)}

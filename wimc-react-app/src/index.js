@@ -55,12 +55,33 @@ root.render(
 // Uses network-first for HTML (so deploys always show fresh content) and
 // cache-first for hashed JS/CSS (content-hash names auto-invalidate on deploy).
 registerSW({
-  onUpdate: () => {
-    // A new version of the app has been downloaded. The SW activates immediately
-    // (skipWaiting is set), so the next navigation will load fresh content.
-    // No action needed — new pages are served automatically.
+  onUpdate: (registration) => {
+    // A new version has been downloaded and (per the SW's own skipWaiting())
+    // is already activating in the background. Desktop browsers sometimes
+    // show their own native "reload to update" prompt, but iOS Safari has no
+    // such thing for installed/standalone PWAs — without this, phone users
+    // had no way to get the update short of deleting and reinstalling the
+    // app. UpdateBanner (mounted in App.js) listens for this and shows an
+    // explicit "Refresh" control.
+    window.dispatchEvent(new CustomEvent("wimc-sw-update", { detail: registration }));
   },
   onSuccess: () => {
     // App shell cached successfully — app is ready for offline use.
   },
 });
+
+// registerSW() only checks for a new version on the initial page load. An
+// already-open installed PWA that's just resumed from the home screen (the
+// common case on iOS — the app is suspended, not reloaded) never re-checks
+// on its own. Re-check whenever the app becomes visible again, and on a
+// slow background interval as a fallback, so an update is noticed without
+// requiring the user to force-quit/relaunch.
+if ("serviceWorker" in navigator) {
+  const checkForUpdate = () => {
+    navigator.serviceWorker.getRegistration().then((reg) => reg && reg.update());
+  };
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkForUpdate();
+  });
+  setInterval(checkForUpdate, 60 * 60 * 1000); // hourly fallback
+}

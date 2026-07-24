@@ -102,7 +102,12 @@ self.addEventListener("fetch", (event) => {
   // ── App shell + same-origin routes → Network-First ──────────────────────
   if (url.origin === self.location.origin && url.pathname.startsWith(APP_BASE)) {
     event.respondWith(
-      fetch(request)
+      // cache: "no-store" bypasses the browser's own HTTP cache, not just this
+      // SW's Cache Storage — without it, "network-first" can still silently
+      // resolve to a stale HTTP-cached response on some browsers (notably iOS
+      // Safari in standalone/installed mode), which is why a fresh deploy
+      // sometimes never showed up until the app was deleted and reinstalled.
+      fetch(request, { cache: "no-store" })
         .then((response) => {
           if (response.ok) {
             const clone = response.clone();
