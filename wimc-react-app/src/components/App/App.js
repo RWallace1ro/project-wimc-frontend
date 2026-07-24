@@ -183,6 +183,23 @@ function AppInner() {
     };
   }, [navigate]);
 
+  // iOS Safari (especially installed/standalone PWAs) can serve a full
+  // bfcache snapshot of the page on a back/forward navigation — e.g. the
+  // system swipe-back gesture — instead of letting the SPA remount fresh.
+  // That snapshot includes every component's in-memory state exactly as it
+  // was, so a modal that happened to be open (WishList, DonateBin, etc. all
+  // manage their own local isOpen state) reappears the moment the user
+  // navigates back into the closet, even though nothing on screen indicated
+  // it was still "open". A reload on restore forces React to remount from
+  // scratch against the current route, which is the only reliable fix.
+  useEffect(() => {
+    const handlePageShow = (e) => {
+      if (e.persisted) window.location.reload();
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   const handleImageUpload = async (file, tag = "default") => {
     try {
       setApiError("");
