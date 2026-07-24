@@ -30,28 +30,20 @@
   }
 }
 
-/* Mobile: full-height side panel */
+/* Mobile — matches Try-On Studio's approach exactly (.tryon-modal): stay a
+   margined, centered card instead of going edge-to-edge full-screen. The
+   previous full-bleed "slide-in drawer" (width:100vw, height:100vh,
+   border-radius:0) always ended up taller than the safe viewport once the
+   overlay's safe-area padding was added, forcing the whole overlay to
+   scroll just to reach the "×" — confirmed still broken by user retest even
+   after capping the height with calc(). Try-On never has this problem
+   because it never grows to fill the screen in the first place; mirroring
+   that structure removes the scroll-to-close issue entirely rather than
+   trying to out-calculate it. */
 @media (max-width: 480px) {
-  .stylist-overlay {
-    align-items: stretch;
-    justify-content: flex-end;
-  }
   .stylist-panel {
-    width: 100vw;
-    /* Was 100vh — combined with the overlay's safe-area padding-top, that
-       made the panel taller than the visible safe area, so the whole
-       overlay (header included) had to be scrolled just to reach the "×".
-       Capping the panel to exactly the space available below the notch/
-       above the bottom padding means the header stays put and only
-       .stylist-messages (already flex:1 + overflow-y:auto) scrolls. */
-    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 32px);
-    height: calc(100vh - env(safe-area-inset-top, 0px) - 32px);
-    border-radius: 0;
-    animation: slideIn 0.22s ease both;
-  }
-  @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to   { transform: translateX(0);    opacity: 1; }
+    width: min(100vw - 24px, 480px);
+    max-height: min(100vh - 24px, 760px);
   }
 }
 
@@ -276,12 +268,6 @@
 .stylist-send:disabled {
   background: #c4b5fd;
   cursor: not-allowed;
-}
-
-@media (max-width: 480px) {
-  .stylist-panel {
-    width: 100vw;
-  }
 }
 
 /* ── Action row ─────────────────────────────────────────────────────────── */
