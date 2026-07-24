@@ -195,6 +195,43 @@ img {
   height: auto;
 }
 
+/* ── Notch/Dynamic-Island safety for modal overlays ──────────────────────────
+   body's own safe-area padding (see above) only helps normal document-flow
+   content — every one of these overlays is position:fixed, which is
+   positioned relative to the viewport and completely ignores an ancestor's
+   padding. Confirmed via real-device testing: modal close ("×") buttons and
+   headings were unreachable/unclickable behind the notch in standalone/
+   installed mode on iOS. Same class list as the scroll-lock rule below, since
+   that's every modal overlay in the app. */
+.modal-overlay,
+.opp-backdrop,
+.planner__backdrop,
+.tp__backdrop,
+.closet-section-modal__overlay,
+.vb-overlay,
+.vb-player-overlay,
+.sl-backdrop,
+.sl-cat-modal__overlay,
+.wish-overlay,
+.stylist-overlay,
+.aida-overlay,
+.aisf-overlay,
+.aipa-overlay,
+.cs-overlay,
+.bgp-overlay,
+.tryon-overlay,
+.weather-overlay,
+.tour-overlay,
+.usm-overlay,
+.kcm-overlay,
+.kpm-overlay,
+.receipts-overlay,
+.opp-favs__backdrop,
+.opp-saved__backdrop,
+.lb__overlay {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 /* ── Body scroll lock ──────────────────────────────────────────────────────
    Whenever ANY modal overlay/backdrop is present in the DOM, prevent the
    page from scrolling.  This stops the header and footer from drifting over

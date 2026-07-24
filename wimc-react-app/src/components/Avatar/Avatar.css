@@ -2,9 +2,18 @@
    (e.g. header__avatar, usm-avatar-preview) — this just adds the
    initials-circle look on top of that. */
 .avatar-initials {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* !important on display/alignment: .usm-avatar-preview (and possibly
+     other size-variant classes) sets display:block for its <img>-tag use
+     case, at EQUAL CSS specificity to this single-class selector — so
+     whichever file the bundler happens to concatenate last wins the tie,
+     which was silently overriding flex centering entirely (confirmed via
+     a real DevTools inspection: display:block was winning, and the
+     initials rendered at their default top-left text-flow position
+     instead of centered — not a sizing bug at all). Forcing these three
+     wins the tie unconditionally, regardless of bundle/file order. */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   background: linear-gradient(135deg, #7c3aed, #4f46e5);
   color: #fff;
   font-weight: 700;

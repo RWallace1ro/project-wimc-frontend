@@ -77,36 +77,34 @@ export function TierProvider({ uid, children }) {
     if (!uid) { setTier("free"); setPriceId(null); setReady(true); return; }
     setReady(false);
     const ref = doc(db, "users", uid);
+    // Two confirmed real-device bugs traced to Firestore's local persistence
+    // cache silently serving stale data forever, with nothing ever prompting
+    // a real server check to correct it: (1) a cached "document doesn't
+    // exist" result on one device, (2) cached "exists but wrong/old tier"
+    // on another (e.g. laptop still showing Free after the account was
+    // upgraded, while phone correctly showed Pro+AI — same account,
+    // genuinely different cached snapshots per device). Both are covered by
+    // the same fix: any time the FIRST snapshot for this mount comes from
+    // cache, kick off exactly one direct server read in the background and
+    // apply it if it disagrees with the cached value — cache is only ever
+    // used for the instant-first-paint, never trusted as the final answer.
+    let didServerCheck = false;
+    const applyDoc = (d) => {
+      const t = d?.tier;
+      setTier(t === "pro" || t === "pro_ai" ? t : "free");
+      setPriceId(d?.stripePriceId || null);
+      setReady(true);
+    };
     const unsub = onSnapshot(
       ref,
-      async (snap) => {
-        // A cached snapshot claiming the document doesn't exist at all is
-        // suspicious in a way an actual empty/missing doc from the SERVER
-        // isn't — a real user account always has a doc (created at signup).
-        // Confirmed via diagnostic logging: some devices get stuck serving a
-        // stale "not found" result from local persistence indefinitely,
-        // silently downgrading a paying user to Free forever since nothing
-        // ever prompts a real server check. Explicitly bypass the cache with
-        // one direct server read whenever this specific pattern shows up.
-        if (snap.metadata.fromCache && !snap.exists()) {
-          try {
-            const serverSnap = await getDocFromServer(ref);
-            const sd = serverSnap.exists() ? serverSnap.data() : {};
-            const st = sd.tier;
-            setTier(st === "pro" || st === "pro_ai" ? st : "free");
-            setPriceId(sd.stripePriceId || null);
-            setReady(true);
-            return;
-          } catch {
-            // Genuinely offline with nothing cached — fall through to the
-            // (also "free") value below; there's nothing better to show.
-          }
+      (snap) => {
+        applyDoc(snap.exists() ? snap.data() : {});
+        if (snap.metadata.fromCache && !didServerCheck) {
+          didServerCheck = true;
+          getDocFromServer(ref)
+            .then((serverSnap) => applyDoc(serverSnap.exists() ? serverSnap.data() : {}))
+            .catch(() => {}); // genuinely offline — cached value above stands
         }
-        const d = snap.exists() ? snap.data() : {};
-        const t = d.tier;
-        setTier(t === "pro" || t === "pro_ai" ? t : "free");
-        setPriceId(d.stripePriceId || null);
-        setReady(true);
       },
       // A genuine snapshot error (not "offline" — Firestore's persistent
       // local cache now serves cached data for that case, so onSnapshot
