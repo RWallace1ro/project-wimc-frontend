@@ -449,7 +449,11 @@
 
 /* ── Full-screen on phone / tablet (portrait + landscape) ── */
 @media (max-width: 768px) {
-  /* Pin the modal directly to the viewport edges — bypasses flex centering */
+  /* Pin the modal directly to the viewport edges — bypasses flex centering,
+     which also means it bypasses the overlay's safe-area padding-top (that
+     padding only affects flex children; this is pinned via inset:0 instead).
+     Add it directly here so the header/"×" (position:absolute, top:10px)
+     clears the notch. */
   .closet-section-modal {
     position: fixed;
     inset: 0;
@@ -459,12 +463,20 @@
     max-height: 100vh;
     border-radius: 0;
     padding: 12px 10px 10px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
     margin: 0;
+    box-sizing: border-box;
   }
   .closet-section-modal__grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 8px;
     padding: 8px;
+  }
+  /* position:absolute offsets are measured from the container's padding
+     edge, which the padding-top added above does NOT move — only in-flow
+     content shifts with padding. The "×" needs its own explicit offset. */
+  .closet-section-modal__close {
+    top: calc(env(safe-area-inset-top, 0px) + 10px);
   }
 }
 
