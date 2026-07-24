@@ -178,7 +178,12 @@ function Header({
               </div>
             )}
             {isLoggedIn && (
-              <Avatar url={currentAvatarUrl} name={currentUserName} className="header__avatar" />
+              <>
+                <span className="header__mobile-bar-username">
+                  {currentUserName ? `${firstName(currentUserName)}'s Closet` : "Your Closet"}
+                </span>
+                <Avatar url={currentAvatarUrl} name={currentUserName} className="header__avatar" />
+              </>
             )}
             <button
               className="header__hamburger"

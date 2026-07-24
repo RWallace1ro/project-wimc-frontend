@@ -196,13 +196,19 @@ img {
 }
 
 /* ── Notch/Dynamic-Island safety for modal overlays ──────────────────────────
-   body's own safe-area padding (see above) only helps normal document-flow
-   content — every one of these overlays is position:fixed, which is
-   positioned relative to the viewport and completely ignores an ancestor's
-   padding. Confirmed via real-device testing: modal close ("×") buttons and
-   headings were unreachable/unclickable behind the notch in standalone/
-   installed mode on iOS. Same class list as the scroll-lock rule below, since
-   that's every modal overlay in the app. */
+   First attempt only added padding-top to the overlay — but every one of
+   these overlays vertically centers its modal card with align-items:center
+   (set in each modal's own CSS file). Flexbox centering lets an overflowing
+   child extend past BOTH edges of its container equally, so on a short phone
+   screen a modal card taller than the safe viewport still rendered with its
+   heading/"×" poking out above the safe area, padding-top or not — confirmed
+   still broken via real-device retest after the padding-only fix shipped.
+   Real fix: force top-alignment (not centered) with scrolling, so a tall
+   modal scrolls into view under the safe area instead of overflowing above
+   it. !important needed because each modal's own CSS file already sets
+   align-items:center at equal specificity (single class selector) — same
+   cascade-tie issue as the avatar-centering bug. Same class list as the
+   scroll-lock rule below, since that's every modal overlay in the app. */
 .modal-overlay,
 .opp-backdrop,
 .planner__backdrop,
@@ -229,7 +235,11 @@ img {
 .opp-favs__backdrop,
 .opp-saved__backdrop,
 .lb__overlay {
-  padding-top: env(safe-area-inset-top, 0px);
+  align-items: flex-start !important;
+  overflow-y: auto !important;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+  padding-bottom: 16px !important;
+  box-sizing: border-box !important;
 }
 
 /* ── Body scroll lock ──────────────────────────────────────────────────────
@@ -305,40 +315,3 @@ html:has(
   overscroll-behavior: none;
 }
 
-/* ── Notch/Dynamic-Island safety for modals ──────────────────────────────────
-   body's own safe-area padding (above) only helps normal in-flow content —
-   these overlays are all position:fixed, which is positioned relative to the
-   viewport and completely ignores an ancestor's padding. Without this, a
-   modal's close button/heading near the top edge renders directly under the
-   notch/status bar in installed standalone mode and can't be tapped. Same
-   class list as the scroll-lock rule above, so any new modal added there
-   automatically gets this protection too. */
-.modal-overlay,
-.opp-backdrop,
-.planner__backdrop,
-.tp__backdrop,
-.closet-section-modal__overlay,
-.vb-overlay,
-.vb-player-overlay,
-.sl-backdrop,
-.sl-cat-modal__overlay,
-.wish-overlay,
-.stylist-overlay,
-.aida-overlay,
-.aisf-overlay,
-.aipa-overlay,
-.cs-overlay,
-.bgp-overlay,
-.tryon-overlay,
-.weather-overlay,
-.tour-overlay,
-.usm-overlay,
-.kcm-overlay,
-.kpm-overlay,
-.receipts-overlay,
-.opp-favs__backdrop,
-.opp-saved__backdrop,
-.lb__overlay {
-  padding-top: env(safe-area-inset-top, 0px);
-  box-sizing: border-box;
-}

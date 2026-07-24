@@ -352,6 +352,25 @@
   border-bottom: 1px solid #eee;
 }
 
+/* Name shown inline in the mobile top bar next to the avatar (mirrors
+   .header__user-name on desktop) — truncates instead of wrapping/pushing
+   the hamburger off-screen on very narrow phones. */
+.header__mobile-bar-username {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 30vw;
+}
+@media screen and (max-width: 480px) {
+  .header__mobile-bar-username {
+    max-width: 24vw;
+    font-size: 11px;
+  }
+}
+
 /* Desktop nav — shown on desktop, hidden on mobile */
 .header__nav--desktop {
   display: flex;
