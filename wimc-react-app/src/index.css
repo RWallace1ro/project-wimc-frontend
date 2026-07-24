@@ -234,6 +234,9 @@ img {
 .receipts-overlay,
 .opp-favs__backdrop,
 .opp-saved__backdrop,
+.msp-overlay,
+.upgrade-overlay,
+.cookie-prefs__overlay,
 .lb__overlay {
   align-items: flex-start !important;
   overflow-y: auto !important;
@@ -275,6 +278,9 @@ html:has(
   .receipts-overlay,
   .opp-favs__backdrop,
   .opp-saved__backdrop,
+  .msp-overlay,
+  .upgrade-overlay,
+  .cookie-prefs__overlay,
   .lb__overlay
 ) {
   overflow: hidden;
@@ -309,6 +315,9 @@ html:has(
   .receipts-overlay,
   .opp-favs__backdrop,
   .opp-saved__backdrop,
+  .msp-overlay,
+  .upgrade-overlay,
+  .cookie-prefs__overlay,
   .lb__overlay
 ) body {
   overflow: hidden;
