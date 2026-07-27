@@ -38,9 +38,10 @@ function About() {
         <ul className="about__features">
           <li>AI Stylist, Packing Assistant &amp; Donation Advisor</li>
           <li>Try-On Studio with AI style feedback</li>
+          <li>Outfit Preview &amp; Outfit of the Day</li>
+          <li>Travel Pack Planner</li>
           <li>Weather-based outfit suggestions</li>
           <li>Kids' Closet &amp; Pet Closet</li>
-          <li>Travel Pack Planner</li>
           <li>Wish List, Shopping List &amp; Donate Bin</li>
           <li>Receipts tracker &amp; backup</li>
         </ul>
