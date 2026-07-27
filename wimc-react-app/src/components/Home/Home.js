@@ -64,10 +64,24 @@ function Home() {
         </div>
 
         {/* door-container: is-visible shows the container (doors CLOSED);
-            is-open triggers the CSS keyframe animation from closed → open. */}
+            is-open triggers the CSS keyframe animation from closed → open.
+            ClosetDoorCarousel fetches + renders ~18 real closet photos from
+            Cloudinary on mount — if that work is still in flight right when
+            doorsOpen flips (very likely if the user clicks Explore quickly
+            after landing on Home, before the fetch has had time to finish),
+            it can occupy the main thread for long enough that the 4s door
+            animation never gets a chance to actually paint at all: the
+            elapsed wall-clock animation time runs out silently while the
+            thread is busy, so it visually "snaps" straight from closed doors
+            to the closet-data page with no perceptible sliding. Deferring
+            the carousel's mount until the animation has already started
+            gives the slide a clear first stretch of main-thread time; the
+            carousel then loads in behind it while the doors are still
+            opening, which is a big enough window that the currently-visible
+            portion of the reveal is never empty. */}
         <div className={`door-container${doorsVisible ? " is-visible" : ""}${doorsOpen ? " is-open" : ""}`}>
           <ClosetInteriorBackdrop />
-          <ClosetDoorCarousel />
+          {doorsOpen && <ClosetDoorCarousel />}
           <div className="door-left"></div>
           <div className="door-right"></div>
         </div>
