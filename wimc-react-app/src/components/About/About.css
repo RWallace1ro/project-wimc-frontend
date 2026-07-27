@@ -8,9 +8,11 @@
   background-image: url("https://images.unsplash.com/photo-1714636608872-048fc9231892?w=1920&q=80");
   background-size: cover;
   background-position: center;
-  height: 100vh;
+  min-height: 100vh;
+  height: auto;
   color: #fff;
   padding: 20px;
+  overflow-y: auto;
 }
 
 .about__back-btn {
@@ -53,4 +55,37 @@
 .about__overlay p {
   line-height: 1.6;
   font-size: 18px;
+  text-align: left;
+}
+.about__overlay p + p {
+  margin-top: 14px;
+}
+
+.about__features {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 20px;
+  text-align: left;
+}
+.about__features li {
+  font-size: 15px;
+  line-height: 1.5;
+  padding-left: 22px;
+  position: relative;
+}
+.about__features li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #7c3aed;
+  font-weight: 700;
+}
+
+@media (max-width: 560px) {
+  .about__features {
+    grid-template-columns: 1fr;
+  }
 }

@@ -24,11 +24,26 @@ function About() {
           designed to help you manage your clothing items efficiently. With
           WIMC, you can categorize items, track designers and sizes, plan
           outfits for different occasions, and even create a seasonal capsule
-          closet for the different seasons of the year. The app provides
-          features for searching through your closet, organizing items by
-          category, adding items to a wish list, and an option to donate items
-          from your closet for streamlined closet management.
+          closet for the different seasons of the year — with dedicated
+          spaces for kids' and pet closets too.
         </p>
+        <p>
+          WIMC also brings AI into your everyday closet routine: an AI
+          Stylist for personalized outfit advice, an AI Packing Assistant
+          that builds a travel packing list from your own wardrobe, an AI
+          Donation Advisor that helps decide what's worth donating, and a
+          Try-On Studio that records outfit videos and gives AI-powered style
+          feedback.
+        </p>
+        <ul className="about__features">
+          <li>AI Stylist, Packing Assistant &amp; Donation Advisor</li>
+          <li>Try-On Studio with AI style feedback</li>
+          <li>Weather-based outfit suggestions</li>
+          <li>Kids' Closet &amp; Pet Closet</li>
+          <li>Travel Pack Planner</li>
+          <li>Wish List, Shopping List &amp; Donate Bin</li>
+          <li>Receipts tracker &amp; backup</li>
+        </ul>
       </section>
     </main>
   );
