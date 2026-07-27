@@ -28,6 +28,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+.door-carousel__item img.is-loaded {
+  opacity: 1;
 }
 
 @keyframes door-carousel-scroll {

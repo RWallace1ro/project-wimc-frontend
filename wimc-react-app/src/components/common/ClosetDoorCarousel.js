@@ -58,7 +58,20 @@ export default function ClosetDoorCarousel({ tagPrefix = "" }) {
       <div className="door-carousel__track">
         {loop.map((url, i) => (
           <div className="door-carousel__item" key={i}>
-            <img src={toThumb(url)} alt="" />
+            <img
+              src={toThumb(url)}
+              alt=""
+              // These fetch over the network on mount and, on a cold/first
+              // load, are often still downloading while the 4s door-open
+              // animation is already playing — without a fade-in they pop
+              // in abruptly mid-animation, which reads as the whole door
+              // animation "snapping" even though the doors themselves are
+              // animating fine. A cached repeat visit doesn't show this
+              // (images are already loaded), which is why it only happened
+              // on first open. Fading in on load fixes it regardless of
+              // how fast/slow the network is.
+              onLoad={(e) => e.currentTarget.classList.add("is-loaded")}
+            />
           </div>
         ))}
       </div>
