@@ -1,9 +1,9 @@
 {
   "files": {
     "main.css": "/project-wimc-frontend/static/css/main.3f67c3c1.css",
-    "main.js": "/project-wimc-frontend/static/js/main.958b1b08.js",
-    "static/css/136.9852c229.chunk.css": "/project-wimc-frontend/static/css/136.9852c229.chunk.css",
-    "static/js/136.3b3da2cd.chunk.js": "/project-wimc-frontend/static/js/136.3b3da2cd.chunk.js",
+    "main.js": "/project-wimc-frontend/static/js/main.952e671b.js",
+    "static/css/136.02189f1c.chunk.css": "/project-wimc-frontend/static/css/136.02189f1c.chunk.css",
+    "static/js/136.109f014b.chunk.js": "/project-wimc-frontend/static/js/136.109f014b.chunk.js",
     "static/css/785.3b8dc819.chunk.css": "/project-wimc-frontend/static/css/785.3b8dc819.chunk.css",
     "static/js/785.a8a2aaa4.chunk.js": "/project-wimc-frontend/static/js/785.a8a2aaa4.chunk.js",
     "static/css/208.22057ae2.chunk.css": "/project-wimc-frontend/static/css/208.22057ae2.chunk.css",
@@ -41,8 +41,8 @@
     "static/js/594.d74940ea.chunk.js": "/project-wimc-frontend/static/js/594.d74940ea.chunk.js",
     "static/css/489.c4b44504.chunk.css": "/project-wimc-frontend/static/css/489.c4b44504.chunk.css",
     "static/js/489.d15c3c8d.chunk.js": "/project-wimc-frontend/static/js/489.d15c3c8d.chunk.js",
-    "static/css/919.b017901d.chunk.css": "/project-wimc-frontend/static/css/919.b017901d.chunk.css",
-    "static/js/919.065c97ee.chunk.js": "/project-wimc-frontend/static/js/919.065c97ee.chunk.js",
+    "static/css/919.9cde4284.chunk.css": "/project-wimc-frontend/static/css/919.9cde4284.chunk.css",
+    "static/js/919.bc9b8cd1.chunk.js": "/project-wimc-frontend/static/js/919.bc9b8cd1.chunk.js",
     "static/js/117.bc96101e.chunk.js": "/project-wimc-frontend/static/js/117.bc96101e.chunk.js",
     "static/css/540.f65e281e.chunk.css": "/project-wimc-frontend/static/css/540.f65e281e.chunk.css",
     "static/media/bags-accessories.jpg": "/project-wimc-frontend/static/media/bags-accessories.260d0f1db7382f2ee855.jpg",
@@ -56,9 +56,9 @@
     "index.html": "/project-wimc-frontend/index.html",
     "static/media/home-icon.svg": "/project-wimc-frontend/static/media/home-icon.590a91c51c7e28b5b3cc4d453f1e11ef.svg",
     "main.3f67c3c1.css.map": "/project-wimc-frontend/static/css/main.3f67c3c1.css.map",
-    "main.958b1b08.js.map": "/project-wimc-frontend/static/js/main.958b1b08.js.map",
-    "136.9852c229.chunk.css.map": "/project-wimc-frontend/static/css/136.9852c229.chunk.css.map",
-    "136.3b3da2cd.chunk.js.map": "/project-wimc-frontend/static/js/136.3b3da2cd.chunk.js.map",
+    "main.952e671b.js.map": "/project-wimc-frontend/static/js/main.952e671b.js.map",
+    "136.02189f1c.chunk.css.map": "/project-wimc-frontend/static/css/136.02189f1c.chunk.css.map",
+    "136.109f014b.chunk.js.map": "/project-wimc-frontend/static/js/136.109f014b.chunk.js.map",
     "785.3b8dc819.chunk.css.map": "/project-wimc-frontend/static/css/785.3b8dc819.chunk.css.map",
     "785.a8a2aaa4.chunk.js.map": "/project-wimc-frontend/static/js/785.a8a2aaa4.chunk.js.map",
     "208.22057ae2.chunk.css.map": "/project-wimc-frontend/static/css/208.22057ae2.chunk.css.map",
@@ -96,13 +96,13 @@
     "594.d74940ea.chunk.js.map": "/project-wimc-frontend/static/js/594.d74940ea.chunk.js.map",
     "489.c4b44504.chunk.css.map": "/project-wimc-frontend/static/css/489.c4b44504.chunk.css.map",
     "489.d15c3c8d.chunk.js.map": "/project-wimc-frontend/static/js/489.d15c3c8d.chunk.js.map",
-    "919.b017901d.chunk.css.map": "/project-wimc-frontend/static/css/919.b017901d.chunk.css.map",
-    "919.065c97ee.chunk.js.map": "/project-wimc-frontend/static/js/919.065c97ee.chunk.js.map",
+    "919.9cde4284.chunk.css.map": "/project-wimc-frontend/static/css/919.9cde4284.chunk.css.map",
+    "919.bc9b8cd1.chunk.js.map": "/project-wimc-frontend/static/js/919.bc9b8cd1.chunk.js.map",
     "117.bc96101e.chunk.js.map": "/project-wimc-frontend/static/js/117.bc96101e.chunk.js.map",
     "540.f65e281e.chunk.css.map": "/project-wimc-frontend/static/css/540.f65e281e.chunk.css.map"
   },
   "entrypoints": [
     "static/css/main.3f67c3c1.css",
-    "static/js/main.958b1b08.js"
+    "static/js/main.952e671b.js"
   ]
 }
