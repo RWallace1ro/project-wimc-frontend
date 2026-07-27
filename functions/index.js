@@ -374,13 +374,12 @@ exports.cloudinarySign = functions
 // Public app base for post-checkout redirects (GitHub Pages project path).
 const APP_URL = "https://rwallace1ro.github.io/project-wimc-frontend";
 
-// Maps each Stripe Price ID → the tier it grants. These are the TEST-mode price
-// IDs; when going live, replace with the live price IDs (same tier values).
+// Maps each Stripe Price ID → the tier it grants. LIVE-mode price IDs.
 const TIER_BY_PRICE = {
-  price_1Tj1CCFHY9B8ibv95O493fUs: "pro",     // Pro monthly  $4.99
-  price_1Tj1ELFHY9B8ibv92n4w5g3a: "pro",     // Pro annual   $39.99
-  price_1Tj1mMFHY9B8ibv9pYRXcjvl: "pro_ai",  // Pro+AI monthly $7.99
-  price_1Tj1XlFHY9B8ibv9Ibg8vtEx: "pro_ai",  // Pro+AI annual  $79.99
+  price_1Tb61FFHY9B8ibv9qQuXRN3v: "pro",     // Pro monthly  $4.99
+  price_1Tb64ZFHY9B8ibv9pOIT5Uo2: "pro",     // Pro annual   $39.99
+  price_1Tb646FHY9B8ibv9eU0jyW6N: "pro_ai",  // Pro+AI monthly $7.99
+  price_1Tb64sFHY9B8ibv9VIKt86tq: "pro_ai",  // Pro+AI annual  $79.99
 };
 
 // Lazy Stripe client (secret is only bound at runtime via runWith).
