@@ -14,25 +14,21 @@ import DonateBin from "../DonateBin/DonateBin";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
 import ClosetInteriorBackdrop from "../common/ClosetInteriorBackdrop";
 import { resolveBackgroundValue } from "../../utils/backgroundPresets";
-import dressesSkirtsImg   from "../../assets/images/dresses-skirts.jpg";
-import shoesSneakersImg   from "../../assets/images/shoes-sneakers.jpg";
-import pantsJeansImg      from "../../assets/images/pants-jeans.jpg";
-import topsImg            from "../../assets/images/tops.jpg";
-import bagsAccessoriesImg from "../../assets/images/bags-accessories.jpg";
-import jacketsCoatsImg    from "../../assets/images/jackets-coats.jpg";
 // Reuse the Kids closet modal styling for an identical look & feel.
 import "../KidsClosetModal/KidsClosetModal.css";
 
 // Pet-twist sections. The underlying Cloudinary `tag` stays standard so every
 // shared feature panel (Outfit Preview/Planner, Travel Pack, Donate, Search)
-// works unchanged — only the card label & icon get the pet spin.
+// works unchanged — only the card label & icon get the pet spin. No
+// placeholder photos — these stay empty with an "Add Clothing Items" prompt
+// (see ClosetSectionCard) until the pet's own first item is uploaded.
 const SECTIONS = [
-  { tag: "jackets-coats",    label: "🧥 Sweaters/Coats",    placeholder: jacketsCoatsImg },
-  { tag: "tops",             label: "👕 Shirts/Tops",       placeholder: topsImg },
-  { tag: "dresses-skirts",   label: "🎽 Costumes/Dresses",  placeholder: dressesSkirtsImg },
-  { tag: "bags-accessories", label: "🎀 Bandanas/Bows",     placeholder: bagsAccessoriesImg },
-  { tag: "shoes-sneakers",   label: "🥾 Booties/Paw Wear",  placeholder: shoesSneakersImg },
-  { tag: "pants-jeans",      label: "🦺 Collars/Harnesses", placeholder: pantsJeansImg },
+  { tag: "jackets-coats",    label: "🧥 Sweaters/Coats" },
+  { tag: "tops",             label: "👕 Shirts/Tops" },
+  { tag: "dresses-skirts",   label: "🎽 Costumes/Dresses" },
+  { tag: "bags-accessories", label: "🎀 Bandanas/Bows" },
+  { tag: "shoes-sneakers",   label: "🥾 Booties/Paw Wear" },
+  { tag: "pants-jeans",      label: "🦺 Collars/Harnesses" },
 ];
 
 const SPECIES_ICONS = { dog: "🐕", cat: "🐈", other: "🐾" };

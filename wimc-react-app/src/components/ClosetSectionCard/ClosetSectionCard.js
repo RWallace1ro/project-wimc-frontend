@@ -129,6 +129,18 @@ function ClosetSectionCard({
 
   const renderMedia = () => {
     if (!display?.url) {
+      // Main closet cards get a real example photo (placeholderUrl). Kids'
+      // and Pet Closet cards intentionally pass no placeholderUrl — those
+      // are meant to stay empty until the user adds their own item, so show
+      // an inviting empty-state message instead of a stock photo.
+      if (!placeholderUrl) {
+        return (
+          <div className="closet-section-card__empty">
+            <span className="closet-section-card__empty-icon">👕</span>
+            <span className="closet-section-card__empty-text">Add Clothing Items</span>
+          </div>
+        );
+      }
       return (
         <img
           src={placeholderUrl}

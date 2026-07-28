@@ -15,26 +15,22 @@ import DonateBin from "../DonateBin/DonateBin";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
 import ClosetInteriorBackdrop from "../common/ClosetInteriorBackdrop";
 import { resolveBackgroundValue } from "../../utils/backgroundPresets";
-import dressesSkirtsImg   from "../../assets/images/dresses-skirts.jpg";
-import dressShirtsSuitsImg from "../../assets/images/dress-shirts-suits.jpg";
-import shoesSneakersImg   from "../../assets/images/shoes-sneakers.jpg";
-import pantsJeansImg      from "../../assets/images/pants-jeans.jpg";
-import topsImg            from "../../assets/images/tops.jpg";
-import bagsAccessoriesImg from "../../assets/images/bags-accessories.jpg";
-import jacketsCoatsImg    from "../../assets/images/jackets-coats.jpg";
-import blazersImg         from "../../assets/images/blazers.jpg";
 import "./KidsClosetModal.css";
 
 // Unisex kids closet: one fixed 8-category list, same for every child.
+// No placeholder photos — unlike the main closet (which shows an example
+// image so users know what to expect), these stay empty with an "Add
+// Clothing Items" prompt (see ClosetSectionCard) until the child's own
+// first item is uploaded.
 const SECTIONS = [
-  { tag: "dresses-skirts",      label: "Dresses/Skirts",       placeholder: dressesSkirtsImg },
-  { tag: "dress-shirts-suits",  label: "Button-Ups/Dress Clothes", placeholder: dressShirtsSuitsImg },
-  { tag: "shoes-sneakers",      label: "Shoes/Sneakers",       placeholder: shoesSneakersImg },
-  { tag: "pants-jeans",         label: "Pants/Jeans",          placeholder: pantsJeansImg },
-  { tag: "tops",                label: "Tops",                 placeholder: topsImg },
-  { tag: "bags-accessories",    label: "Bags/Accessories",     placeholder: bagsAccessoriesImg },
-  { tag: "jackets-coats",       label: "Jackets/Coats",        placeholder: jacketsCoatsImg },
-  { tag: "blazers",             label: "Blazers",              placeholder: blazersImg },
+  { tag: "dresses-skirts",      label: "Dresses/Skirts" },
+  { tag: "dress-shirts-suits",  label: "Button-Ups/Dress Clothes" },
+  { tag: "shoes-sneakers",      label: "Shoes/Sneakers" },
+  { tag: "pants-jeans",         label: "Pants/Jeans" },
+  { tag: "tops",                label: "Tops" },
+  { tag: "bags-accessories",    label: "Bags/Accessories" },
+  { tag: "jackets-coats",       label: "Jackets/Coats" },
+  { tag: "blazers",             label: "Blazers" },
 ];
 
 const GROUP_ICONS = { baby: "👶", toddler: "🧒", kids: "🧑", teen: "🧑‍🎓" };
