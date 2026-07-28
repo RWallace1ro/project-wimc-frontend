@@ -538,6 +538,25 @@ exports.stripeWebhook = functions
           await applySubscription(event.data.object);
           break;
         }
+        // Belt-and-suspenders: checkout.session.completed can fire and read
+        // the subscription's status a moment BEFORE Stripe has finished
+        // marking it active internally, writing a stale "incomplete" that
+        // nothing then corrects if the expected customer.subscription.updated
+        // follow-up event is delayed or never delivered (confirmed happening
+        // in practice — a real paid subscription got stuck showing "free"
+        // with no further webhook calls after the initial ones). invoice.paid
+        // fires reliably once the first invoice is actually paid, so treat it
+        // as another trigger to re-fetch and re-apply the current (accurate)
+        // subscription state. Must also be added to the endpoint's selected
+        // events in the Stripe Dashboard, not just handled here.
+        case "invoice.paid": {
+          const invoice = event.data.object;
+          if (invoice.subscription) {
+            const sub = await stripe.subscriptions.retrieve(invoice.subscription);
+            await applySubscription(sub);
+          }
+          break;
+        }
         default:
           // ignore other event types
           break;
