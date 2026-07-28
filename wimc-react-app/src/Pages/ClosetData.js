@@ -23,11 +23,13 @@ import ClosetInteriorBackdrop from "../components/common/ClosetInteriorBackdrop"
 import "./ClosetData.css";
 
 import dressesSkirtsImg from "../assets/images/dresses-skirts.jpg";
+import dressShirtsSuitsImg from "../assets/images/dress-shirts-suits.jpg";
 import shoesSneakersImg from "../assets/images/shoes-sneakers.jpg";
 import pantsJeansImg from "../assets/images/pants-jeans.jpg";
 import topsImg from "../assets/images/tops.jpg";
 import bagsAccessoriesImg from "../assets/images/bags-accessories.jpg";
 import jacketsCoatsImg from "../assets/images/jackets-coats.jpg";
+import blazersImg from "../assets/images/blazers.jpg";
 
 function getSectionTagToDisplayName() {
   return {
@@ -50,13 +52,13 @@ function getSectionTagToDisplayName() {
 function getClosetSections() {
   return [
     { name: "dresses-skirts",    tag: "dresses-skirts",       placeholderUrl: dressesSkirtsImg },
-    { name: "dress-shirts-suits", tag: "dress-shirts-suits",  placeholderUrl: dressesSkirtsImg },
+    { name: "dress-shirts-suits", tag: "dress-shirts-suits",  placeholderUrl: dressShirtsSuitsImg },
     { name: "shoes-sneakers",    tag: "shoes-sneakers",       placeholderUrl: shoesSneakersImg },
     { name: "pants-jeans",       tag: "pants-jeans",          placeholderUrl: pantsJeansImg },
     { name: "tops",              tag: "tops",                 placeholderUrl: topsImg },
     { name: "bags-accessories",  tag: "bags-accessories",     placeholderUrl: bagsAccessoriesImg },
     { name: "jackets-coats",     tag: "jackets-coats",        placeholderUrl: jacketsCoatsImg },
-    { name: "blazers",           tag: "blazers",              placeholderUrl: jacketsCoatsImg },
+    { name: "blazers",           tag: "blazers",              placeholderUrl: blazersImg },
   ];
 }
 

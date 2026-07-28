@@ -16,23 +16,25 @@ import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
 import ClosetInteriorBackdrop from "../common/ClosetInteriorBackdrop";
 import { resolveBackgroundValue } from "../../utils/backgroundPresets";
 import dressesSkirtsImg   from "../../assets/images/dresses-skirts.jpg";
+import dressShirtsSuitsImg from "../../assets/images/dress-shirts-suits.jpg";
 import shoesSneakersImg   from "../../assets/images/shoes-sneakers.jpg";
 import pantsJeansImg      from "../../assets/images/pants-jeans.jpg";
 import topsImg            from "../../assets/images/tops.jpg";
 import bagsAccessoriesImg from "../../assets/images/bags-accessories.jpg";
 import jacketsCoatsImg    from "../../assets/images/jackets-coats.jpg";
+import blazersImg         from "../../assets/images/blazers.jpg";
 import "./KidsClosetModal.css";
 
 // Unisex kids closet: one fixed 8-category list, same for every child.
 const SECTIONS = [
   { tag: "dresses-skirts",      label: "Dresses/Skirts",       placeholder: dressesSkirtsImg },
-  { tag: "dress-shirts-suits",  label: "Button-Ups/Dress Clothes", placeholder: dressesSkirtsImg },
+  { tag: "dress-shirts-suits",  label: "Button-Ups/Dress Clothes", placeholder: dressShirtsSuitsImg },
   { tag: "shoes-sneakers",      label: "Shoes/Sneakers",       placeholder: shoesSneakersImg },
   { tag: "pants-jeans",         label: "Pants/Jeans",          placeholder: pantsJeansImg },
   { tag: "tops",                label: "Tops",                 placeholder: topsImg },
   { tag: "bags-accessories",    label: "Bags/Accessories",     placeholder: bagsAccessoriesImg },
   { tag: "jackets-coats",       label: "Jackets/Coats",        placeholder: jacketsCoatsImg },
-  { tag: "blazers",             label: "Blazers",              placeholder: jacketsCoatsImg },
+  { tag: "blazers",             label: "Blazers",              placeholder: blazersImg },
 ];
 
 const GROUP_ICONS = { baby: "👶", toddler: "🧒", kids: "🧑", teen: "🧑‍🎓" };
