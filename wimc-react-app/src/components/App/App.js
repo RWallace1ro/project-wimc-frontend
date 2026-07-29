@@ -195,12 +195,6 @@ function AppInner() {
   // scratch against the current route, which is the only reliable fix.
   useEffect(() => {
     const handlePageShow = (e) => {
-      // TEMP DIAGNOSTIC — remove once the door-animation snap bug is
-      // root-caused. This reload is the prime suspect for that bug
-      // (reported as happening specifically after the app sat closed for a
-      // while), so log every pageshow regardless of persisted so we can see
-      // whether it's actually firing mid-animation.
-      console.log(`[WIMC DOOR DEBUG] pageshow fired, persisted=${e.persisted}, path=${window.location.pathname}, t=${performance.now().toFixed(0)}ms`);
       if (e.persisted) window.location.reload();
     };
     window.addEventListener("pageshow", handlePageShow);
@@ -532,7 +526,18 @@ function AppInner() {
             <React.Suspense fallback={<p className="loading-message">Loading…</p>}>
             <Routes>
               {/* Public routes */}
-              <Route path="/" element={<Main isLoggedIn={isLoggedIn} />} />
+              {/* "/" is the PWA's manifest start_url, so it's what renders on
+                  every cold launch from the home-screen icon/taskbar — not
+                  just first-ever visits. Main.js's "Explore Your Closet" is a
+                  plain instant navigate() straight to /closet-data with no
+                  animation at all, which is exactly right for a logged-out
+                  visitor but meant an already-logged-in user relaunching the
+                  app skipped Home.js (and its door-open animation) entirely
+                  — confirmed via a real repro: zero related console output,
+                  since Home.js's code never even ran. Redirect a logged-in
+                  user straight to /home instead, so a cold relaunch gets the
+                  same experience as every other path into the app. */}
+              <Route path="/" element={isLoggedIn ? <Navigate to="/home" replace /> : <Main isLoggedIn={isLoggedIn} />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
