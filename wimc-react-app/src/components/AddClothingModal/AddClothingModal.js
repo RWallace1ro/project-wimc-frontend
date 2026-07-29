@@ -249,10 +249,19 @@ function AddClothingModal({
           <input
             id="name"
             type="text"
-            name="name"
+            /* Not "name" — browsers key their own "previously typed values"
+               suggestion list off the name/id attribute, and several
+               (confirmed on real device testing) still show that history
+               even with autocomplete="off" set. A field name/id that was
+               never used before (and never will be reused elsewhere) means
+               there's nothing in the browser's memory to match against,
+               regardless of autocomplete-off support. onChange sets the
+               formData.name key explicitly since it's no longer derived
+               from e.target.name. */
+            name="wimc-item-name-nofill"
             placeholder="Item Name"
             value={formData.name}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
             className="modal__input"
             autoComplete="off"
             required
@@ -262,10 +271,10 @@ function AddClothingModal({
           <input
             id="designer"
             type="text"
-            name="designer"
+            name="wimc-item-designer-nofill"
             placeholder="Designer"
             value={formData.designer}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, designer: e.target.value }))}
             className="modal__input"
             autoComplete="off"
             required
@@ -275,10 +284,10 @@ function AddClothingModal({
           <input
             id="size"
             type="text"
-            name="size"
+            name="wimc-item-size-nofill"
             placeholder="Size"
             value={formData.size}
-            onChange={handleChange}
+            onChange={(e) => setFormData((prev) => ({ ...prev, size: e.target.value }))}
             className="modal__input"
             autoComplete="off"
             required
