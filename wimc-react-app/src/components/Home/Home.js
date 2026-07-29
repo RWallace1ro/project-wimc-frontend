@@ -42,13 +42,22 @@ function Home() {
   }, []);
 
   const handleExploreClick = () => {
+    // TEMP DIAGNOSTIC — remove once the snap bug is root-caused. Logs every
+    // step of this sequence with a timestamp so we can see exactly what
+    // fires and when during a real repro, instead of guessing again.
+    const t0 = performance.now();
+    console.log(`[WIMC DOOR DEBUG] handleExploreClick called @ ${t0.toFixed(0)}ms, docHidden=${document.hidden}, visibilityState=${document.visibilityState}`);
     clearTimeout(openTimerRef.current);
     clearTimeout(navTimerRef.current);
     setDoorsVisible(true);
     // Small delay so the browser paints the closed state before animating
-    openTimerRef.current = setTimeout(() => setDoorsOpen(true), 100);
+    openTimerRef.current = setTimeout(() => {
+      console.log(`[WIMC DOOR DEBUG] doorsOpen=true @ +${(performance.now() - t0).toFixed(0)}ms`);
+      setDoorsOpen(true);
+    }, 100);
     // Navigate slightly after the 4 s animation completes
     navTimerRef.current = setTimeout(() => {
+      console.log(`[WIMC DOOR DEBUG] navigate(/closet-data) firing @ +${(performance.now() - t0).toFixed(0)}ms`);
       navigate("/closet-data");
     }, 4500);
   };

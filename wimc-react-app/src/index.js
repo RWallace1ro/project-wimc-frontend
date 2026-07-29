@@ -63,6 +63,7 @@ registerSW({
     // had no way to get the update short of deleting and reinstalling the
     // app. UpdateBanner (mounted in App.js) listens for this and shows an
     // explicit "Refresh" control.
+    console.log(`[WIMC DOOR DEBUG] SW onUpdate fired, t=${performance.now().toFixed(0)}ms`);
     window.dispatchEvent(new CustomEvent("wimc-sw-update", { detail: registration }));
   },
   onSuccess: () => {
@@ -78,9 +79,13 @@ registerSW({
 // requiring the user to force-quit/relaunch.
 if ("serviceWorker" in navigator) {
   const checkForUpdate = () => {
+    // TEMP DIAGNOSTIC — remove once the door-animation snap bug is
+    // root-caused.
+    console.log(`[WIMC DOOR DEBUG] checkForUpdate running, t=${performance.now().toFixed(0)}ms`);
     navigator.serviceWorker.getRegistration().then((reg) => reg && reg.update());
   };
   document.addEventListener("visibilitychange", () => {
+    console.log(`[WIMC DOOR DEBUG] visibilitychange -> ${document.visibilityState}, t=${performance.now().toFixed(0)}ms`);
     if (document.visibilityState === "visible") checkForUpdate();
   });
   // An hourly interval meant this never fired during a normal active testing

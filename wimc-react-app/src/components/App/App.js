@@ -195,6 +195,12 @@ function AppInner() {
   // scratch against the current route, which is the only reliable fix.
   useEffect(() => {
     const handlePageShow = (e) => {
+      // TEMP DIAGNOSTIC — remove once the door-animation snap bug is
+      // root-caused. This reload is the prime suspect for that bug
+      // (reported as happening specifically after the app sat closed for a
+      // while), so log every pageshow regardless of persisted so we can see
+      // whether it's actually firing mid-animation.
+      console.log(`[WIMC DOOR DEBUG] pageshow fired, persisted=${e.persisted}, path=${window.location.pathname}, t=${performance.now().toFixed(0)}ms`);
       if (e.persisted) window.location.reload();
     };
     window.addEventListener("pageshow", handlePageShow);
