@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from "react";
+import React, { useState, useRef, useEffect, Suspense, lazy } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWIMCTour } from "../WIMCTourVideo/useTour";
 import ClosetDoorCarousel from "../common/ClosetDoorCarousel";
@@ -18,12 +18,37 @@ function Home() {
 
   const { isOpen: isTourOpen, openTour, closeTour } = useWIMCTour();
 
+  // These two timers were never cancelled — if the app got backgrounded/
+  // suspended (tab minimized, PWA sent to background, device locked) after
+  // a click but before the 4.5s finished, the pending navigate() timer kept
+  // ticking in the suspended page. On resume, sometimes well after the
+  // animation "should" have finished, it fires almost immediately — jumping
+  // straight to /closet-data with no visible animation at all, completely
+  // disconnected from whatever's currently on screen. Confirmed via screen
+  // recording: reproduces specifically after the app sat closed for a
+  // while (session persisted, no fresh login), never when logging back in
+  // or navigating away and back — both of those remount this component
+  // fresh, which happened to clear the stale timers as a side effect.
+  // Tracking the IDs and clearing them on unmount (and before arming new
+  // ones) fixes it at the source instead of relying on that side effect.
+  const openTimerRef = useRef(null);
+  const navTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(openTimerRef.current);
+      clearTimeout(navTimerRef.current);
+    };
+  }, []);
+
   const handleExploreClick = () => {
+    clearTimeout(openTimerRef.current);
+    clearTimeout(navTimerRef.current);
     setDoorsVisible(true);
     // Small delay so the browser paints the closed state before animating
-    setTimeout(() => setDoorsOpen(true), 100);
+    openTimerRef.current = setTimeout(() => setDoorsOpen(true), 100);
     // Navigate slightly after the 4 s animation completes
-    setTimeout(() => {
+    navTimerRef.current = setTimeout(() => {
       navigate("/closet-data");
     }, 4500);
   };
