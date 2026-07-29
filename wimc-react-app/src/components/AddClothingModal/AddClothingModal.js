@@ -254,6 +254,7 @@ function AddClothingModal({
             value={formData.name}
             onChange={handleChange}
             className="modal__input"
+            autoComplete="off"
             required
           />
 
@@ -266,6 +267,7 @@ function AddClothingModal({
             value={formData.designer}
             onChange={handleChange}
             className="modal__input"
+            autoComplete="off"
             required
           />
 
@@ -278,6 +280,7 @@ function AddClothingModal({
             value={formData.size}
             onChange={handleChange}
             className="modal__input"
+            autoComplete="off"
             required
           />
 
@@ -325,6 +328,7 @@ function AddClothingModal({
                 placeholder="Paste an image link (e.g. https://…/photo.jpg)"
                 value={webUrl}
                 onChange={(e) => { setWebUrl(e.target.value); setError(""); }}
+                autoComplete="off"
               />
               <div className="modal__web-note">
                 <p>
