@@ -83,5 +83,12 @@ if ("serviceWorker" in navigator) {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") checkForUpdate();
   });
-  setInterval(checkForUpdate, 60 * 60 * 1000); // hourly fallback
+  // An hourly interval meant this never fired during a normal active testing
+  // session — someone who deploys and then keeps the same tab open/focused
+  // the whole time (no tab-switch, no re-visibility event) saw no banner at
+  // all until they manually refreshed. 3 minutes still costs almost nothing
+  // (a single lightweight byte-diff check against the SW script) but makes
+  // the banner show up promptly for anyone actively using the app too, not
+  // just people who happen to switch away and back.
+  setInterval(checkForUpdate, 3 * 60 * 1000);
 }
