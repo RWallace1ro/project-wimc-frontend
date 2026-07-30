@@ -29,11 +29,11 @@ const SECTIONS = [
     items: [
       {
         q: "What closet sections are available?",
-        a: "Your main closet is divided into six sections: Tops, Pants/Jeans, Dresses/Skirts, Shoes/Sneakers, Bags/Accessories, and Jackets/Coats. The sections adjust to your selected closet style (e.g. the men's closet shows Button-Ups/Dress Clothes). Each section stores both photos and videos of your items.",
+        a: "Your main closet is divided into eight sections: Dresses/Skirts, Dress Shirts/Suits, Shoes/Sneakers, Pants/Jeans, Tops, Bags/Accessories, Jackets/Coats, and Blazers — the same set for everyone. Each section stores both photos and videos of your items.",
       },
       {
         q: "What are sub-sections?",
-        a: "Every section card is split into sub-sections so you can organize at a finer level — for example, Tops includes Shirts, T-Shirts, and Sweaters; Shoes/Sneakers includes Sneakers, Heels, and Sandals/Slides. Tap a sub-section pill at the top of a section to view or add items there. The sub-sections are tailored to each closet (women's, men's, and each child's). When the feature first appears, your existing items show under the first sub-section — just use the Move button to sort them into the right one.",
+        a: "Every section card is split into sub-sections so you can organize at a finer level — for example, Tops includes Shirts, T-Shirts, and Sweaters; Shoes/Sneakers includes Sneakers, Heels, and Sandals/Slides. Tap a sub-section pill at the top of a section to view or add items there. Sub-sections are also available in each child's closet. When the feature first appears, your existing items show under the first sub-section — just use the Move button to sort them into the right one.",
       },
       {
         q: "Can I upload videos of my clothing items?",

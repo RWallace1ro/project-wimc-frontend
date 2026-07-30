@@ -26,7 +26,7 @@ const MONTHLY_PLANS = [
     badge: null,
     popular: false,
     features: [
-      { text: "Closet organization (all 6 sections)", check: true },
+      { text: "Closet organization (all 8 sections)", check: true },
       { text: "50 photo uploads", check: true },
       { text: "Basic outfit preview", check: true },
       { text: "Weather-based outfit suggestions", check: true },
