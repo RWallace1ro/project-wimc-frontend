@@ -4,7 +4,6 @@ import "./LegalPage.css";
 import "./Contact.css";
 
 const CONTACT_FORM_URL = process.env.REACT_APP_CONTACT_FORM_URL;
-const SUPPORT_EMAIL = "wimcsupport@gingerfaith.com";
 
 export default function Contact() {
   const navigate = useNavigate();
@@ -52,13 +51,6 @@ export default function Contact() {
         {status === "sent" ? (
           <div className="contact-page__success">
             <p>✅ Your message has been sent. We'll get back to you soon.</p>
-            <p>
-              You can also reach us anytime at{" "}
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="legal-page__link">
-                {SUPPORT_EMAIL}
-              </a>
-              .
-            </p>
           </div>
         ) : (
           <form className="contact-page__form" onSubmit={handleSubmit}>
@@ -99,13 +91,6 @@ export default function Contact() {
             <button type="submit" className="contact-page__submit" disabled={status === "sending"}>
               {status === "sending" ? "Sending…" : "Send Message"}
             </button>
-
-            <p className="contact-page__fallback">
-              Prefer email directly?{" "}
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="legal-page__link">
-                {SUPPORT_EMAIL}
-              </a>
-            </p>
           </form>
         )}
       </div>
