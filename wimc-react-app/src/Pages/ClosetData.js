@@ -267,12 +267,17 @@ function ClosetData({
     setIsTryOnOpen(true);
   };
 
+  // Default for new users (nothing chosen yet) is the real Closet Interior
+  // backdrop, not the CSS class's Ivory Wave fallback image — an explicit
+  // user pick always wins over this default.
+  const effectivePageBg = backgrounds[PAGE_BG_KEY] || CLOSET_INTERIOR_BACKDROP_VALUE;
+
   return (
     <main
       className="closet-data-page"
-      style={getPageBgStyle(backgrounds[PAGE_BG_KEY])}
+      style={getPageBgStyle(effectivePageBg)}
     >
-      {backgrounds[PAGE_BG_KEY] === CLOSET_INTERIOR_BACKDROP_VALUE && (
+      {effectivePageBg === CLOSET_INTERIOR_BACKDROP_VALUE && (
         <ClosetInteriorBackdrop fixed />
       )}
       <header className="closet-data__header-actions">
