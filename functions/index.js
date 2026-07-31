@@ -963,7 +963,7 @@ exports.submitContactForm = functions
       const upstream = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json; charset=utf-8",
           Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
         },
         body: JSON.stringify({
