@@ -37,6 +37,12 @@
   height: 150px;
   border-radius: 12px 12px 0 0;
   object-fit: cover;
+  /* Default (center) crops equally from top and bottom — for a tall
+     portrait photo (e.g. a full-length dress) in a short landscape card,
+     that cuts off a large chunk of both ends, most noticeably the
+     neckline/collar at top. Anchoring the crop to the top keeps the part
+     of the garment people actually look at first in frame. */
+  object-position: top;
 }
 
 /* Empty-state shown on Kids'/Pet Closet cards until the first item is
