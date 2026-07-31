@@ -13,6 +13,8 @@ function Footer() {
       <p className="footer__legal">
         <Link to="/faq" className="footer__legal-link">FAQ</Link>
         <span className="footer__legal-sep"> · </span>
+        <Link to="/contact" className="footer__legal-link">Contact Us</Link>
+        <span className="footer__legal-sep"> · </span>
         <Link to="/pricing" className="footer__legal-link">Pricing</Link>
         <span className="footer__legal-sep"> · </span>
         <Link to="/privacy-policy" className="footer__legal-link">Privacy Policy</Link>

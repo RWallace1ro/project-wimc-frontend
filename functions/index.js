@@ -9,12 +9,14 @@
  * stripeWebhook             — Signature-verified Stripe webhook → sets user tier.
  * finalizeScheduledDeletions — Daily job: completes 14-day-grace account deletions.
  * cleanupExpiredShares      — Daily job: deletes sharedContent links older than 30 days.
+ * submitContactForm         — Public contact form → emails support via Resend.
  *
  * Secrets:
  *   ANTHROPIC_API_KEY     — firebase functions:secrets:set ANTHROPIC_API_KEY
  *   CLOUDINARY_API_SECRET — firebase functions:secrets:set CLOUDINARY_API_SECRET
  *   STRIPE_SECRET_KEY     — firebase functions:secrets:set STRIPE_SECRET_KEY
  *   STRIPE_WEBHOOK_SECRET — firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+ *   RESEND_API_KEY        — firebase functions:secrets:set RESEND_API_KEY
  */
 
 // v1 API import (firebase-functions v5+ defaults the top-level export to v2;
@@ -873,4 +875,118 @@ exports.cleanupExpiredShares = functions
     }
 
     return null;
+  });
+
+// ── Contact form ─────────────────────────────────────────────────────────────
+// Public (unauthenticated — visitors without an account need to reach
+// support too), so it's rate-limited per IP instead of per uid, plus a
+// honeypot field to silently drop simple bots. Sends via Resend's HTTP API
+// (no SDK needed — it's one POST) so the visitor's own mail client/OS default
+// handler is never involved.
+const CONTACT_FORM_DAILY_LIMIT_PER_IP = 5;
+const CONTACT_SUPPORT_EMAIL = "wimcsupport@gingerfaith.com";
+
+function hashIp(ip) {
+  return crypto.createHash("sha256").update(String(ip || "unknown")).digest("hex");
+}
+
+exports.submitContactForm = functions
+  .runWith({ secrets: ["RESEND_API_KEY"] })
+  .https.onRequest(async (req, res) => {
+    setCORS(res);
+
+    if (req.method === "OPTIONS") {
+      res.status(204).send("");
+      return;
+    }
+    if (req.method !== "POST") {
+      res.status(405).send("Method Not Allowed");
+      return;
+    }
+
+    const { name, email, subject, message, company } = req.body || {};
+
+    // Honeypot — a real visitor never fills a field hidden via CSS. Bots that
+    // blindly fill every field trip this; report success so they don't retry.
+    if (company) {
+      res.status(200).json({ ok: true });
+      return;
+    }
+
+    if (!name || !email || !message) {
+      res.status(400).json({ error: "Name, email, and message are required." });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      res.status(400).json({ error: "Please enter a valid email address." });
+      return;
+    }
+    if (String(message).length > 5000) {
+      res.status(400).json({ error: "Message is too long (5000 characters max)." });
+      return;
+    }
+
+    // Per-IP daily cap so an unauthenticated form can't be used to spam the
+    // support inbox or burn through the email provider's monthly quota.
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip || "unknown";
+    const ipKey = hashIp(ip);
+    const adminDb = getAdminDb();
+    const usageRef = adminDb.collection("contactFormUsage").doc(ipKey);
+    const today = new Date().toISOString().slice(0, 10);
+
+    try {
+      const allowed = await adminDb.runTransaction(async (tx) => {
+        const snap = await tx.get(usageRef);
+        const data = snap.exists ? snap.data() : {};
+        const count = data.date === today ? (data.count || 0) : 0;
+        if (count >= CONTACT_FORM_DAILY_LIMIT_PER_IP) return false;
+        tx.set(usageRef, { date: today, count: count + 1, updatedAt: Date.now() });
+        return true;
+      });
+      if (!allowed) {
+        res.status(429).json({ error: "Too many messages sent. Please try again tomorrow." });
+        return;
+      }
+    } catch (e) {
+      console.error("submitContactForm: rate-limit check failed:", e);
+      res.status(500).json({ error: "Something went wrong. Please try again." });
+      return;
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      console.error("submitContactForm: RESEND_API_KEY is not bound");
+      res.status(500).json({ error: "Server misconfiguration: email not configured" });
+      return;
+    }
+
+    try {
+      const upstream = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          // Resend requires the "from" address to be on a domain you've
+          // verified with them — this can't be the visitor's own address.
+          // Their real address goes in reply_to so hitting Reply in the
+          // inbox goes straight back to them.
+          from: "WIMC Contact Form <contact@gingerfaith.com>",
+          to: [CONTACT_SUPPORT_EMAIL],
+          reply_to: email,
+          subject: subject ? `[WIMC Contact] ${subject}` : "[WIMC Contact] New message",
+          text: `From: ${name} <${email}>\n\n${message}`,
+        }),
+      });
+      if (!upstream.ok) {
+        const errBody = await upstream.text();
+        console.error("submitContactForm: Resend error:", upstream.status, errBody);
+        res.status(502).json({ error: "Failed to send. Please try again or email us directly." });
+        return;
+      }
+      res.status(200).json({ ok: true });
+    } catch (err) {
+      console.error("submitContactForm error:", err);
+      res.status(500).json({ error: "Failed to send. Please try again or email us directly." });
+    }
   });

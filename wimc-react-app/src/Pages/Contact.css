@@ -1,0 +1,84 @@
+.contact-page__intro {
+  margin-bottom: 20px;
+  color: #444;
+}
+
+.contact-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 520px;
+}
+
+.contact-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.contact-page__field input,
+.contact-page__field textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  resize: vertical;
+}
+
+.contact-page__field input:focus,
+.contact-page__field textarea:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+
+/* Honeypot — invisible to real visitors, still present/tabbable for bots
+   that ignore CSS but scan the raw HTML. */
+.contact-page__honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-page__submit {
+  align-self: flex-start;
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.contact-page__submit:hover:not(:disabled) {
+  background: #6d28d9;
+}
+.contact-page__submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.contact-page__error {
+  color: #b91c1c;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.contact-page__fallback {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 4px 0 0;
+}
+
+.contact-page__success {
+  font-size: 1rem;
+  line-height: 1.8;
+}

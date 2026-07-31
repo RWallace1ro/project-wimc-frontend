@@ -51,6 +51,7 @@ const Receipts = React.lazy(() => import("../../Pages/Receipts"));
 const PrivacyPolicy = React.lazy(() => import("../../Pages/PrivacyPolicy"));
 const TermsOfService = React.lazy(() => import("../../Pages/TermsOfService"));
 const FAQ = React.lazy(() => import("../../Pages/FAQ"));
+const Contact = React.lazy(() => import("../../Pages/Contact"));
 const Pricing = React.lazy(() => import("../../Pages/Pricing"));
 const SharedView = React.lazy(() => import("../../Pages/SharedView"));
 const AuthAction = React.lazy(() => import("../../Pages/AuthAction"));
@@ -542,6 +543,7 @@ function AppInner() {
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/faq" element={<FAQ />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/pricing" element={<Pricing isLoggedIn={isLoggedIn} />} />
               <Route path="/shared" element={<SharedView />} />
               <Route path="/auth-action" element={<AuthAction />} />
