@@ -153,7 +153,7 @@ const SECTIONS = [
       },
       {
         q: "What is the Weather feature?",
-        a: "The Weather modal shows the current conditions and a 7-day forecast for your location (or any city you search). It includes outfit suggestions based on the temperature and conditions so you can dress appropriately.",
+        a: "The Weather modal shows the current conditions and a 7-day forecast for your location (or any city you search). It includes outfit suggestions based on the temperature and conditions so you can dress appropriately. Your location is only sent to the weather-data providers to fetch that forecast — it isn't stored on our servers or linked to your account.",
       },
       {
         q: "What is the Video Bin?",
@@ -166,7 +166,7 @@ const SECTIONS = [
     items: [
       {
         q: "How is my data stored?",
-        a: "Your account information is stored in Firebase (Google Cloud). Your clothing photos and videos are stored on Cloudinary, a secure media hosting service. GingerFaith™ LLC does not sell or share your personal data with third parties.",
+        a: "Your account information is stored in Firebase (Google Cloud), and your clothing photos and videos are stored using Cloudinary, a secure media-hosting service. Both are service providers that process and host this data on our behalf — they don't use it for their own purposes. GingerFaith™ LLC does not sell your personal data or share it with third parties for marketing or advertising.",
       },
       {
         q: "Can I delete my account?",
@@ -183,7 +183,7 @@ const SECTIONS = [
     items: [
       {
         q: "Is WIMC free to use?",
-        a: "Yes — the Free plan includes all six closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist (3 requests per day). Upgrading unlocks unlimited uploads and the Pro features below.",
+        a: "Yes — the Free plan includes all eight closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist (3 requests per day). Upgrading unlocks unlimited uploads and the Pro features below.",
       },
       {
         q: "What are the plans and what's included?",

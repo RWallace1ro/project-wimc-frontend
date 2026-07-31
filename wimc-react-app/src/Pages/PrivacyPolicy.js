@@ -24,8 +24,17 @@ export default function PrivacyPolicy() {
         <p>
           When you create an account, we collect your name, email address, and
           optionally a profile photo. When you use the app, we store photos and
-          videos of your clothing items via Cloudinary, a third-party media
-          service.
+          videos of your clothing items using Cloudinary, a media-hosting
+          service we rely on to store and deliver your images and videos on
+          our behalf.
+        </p>
+        <p>
+          If you use the Weather feature, your device's approximate location
+          (or a city you search for) is sent to weather-data providers —
+          Open-Meteo, the U.S. National Weather Service, and OpenStreetMap's
+          location-lookup service — solely to fetch a forecast for that
+          location. This location is used for that single request and is not
+          stored on our servers or linked to your account.
         </p>
       </section>
 
@@ -34,7 +43,9 @@ export default function PrivacyPolicy() {
         <p>
           We use your information solely to provide the What's In My Closet
           service — organizing your closet, building outfits, and delivering
-          AI styling suggestions. We do not sell your data to third parties.
+          AI styling suggestions. We do not sell your data, and we do not
+          share it with third parties for their own marketing or advertising
+          purposes.
         </p>
       </section>
 
@@ -42,8 +53,12 @@ export default function PrivacyPolicy() {
         <h2>3. Data Storage</h2>
         <p>
           Your account and profile data are stored securely using Google
-          Firebase. Media files (photos and videos) are stored on Cloudinary.
-          Both services maintain their own security and privacy standards.
+          Firebase, and your media files (photos and videos) are stored using
+          Cloudinary. Both are service providers that process and host this
+          data on our behalf, under their own security and privacy standards
+          — they don't use it for their own purposes. The Weather feature
+          similarly sends only the coordinates needed for a forecast to the
+          weather providers listed above, on a per-request basis.
         </p>
       </section>
 
