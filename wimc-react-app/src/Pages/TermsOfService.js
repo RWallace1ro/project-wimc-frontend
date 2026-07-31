@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import SupportEmailLink from "../components/SupportEmailLink/SupportEmailLink";
+import "../components/SupportEmailLink/SupportEmailLink.css";
 import "./LegalPage.css";
 
 export default function TermsOfService() {
@@ -104,9 +106,7 @@ export default function TermsOfService() {
         <h2>10. Contact</h2>
         <p>
           For questions about these Terms, please email{" "}
-          <a href="mailto:wimcsupport@gingerfaith.com" className="legal-page__link">
-            wimcsupport@gingerfaith.com
-          </a>
+          <SupportEmailLink email="wimcsupport@gingerfaith.com" className="legal-page__link" />
           .
         </p>
       </section>

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SupportEmailLink from "../components/SupportEmailLink/SupportEmailLink";
+import "../components/SupportEmailLink/SupportEmailLink.css";
 import "./FAQ.css";
 
 const SECTIONS = [
@@ -226,9 +228,7 @@ export default function FAQ() {
         <p className="faq-page__subtitle">
           Everything you need to know about What's In My Closet.
           Can't find your answer?{" "}
-          <a href="mailto:wimcsupport@gingerfaith.com" className="faq-page__link">
-            Email us
-          </a>
+          <SupportEmailLink email="wimcsupport@gingerfaith.com" className="faq-page__link" linkText="Email us" />
           .
         </p>
       </div>

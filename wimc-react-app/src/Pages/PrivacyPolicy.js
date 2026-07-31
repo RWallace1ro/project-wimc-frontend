@@ -1,5 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import SupportEmailLink from "../components/SupportEmailLink/SupportEmailLink";
+import "../components/SupportEmailLink/SupportEmailLink.css";
 import "./LegalPage.css";
 
 export default function PrivacyPolicy() {
@@ -142,9 +144,7 @@ export default function PrivacyPolicy() {
         <h2>8. Contact</h2>
         <p>
           If you have questions about this Privacy Policy, please email{" "}
-          <a href="mailto:wimcsupport@gingerfaith.com" className="legal-page__link">
-            wimcsupport@gingerfaith.com
-          </a>
+          <SupportEmailLink email="wimcsupport@gingerfaith.com" className="legal-page__link" />
           .
         </p>
       </section>

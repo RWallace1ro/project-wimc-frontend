@@ -1,0 +1,22 @@
+.support-email-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.support-email-link__copy-btn {
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+.support-email-link__copy-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
