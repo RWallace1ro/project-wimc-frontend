@@ -36,13 +36,14 @@
   width: 100%;
   height: 150px;
   border-radius: 12px 12px 0 0;
-  object-fit: cover;
-  /* Default (center) crops equally from top and bottom — for a tall
-     portrait photo (e.g. a full-length dress) in a short landscape card,
-     that cuts off a large chunk of both ends, most noticeably the
-     neckline/collar at top. Anchoring the crop to the top keeps the part
-     of the garment people actually look at first in frame. */
-  object-position: top;
+  /* object-fit: cover (with any object-position) always crops SOME edge —
+     fine for a landscape photo, but a tall portrait item (e.g. a
+     full-length dress) loses its top or bottom no matter which edge is
+     anchored, and a single anchor can't be right for every item shape
+     across every section. `contain` shows the whole garment, letterboxed
+     on a neutral background, so nothing is ever cut off. */
+  object-fit: contain;
+  background: #f4f4f5;
 }
 
 /* Empty-state shown on Kids'/Pet Closet cards until the first item is
