@@ -201,7 +201,17 @@ export function clearLocalAppData() {
 // with the changed key so the app can react (e.g. show a "refresh" banner).
 export function subscribeToRemoteChanges(uid, onChange) {
   const colRef = collection(db, "users", uid, "syncdata");
+  let isFirstSnapshot = true;
   return onSnapshot(colRef, (snap) => {
+    // The listener's first callback reports every existing doc as "added" —
+    // that's Firestore replaying current state, not a real remote change.
+    // hydrateFromFirestore() already pulled this data in before the listener
+    // was attached, so acting on it here just fires a false "another device
+    // updated your data" toast on every fresh login.
+    if (isFirstSnapshot) {
+      isFirstSnapshot = false;
+      return;
+    }
     snap.docChanges().forEach((change) => {
       if (change.type === "modified" || change.type === "added") {
         const { key, value, deleted } = change.doc.data();
