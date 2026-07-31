@@ -883,7 +883,7 @@ exports.cleanupExpiredShares = functions
 // honeypot field to silently drop simple bots. Sends via Resend's HTTP API
 // (no SDK needed — it's one POST) so the visitor's own mail client/OS default
 // handler is never involved.
-const CONTACT_FORM_DAILY_LIMIT_PER_IP = 5;
+const CONTACT_FORM_DAILY_LIMIT_PER_IP = 8;
 const CONTACT_SUPPORT_EMAIL = "wimcsupport@gingerfaith.com";
 
 function hashIp(ip) {
