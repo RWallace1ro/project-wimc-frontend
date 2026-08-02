@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./LegalPage.css";
 import "./Contact.css";
 
 const CONTACT_FORM_URL = process.env.REACT_APP_CONTACT_FORM_URL;
 
 export default function Contact() {
-  const navigate = useNavigate();
+  const closePage = useCloseStandalonePage();
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "", company: "" });
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState("");
@@ -40,7 +40,7 @@ export default function Contact() {
   return (
     <main className="legal-page">
       <div className="legal-hero">
-        <button className="legal-hero__back" onClick={() => navigate(-1)} aria-label="Go back">
+        <button className="legal-hero__back" onClick={closePage} aria-label="Go back">
           ✕
         </button>
         <h1 className="legal-hero__title">Contact Us</h1>

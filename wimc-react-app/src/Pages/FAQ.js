@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./FAQ.css";
 
 const SECTIONS = [
@@ -206,7 +207,7 @@ const SECTIONS = [
 ];
 
 export default function FAQ() {
-  const navigate = useNavigate();
+  const closePage = useCloseStandalonePage();
   const [openMap, setOpenMap] = useState({});
 
   const toggle = (key) =>
@@ -217,7 +218,7 @@ export default function FAQ() {
       <div className="faq-page__hero">
         <button
           className="faq-page__back"
-          onClick={() => navigate(-1)}
+          onClick={closePage}
           aria-label="Go back"
         >
           ✕

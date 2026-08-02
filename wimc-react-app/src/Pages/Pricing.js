@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { startCheckout } from "../utils/billing";
 import { useTier } from "../context/TierContext";
+import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./Pricing.css";
 
 const PAYMENTS_ENABLED = process.env.REACT_APP_PAYMENTS_ENABLED === "true";
@@ -236,6 +237,7 @@ function PlanCard({ plan, currentPlanId, isLoggedIn, onRequireLogin }) {
 /* ── Page ── */
 export default function Pricing({ isLoggedIn }) {
   const navigate = useNavigate();
+  const closePage = useCloseStandalonePage();
   const { tier, priceId } = useTier();
 
   // Determine the user's current plan card from their live subscription.
@@ -265,7 +267,7 @@ export default function Pricing({ isLoggedIn }) {
       <div className="pricing-hero">
         <button
           className="pricing-hero__back"
-          onClick={() => navigate(-1)}
+          onClick={closePage}
           aria-label="Go back"
         >
           ✕

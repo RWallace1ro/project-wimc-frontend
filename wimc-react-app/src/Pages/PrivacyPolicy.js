@@ -1,15 +1,16 @@
 import React from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./LegalPage.css";
 
 export default function PrivacyPolicy() {
-  const navigate = useNavigate();
+  const closePage = useCloseStandalonePage();
   return (
     <main className="legal-page">
       <div className="legal-hero">
         <button
           className="legal-hero__back"
-          onClick={() => navigate(-1)}
+          onClick={closePage}
           aria-label="Go back"
         >
           ✕
