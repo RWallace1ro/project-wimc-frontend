@@ -584,7 +584,15 @@ function AppInner() {
               }
             />
           )}
-          {isEmbed ? null : (!isLoggedIn || isExternalReferrer(location.search)) && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
+          {/* An external visitor (from the marketing site, an emailed link,
+              etc.) gets ZERO header — not even the minimal logo bar — so the
+              page reads as a genuinely standalone form/document, not a WIMC
+              app screen. The logo-bar MinimalHeader is reserved for a
+              logged-out visitor who's browsing these pages FROM INSIDE the
+              app's own navigation (e.g. clicked "FAQ" while logged out) —
+              they benefit from the branding continuity; someone arriving
+              from outside does not. */}
+          {isEmbed || (isExternalReferrer(location.search) && PUBLIC_STANDALONE_PATHS.includes(location.pathname)) ? null : !isLoggedIn && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
             <MinimalHeader
               onSignUpClick={() => setIsSignUpModalOpen(true)}
               onLoginClick={() => setIsLoginModalOpen(true)}
