@@ -4,6 +4,12 @@
   min-height: 100vh;
 }
 
+/* ?embed=1 on /contact — sits inside an <iframe> on an external site with
+   its own fixed/scrollable height, so it shouldn't force a full 100vh. */
+.app--embed {
+  min-height: 0;
+}
+
 .main {
   flex: 1;
   display: flex;

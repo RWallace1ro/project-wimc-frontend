@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./LegalPage.css";
 import "./Contact.css";
@@ -7,6 +8,10 @@ const CONTACT_FORM_URL = process.env.REACT_APP_CONTACT_FORM_URL;
 
 export default function Contact() {
   const closePage = useCloseStandalonePage();
+  const [searchParams] = useSearchParams();
+  // ?embed=1 — dropped into an <iframe> on an external site, so there's no
+  // hero banner, no close button, no WIMC chrome — just the bare form.
+  const isEmbed = searchParams.get("embed") === "1";
   const [form, setForm] = useState({ name: "", email: "", subject: "", message: "", company: "" });
   const [status, setStatus] = useState("idle"); // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState("");
@@ -38,16 +43,18 @@ export default function Contact() {
   };
 
   return (
-    <main className="legal-page">
-      <div className="legal-hero">
-        <button className="legal-hero__back" onClick={closePage} aria-label="Go back">
-          ✕
-        </button>
-        <h1 className="legal-hero__title">Contact Us</h1>
-        <p className="legal-hero__updated">We usually reply within 1–2 business days.</p>
-      </div>
+    <main className={isEmbed ? "legal-page legal-page--embed" : "legal-page"}>
+      {!isEmbed && (
+        <div className="legal-hero">
+          <button className="legal-hero__back" onClick={closePage} aria-label="Go back">
+            ✕
+          </button>
+          <h1 className="legal-hero__title">Contact Us</h1>
+          <p className="legal-hero__updated">We usually reply within 1–2 business days.</p>
+        </div>
+      )}
 
-      <div className="legal-page__body">
+      <div className={isEmbed ? "legal-page__body legal-page__body--embed" : "legal-page__body"}>
         {status === "sent" ? (
           <div className="contact-page__success">
             <p>✅ Your message has been sent. We'll get back to you soon.</p>

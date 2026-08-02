@@ -52,6 +52,19 @@
   padding: 40px 24px 60px;
 }
 
+/* ?embed=1 — sitting inside an <iframe> on an external site, so it should
+   read as a plain form on THAT page, not a standalone WIMC page: no hero
+   banner (already conditionally unrendered), tighter/no top padding since
+   there's no header above it, no bottom padding since the iframe should be
+   sized to the form's actual height rather than leaving trailing space. */
+.legal-page--embed {
+  background: transparent;
+}
+.legal-page__body--embed {
+  padding: 16px 16px 24px;
+  max-width: 100%;
+}
+
 .legal-page__section {
   margin-bottom: 28px;
 }

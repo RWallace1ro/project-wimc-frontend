@@ -67,6 +67,13 @@ const WIMCAssistant = React.lazy(() => import("../WIMCAssistant/WIMCAssistant"))
 // unfinished, since none of it is relevant until they've actually signed up.
 const PUBLIC_STANDALONE_PATHS = ["/about", "/privacy-policy", "/terms-of-service", "/faq", "/contact"];
 
+// ?embed=1 on /contact renders a bare, chrome-free version meant to be
+// dropped into an <iframe> on an external site (e.g. a Squarespace Code
+// Block on gingerfaith.com) — no Header/Footer, no WIMC branding, no
+// navigation. This is what makes the contact form feel truly native to the
+// embedding site instead of like a separate WIMC app page/window.
+const EMBEDDABLE_PATHS = ["/contact"];
+
 // Redirects unauthenticated users to "/" and opens the login modal
 function ProtectedRoute({ isLoggedIn, onLoginRequired, children }) {
   const triggered = useRef(false);
@@ -529,12 +536,16 @@ function AppInner() {
     );
   }
 
+  const isEmbed =
+    EMBEDDABLE_PATHS.includes(location.pathname) &&
+    new URLSearchParams(location.search).get("embed") === "1";
+
   return (
     <ClosetProvider>
       <BackgroundProvider>
       <TierProvider uid={isLoggedIn ? userData.uid : null}>
       <SyncProvider uid={isLoggedIn ? userData.uid : null}>
-        <main className="app">
+        <main className={isEmbed ? "app app--embed" : "app"}>
           {isLoggedIn && userData?.pendingDeletion && (
             <PendingDeletionBanner
               userData={userData}
@@ -547,7 +558,7 @@ function AppInner() {
               }
             />
           )}
-          {!isLoggedIn && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
+          {isEmbed ? null : !isLoggedIn && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
             <MinimalHeader
               onSignUpClick={() => setIsSignUpModalOpen(true)}
               onLoginClick={() => setIsLoginModalOpen(true)}
@@ -657,7 +668,7 @@ function AppInner() {
             </Routes>
             </React.Suspense>
           </section>
-          <Footer />
+          {!isEmbed && <Footer />}
           {isLoggedIn && (
             <React.Suspense fallback={null}>
               <WIMCAssistant />
