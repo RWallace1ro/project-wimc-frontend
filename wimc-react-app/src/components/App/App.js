@@ -62,10 +62,28 @@ const WIMCAssistant = React.lazy(() => import("../WIMCAssistant/WIMCAssistant"))
 
 // Standalone pages meant to be linked from OUTSIDE the app (the marketing
 // site's own Contact Us link, an emailed FAQ/policy link, etc.) — for a
-// logged-out visitor landing directly on one of these, the full Header's
-// entire internal app toolbar and closet-section tabs read as cluttered and
+// visitor landing directly on one of these, the full Header's entire
+// internal app toolbar and closet-section tabs read as cluttered and
 // unfinished, since none of it is relevant until they've actually signed up.
 const PUBLIC_STANDALONE_PATHS = ["/about", "/privacy-policy", "/terms-of-service", "/faq", "/contact"];
+
+// document.referrer is set once, when the browser tab itself first
+// navigated to the app, and stays constant for the whole session even as
+// React Router changes routes client-side afterward — so this correctly
+// answers "did this tab arrive via an outside link" regardless of how many
+// in-app navigations have happened since. A visitor who clicked "Contact
+// Us" on gingerfaith.com should see the clean standalone page even if
+// they're ALSO logged into WIMC in that same browser (e.g. from testing) —
+// login state alone isn't enough to tell "in-app user" from "outside
+// visitor who happens to share a browser with a logged-in session".
+function isExternalReferrer() {
+  if (!document.referrer) return false;
+  try {
+    return new URL(document.referrer).origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
 
 // ?embed=1 on /contact renders a bare, chrome-free version meant to be
 // dropped into an <iframe> on an external site (e.g. a Squarespace Code
@@ -558,7 +576,7 @@ function AppInner() {
               }
             />
           )}
-          {isEmbed ? null : !isLoggedIn && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
+          {isEmbed ? null : (!isLoggedIn || isExternalReferrer()) && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
             <MinimalHeader
               onSignUpClick={() => setIsSignUpModalOpen(true)}
               onLoginClick={() => setIsLoginModalOpen(true)}
