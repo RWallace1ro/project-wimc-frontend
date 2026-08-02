@@ -27,6 +27,7 @@ import { logAppEvent } from "../../utils/analytics";
 import { clearLocalAppData } from "../../utils/syncStore";
 
 import Header from "../Header/Header";
+import MinimalHeader from "../Header/MinimalHeader";
 import Footer from "../Footer/Footer";
 import CookieConsent from "../CookieConsent/CookieConsent";
 import CookiePreferences from "../CookiePreferences/CookiePreferences";
@@ -57,6 +58,13 @@ const SharedView = React.lazy(() => import("../../Pages/SharedView"));
 const AuthAction = React.lazy(() => import("../../Pages/AuthAction"));
 const NotFound = React.lazy(() => import("../../Pages/NotFound"));
 const WIMCAssistant = React.lazy(() => import("../WIMCAssistant/WIMCAssistant"));
+
+// Standalone pages meant to be linked from OUTSIDE the app (the marketing
+// site's own Contact Us link, an emailed FAQ/policy link, etc.) — for a
+// logged-out visitor landing directly on one of these, the full Header's
+// entire internal app toolbar and closet-section tabs read as cluttered and
+// unfinished, since none of it is relevant until they've actually signed up.
+const PUBLIC_STANDALONE_PATHS = ["/about", "/privacy-policy", "/terms-of-service", "/faq", "/contact"];
 
 // Redirects unauthenticated users to "/" and opens the login modal
 function ProtectedRoute({ isLoggedIn, onLoginRequired, children }) {
@@ -508,20 +516,27 @@ function AppInner() {
               }
             />
           )}
-          <Header
-            userName={isLoggedIn ? userData.userName : "Your Closet"}
-            avatarUrl={userData.avatarUrl}
-            isLoggedIn={isLoggedIn}
-            userData={userData}
-            onUserUpdate={handleUserUpdate}
-            onSignUpClick={() => setIsSignUpModalOpen(true)}
-            onLoginClick={() => setIsLoginModalOpen(true)}
-            onLogoutClick={handleLogout}
-            onDeletionScheduled={handleDeletionScheduled}
-            handleSelectTab={handleSelectTab}
-            selectedTab={selectedTab}
-            closetItems={closetItems}
-          />
+          {!isLoggedIn && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
+            <MinimalHeader
+              onSignUpClick={() => setIsSignUpModalOpen(true)}
+              onLoginClick={() => setIsLoginModalOpen(true)}
+            />
+          ) : (
+            <Header
+              userName={isLoggedIn ? userData.userName : "Your Closet"}
+              avatarUrl={userData.avatarUrl}
+              isLoggedIn={isLoggedIn}
+              userData={userData}
+              onUserUpdate={handleUserUpdate}
+              onSignUpClick={() => setIsSignUpModalOpen(true)}
+              onLoginClick={() => setIsLoginModalOpen(true)}
+              onLogoutClick={handleLogout}
+              onDeletionScheduled={handleDeletionScheduled}
+              handleSelectTab={handleSelectTab}
+              selectedTab={selectedTab}
+              closetItems={closetItems}
+            />
+          )}
           <section className="app__content">
             {apiError && <p className="error-message">{apiError}</p>}
             <React.Suspense fallback={<p className="loading-message">Loading…</p>}>
