@@ -76,7 +76,15 @@ const PUBLIC_STANDALONE_PATHS = ["/about", "/privacy-policy", "/terms-of-service
 // they're ALSO logged into WIMC in that same browser (e.g. from testing) —
 // login state alone isn't enough to tell "in-app user" from "outside
 // visitor who happens to share a browser with a logged-in session".
-function isExternalReferrer() {
+//
+// BUT: referrer isn't reliable alone — many browsers strip it entirely on
+// cross-site navigation (privacy modes, some default settings, especially
+// with target="_blank"), which reads as empty/same as "not external". A
+// "?src=web" marker on the outbound link is a second, deterministic signal
+// that doesn't depend on any browser's referrer policy — either one being
+// true is enough.
+function isExternalReferrer(search) {
+  if (new URLSearchParams(search).get("src") === "web") return true;
   if (!document.referrer) return false;
   try {
     return new URL(document.referrer).origin !== window.location.origin;
@@ -576,7 +584,7 @@ function AppInner() {
               }
             />
           )}
-          {isEmbed ? null : (!isLoggedIn || isExternalReferrer()) && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
+          {isEmbed ? null : (!isLoggedIn || isExternalReferrer(location.search)) && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
             <MinimalHeader
               onSignUpClick={() => setIsSignUpModalOpen(true)}
               onLoginClick={() => setIsLoginModalOpen(true)}
