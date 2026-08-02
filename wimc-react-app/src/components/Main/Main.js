@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { LAUNCH_GATE_ENABLED } from "../../config/launchGate";
 import "./Main.css";
 
 function Main({ isLoggedIn }) {
@@ -18,6 +19,23 @@ function Main({ isLoggedIn }) {
   const closeAuthMessage = () => {
     setShowAuthMessage(false);
   };
+
+  // Pre-launch: no Sign Up/Explore CTA on the public landing page at all —
+  // Header/MinimalHeader still expose a Login entry point for allowlisted
+  // testers, but the page itself shouldn't invite the general public in.
+  if (LAUNCH_GATE_ENABLED) {
+    return (
+      <main className="main">
+        <section className="main__content">
+          <h1 className="main__title">What's In My Closet (WIMC)</h1>
+          <p className="main__description">
+            We're putting the finishing touches on WIMC — your AI-powered
+            closet organizer and stylist. Check back soon!
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="main">

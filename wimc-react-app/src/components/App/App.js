@@ -25,6 +25,7 @@ import {
 import { auth, db } from "../../firebase";
 import { logAppEvent } from "../../utils/analytics";
 import { clearLocalAppData } from "../../utils/syncStore";
+import { LAUNCH_GATE_ENABLED, LAUNCH_GATE_MESSAGE, isLaunchGateAllowed } from "../../config/launchGate";
 
 import Header from "../Header/Header";
 import MinimalHeader from "../Header/MinimalHeader";
@@ -130,6 +131,19 @@ function AppInner() {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       clearTimeout(safetyTimer);
       if (firebaseUser) {
+        // ── Pre-launch gate safety net ────────────────────────────────────────
+        // handleLogin already rejects non-allowlisted accounts at the login
+        // step, but this covers every OTHER way a session could exist — a
+        // page refresh restoring a previously-valid session, a stray token,
+        // etc. Sign out silently; there's no login-modal error UI to show at
+        // this point, it's just a hard stop.
+        if (LAUNCH_GATE_ENABLED && !isLaunchGateAllowed(firebaseUser.email)) {
+          await signOut(auth);
+          setIsLoggedIn(false);
+          setIsLoading(false);
+          return;
+        }
+
         // ── Email-verification gate ──────────────────────────────────────────
         // Block full access until the user has verified their email. Password
         // (email) sign-ups start unverified; Google accounts are already verified.
@@ -246,6 +260,14 @@ function AppInner() {
     // Mobile keyboards add trailing spaces and capitalize the first letter —
     // normalize so the account email is always clean and consistent.
     const cleanEmail = (userCredentials.email || "").trim().toLowerCase();
+    if (LAUNCH_GATE_ENABLED && !isLaunchGateAllowed(cleanEmail)) {
+      // Blocked before any Firebase call runs — no Auth account is ever
+      // created for a non-allowlisted visitor. Add a tester's email to
+      // LAUNCH_GATE_ALLOWED_EMAILS in src/config/launchGate.js before
+      // inviting them, so their first-time signup still goes through.
+      setSignUpError(LAUNCH_GATE_MESSAGE);
+      return;
+    }
     try {
       // Do NOT auto-navigate to /home — the user must verify their email first.
       pendingNavRef.current = null;
@@ -282,9 +304,18 @@ function AppInner() {
 
   const handleLogin = async (data) => {
     setLoginError("");
+    const cleanEmail = (data.email || "").trim().toLowerCase();
     try {
       pendingNavRef.current = "/home"; // navigate after auth state confirms
-      await signInWithEmailAndPassword(auth, (data.email || "").trim().toLowerCase(), data.password);
+      await signInWithEmailAndPassword(auth, cleanEmail, data.password);
+      if (LAUNCH_GATE_ENABLED && !isLaunchGateAllowed(cleanEmail)) {
+        // Real credentials, but not an allowlisted account pre-launch —
+        // sign back out immediately rather than granting access.
+        pendingNavRef.current = null;
+        await signOut(auth);
+        setLoginError(LAUNCH_GATE_MESSAGE);
+        return;
+      }
       logAppEvent("login", { method: "email" });
       setLoginData({ email: "", password: "" });
       setIsLoginModalOpen(false);
