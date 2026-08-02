@@ -11,7 +11,9 @@ import "./Header.css";
 // than navigates to from inside the app. This only swaps in for logged-out
 // visitors on those specific routes — a logged-in user still sees the real
 // Header everywhere, including here, so in-app navigation isn't disrupted.
-export default function MinimalHeader({ onSignUpClick, onLoginClick }) {
+// showAuthButtons: set false pre-launch on pages that shouldn't invite
+// sign-ups yet (e.g. Contact Us) — flip back to true once the app is live.
+export default function MinimalHeader({ onSignUpClick, onLoginClick, showAuthButtons = true }) {
   const navigate = useNavigate();
   return (
     <header className="header">
@@ -19,18 +21,22 @@ export default function MinimalHeader({ onSignUpClick, onLoginClick }) {
         <div className="header__logo-link" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
           <div className="header__logo">WIMC™</div>
         </div>
-        <nav className="header__nav header__nav--desktop" aria-label="Main navigation">
-          <div className="header__auth-buttons">
-            <button className="header__button" onClick={onSignUpClick}>Sign Up</button>
-            <button className="header__button" onClick={onLoginClick}>Login</button>
-          </div>
-        </nav>
-        <div className="header__mobile-controls">
-          <div className="header__mobile-auth">
-            <button className="header__button header__button--signup-mobile" onClick={onSignUpClick}>Sign Up</button>
-            <button className="header__button header__button--login-mobile" onClick={onLoginClick}>Login</button>
-          </div>
-        </div>
+        {showAuthButtons && (
+          <>
+            <nav className="header__nav header__nav--desktop" aria-label="Main navigation">
+              <div className="header__auth-buttons">
+                <button className="header__button" onClick={onSignUpClick}>Sign Up</button>
+                <button className="header__button" onClick={onLoginClick}>Login</button>
+              </div>
+            </nav>
+            <div className="header__mobile-controls">
+              <div className="header__mobile-auth">
+                <button className="header__button header__button--signup-mobile" onClick={onSignUpClick}>Sign Up</button>
+                <button className="header__button header__button--login-mobile" onClick={onLoginClick}>Login</button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </header>
   );

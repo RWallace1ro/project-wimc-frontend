@@ -520,6 +520,7 @@ function AppInner() {
             <MinimalHeader
               onSignUpClick={() => setIsSignUpModalOpen(true)}
               onLoginClick={() => setIsLoginModalOpen(true)}
+              showAuthButtons={location.pathname !== "/contact"}
             />
           ) : (
             <Header
