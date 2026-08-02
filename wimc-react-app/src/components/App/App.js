@@ -29,6 +29,7 @@ import { LAUNCH_GATE_ENABLED, LAUNCH_GATE_MESSAGE, isLaunchGateAllowed } from ".
 
 import Header from "../Header/Header";
 import MinimalHeader from "../Header/MinimalHeader";
+import StandaloneLogoBar from "../Header/StandaloneLogoBar";
 import Footer from "../Footer/Footer";
 import CookieConsent from "../CookieConsent/CookieConsent";
 import CookiePreferences from "../CookiePreferences/CookiePreferences";
@@ -585,14 +586,17 @@ function AppInner() {
             />
           )}
           {/* An external visitor (from the marketing site, an emailed link,
-              etc.) gets ZERO header — not even the minimal logo bar — so the
-              page reads as a genuinely standalone form/document, not a WIMC
-              app screen. The logo-bar MinimalHeader is reserved for a
-              logged-out visitor who's browsing these pages FROM INSIDE the
-              app's own navigation (e.g. clicked "FAQ" while logged out) —
-              they benefit from the branding continuity; someone arriving
-              from outside does not. */}
-          {isEmbed || (isExternalReferrer(location.search) && PUBLIC_STANDALONE_PATHS.includes(location.pathname)) ? null : !isLoggedIn && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
+              etc.) gets only a plain, non-interactive logo mark — no Sign
+              Up/Login, no app nav — so the page reads as a genuinely
+              standalone form/document, not a WIMC app screen. The full
+              MinimalHeader (with auth buttons) is reserved for a logged-out
+              visitor browsing these pages FROM INSIDE the app's own
+              navigation (e.g. clicked "FAQ" while logged out) — they
+              benefit from that continuity; someone arriving from outside
+              does not. */}
+          {isEmbed ? null : isExternalReferrer(location.search) && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
+            <StandaloneLogoBar />
+          ) : !isLoggedIn && PUBLIC_STANDALONE_PATHS.includes(location.pathname) ? (
             <MinimalHeader
               onSignUpClick={() => setIsSignUpModalOpen(true)}
               onLoginClick={() => setIsLoginModalOpen(true)}
