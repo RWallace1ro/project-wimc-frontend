@@ -173,6 +173,7 @@ function AddClothingModal({
       setError("");
       setWebUrl("");
       setWebBusy(false);
+      setSource("device");
     }
 
     if (isOpen && initialCategory) {
@@ -230,9 +231,15 @@ function AddClothingModal({
         <form className="modal__form" onSubmit={handleSubmit}>
           {/* Optional alternative sources — device uploader is always visible below */}
           <div className="modal__segmented">
+            {/* Hidden on phone screens (see .segmented__btn--websearch's media
+                query) — it opens Cloudinary's own third-party Upload Widget,
+                whose internal close/confirm buttons we don't control the
+                layout of and land under the notch/status bar on real
+                devices. Paste URL already covers "get an image from the
+                web" with our own fully-controlled UI. */}
             <button
               type="button"
-              className={`segmented__btn ${source === "web" ? "is-active" : ""}`}
+              className={`segmented__btn segmented__btn--websearch ${source === "web" ? "is-active" : ""}`}
               onClick={() => setSource(source === "web" ? "device" : "web")}
             >
               Web search (image)

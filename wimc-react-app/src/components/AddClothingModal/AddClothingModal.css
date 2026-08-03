@@ -104,6 +104,17 @@
   font-weight: 700;
 }
 
+/* Cloudinary's own third-party Upload Widget (opened by this button) puts
+   its close/confirm buttons under the notch/status bar on real phones —
+   we don't control that widget's internal layout. Paste URL already
+   covers "get an image from the web" with our own fully-controlled UI,
+   so just don't offer this option on phone-sized screens. */
+@media (max-width: 600px) {
+  .segmented__btn--websearch {
+    display: none;
+  }
+}
+
 /* Web upload: paste-link fallback (mobile-proof) */
 .modal__web {
   display: flex;
