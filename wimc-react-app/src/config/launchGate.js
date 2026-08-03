@@ -10,7 +10,7 @@
 //
 // To launch publicly: set LAUNCH_GATE_ENABLED to false. Nothing else in the
 // app needs to change — every check reads from this one flag.
-export const LAUNCH_GATE_ENABLED = true;
+export const LAUNCH_GATE_ENABLED = false;
 
 export const LAUNCH_GATE_ALLOWED_EMAILS = [
   "rwallaceroc@gmail.com",
