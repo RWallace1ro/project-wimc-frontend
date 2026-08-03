@@ -7,7 +7,9 @@ const SLIDES = [
   {
     id: "welcome",
     label: "Welcome",
-    dur: 22,
+    // dur = narration length + ~3.5s pause before auto-advancing (was
+    // padded much higher, leaving a 5-7s silent gap on every slide).
+    dur: 18,
     icon: "👗👔",
     title: "WIMC™",
     subtitle: "What's In My Closet",
@@ -23,7 +25,7 @@ const SLIDES = [
   {
     id: "auth",
     label: "Authentication",
-    dur: 19,
+    dur: 18,
     icon: "🔐",
     title: "Authentication",
     type: "feature",
@@ -34,18 +36,18 @@ const SLIDES = [
   {
     id: "closet",
     label: "Smart Closet",
-    dur: 24,
+    dur: 20,
     icon: "👗",
     title: "Smart Closet",
     type: "feature",
     mockupTitle: "My Closet",
-    features: ["6 clothing categories","Bags · Accessories · Fragrance","Images & video uploads","Per-section custom backgrounds","Color palette + photo presets","Try-On button per section","AI Natural Language Search"],
+    features: ["8 clothing categories","Bags · Accessories · Fragrance","Images & video uploads","Per-section custom backgrounds","Color palette + photo presets","Try-On button per section","AI Natural Language Search"],
     featureIcons: ["📦","👜","🖼️","🎨","🌈","🎬","🔍"],
   },
   {
     id: "search",
     label: "Closet Search",
-    dur: 18,
+    dur: 16,
     icon: "🔍",
     title: "Closet Search",
     type: "feature",
@@ -56,7 +58,7 @@ const SLIDES = [
   {
     id: "planning",
     label: "Planning Tools",
-    dur: 22,
+    dur: 18,
     icon: "📅",
     title: "Planning Tools",
     type: "feature",
@@ -67,7 +69,7 @@ const SLIDES = [
   {
     id: "ai",
     label: "AI Features",
-    dur: 26,
+    dur: 23,
     icon: "✨",
     title: "Five AI Features",
     type: "feature",
@@ -78,7 +80,7 @@ const SLIDES = [
   {
     id: "tryon",
     label: "Try-On Studio",
-    dur: 19,
+    dur: 17,
     icon: "🎬",
     title: "Try-On Studio",
     type: "feature",
@@ -89,7 +91,7 @@ const SLIDES = [
   {
     id: "donate-wishlist",
     label: "Donate & Wish List",
-    dur: 19,
+    dur: 16,
     icon: "🗑️",
     title: "Donate Bin & Wish List",
     type: "feature",
@@ -100,7 +102,7 @@ const SLIDES = [
   {
     id: "shopping",
     label: "Shopping List",
-    dur: 20,
+    dur: 17,
     icon: "🛒",
     title: "Shopping & Wish List",
     type: "feature",
@@ -111,7 +113,7 @@ const SLIDES = [
   {
     id: "kids",
     label: "Kids' Closet",
-    dur: 16,
+    dur: 14,
     icon: "👶",
     title: "Kids' Closet",
     type: "feature",
@@ -122,7 +124,7 @@ const SLIDES = [
   {
     id: "pets",
     label: "Pet Closet",
-    dur: 24,
+    dur: 22,
     icon: "🐾",
     title: "Pet Closet",
     type: "feature",
@@ -133,7 +135,7 @@ const SLIDES = [
   {
     id: "receipts-weather",
     label: "Receipts & Weather",
-    dur: 20,
+    dur: 18,
     icon: "🧾",
     title: "Receipts & Weather",
     type: "feature",
@@ -144,7 +146,7 @@ const SLIDES = [
   {
     id: "settings",
     label: "Settings & More",
-    dur: 24,
+    dur: 22,
     icon: "⚙️",
     title: "Settings & More",
     type: "feature",
@@ -187,7 +189,7 @@ const SPEED_OPTIONS = [
 const SCRIPTS = [
   "Welcome to WIMC — What's In My Closet! This is your complete AI-powered closet manager. From smart closets and outfit planning to kids' closets, shopping lists, weather, and more — let me show you everything.",
   "WIMC starts with secure authentication powered by Firebase. Sign up or log in, verify your email, and reset your password anytime. Upload a profile photo and update your account from Settings.",
-  "Your closet is organized into six smart categories. The Bags and Accessories card even splits into Bags, Accessories, and Fragrance. Upload photos and videos to the cloud, and customize each section's background with photo presets or a color palette.",
+  "Your closet is organized into eight smart categories. The Bags and Accessories card even splits into Bags, Accessories, and Fragrance. Upload photos and videos to the cloud, and customize each section's background with photo presets or a color palette.",
   "Use Closet Search to find any item instantly with AI Natural Language Search. Search across all categories, filter by color, type, or season, and open any item directly from results.",
   "The Outfit Preview Panel lets you build looks by tapping items to select them. Save favorites, share outfits, and plan your entire week with the Outfit Planner. The Travel Pack Panel helps you pack smarter with AI assistance.",
   "WIMC has five AI features built in — an AI Stylist that can build a full outfit from your own closet, Natural Language Search, a Smart Donation Advisor, AI Style Feedback after try-ons, and a full AI Shopping Assistant. Your plan sets how many AI requests you get each day.",
@@ -330,8 +332,8 @@ function MockupContent({ id }) {
     case "closet":
       return (
         <div>
-          <div className="mc-card-grid">
-            {[["👗","#2d1b4e","Dresses"],["👟","#1a2e4a","Shoes"],["👖","#1a3a2a","Pants"],["👚","#2d2010","Tops"],["👜","#2a1a2e","Bags"],["🧥","#1a1a2e","Jackets"]].map(([e,bg,l])=>(
+          <div className="mc-card-grid mc-card-grid--eight">
+            {[["👗","#2d1b4e","Dresses"],["👔","#1a2440","Dress Shirts"],["👟","#1a2e4a","Shoes"],["👖","#1a3a2a","Pants"],["👚","#2d2010","Tops"],["👜","#2a1a2e","Bags"],["🧥","#1a1a2e","Jackets"],["🧳","#2a2010","Blazers"]].map(([e,bg,l])=>(
               <div className="mc-card" key={l}>
                 <div className="mc-card-img" style={{background:bg}}>{e}</div>
                 <div className="mc-card-lbl">{l}</div>
@@ -437,17 +439,6 @@ function MockupContent({ id }) {
               <div style={{fontSize:7,color:"#f59e0b",marginTop:4}}>⏳ 11 days until deleted</div>
             </div>
           </div>
-          <div className="mc-panel" style={{marginTop:7}}>
-            <div className="mc-panel-title" style={{color:"#059669"}}>🧾 Receipts</div>
-            <div className="mc-receipt-row">
-              {[["📷","Photo"],["📄","PDF"],["📧","Email"]].map(([e,l])=>(
-                <div key={l} className="mc-receipt-card">
-                  <div style={{fontSize:14}}>{e}</div>
-                  <div style={{fontSize:7,color:"#64748b"}}>{l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       );
     case "shopping":
@@ -484,26 +475,22 @@ function MockupContent({ id }) {
         </div>
       );
     case "settings":
+      // Mirrors the real Account Settings modal's actual tabs/layout
+      // (UserSettingsModal.js) — Edit Profile, Change Password,
+      // Appearance, Subscription, plus Delete Account below.
       return (
         <div>
-          <div className="mc-settings-tabs">
-            {[["👤 Profile",true],["🔒 Password",false],["🎨 Appearance",false]].map(([l,a])=>(
+          <div className="mc-settings-tabs mc-settings-tabs--four">
+            {[["👤 Edit Profile",true],["🔒 Change Password",false],["🎨 Appearance",false],["💳 Subscription",false]].map(([l,a])=>(
               <div key={l} className={`mc-settings-tab${a?" mc-settings-tab--active":""}`}>{l}</div>
             ))}
           </div>
-          <div className="mc-panel" style={{marginBottom:6}}>
-            <div className="mc-panel-title" style={{color:"#0369a1"}}>🌤️ Weather — Washington DC</div>
-            <div className="mc-weather-row">
-              <div style={{fontSize:20}}>⛅</div>
-              <div className="mc-weather-temp">72°F</div>
-              <div style={{fontSize:7,color:"#64748b",textAlign:"right"}}>Partly cloudy<br/>7-day forecast</div>
-            </div>
-          </div>
-          <div className="mc-bottom-btns">
-            <div className="mc-bottom-btn" style={{color:"#ef4444"}}>🗑️ Donate Bin</div>
-            <div className="mc-bottom-btn">ℹ️ About</div>
-            <div className="mc-bottom-btn mc-bottom-btn--primary">WIMC™ Complete</div>
-          </div>
+          <div className="mc-settings-danger">🗑️ Delete Account</div>
+          <div className="mc-auth-avatar" style={{margin:"6px auto 3px"}}>👤</div>
+          <div className="mc-auth-heading" style={{marginBottom:4}}>Tap 📷 to change photo</div>
+          <div className="mc-field">Username</div>
+          <div className="mc-field" style={{marginTop:4}}>Email address</div>
+          <div className="mc-btn" style={{marginTop:6}}>Save Changes</div>
         </div>
       );
     default:

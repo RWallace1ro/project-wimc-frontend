@@ -15,7 +15,7 @@
 .tour-modal {
   width: min(860px, calc(100vw - 32px));
   height: min(580px, calc(100vh - 32px));
-  background: #0a0e1a;
+  background: #151b2e;
   border-radius: 16px;
   border: 1px solid #1e293b;
   box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
@@ -87,7 +87,7 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #0a0e1a;
+  background: #151b2e;
 }
 
 /* ── Title slide ─────────────────────────────────────── */
@@ -525,6 +525,18 @@
   gap: 5px;
   margin-bottom: 7px;
 }
+/* All 8 real closet categories (was hardcoded to just 6) — 4 columns
+   keeps card size close to the original 3-column layout. */
+.mc-card-grid--eight {
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+.mc-card-grid--eight .mc-card-img {
+  height: 28px;
+  font-size: 13px;
+}
+.mc-card-grid--eight .mc-card-lbl {
+  font-size: 6px;
+}
 .mc-card {
   background: #0f172a;
   border: 1px solid #334155;
@@ -810,6 +822,19 @@
   border-color: #7c3aed;
   color: #a78bfa;
   font-weight: 700;
+}
+/* 4 tabs (Edit Profile / Change Password / Appearance / Subscription)
+   need smaller text than the original 3-tab layout to avoid wrapping. */
+.mc-settings-tabs--four .mc-settings-tab {
+  font-size: 6.5px;
+  padding: 5px 2px;
+  letter-spacing: -0.01em;
+}
+.mc-settings-danger {
+  font-size: 7px;
+  color: #f87171;
+  font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .mc-weather-row {
