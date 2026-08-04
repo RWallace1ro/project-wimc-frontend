@@ -328,6 +328,22 @@
   text-align: center;
   white-space: nowrap;
 }
+.usm-avatar-remove-btn {
+  margin-top: 2px;
+  padding: 4px 10px;
+  border: 1px solid #fecaca;
+  background: #fff;
+  color: #b91c1c;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.usm-avatar-remove-btn:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
 .usm-avatar-filename {
   margin: 0;
   font-size: 13px;

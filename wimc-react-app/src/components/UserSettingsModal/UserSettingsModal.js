@@ -340,6 +340,17 @@ export default function UserSettingsModal({
     setProfileMsg({ text: "", type: "" });
   };
 
+  // Clears the photo without requiring a replacement — Avatar already falls
+  // back to the user's initials when given no url, same as a brand-new
+  // account that's never uploaded one.
+  const handleRemoveAvatar = () => {
+    setAvatarFile(null);
+    setAvatarPreview("");
+    setAvatarUrl("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    setProfileMsg({ text: "", type: "" });
+  };
+
   // ── Save Profile ─────────────────────────────────────────────────────────────
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -651,6 +662,15 @@ export default function UserSettingsModal({
                   )}
                   {uploading && (
                     <p className="usm-avatar-hint">Uploading photo…</p>
+                  )}
+                  {avatarPreview && !uploading && (
+                    <button
+                      type="button"
+                      className="usm-avatar-remove-btn"
+                      onClick={handleRemoveAvatar}
+                    >
+                      🗑️ Remove Photo
+                    </button>
                   )}
                 </div>
               </div>
