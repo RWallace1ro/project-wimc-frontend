@@ -742,6 +742,68 @@ function ClosetSectionModal({
               ›
             </button>
           )}
+
+          {/* Same actions available on the thumbnail (Pin, Move to top, Move,
+              Delete) — the enlarged view is otherwise a dead end for taking
+              any action on the photo you're actually looking at. */}
+          {(() => {
+            const url = items[lightboxIdx];
+            const isBusy = deleting === url || moving === url;
+            return (
+              <div className="csm-lightbox__actions" onClick={(e) => e.stopPropagation()}>
+                <button
+                  className={`csm-lightbox__action-btn${pinnedUrl === url ? " is-pinned" : ""}`}
+                  onClick={() => handlePinImage(url)}
+                  title={pinnedUrl === url ? "Card image (pinned)" : "Set as card image"}
+                  aria-label="Set as card image"
+                >
+                  {pinFlash === url ? "✅" : "📌"}
+                </button>
+                <button
+                  className="csm-lightbox__action-btn"
+                  onClick={() => handleMoveToTop(url)}
+                  title="Move to top"
+                  aria-label="Move to top"
+                >
+                  ⬆
+                </button>
+                {moveTargets.length > 0 && (
+                  <button
+                    className="csm-lightbox__action-btn"
+                    onClick={() => setMoveMenuFor(moveMenuFor === url ? null : url)}
+                    disabled={isBusy}
+                    title="Move to another section"
+                    aria-label="Move to another section"
+                  >
+                    {moving === url ? "…" : "↗"}
+                  </button>
+                )}
+                <button
+                  className="csm-lightbox__action-btn csm-lightbox__action-btn--danger"
+                  onClick={() => { handleDeleteImage(url); lightboxClose(); }}
+                  disabled={isBusy}
+                  title="Delete image"
+                  aria-label="Delete image"
+                >
+                  {deleting === url ? "…" : "🗑️"}
+                </button>
+                {moveMenuFor === url && (
+                  <div className="csm-move-menu csm-lightbox__move-menu" onClick={(e) => e.stopPropagation()}>
+                    <p className="csm-move-menu__title">Move to…</p>
+                    {moveTargets.map((s) => (
+                      <button
+                        key={s.tag}
+                        className="csm-move-option"
+                        onClick={() => { handleMoveItem(url, s.tag, "image"); lightboxClose(); }}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
     </section>
