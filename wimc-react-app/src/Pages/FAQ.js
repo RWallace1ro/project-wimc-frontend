@@ -149,6 +149,10 @@ const SECTIONS = [
         a: "The Try-On Studio (🎬 Try On) lets you record an outfit video using your front or rear camera, or upload one. Each video can be saved to your Video Bin, and you can request AI Style Feedback on it. The Try-On Studio is a Pro feature.",
       },
       {
+        q: "What is the Carousel?",
+        a: "The Carousel (🎞️ Carousel) is a full-screen, ambient slideshow of every photo across your closet — great as a background display, or cast to a TV via AirPlay/Chromecast. You can play/pause, adjust the speed, and turn on optional background music (with volume control, or use your own audio file for that session). The Carousel is a Pro feature.",
+      },
+      {
         q: "What is the Receipts tracker?",
         a: "The Receipts tracker (🧾 Receipts) lets you store purchase receipts as photos, PDFs, or notes, filter them by category or return status, mark items as returned, and back up or restore your receipts across devices. Receipts is a Pro feature.",
       },
@@ -188,7 +192,7 @@ const SECTIONS = [
       },
       {
         q: "What are the plans and what's included?",
-        a: "There are three plans. Free ($0): core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro ($4.99/mo or $39.99/yr): everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Receipts tracker, and 10 AI requests/day. Pro + AI ($7.99/mo or $79.99/yr): everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features.",
+        a: "There are three plans. Free ($0): core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro ($4.99/mo or $39.99/yr): everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and 10 AI requests/day. Pro + AI ($7.99/mo or $79.99/yr): everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features.",
       },
       {
         q: "How much does the Pro plan cost?",

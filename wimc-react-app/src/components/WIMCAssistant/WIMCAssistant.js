@@ -28,14 +28,15 @@ WIMC FEATURES:
 - Receipts: store receipts as photo, PDF, or metadata; filter, search, mark returned, share, and back up/restore across devices.
 - Kids' Closet: a separate closet + profile (sizes, age) for each child. Pet Closet: a closet + profile (species, breed, apparel size, measurements) for each pet. Both have their own sections and planners.
 - Try-On Studio: record outfit videos and get AI Style Feedback. AI Stylist: chat for outfit ideas that can build a visual outfit from your closet. Weather: current + 7-day forecast to plan outfits.
+- Carousel: a full-screen ambient slideshow of every photo across your closet (great cast to a TV via AirPlay/Chromecast) — play/pause, adjust speed, optional background music with volume control or your own audio file for that session.
 - Settings (⚙️ in the header): edit profile/photo, change password, set page & card backgrounds, manage your subscription, or delete your account.
 - Everything syncs across your devices automatically when you're signed in.
 
-NAVIGATION: Most features are buttons in the top header (Weather, Try On, AI Stylist, Kids, Pets, Receipts, Tour, Settings). The closet itself is the Home/Closet page. The guided Tour (🎬 Tour) walks through everything.
+NAVIGATION: Most features are buttons in the top header (Weather, Try On, Carousel, AI Stylist, Kids, Pets, Receipts, Tour, Settings). The closet itself is the Home/Closet page. The guided Tour (🎬 Tour) walks through everything.
 
 PLANS / PRICING (find these on the Pricing page, or Settings → Subscription):
 - Free ($0): closet with all 8 sections, 50 photo uploads, basic outfit preview, weather, Shopping List, Wish List, and the AI Stylist limited to 3 requests/day.
-- Pro ($4.99/mo or $39.99/yr): everything in Free, unlimited uploads, Kids' Closet & Pet Closet, Travel Pack Planner, Video Bin, Donate Bin, Outfit-of-the-Day Planner, Receipts backup & restore, and 10 AI requests/day.
+- Pro ($4.99/mo or $39.99/yr): everything in Free, unlimited uploads, Kids' Closet & Pet Closet, Travel Pack Planner, Video Bin, Donate Bin, Outfit-of-the-Day Planner, Carousel, Receipts backup & restore, and 10 AI requests/day.
 - Pro + AI ($7.99/mo or $79.99/yr): everything in Pro, 50 AI requests/day, and the full AI suite (AI Stylist outfit builder, AI Packing Assistant, AI Donation Advisor, AI Closet Search), plus unlimited Kids & Pet profiles.
 - To upgrade: go to the Pricing page and pick a plan. To manage or cancel: Settings → Subscription → Manage Subscription.
 
