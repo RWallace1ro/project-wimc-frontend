@@ -28,6 +28,7 @@ export default function AuthAction() {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -91,25 +92,47 @@ export default function AuthAction() {
             <form className="authaction__form" onSubmit={handleReset}>
               <label className="authaction__label">
                 <span>New password</span>
-                <input
-                  type="password"
-                  value={pw}
-                  onChange={(e) => { setPw(e.target.value); setErr(""); }}
-                  placeholder="At least 8 characters"
-                  autoComplete="new-password"
-                  className="authaction__input"
-                />
+                <div className="authaction__pw-field">
+                  <input
+                    type={showPw ? "text" : "password"}
+                    value={pw}
+                    onChange={(e) => { setPw(e.target.value); setErr(""); }}
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    className="authaction__input"
+                  />
+                  <button
+                    type="button"
+                    className="authaction__pw-toggle"
+                    onClick={() => setShowPw((v) => !v)}
+                    aria-label={showPw ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showPw ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </label>
               <label className="authaction__label">
                 <span>Confirm new password</span>
-                <input
-                  type="password"
-                  value={confirmPw}
-                  onChange={(e) => { setConfirmPw(e.target.value); setErr(""); }}
-                  placeholder="Re-enter your new password"
-                  autoComplete="new-password"
-                  className="authaction__input"
-                />
+                <div className="authaction__pw-field">
+                  <input
+                    type={showPw ? "text" : "password"}
+                    value={confirmPw}
+                    onChange={(e) => { setConfirmPw(e.target.value); setErr(""); }}
+                    placeholder="Re-enter your new password"
+                    autoComplete="new-password"
+                    className="authaction__input"
+                  />
+                  <button
+                    type="button"
+                    className="authaction__pw-toggle"
+                    onClick={() => setShowPw((v) => !v)}
+                    aria-label={showPw ? "Hide password" : "Show password"}
+                    tabIndex={-1}
+                  >
+                    {showPw ? "🙈" : "👁️"}
+                  </button>
+                </div>
               </label>
               {err && <p className="authaction__err">{err}</p>}
               <button className="authaction__btn authaction__btn--primary" disabled={busy}>

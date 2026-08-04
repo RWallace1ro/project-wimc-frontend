@@ -284,6 +284,7 @@ export default function UserSettingsModal({
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [showDeletePw, setShowDeletePw] = useState(false);
   const [pwMsg, setPwMsg] = useState({ text: "", type: "" });
   const [pwSaving, setPwSaving] = useState(false);
 
@@ -942,18 +943,29 @@ export default function UserSettingsModal({
                     <label className="usm-label" htmlFor="usm-delete-pw">
                       Enter your password to continue
                     </label>
-                    <input
-                      id="usm-delete-pw"
-                      className="usm-input usm-input--danger"
-                      type="password"
-                      value={deletePassword}
-                      onChange={(e) => {
-                        setDeletePassword(e.target.value);
-                        if (deleteMsg.text) setDeleteMsg({ text: "", type: "" });
-                      }}
-                      placeholder="Your current password"
-                      autoComplete="current-password"
-                    />
+                    <div className="usm-pw-field">
+                      <input
+                        id="usm-delete-pw"
+                        className="usm-input usm-input--danger"
+                        type={showDeletePw ? "text" : "password"}
+                        value={deletePassword}
+                        onChange={(e) => {
+                          setDeletePassword(e.target.value);
+                          if (deleteMsg.text) setDeleteMsg({ text: "", type: "" });
+                        }}
+                        placeholder="Your current password"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        className="usm-pw-toggle"
+                        onClick={() => setShowDeletePw((v) => !v)}
+                        aria-label={showDeletePw ? "Hide password" : "Show password"}
+                        tabIndex={-1}
+                      >
+                        {showDeletePw ? "🙈" : "👁️"}
+                      </button>
+                    </div>
                   </div>
 
                   {deleteMsg.text && (

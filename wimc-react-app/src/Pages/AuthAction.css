@@ -78,3 +78,24 @@
   border-color: #0056b3;
 }
 .authaction__btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.authaction__pw-field {
+  position: relative;
+}
+.authaction__pw-field .authaction__input {
+  padding-right: 40px;
+}
+.authaction__pw-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}

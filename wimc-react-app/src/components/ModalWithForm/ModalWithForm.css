@@ -200,3 +200,24 @@
   line-height: 1.5;
   color: #065f46;
 }
+
+.modal__pw-field {
+  position: relative;
+}
+.modal__pw-field .modal__input {
+  padding-right: 40px;
+}
+.modal__pw-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}

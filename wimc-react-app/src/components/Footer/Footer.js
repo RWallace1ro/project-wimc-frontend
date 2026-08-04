@@ -7,7 +7,7 @@ function Footer() {
   return (
     <footer className="footer">
       <p className="footer__year">
-        © 2024–{new Date().getFullYear()} GingerFaith™ LLC. All rights reserved.
+        © {new Date().getFullYear()}
       </p>
       {/* All legal links rendered as inline text — no flexbox, no wrapping edge-cases */}
       <p className="footer__legal">

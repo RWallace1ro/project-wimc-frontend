@@ -18,6 +18,7 @@ function ModalWithForm({
     avatarUrl: "",
   });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resetMsg, setResetMsg] = useState("");
@@ -34,6 +35,7 @@ function ModalWithForm({
       setIsSubmitting(false);
       setResetMsg("");
       setResetBusy(false);
+      setShowPassword(false);
     } else {
       setTimeout(() => firstInputRef.current?.focus(), 50);
     }
@@ -201,33 +203,55 @@ function ModalWithForm({
 
             <label className="modal__label">
               <span className="modal__label-text">Password</span>
-              <input
-                type="password"
-                name="password"
-                placeholder={isSignUp ? "At least 8 characters" : "Password"}
-                value={formData.password}
-                onChange={handleChange}
-                className="modal__input"
-                autoComplete={isSignUp ? "new-password" : "current-password"}
-                aria-required="true"
-                aria-describedby={errorMessage ? "modal-error" : undefined}
-              />
+              <div className="modal__pw-field">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder={isSignUp ? "At least 8 characters" : "Password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="modal__input"
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
+                  aria-required="true"
+                  aria-describedby={errorMessage ? "modal-error" : undefined}
+                />
+                <button
+                  type="button"
+                  className="modal__pw-toggle"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  {showPassword ? "🙈" : "👁️"}
+                </button>
+              </div>
             </label>
 
             {isSignUp && (
               <>
                 <label className="modal__label">
                   <span className="modal__label-text">Confirm Password</span>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="Re-enter your password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="modal__input"
-                    autoComplete="new-password"
-                    aria-required="true"
-                  />
+                  <div className="modal__pw-field">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      placeholder="Re-enter your password"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className="modal__input"
+                      autoComplete="new-password"
+                      aria-required="true"
+                    />
+                    <button
+                      type="button"
+                      className="modal__pw-toggle"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? "🙈" : "👁️"}
+                    </button>
+                  </div>
                 </label>
 
                 <label className="modal__label">

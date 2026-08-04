@@ -1209,3 +1209,24 @@
   line-height: 1.6;
   margin: 4px 0 16px;
 }
+
+.usm-pw-field {
+  position: relative;
+}
+.usm-pw-field .usm-input {
+  padding-right: 40px;
+}
+.usm-pw-toggle {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
