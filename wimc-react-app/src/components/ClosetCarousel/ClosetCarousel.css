@@ -119,8 +119,21 @@
   transform: translateX(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
   gap: 10px;
+  /* With Play/Pause + 4 speed options + volume + music picker all in one
+     row, the bar is wider than a phone viewport — without a width cap it
+     stayed centered but spilled past both edges ("pressed" against the
+     margins). Wraps to a second line on narrow screens instead. */
+  max-width: calc(100vw - 32px);
   pointer-events: auto;
+}
+
+@media (max-width: 480px) {
+  .cc-bottom-bar {
+    gap: 8px;
+  }
 }
 
 .cc-speed {
