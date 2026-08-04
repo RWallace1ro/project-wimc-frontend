@@ -30,7 +30,7 @@ function About() {
         <p>
           WIMC also brings AI into your everyday closet routine: an AI
           Stylist for personalized outfit advice, an AI Packing Assistant
-          that builds a travel packing list from your own wardrobe, an AI
+          that builds a travel packing list from your own closet, an AI
           Donation Advisor that helps decide what's worth donating, and a
           Try-On Studio that records outfit videos and gives AI-powered style
           feedback.
