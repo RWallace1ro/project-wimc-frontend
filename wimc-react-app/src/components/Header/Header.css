@@ -227,6 +227,13 @@
   background-color: #6d28d9;
 }
 
+.header__button--carousel {
+  background-color: #0f766e;
+}
+.header__button--carousel:hover {
+  background-color: #0d5f59;
+}
+
 /* ── Tabs layer overrides ── */
 .header__bottom .closet-tabs {
   flex: 1;

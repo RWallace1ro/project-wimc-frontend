@@ -18,6 +18,7 @@ const firstName = (name) => (name || "").trim().split(/\s+/)[0] || "";
 // Each only downloads when the user first opens it.
 const WeatherModal      = lazy(() => import("../WeatherModal/WeatherModal"));
 const TryOnStudio       = lazy(() => import("../TryOnStudio/TryOnStudio"));
+const ClosetCarousel    = lazy(() => import("../ClosetCarousel/ClosetCarousel"));
 const AIStylist         = lazy(() => import("../AIStylist/AIStylist"));
 const UserSettingsModal = lazy(() => import("../UserSettingsModal/UserSettingsModal"));
 const WIMCTourVideo     = lazy(() => import("../WIMCTourVideo/WIMCTourVideo"));
@@ -42,6 +43,7 @@ function Header({
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
   const [isWeatherOpen, setIsWeatherOpen] = useState(false);
   const [isTryOnOpen, setIsTryOnOpen] = useState(false);
+  const [isCarouselOpen, setIsCarouselOpen] = useState(false);
   const [isStylistOpen, setIsStylistOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -117,6 +119,7 @@ function Header({
     <>
       <button className="header__button header__button--weather" onClick={() => { setIsWeatherOpen(true); setIsMobileMenuOpen(false); }}>🌤️ Weather</button>
       <button className="header__button header__button--tryon" onClick={() => { if (!requirePro("Try-On Studio")) return; setIsTryOnOpen(true); setIsMobileMenuOpen(false); }}>🎬 Try On</button>
+      <button className="header__button header__button--carousel" onClick={() => { if (!requirePro("Closet Slideshow")) return; setIsCarouselOpen(true); setIsMobileMenuOpen(false); }}>🎞️ Slideshow</button>
       <button className="header__button header__button--stylist" onClick={() => { setIsStylistOpen(true); setIsMobileMenuOpen(false); }}>✨ AI Stylist</button>
       <button className="header__button header__button--kids" onClick={() => { if (!requirePro("Kids' Closet")) return; navigate("/kids-closet"); setIsMobileMenuOpen(false); }}>👶 Kids</button>
       <button className="header__button header__button--pets" onClick={() => { if (!requirePro("Pet Closet")) return; navigate("/pet-closet"); setIsMobileMenuOpen(false); }}>🐾 Pets</button>
@@ -226,6 +229,7 @@ function Header({
       <Suspense fallback={null}>
         <WeatherModal isOpen={isWeatherOpen} onClose={() => setIsWeatherOpen(false)} />
         <TryOnStudio isOpen={isTryOnOpen} onClose={() => setIsTryOnOpen(false)} initialImageUrl={null} initialSection={null} />
+        <ClosetCarousel isOpen={isCarouselOpen} onClose={() => setIsCarouselOpen(false)} />
         <AIStylist isOpen={isStylistOpen} onClose={() => setIsStylistOpen(false)} closetItems={closetItems} selectedTab={selectedTab} />
         <UserSettingsModal
           isOpen={isSettingsOpen}
