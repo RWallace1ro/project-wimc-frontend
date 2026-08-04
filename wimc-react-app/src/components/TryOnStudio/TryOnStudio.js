@@ -6,7 +6,7 @@ import {
   videoStream,
 } from "../../utils/CloudinaryAPI";
 import { getSubSections } from "../../utils/closetSubsections";
-import { setVideoRefImage } from "../../utils/videoMeta";
+import { setVideoRefImage, setVideoTitleIfMissing } from "../../utils/videoMeta";
 import AIStyleFeedback from "../AIStyleFeedback/AIStyleFeedback";
 import "./TryOnStudio.css";
 
@@ -235,6 +235,11 @@ export default function TryOnStudio({
         // transform segment, so saving under that key never matched anything
         // VideoBin later looked up, and the thumbnail silently never showed.
         if (refImage) setVideoRefImage(videoStream(res.secure_url), refImage);
+        // Give it a real title (e.g. "Dresses/Skirts Try-On — Aug 3") instead
+        // of leaving it "Untitled" until the user manually renames it.
+        const sectionLabel = SECTION_OPTIONS.find((o) => o.value === section)?.label || "Try-On";
+        const dateLabel = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        setVideoTitleIfMissing(videoStream(res.secure_url), `${sectionLabel} Try-On — ${dateLabel}`);
         setShareMsg("✅ Saved to Video Bin!");
       } else {
         setShareErr("Upload failed — please try again.");

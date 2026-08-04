@@ -33,6 +33,17 @@ export function setVideoRefImage(videoUrl, refImage) {
   saveVideoMeta(meta);
 }
 
+// Give a freshly saved video a real title instead of leaving it "Untitled"
+// until the user manually renames it — never overwrites a title that's
+// already there (e.g. a previous rename).
+export function setVideoTitleIfMissing(videoUrl, title) {
+  if (!videoUrl || !title) return;
+  const meta = loadVideoMeta();
+  if (meta[videoUrl]?.title) return;
+  meta[videoUrl] = { ...(meta[videoUrl] || {}), title };
+  saveVideoMeta(meta);
+}
+
 // ── Deleted-videos trash (30-day grace period) ──────────────────────────────
 // Per-user, synced list — there's no global collection of every user's videos
 // the way sharedContent works for shares, so the 30-day auto-purge is checked

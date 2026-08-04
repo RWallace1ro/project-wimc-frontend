@@ -189,14 +189,20 @@ export function imageSrcSet(url) {
 // so_3 (3 seconds in) 404s for any video shorter than that, which is common
 // for quick recordings — so_0 always exists as long as the video has at
 // least one frame.
+// Was appending ".jpg" onto the URL as-is (e.g. "...video.mp4.jpg") instead
+// of replacing the video extension — Cloudinary can't resolve that double
+// extension, so the poster image 404s and every video thumbnail that falls
+// back to this (i.e. wasn't given an explicit refImage) silently shows
+// nothing. Now identical to safeVideoPoster's correct extension-replace
+// logic; kept both names since call sites use either.
 export function videoPoster(url) {
-  return url ? url.replace("/upload/", "/upload/so_0,du_0/") + ".jpg" : "";
-}
-
-export function safeVideoPoster(url) {
   if (!url) return "";
   const withTransform = url.replace("/upload/", "/upload/so_0,du_0/");
   return withTransform.replace(/\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i, ".jpg");
+}
+
+export function safeVideoPoster(url) {
+  return videoPoster(url);
 }
 
 // Stream-friendly delivery for videos
