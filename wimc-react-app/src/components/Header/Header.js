@@ -119,7 +119,7 @@ function Header({
     <>
       <button className="header__button header__button--weather" onClick={() => { setIsWeatherOpen(true); setIsMobileMenuOpen(false); }}>🌤️ Weather</button>
       <button className="header__button header__button--tryon" onClick={() => { if (!requirePro("Try-On Studio")) return; setIsTryOnOpen(true); setIsMobileMenuOpen(false); }}>🎬 Try On</button>
-      <button className="header__button header__button--carousel" onClick={() => { if (!requirePro("Closet Slideshow")) return; setIsCarouselOpen(true); setIsMobileMenuOpen(false); }}>🎞️ Slideshow</button>
+      <button className="header__button header__button--carousel" onClick={() => { if (!requirePro("Carousel")) return; setIsCarouselOpen(true); setIsMobileMenuOpen(false); }}>🎞️ Carousel</button>
       <button className="header__button header__button--stylist" onClick={() => { setIsStylistOpen(true); setIsMobileMenuOpen(false); }}>✨ AI Stylist</button>
       <button className="header__button header__button--kids" onClick={() => { if (!requirePro("Kids' Closet")) return; navigate("/kids-closet"); setIsMobileMenuOpen(false); }}>👶 Kids</button>
       <button className="header__button header__button--pets" onClick={() => { if (!requirePro("Pet Closet")) return; navigate("/pet-closet"); setIsMobileMenuOpen(false); }}>🐾 Pets</button>

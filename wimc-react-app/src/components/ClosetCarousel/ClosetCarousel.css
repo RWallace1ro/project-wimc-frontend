@@ -13,30 +13,68 @@
   cursor: none;
 }
 
-.cc-slide {
-  max-width: 100vw;
-  max-height: 100vh;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  animation: ccFadeIn 1s ease both, ccKenBurns 6s ease-in-out both;
-}
-@keyframes ccFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-/* Slow, subtle zoom — the classic "ambient display" motion (like a TV
-   screensaver) instead of a static photo hanging in place for 6s. */
-@keyframes ccKenBurns {
-  from { transform: scale(1); }
-  to   { transform: scale(1.06); }
-}
-
 .cc-status {
   color: rgba(255, 255, 255, 0.7);
   font-size: 16px;
   text-align: center;
   padding: 0 24px;
+}
+
+/* ── Marquee — same continuously-scrolling strip as the home-screen
+   door-open reveal, scaled up to fill the whole screen. ── */
+.cc-marquee {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.cc-marquee__track {
+  display: flex;
+  gap: 16px;
+  height: 100%;
+  align-items: center;
+  padding: 0 16px;
+  width: max-content;
+  animation: cc-marquee-scroll 60s linear infinite;
+}
+.cc-marquee__track--paused {
+  animation-play-state: paused;
+}
+.cc-marquee__item {
+  flex: 0 0 auto;
+  width: 320px;
+  height: 86%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+.cc-marquee__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 350ms ease;
+}
+.cc-marquee__item img.is-loaded {
+  opacity: 1;
+}
+
+@keyframes cc-marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cc-marquee__track {
+    animation: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .cc-marquee__item {
+    width: 220px;
+  }
 }
 
 .cc-controls {
@@ -72,19 +110,6 @@
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + 16px);
   right: 20px;
-}
-
-.cc-counter {
-  position: absolute;
-  top: calc(env(safe-area-inset-top, 0px) + 22px);
-  left: 20px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 14px;
-  font-weight: 600;
-  background: rgba(0, 0, 0, 0.45);
-  padding: 4px 10px;
-  border-radius: 20px;
-  pointer-events: none;
 }
 
 .cc-bottom-bar {

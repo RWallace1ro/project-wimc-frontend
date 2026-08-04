@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { fetchImagesForSection } from "../../utils/CloudinaryAPI";
 import "./ClosetCarousel.css";
@@ -14,11 +14,13 @@ const SECTIONS = [
   "blazers",
 ];
 
-const SLIDE_MS = 6000;
 const CONTROLS_IDLE_MS = 3000;
 
-// Deterministic-ish shuffle (Fisher-Yates) — a fresh random order every time
-// the carousel opens, not just closet-grid order every time.
+function toThumb(url) {
+  return url?.replace("/upload/", "/upload/f_auto,q_auto,e_improve,w_500,c_limit/") || url;
+}
+
+// Fisher-Yates — a fresh order every time the carousel opens.
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -28,20 +30,21 @@ function shuffle(arr) {
   return a;
 }
 
+// Same continuously-scrolling marquee style as the home-screen door-open
+// reveal (ClosetDoorCarousel) — several photos visible side by side,
+// endlessly drifting left — rather than one image at a time. Reads as an
+// actual ambient display (think a screensaver or "fireplace on the TV")
+// instead of a slideshow you have to click through.
 export default function ClosetCarousel({ isOpen, onClose }) {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
   const [controlsVisible, setControlsVisible] = useState(true);
 
-  const timerRef = useRef(null);
   const idleRef = useRef(null);
   const audioRef = useRef(null);
 
-  // Fetch every photo across all 8 closet sections (including sub-sections,
-  // via fetchImagesForSection) once per open, then shuffle into one big loop.
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
@@ -49,26 +52,12 @@ export default function ClosetCarousel({ isOpen, onClose }) {
     Promise.all(SECTIONS.map((s) => fetchImagesForSection(s).catch(() => [])))
       .then((lists) => {
         if (cancelled) return;
-        const flat = shuffle(lists.flat().filter(Boolean));
-        setImages(flat);
-        setIndex(0);
+        setImages(shuffle(lists.flat().filter(Boolean)));
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [isOpen]);
 
-  // Auto-advance
-  useEffect(() => {
-    clearInterval(timerRef.current);
-    if (!isOpen || !playing || images.length < 2) return;
-    timerRef.current = setInterval(() => {
-      setIndex((i) => (i + 1) % images.length);
-    }, SLIDE_MS);
-    return () => clearInterval(timerRef.current);
-  }, [isOpen, playing, images.length]);
-
-  // Background music — muted by default (autoplay-with-sound is blocked by
-  // every browser without a user gesture); the Unmute button is that gesture.
   useEffect(() => {
     if (!audioRef.current) return;
     if (isOpen && playing && !muted) {
@@ -78,9 +67,6 @@ export default function ClosetCarousel({ isOpen, onClose }) {
     }
   }, [isOpen, playing, muted]);
 
-  // Auto-hide controls after inactivity — reads like an actual ambient
-  // display (a fireplace loop) rather than an app screen with UI chrome
-  // sitting on top the whole time.
   const wakeControls = useCallback(() => {
     setControlsVisible(true);
     clearTimeout(idleRef.current);
@@ -97,36 +83,16 @@ export default function ClosetCarousel({ isOpen, onClose }) {
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
       if (e.key === " ") { e.preventDefault(); setPlaying((p) => !p); }
-      if (e.key === "ArrowRight") setIndex((i) => (i + 1) % Math.max(images.length, 1));
-      if (e.key === "ArrowLeft") setIndex((i) => (i - 1 + images.length) % Math.max(images.length, 1));
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose, images.length]);
-
-  const goNext = () => setIndex((i) => (i + 1) % Math.max(images.length, 1));
-  const goPrev = () => setIndex((i) => (i - 1 + images.length) % Math.max(images.length, 1));
-
-  const current = images[index];
-
-  const content = useMemo(() => {
-    if (loading) {
-      return <p className="cc-status">Loading your closet…</p>;
-    }
-    if (!images.length) {
-      return (
-        <p className="cc-status">
-          No photos yet — add a few items to your closet to use the slideshow.
-        </p>
-      );
-    }
-    return (
-      <img key={current} src={current} alt="" className="cc-slide" />
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, images.length, current]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  // Duplicated so the marquee loop has no visible seam (same trick as
+  // ClosetDoorCarousel).
+  const loop = images.length ? [...images, ...images] : [];
 
   return createPortal(
     <div
@@ -137,7 +103,27 @@ export default function ClosetCarousel({ isOpen, onClose }) {
       role="dialog"
       aria-label="Closet slideshow"
     >
-      {content}
+      {loading && <p className="cc-status">Loading your closet…</p>}
+      {!loading && !images.length && (
+        <p className="cc-status">
+          No photos yet — add a few items to your closet to use the slideshow.
+        </p>
+      )}
+      {!loading && images.length > 0 && (
+        <div className="cc-marquee">
+          <div className={`cc-marquee__track${playing ? "" : " cc-marquee__track--paused"}`}>
+            {loop.map((url, i) => (
+              <div className="cc-marquee__item" key={i}>
+                <img
+                  src={toThumb(url)}
+                  alt=""
+                  onLoad={(e) => e.currentTarget.classList.add("is-loaded")}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <audio ref={audioRef} src="/carousel-audio/ambient-loop.mp3" loop />
 
@@ -147,13 +133,10 @@ export default function ClosetCarousel({ isOpen, onClose }) {
         </button>
         {images.length > 0 && (
           <>
-            <span className="cc-counter">{index + 1} / {images.length}</span>
             <div className="cc-bottom-bar">
-              <button className="cc-btn" onClick={goPrev} aria-label="Previous">‹</button>
               <button className="cc-btn" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
                 {playing ? "⏸" : "▶"}
               </button>
-              <button className="cc-btn" onClick={goNext} aria-label="Next">›</button>
               <button className="cc-btn" onClick={() => setMuted((m) => !m)} aria-label={muted ? "Unmute music" : "Mute music"}>
                 {muted ? "🔇" : "🔊"}
               </button>
