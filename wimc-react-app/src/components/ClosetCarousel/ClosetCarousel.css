@@ -118,8 +118,47 @@
   bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
   transform: translateX(-50%);
   display: flex;
+  align-items: center;
   gap: 10px;
   pointer-events: auto;
+}
+
+.cc-speed {
+  display: flex;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 22px;
+  padding: 4px;
+}
+.cc-speed__btn {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 18px;
+  cursor: pointer;
+}
+.cc-speed__btn.is-active {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.cc-volume-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.cc-volume-slider {
+  position: absolute;
+  left: 50%;
+  bottom: 52px;
+  transform: translateX(-50%) rotate(-90deg);
+  transform-origin: center;
+  width: 90px;
+  accent-color: #fff;
 }
 
 .cc-credit {

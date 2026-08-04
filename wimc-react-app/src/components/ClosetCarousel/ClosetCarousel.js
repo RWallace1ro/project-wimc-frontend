@@ -15,6 +15,8 @@ const SECTIONS = [
 ];
 
 const CONTROLS_IDLE_MS = 3000;
+const BASE_SCROLL_SECONDS = 60; // duration at 1x speed
+const SPEED_OPTIONS = [0.5, 1, 1.5, 2];
 
 function toThumb(url) {
   return url?.replace("/upload/", "/upload/f_auto,q_auto,e_improve,w_500,c_limit/") || url;
@@ -40,6 +42,9 @@ export default function ClosetCarousel({ isOpen, onClose }) {
   const [loading, setLoading] = useState(true);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
+  const [volume, setVolume] = useState(0.6);
+  const [speed, setSpeed] = useState(1);
+  const [showVolume, setShowVolume] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
 
   const idleRef = useRef(null);
@@ -66,6 +71,11 @@ export default function ClosetCarousel({ isOpen, onClose }) {
       audioRef.current.pause();
     }
   }, [isOpen, playing, muted]);
+
+  // Keep the <audio> element's actual volume in sync with the slider.
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
 
   const wakeControls = useCallback(() => {
     setControlsVisible(true);
@@ -111,7 +121,10 @@ export default function ClosetCarousel({ isOpen, onClose }) {
       )}
       {!loading && images.length > 0 && (
         <div className="cc-marquee">
-          <div className={`cc-marquee__track${playing ? "" : " cc-marquee__track--paused"}`}>
+          <div
+            className={`cc-marquee__track${playing ? "" : " cc-marquee__track--paused"}`}
+            style={{ animationDuration: `${BASE_SCROLL_SECONDS / speed}s` }}
+          >
             {loop.map((url, i) => (
               <div className="cc-marquee__item" key={i}>
                 <img
@@ -125,7 +138,12 @@ export default function ClosetCarousel({ isOpen, onClose }) {
         </div>
       )}
 
-      <audio ref={audioRef} src="/carousel-audio/ambient-loop.mp3" loop />
+      {/* PUBLIC_URL, not a bare "/" path — the app is hosted under a
+          subpath (…/project-wimc-frontend/), so an absolute "/carousel-…"
+          URL resolved to the wrong origin and the file 404'd silently
+          (audioRef.current.play() swallows the rejection). Same fix the
+          tour narration audio already uses. */}
+      <audio ref={audioRef} src={`${process.env.PUBLIC_URL}/carousel-audio/ambient-loop.mp3`} loop />
 
       <div className="cc-controls">
         <button className="cc-btn cc-btn--close" onClick={onClose} aria-label="Close slideshow">
@@ -137,9 +155,45 @@ export default function ClosetCarousel({ isOpen, onClose }) {
               <button className="cc-btn" onClick={() => setPlaying((p) => !p)} aria-label={playing ? "Pause" : "Play"}>
                 {playing ? "⏸" : "▶"}
               </button>
-              <button className="cc-btn" onClick={() => setMuted((m) => !m)} aria-label={muted ? "Unmute music" : "Mute music"}>
-                {muted ? "🔇" : "🔊"}
-              </button>
+
+              <div className="cc-speed">
+                {SPEED_OPTIONS.map((s) => (
+                  <button
+                    key={s}
+                    className={`cc-speed__btn${speed === s ? " is-active" : ""}`}
+                    onClick={() => setSpeed(s)}
+                    aria-label={`${s}x speed`}
+                  >
+                    {s}×
+                  </button>
+                ))}
+              </div>
+
+              <div className="cc-volume-wrap">
+                <button
+                  className="cc-btn"
+                  onClick={() => setShowVolume((v) => !v)}
+                  aria-label={muted ? "Unmute music" : "Mute music"}
+                >
+                  {muted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
+                </button>
+                {showVolume && (
+                  <input
+                    className="cc-volume-slider"
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={muted ? 0 : volume}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setVolume(v);
+                      setMuted(v === 0);
+                    }}
+                    aria-label="Music volume"
+                  />
+                )}
+              </div>
             </div>
             {!muted && (
               <span className="cc-credit">
