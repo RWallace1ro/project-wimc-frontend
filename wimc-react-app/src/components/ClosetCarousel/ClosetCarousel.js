@@ -46,8 +46,14 @@ export default function ClosetCarousel({ isOpen, onClose }) {
   const [speed, setSpeed] = useState(1);
   const [showVolume, setShowVolume] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
+  // Local-only for now — an object URL, not uploaded anywhere, so it lasts
+  // for this viewing session on this device only (picking a new file, or
+  // reloading the page, clears it back to the default track).
+  const [customTrackUrl, setCustomTrackUrl] = useState(null);
+  const [customTrackName, setCustomTrackName] = useState("");
 
   const idleRef = useRef(null);
+  const fileInputRef = useRef(null);
   const audioRef = useRef(null);
 
   useEffect(() => {
@@ -76,6 +82,39 @@ export default function ClosetCarousel({ isOpen, onClose }) {
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
+
+  // Revoke the previous object URL whenever it's replaced or the component
+  // unmounts, so picking several tracks in a row doesn't leak memory.
+  useEffect(() => {
+    return () => { if (customTrackUrl) URL.revokeObjectURL(customTrackUrl); };
+  }, [customTrackUrl]);
+
+  // Swapping <audio>'s src via React re-render doesn't reliably reload the
+  // element in every browser on its own — force it, then resume playback
+  // under the same play/volume rules as everywhere else.
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.load();
+    audioRef.current.volume = volume;
+    if (isOpen && playing && !muted) audioRef.current.play().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customTrackUrl]);
+
+  const handleCustomTrackFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (customTrackUrl) URL.revokeObjectURL(customTrackUrl);
+    setCustomTrackUrl(URL.createObjectURL(file));
+    setCustomTrackName(file.name);
+    setMuted(false);
+  };
+
+  const clearCustomTrack = () => {
+    if (customTrackUrl) URL.revokeObjectURL(customTrackUrl);
+    setCustomTrackUrl(null);
+    setCustomTrackName("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const wakeControls = useCallback(() => {
     setControlsVisible(true);
@@ -143,7 +182,11 @@ export default function ClosetCarousel({ isOpen, onClose }) {
           URL resolved to the wrong origin and the file 404'd silently
           (audioRef.current.play() swallows the rejection). Same fix the
           tour narration audio already uses. */}
-      <audio ref={audioRef} src={`${process.env.PUBLIC_URL}/carousel-audio/ambient-loop.mp3`} loop />
+      <audio
+        ref={audioRef}
+        src={customTrackUrl || `${process.env.PUBLIC_URL}/carousel-audio/ambient-loop.mp3`}
+        loop
+      />
 
       <div className="cc-controls">
         <button className="cc-btn cc-btn--close" onClick={onClose} aria-label="Close slideshow">
@@ -170,13 +213,6 @@ export default function ClosetCarousel({ isOpen, onClose }) {
               </div>
 
               <div className="cc-volume-wrap">
-                <button
-                  className="cc-btn"
-                  onClick={() => setShowVolume((v) => !v)}
-                  aria-label={muted ? "Unmute music" : "Mute music"}
-                >
-                  {muted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
-                </button>
                 {showVolume && (
                   <input
                     className="cc-volume-slider"
@@ -193,11 +229,41 @@ export default function ClosetCarousel({ isOpen, onClose }) {
                     aria-label="Music volume"
                   />
                 )}
+                <button
+                  className="cc-btn"
+                  onClick={() => setShowVolume((v) => !v)}
+                  aria-label={muted ? "Unmute music" : "Mute music"}
+                >
+                  {muted || volume === 0 ? "🔇" : volume < 0.5 ? "🔉" : "🔊"}
+                </button>
               </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="audio/*"
+                style={{ display: "none" }}
+                onChange={handleCustomTrackFile}
+              />
+              <button
+                className="cc-btn"
+                onClick={() => fileInputRef.current?.click()}
+                title="Use your own music"
+                aria-label="Use your own music"
+              >
+                🎵
+              </button>
+              {customTrackUrl && (
+                <button className="cc-btn" onClick={clearCustomTrack} title="Remove your music, use default" aria-label="Remove your music">
+                  ↩
+                </button>
+              )}
             </div>
             {!muted && (
               <span className="cc-credit">
-                🎵 "Ambient" by raspberrymusic — CC BY 3.0, via Wikimedia Commons
+                {customTrackUrl
+                  ? `🎵 Playing: ${customTrackName}`
+                  : '🎵 "Ambient" by raspberrymusic — CC BY 3.0, via Wikimedia Commons'}
               </span>
             )}
           </>
