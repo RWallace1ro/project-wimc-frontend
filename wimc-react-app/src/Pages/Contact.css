@@ -22,11 +22,29 @@
 .contact-page__field input,
 .contact-page__field textarea {
   font: inherit;
+  /* iOS Safari (and every other iOS browser — they all run WebKit)
+     auto-zooms the page when focusing a text field smaller than 16px, to
+     keep tiny text legible. The label wrapper's 0.9rem (~14.4px) was
+     cascading into these via font:inherit, so tapping into any field —
+     most noticeably Message, since it's the one people actually type
+     into for a while — triggered that zoom, which looks exactly like the
+     page "expanding" into horizontal scroll while typing. Explicit 16px
+     disables the zoom entirely; this is the standard fix for this. */
+  font-size: 16px;
   font-weight: 400;
   padding: 10px 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   resize: vertical;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+.contact-page__field textarea {
+  /* A long unbroken string (URL, etc.) can otherwise force the textarea's
+     content wider than its box instead of wrapping. */
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .contact-page__field input:focus,
