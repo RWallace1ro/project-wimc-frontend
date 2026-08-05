@@ -47,6 +47,13 @@ export default function TermsOfService() {
           <li>Use the App for any commercial purpose without our written consent</li>
           <li>Reverse-engineer or attempt to extract source code from the App</li>
         </ul>
+        <p>
+          If you encounter content in the App that you believe is illegal,
+          harmful, or violates these Terms, please{" "}
+          <Link to="/contact" className="legal-page__link">contact us</Link>
+          {" "}to report it. We review reports and take appropriate action,
+          which may include removing content or suspending accounts.
+        </p>
       </section>
 
       <section className="legal-page__section">
