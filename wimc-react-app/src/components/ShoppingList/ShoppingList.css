@@ -357,6 +357,15 @@
 .sl-main {
   flex: 1 1 auto;
   min-width: 0;
+  /* Without this, a flex item defaults to min-height:auto — it grows to
+     fit ALL its content (header + add row + share bar + item list)
+     instead of being constrained to its share of the modal's fixed
+     height. That meant .sl-items's own overflow-y:auto never actually
+     activated (nothing forced it to be shorter than its content), and
+     the modal's own overflow:hidden silently clipped whatever didn't
+     fit — the item was there, just clipped off with no way to scroll to
+     it. This is what "item count is right but the list looks empty" was. */
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
