@@ -24,6 +24,10 @@ const SPEED_OPTIONS = [0.5, 1, 1.5, 2];
 // with Chrome's own out-of-memory/crash-recovery message appearing).
 // Capping the pool keeps memory bounded regardless of closet size.
 const MAX_IMAGES = 24;
+// How long each on-screen set stays up before the next batch rotates in.
+// Short on purpose — a long-running display (e.g. cast to a TV) should
+// keep feeling fresh rather than looping the same 24 photos indefinitely.
+const ROTATION_MS = 25000;
 
 function toThumb(url) {
   // w_500 (fine for one section-detail thumbnail elsewhere in the app) is
@@ -50,6 +54,13 @@ function shuffle(arr) {
 export default function ClosetCarousel({ isOpen, onClose }) {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  // The FULL shuffled closet (not capped) plus a cursor into it — every
+  // rotation advances the cursor by MAX_IMAGES and wraps around, so every
+  // photo gets a turn before anything repeats, instead of a small pool
+  // looping the same set the whole time.
+  const poolRef = useRef([]);
+  const cursorRef = useRef(0);
+  const rotationRef = useRef(null);
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
   const [volume, setVolume] = useState(0.6);
@@ -66,6 +77,25 @@ export default function ClosetCarousel({ isOpen, onClose }) {
   const fileInputRef = useRef(null);
   const audioRef = useRef(null);
 
+  // Pulls the next MAX_IMAGES starting at cursorRef, wrapping around the
+  // pool. Re-shuffles once a full pass completes, so the next lap isn't in
+  // the exact same order as the last.
+  const rotateIn = useCallback(() => {
+    const pool = poolRef.current;
+    if (!pool.length) return;
+    const start = cursorRef.current;
+    const next = [];
+    for (let i = 0; i < Math.min(MAX_IMAGES, pool.length); i++) {
+      next.push(pool[(start + i) % pool.length]);
+    }
+    cursorRef.current = (start + MAX_IMAGES) % pool.length;
+    if (cursorRef.current < MAX_IMAGES && pool.length > MAX_IMAGES) {
+      // Completed a full pass — reshuffle for next time around.
+      poolRef.current = shuffle(pool);
+    }
+    setImages(next);
+  }, []);
+
   useEffect(() => {
     if (!isOpen) return;
     let cancelled = false;
@@ -73,11 +103,22 @@ export default function ClosetCarousel({ isOpen, onClose }) {
     Promise.all(SECTIONS.map((s) => fetchImagesForSection(s).catch(() => [])))
       .then((lists) => {
         if (cancelled) return;
-        setImages(shuffle(lists.flat().filter(Boolean)).slice(0, MAX_IMAGES));
+        poolRef.current = shuffle(lists.flat().filter(Boolean));
+        cursorRef.current = 0;
+        rotateIn();
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [isOpen]);
+  }, [isOpen, rotateIn]);
+
+  // Rotate in a fresh batch on a timer while open. Paused along with
+  // everything else when the user hits Pause, so a paused screen doesn't
+  // suddenly swap photos out from under them.
+  useEffect(() => {
+    if (!isOpen || !playing) return;
+    rotationRef.current = setInterval(rotateIn, ROTATION_MS);
+    return () => clearInterval(rotationRef.current);
+  }, [isOpen, playing, rotateIn]);
 
   useEffect(() => {
     if (!audioRef.current) return;
