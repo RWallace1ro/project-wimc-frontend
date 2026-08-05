@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { startCheckout } from "../utils/billing";
+import { startCheckout, openBillingPortal } from "../utils/billing";
 import { useTier } from "../context/TierContext";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./Pricing.css";
@@ -14,6 +14,18 @@ const PRICE_IDS = {
   "pro-ai-monthly": process.env.REACT_APP_PRICE_PROAI_MONTHLY,
   "pro-ai-annual":  process.env.REACT_APP_PRICE_PROAI_ANNUAL,
 };
+
+// Which tier each plan card grants, and how tiers rank, so a plan below the
+// user's current tier can be shown/handled as a downgrade rather than an
+// "upgrade."
+const PLAN_TIER = {
+  "free": "free",
+  "pro-monthly": "pro",
+  "pro-annual": "pro",
+  "pro-ai-monthly": "pro_ai",
+  "pro-ai-annual": "pro_ai",
+};
+const TIER_RANK = { free: 0, pro: 1, pro_ai: 2 };
 
 /* ── Plan definitions ── */
 const MONTHLY_PLANS = [
@@ -156,8 +168,13 @@ function Feature({ text, check }) {
 }
 
 /* ── Single pricing card ── */
-function PlanCard({ plan, currentPlanId, isLoggedIn, onRequireLogin }) {
+function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin }) {
   const isCurrent = isLoggedIn && currentPlanId === plan.id;
+  const isDowngrade =
+    isLoggedIn &&
+    !isCurrent &&
+    currentTier &&
+    TIER_RANK[PLAN_TIER[plan.id]] < TIER_RANK[currentTier];
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -172,12 +189,32 @@ function PlanCard({ plan, currentPlanId, isLoggedIn, onRequireLogin }) {
   } else if (!PAYMENTS_ENABLED) {
     btnLabel = plan.id === "free" ? plan.btnLabel : "Coming Soon";
     btnDisabled = plan.id !== "free";
+  } else if (isDowngrade) {
+    btnLabel = plan.id === "free" ? "Switch to Free" : `Switch to ${plan.name}`;
+    btnStyle = "current";
   }
   if (busy) btnLabel = "Redirecting…";
 
   async function handleClick() {
-    if (!PAYMENTS_ENABLED || plan.id === "free" || busy) return;
+    if (!PAYMENTS_ENABLED || busy) return;
     if (!isLoggedIn) { onRequireLogin?.(); return; }
+
+    // Downgrades (including to Free) go through the billing portal, which
+    // already has "switch plan" and "cancel" options wired up — Checkout is
+    // only for starting a brand-new or higher-tier subscription.
+    if (isDowngrade) {
+      setErr("");
+      setBusy(true);
+      try {
+        await openBillingPortal();
+      } catch (e) {
+        setErr(e.message || "Could not open the billing portal.");
+        setBusy(false);
+      }
+      return;
+    }
+
+    if (plan.id === "free") return;
     const priceId = PRICE_IDS[plan.id];
     if (!priceId) { setErr("This plan isn't available yet."); return; }
     setErr("");
@@ -297,6 +334,7 @@ export default function Pricing({ isLoggedIn }) {
                 key={plan.id}
                 plan={plan}
                 currentPlanId={currentPlanId}
+                currentTier={isLoggedIn ? tier : null}
                 isLoggedIn={isLoggedIn}
                 onRequireLogin={() => navigate("/")}
               />
@@ -313,6 +351,7 @@ export default function Pricing({ isLoggedIn }) {
                 key={plan.id}
                 plan={plan}
                 currentPlanId={currentPlanId}
+                currentTier={isLoggedIn ? tier : null}
                 isLoggedIn={isLoggedIn}
                 onRequireLogin={() => navigate("/")}
               />
