@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
           ✕
         </button>
         <h1 className="legal-hero__title">Privacy Policy</h1>
-        <p className="legal-hero__updated">Last updated: May 2026</p>
+        <p className="legal-hero__updated">Last updated: August 2026</p>
       </div>
 
       <div className="legal-page__body">
@@ -37,6 +37,20 @@ export default function PrivacyPolicy() {
           location. This location is used for that single request and is not
           stored on our servers or linked to your account.
         </p>
+        <p>
+          If you use AI-powered features (such as AI Stylist suggestions or
+          Try-On Studio feedback), the relevant photos, videos, or text you
+          submit are sent to Anthropic, our AI provider, solely to generate
+          that response. Anthropic processes this data on our behalf and does
+          not use it to train its models.
+        </p>
+        <p>
+          If you subscribe to a paid plan, your payment is processed by
+          Stripe. We do not receive or store your full card number — Stripe
+          shares with us only what's needed to manage your subscription (such
+          as your plan, billing status, and a reference to your payment
+          method).
+        </p>
       </section>
 
       <section className="legal-page__section">
@@ -55,11 +69,13 @@ export default function PrivacyPolicy() {
         <p>
           Your account and profile data are stored securely using Google
           Firebase, and your media files (photos and videos) are stored using
-          Cloudinary. Both are service providers that process and host this
-          data on our behalf, under their own security and privacy standards
-          — they don't use it for their own purposes. The Weather feature
-          similarly sends only the coordinates needed for a forecast to the
-          weather providers listed above, on a per-request basis.
+          Cloudinary. Payment processing is handled by Stripe, and AI-powered
+          features are processed by Anthropic. All of these are service
+          providers that process and host this data on our behalf, under
+          their own security and privacy standards — they don't use it for
+          their own purposes. The Weather feature similarly sends only the
+          coordinates needed for a forecast to the weather providers listed
+          above, on a per-request basis.
         </p>
       </section>
 

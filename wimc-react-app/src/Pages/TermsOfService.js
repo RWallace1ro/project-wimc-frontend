@@ -16,7 +16,7 @@ export default function TermsOfService() {
           ✕
         </button>
         <h1 className="legal-hero__title">Terms of Service</h1>
-        <p className="legal-hero__updated">Last updated: May 2026</p>
+        <p className="legal-hero__updated">Last updated: August 2026</p>
       </div>
 
       <div className="legal-page__body">
