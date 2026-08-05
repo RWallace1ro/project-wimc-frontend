@@ -392,21 +392,6 @@
   white-space: nowrap;
 }
 
-/* ── Show password toggle ────────────────────────────────────── */
-.usm-show-pw {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #475569;
-  cursor: pointer;
-  user-select: none;
-}
-.usm-show-pw input {
-  cursor: pointer;
-  accent-color: #7c3aed;
-}
-
 /* ── Appearance tab ──────────────────────────────────────────── */
 .usm-appearance {
   display: flex;

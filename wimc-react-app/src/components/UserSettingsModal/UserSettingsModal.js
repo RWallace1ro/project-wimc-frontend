@@ -764,26 +764,28 @@ export default function UserSettingsModal({
                   <label className="usm-label" htmlFor={id}>
                     {label}
                   </label>
-                  <input
-                    id={id}
-                    className="usm-input"
-                    type={showPw ? "text" : "password"}
-                    value={val}
-                    onChange={(e) => set(e.target.value)}
-                    placeholder={ph}
-                    required
-                  />
+                  <div className="usm-pw-field">
+                    <input
+                      id={id}
+                      className="usm-input"
+                      type={showPw ? "text" : "password"}
+                      value={val}
+                      onChange={(e) => set(e.target.value)}
+                      placeholder={ph}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="usm-pw-toggle"
+                      onClick={() => setShowPw((v) => !v)}
+                      aria-label={showPw ? "Hide password" : "Show password"}
+                      tabIndex={-1}
+                    >
+                      {showPw ? "🙈" : "👁️"}
+                    </button>
+                  </div>
                 </div>
               ))}
-
-              <label className="usm-show-pw">
-                <input
-                  type="checkbox"
-                  checked={showPw}
-                  onChange={() => setShowPw((v) => !v)}
-                />
-                Show passwords
-              </label>
 
               {pwStrength && (
                 <div className="usm-strength">
