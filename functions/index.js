@@ -378,10 +378,19 @@ const APP_URL = "https://rwallace1ro.github.io/project-wimc-frontend";
 
 // Maps each Stripe Price ID → the tier it grants. LIVE-mode price IDs.
 const TIER_BY_PRICE = {
-  price_1Tb61FFHY9B8ibv9qQuXRN3v: "pro",     // Pro monthly  $4.99
-  price_1Tb64ZFHY9B8ibv9pOIT5Uo2: "pro",     // Pro annual   $39.99
-  price_1Tb646FHY9B8ibv9eU0jyW6N: "pro_ai",  // Pro+AI monthly $7.99
-  price_1Tb64sFHY9B8ibv9VIKt86tq: "pro_ai",  // Pro+AI annual  $79.99
+  // Legacy prices (single shared product) — kept so existing subscriptions
+  // created before the Pro/Pro+AI product split still resolve correctly.
+  price_1Tb61FFHY9B8ibv9qQuXRN3v: "pro",     // Pro monthly  $4.99 (legacy)
+  price_1Tb64ZFHY9B8ibv9pOIT5Uo2: "pro",     // Pro annual   $39.99 (legacy)
+  price_1Tb646FHY9B8ibv9eU0jyW6N: "pro_ai",  // Pro+AI monthly $7.99 (legacy)
+  price_1Tb64sFHY9B8ibv9VIKt86tq: "pro_ai",  // Pro+AI annual  $79.99 (legacy)
+
+  // Current prices — separate "WIMC Pro" / "WIMC Pro+AI" products so the
+  // Stripe Customer Portal can offer a "switch plan" option.
+  price_1U19OrFHY9B8ibv9KlJbydxd: "pro",     // Pro monthly
+  price_1U19RCFHY9B8ibv9LvXxDSnQ: "pro",     // Pro annual
+  price_1U19TtFHY9B8ibv9a7FOiD3y: "pro_ai",  // Pro+AI monthly
+  price_1U19UnFHY9B8ibv9pQbLRuUe: "pro_ai",  // Pro+AI annual
 };
 
 // Lazy Stripe client (secret is only bound at runtime via runWith).
