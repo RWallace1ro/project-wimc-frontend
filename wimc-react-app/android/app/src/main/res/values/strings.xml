@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">What\'s In My Closet</string>
+    <string name="title_activity_main">What\'s In My Closet</string>
+    <string name="package_name">com.gingerfaith.wimc</string>
+    <string name="custom_url_scheme">com.gingerfaith.wimc</string>
+</resources>

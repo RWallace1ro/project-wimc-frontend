@@ -1,4 +1,53 @@
 workflows:
+  android-capacitor:
+    name: WIMC Android (Capacitor)
+    max_build_duration: 60
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        # Upload a keystore in Codemagic's Team settings > Code signing
+        # identities > Android, name it "wimc-android", then this reference
+        # picks it up automatically for a release build.
+        - wimc-android
+      vars:
+        PACKAGE_NAME: "com.gingerfaith.wimc"
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: stage-react-api
+          include: true
+    scripts:
+      - name: Build web assets
+        script: |
+          cd wimc-react-app
+          npm ci
+          CI=false npm run build
+      - name: Sync Capacitor Android project
+        script: |
+          cd wimc-react-app
+          npx cap sync android
+      - name: Build .aab
+        script: |
+          cd wimc-react-app/android
+          ./gradlew bundleRelease
+    artifacts:
+      - wimc-react-app/android/app/build/outputs/**/*.aab
+      - wimc-react-app/android/app/build/outputs/**/*.apk
+    publishing:
+      # Uncomment once you're ready to auto-upload builds to Google Play —
+      # requires the Google Play integration to already be connected in
+      # Codemagic's team settings.
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      email:
+        recipients:
+          - rwallaceroc@gmail.com
+        notify:
+          success: true
+          failure: true
+
   ios-capacitor:
     name: WIMC iOS (Capacitor)
     max_build_duration: 60
