@@ -17,9 +17,19 @@ const SECTIONS = [
 const CONTROLS_IDLE_MS = 3000;
 const BASE_SCROLL_SECONDS = 60; // duration at 1x speed
 const SPEED_OPTIONS = [0.5, 1, 1.5, 2];
+// A well-populated closet across all 8 sections can easily be 50-100+
+// photos — loading and decoding all of them at once (then AGAIN duplicated
+// for the seamless loop) is enough to exhaust a phone browser's memory and
+// crash the tab (confirmed: reproduced only on phone, never on a laptop,
+// with Chrome's own out-of-memory/crash-recovery message appearing).
+// Capping the pool keeps memory bounded regardless of closet size.
+const MAX_IMAGES = 24;
 
 function toThumb(url) {
-  return url?.replace("/upload/", "/upload/f_auto,q_auto,e_improve,w_500,c_limit/") || url;
+  // w_500 (fine for one section-detail thumbnail elsewhere in the app) is
+  // too large multiplied across dozens of simultaneous decodes here —
+  // w_300 is still sharp at the marquee's on-screen card size.
+  return url?.replace("/upload/", "/upload/f_auto,q_auto,e_improve,w_300,c_limit/") || url;
 }
 
 // Fisher-Yates — a fresh order every time the carousel opens.
@@ -63,7 +73,7 @@ export default function ClosetCarousel({ isOpen, onClose }) {
     Promise.all(SECTIONS.map((s) => fetchImagesForSection(s).catch(() => [])))
       .then((lists) => {
         if (cancelled) return;
-        setImages(shuffle(lists.flat().filter(Boolean)));
+        setImages(shuffle(lists.flat().filter(Boolean)).slice(0, MAX_IMAGES));
       })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -169,6 +179,8 @@ export default function ClosetCarousel({ isOpen, onClose }) {
                 <img
                   src={toThumb(url)}
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   onLoad={(e) => e.currentTarget.classList.add("is-loaded")}
                 />
               </div>
