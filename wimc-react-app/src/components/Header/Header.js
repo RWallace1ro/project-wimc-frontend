@@ -91,8 +91,16 @@ function Header({
         setIsMobileMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    // "click", not "mousedown" — mousedown fires BEFORE a tap's click event
+    // resolves, which on real touchscreens (unlike a simulated/mouse click)
+    // can race against the menu item's own onClick. If this handler ever
+    // closed the menu first, the browser's subsequent click can fall
+    // through to whatever was newly revealed underneath at that same
+    // screen position — e.g. a closet section card, which would explain a
+    // tap on a menu button ending in an unrelated navigation. "click"
+    // only fires after the target element's own handlers have already run.
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
   }, [isMobileMenuOpen]);
 
   const handleTabChange = (tab) => {
