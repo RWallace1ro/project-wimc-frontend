@@ -30,6 +30,17 @@ repositories {
     }
 }
 
+configurations.all {
+    // The Cordova plugin bridge pulls in an old kotlin-stdlib-jdk7/jdk8
+    // (1.6.21), while Capacitor's core pulls a modern kotlin-stdlib (which
+    // has that jdk7/jdk8 functionality merged in since Kotlin 1.8). Both
+    // versions on the classpath at once causes duplicate-class build
+    // failures — exclude the legacy split modules since the merged stdlib
+    // already covers them.
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk7'
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
+}
+
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
