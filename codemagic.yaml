@@ -3,6 +3,7 @@ workflows:
     name: WIMC Android (Capacitor)
     max_build_duration: 60
     environment:
+      java: 21
       android_signing:
         # Uploaded in Codemagic's Team settings > Code signing identities >
         # Android under the reference name "WIMC".
