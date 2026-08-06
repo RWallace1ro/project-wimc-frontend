@@ -5,10 +5,9 @@ workflows:
     instance_type: linux_x2
     environment:
       android_signing:
-        # Upload a keystore in Codemagic's Team settings > Code signing
-        # identities > Android, name it "wimc-android", then this reference
-        # picks it up automatically for a release build.
-        - wimc-android
+        # Uploaded in Codemagic's Team settings > Code signing identities >
+        # Android under the reference name "WIMC".
+        - WIMC
       vars:
         PACKAGE_NAME: "com.gingerfaith.wimc"
     triggering:
