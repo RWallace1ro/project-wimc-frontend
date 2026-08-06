@@ -216,6 +216,16 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
   const [kidsPackIncoming,    setKidsPackIncoming]    = useState(null);
   const [kidsDonateIncoming,  setKidsDonateIncoming]  = useState(null);
 
+  // Re-read pinned card images once hydrateFromFirestore() finishes pulling
+  // synced pins down on a fresh device/login — see the matching effect in
+  // ClosetData.js for the full explanation.
+  const [pinnedRefresh, setPinnedRefresh] = useState(0);
+  useEffect(() => {
+    const onHydrated = () => setPinnedRefresh((n) => n + 1);
+    window.addEventListener("wimc-hydrated", onHydrated);
+    return () => window.removeEventListener("wimc-hydrated", onHydrated);
+  }, []);
+
   const handleKidsApplyItems = (items, target) => {
     const payload = { items, ts: Date.now() };
     if (target === "preview") setKidsPreviewIncoming(payload);
@@ -477,6 +487,7 @@ export default function KidsClosetModal({ child, onClose, onUpdateChild, sibling
               // fall back to the optimistic post-upload thumb, otherwise let
               // the card self-fetch (now sub-section aware).
               let pinnedCardUrl = null;
+              void pinnedRefresh; // re-read once "wimc-hydrated" fires, see effect above
               try { pinnedCardUrl = localStorage.getItem(`wimc_card_image_${kidTag}`) || null; } catch {}
               return (
                 <ClosetSectionCard

@@ -185,6 +185,16 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
   const [petPackIncoming,    setPetPackIncoming]    = useState(null);
   const [petDonateIncoming,  setPetDonateIncoming]  = useState(null);
 
+  // Re-read pinned card images once hydrateFromFirestore() finishes pulling
+  // synced pins down on a fresh device/login — see the matching effect in
+  // ClosetData.js for the full explanation.
+  const [pinnedRefresh, setPinnedRefresh] = useState(0);
+  useEffect(() => {
+    const onHydrated = () => setPinnedRefresh((n) => n + 1);
+    window.addEventListener("wimc-hydrated", onHydrated);
+    return () => window.removeEventListener("wimc-hydrated", onHydrated);
+  }, []);
+
   const handlePetApplyItems = (items, target) => {
     const payload = { items, ts: Date.now() };
     if (target === "preview") setPetPreviewIncoming(payload);
@@ -392,6 +402,7 @@ export default function PetClosetModal({ pet, onClose, onUpdatePet }) {
               // priority; otherwise fall back to the optimistic post-upload
               // thumb, otherwise let the card self-fetch.
               let pinnedCardUrl = null;
+              void pinnedRefresh; // re-read once "wimc-hydrated" fires, see effect above
               try { pinnedCardUrl = localStorage.getItem(`wimc_card_image_${tag}`) || null; } catch {}
               return (
                 <ClosetSectionCard

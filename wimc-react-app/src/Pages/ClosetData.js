@@ -189,6 +189,20 @@ function ClosetData({
       onRegisterOpenSection(openSection);
   }, [onRegisterOpenSection, openSection]);
 
+  // Pinned card-cover images are read from localStorage below, but on a
+  // device's first load that read can happen before hydrateFromFirestore()
+  // finishes pulling the account's synced pins down from Firestore — with
+  // nothing forcing a re-render afterward, the cards would be stuck showing
+  // "unpinned" until some unrelated state change happened to re-render this
+  // page. Bumping this counter on "wimc-hydrated" forces the cards to
+  // re-read localStorage once the real synced value has actually arrived.
+  const [pinnedRefresh, setPinnedRefresh] = useState(0);
+  useEffect(() => {
+    const onHydrated = () => setPinnedRefresh((n) => n + 1);
+    window.addEventListener("wimc-hydrated", onHydrated);
+    return () => window.removeEventListener("wimc-hydrated", onHydrated);
+  }, []);
+
   // Purge items deleted elsewhere (Donate Bin's "Confirm removed from
   // closet") from this page's own closetItems — it's passed to Donate Bin
   // as its picker source, so a stale entry here could let a deleted photo
@@ -339,6 +353,7 @@ function ClosetData({
             // own thumbnail by tag. Passing tag + undefined imageUrl triggers
             // that fetch.
             const pinnedCardUrl = (() => {
+              void pinnedRefresh; // re-read once "wimc-hydrated" fires, see effect above
               try { return localStorage.getItem(`wimc_card_image_${section.tag}`) || null; } catch { return null; }
             })();
             // Most recent upload into THIS card's base tag or any of its
