@@ -28,6 +28,7 @@ workflows:
       - name: Build .aab
         script: |
           cd wimc-react-app/android
+          chmod +x gradlew
           ./gradlew bundleRelease
     artifacts:
       - wimc-react-app/android/app/build/outputs/**/*.aab
