@@ -8,12 +8,14 @@ import "./Pricing.css";
 
 const PAYMENTS_ENABLED = process.env.REACT_APP_PAYMENTS_ENABLED === "true";
 
-// Apple requires digital subscriptions purchased inside an iOS app to go
-// through Apple's own In-App Purchase system, not an external processor like
-// Stripe — so new purchases are disabled in the native iOS build. Existing
-// subscribers (from web/Android) still see their tier's features normally;
-// this only affects starting a brand-new paid subscription from an iPhone/iPad.
-const IS_IOS_NATIVE = Capacitor.getPlatform() === "ios";
+// Apple and Google both require digital subscriptions purchased inside a
+// native app to go through their own in-app billing system (Apple's IAP /
+// Google Play Billing), not an external processor like Stripe — so new
+// purchases are disabled in the native iOS/Android builds. Existing
+// subscribers (from web, or a different platform) still see their tier's
+// features normally; this only affects starting a brand-new paid
+// subscription from inside the installed app.
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 // Stripe Price IDs come from env so test↔live can be swapped without code edits.
 const PRICE_IDS = {
@@ -202,7 +204,7 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
   } else if (!PAYMENTS_ENABLED) {
     btnLabel = plan.id === "free" ? plan.btnLabel : "Coming Soon";
     btnDisabled = plan.id !== "free";
-  } else if (IS_IOS_NATIVE && isNewPurchase) {
+  } else if (NATIVE_PLATFORM && isNewPurchase) {
     btnLabel = "Currently Unavailable";
     btnStyle = "outline";
     btnDisabled = true;
@@ -214,7 +216,7 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
 
   async function handleClick() {
     if (!PAYMENTS_ENABLED || busy) return;
-    if (IS_IOS_NATIVE && isNewPurchase) return;
+    if (NATIVE_PLATFORM && isNewPurchase) return;
     if (!isLoggedIn) { onRequireLogin?.(); return; }
 
     // Downgrades (including to Free) go through the billing portal, which
