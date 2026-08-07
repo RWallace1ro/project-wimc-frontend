@@ -98,12 +98,13 @@ workflows:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
     publishing:
-      # Uncomment once you're ready to auto-upload builds to TestFlight —
-      # requires the App Store Connect integration (see ios_signing note
-      # above) to already be connected in Codemagic's team settings.
-      # app_store_connect:
-      #   auth: integration
-      #   submit_to_testflight: true
+      # Auto-uploads every build straight to TestFlight — necessary since
+      # manually uploading an .ipa normally requires Apple's Transporter app,
+      # which is Mac-only. Uses the same Developer Portal API key integration
+      # already connected in Codemagic's team settings.
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
       email:
         recipients:
           - rwallaceroc@gmail.com
