@@ -1,11 +1,19 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { startCheckout, openBillingPortal } from "../utils/billing";
 import { useTier } from "../context/TierContext";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./Pricing.css";
 
 const PAYMENTS_ENABLED = process.env.REACT_APP_PAYMENTS_ENABLED === "true";
+
+// Apple requires digital subscriptions purchased inside an iOS app to go
+// through Apple's own In-App Purchase system, not an external processor like
+// Stripe — so new purchases are disabled in the native iOS build. Existing
+// subscribers (from web/Android) still see their tier's features normally;
+// this only affects starting a brand-new paid subscription from an iPhone/iPad.
+const IS_IOS_NATIVE = Capacitor.getPlatform() === "ios";
 
 // Stripe Price IDs come from env so test↔live can be swapped without code edits.
 const PRICE_IDS = {
@@ -178,6 +186,11 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
+  // A "new purchase" is any button that would start Checkout — not the
+  // current plan, and not a downgrade (which routes to the billing portal,
+  // not a new charge).
+  const isNewPurchase = !isCurrent && !isDowngrade && plan.id !== "free";
+
   let btnLabel = plan.btnLabel;
   let btnStyle = plan.btnStyle;
   let btnDisabled = false;
@@ -189,6 +202,10 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
   } else if (!PAYMENTS_ENABLED) {
     btnLabel = plan.id === "free" ? plan.btnLabel : "Coming Soon";
     btnDisabled = plan.id !== "free";
+  } else if (IS_IOS_NATIVE && isNewPurchase) {
+    btnLabel = "Currently Unavailable";
+    btnStyle = "outline";
+    btnDisabled = true;
   } else if (isDowngrade) {
     btnLabel = plan.id === "free" ? "Switch to Free" : `Switch to ${plan.name}`;
     btnStyle = "current";
@@ -197,6 +214,7 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
 
   async function handleClick() {
     if (!PAYMENTS_ENABLED || busy) return;
+    if (IS_IOS_NATIVE && isNewPurchase) return;
     if (!isLoggedIn) { onRequireLogin?.(); return; }
 
     // Downgrades (including to Free) go through the billing portal, which
