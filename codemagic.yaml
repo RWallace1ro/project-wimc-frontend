@@ -73,6 +73,15 @@ workflows:
         - pattern: stage-react-api
           include: true
     scripts:
+      - name: Build web assets
+        script: |
+          cd wimc-react-app
+          npm ci
+          CI=false npm run build
+      - name: Sync Capacitor iOS project
+        script: |
+          cd wimc-react-app
+          npx cap sync ios
       - name: Install CocoaPods dependencies
         script: |
           cd wimc-react-app/ios/App
