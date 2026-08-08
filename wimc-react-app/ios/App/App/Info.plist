@@ -51,5 +51,7 @@
 	<string>WIMC uses your microphone to record audio when you save a Try-On Studio video.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>WIMC uses your location to show local weather-based outfit suggestions.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
