@@ -56,15 +56,37 @@ const SLIDES = [
     featureIcons: ["🤖","📦","🎨","⚡","👆","📷"],
   },
   {
-    id: "planning",
-    label: "Planning Tools",
-    dur: 18,
-    icon: "📅",
-    title: "Planning Tools",
+    id: "outfit-preview",
+    label: "Outfit Preview",
+    dur: 14,
+    icon: "👗",
+    title: "Outfit Preview",
     type: "feature",
-    mockupTitle: "Outfit Preview + Planner",
-    features: ["Outfit Preview Panel","Tap to select items","Favorites & saved looks","Share & print outfit","7-day Outfit Planner","Travel Pack Panel","AI Packing Assistant","Export / import plans"],
-    featureIcons: ["👁️","👆","⭐","🔗","📅","✈️","🧳","📤"],
+    mockupTitle: "👗 Outfit Preview",
+    features: ["Build outfits from your closet","Tap to select items","Favorites & saved looks","Share outfit with a link","Print any outfit you create"],
+    featureIcons: ["👗","👆","⭐","🔗","🖨️"],
+  },
+  {
+    id: "outfit-planner",
+    label: "Outfit Planner",
+    dur: 13,
+    icon: "📅",
+    title: "Outfit Planner",
+    type: "feature",
+    mockupTitle: "📅 7-Day Outfit Planner",
+    features: ["Plan outfits for each day","7-day weekly view","Assign saved outfits to a day","Export or import your plan","See your week at a glance"],
+    featureIcons: ["📅","🗓️","👗","📤","👀"],
+  },
+  {
+    id: "travel-pack",
+    label: "Travel Pack",
+    dur: 13,
+    icon: "✈️",
+    title: "Travel Pack Planner",
+    type: "feature",
+    mockupTitle: "✈️ Travel Pack Planner",
+    features: ["Plan exactly what to pack","AI Packing Assistant","Suggestions based on your trip","Check items off as you pack","Never overpack or forget an item"],
+    featureIcons: ["🧳","🤖","✈️","✅","👗"],
   },
   {
     id: "ai",
@@ -85,19 +107,52 @@ const SLIDES = [
     title: "Try-On Studio",
     type: "feature",
     mockupTitle: "🎬 Try-On Studio",
-    features: ["Live camera recording","Front / rear camera toggle","Upload & cloud storage","AI Style Feedback (4 sections)","Video Bin with grid / list","Timestamps & custom titles","Download & share videos","🎞️ Carousel — ambient closet slideshow"],
-    featureIcons: ["📸","🔄","☁️","✨","🎥","🕐","⬇️","🎞️"],
+    features: ["Live camera recording","Front / rear camera toggle","Upload & cloud storage","AI Style Feedback (4 sections)","Timestamps & custom titles","Download & share videos"],
+    featureIcons: ["📸","🔄","☁️","✨","🕐","⬇️"],
   },
   {
-    id: "donate-wishlist",
-    label: "Donate & Wish List",
-    dur: 16,
-    icon: "🗑️",
-    title: "Donate Bin & Wish List",
+    id: "carousel",
+    label: "Carousel",
+    dur: 21,
+    icon: "🎞️",
+    title: "Carousel",
     type: "feature",
-    mockupTitle: "🗑️ Donate Bin · 📋 Wish List",
-    features: ["Add items to Donate Bin","AI Smart Donation Advisor","Bulk donate with one tap","Wish List with URL previews","Add notes & priorities","Share your wish list via link"],
-    featureIcons: ["🗑️","🤖","✅","📋","📝","🔗"],
+    mockupTitle: "🎞️ Carousel",
+    features: ["Ambient closet slideshow","Cast to your TV","Adjustable playback speed","Add your own background music","Ever-changing display of your closet"],
+    featureIcons: ["🎞️","📺","⏩","🎵","🔄"],
+  },
+  {
+    id: "video-bin",
+    label: "Video Bin",
+    dur: 19,
+    icon: "📹",
+    title: "Video Bin",
+    type: "feature",
+    mockupTitle: "📹 Video Bin",
+    features: ["All your Try-On videos in one place","Grid or list view","Custom titles & timestamps","Download & share favorites","Browse by date"],
+    featureIcons: ["📹","🗂️","🏷️","⬇️","📅"],
+  },
+  {
+    id: "wishlist",
+    label: "Wish List",
+    dur: 15,
+    icon: "📋",
+    title: "Wish List",
+    type: "feature",
+    mockupTitle: "📋 Wish List",
+    features: ["Save items you want to add","URL previews for saved items","Add notes & priorities","Share your list via link"],
+    featureIcons: ["📋","🔗","📝","📤"],
+  },
+  {
+    id: "donate-bin",
+    label: "Donate Bin",
+    dur: 15,
+    icon: "🗑️",
+    title: "Donate Bin",
+    type: "feature",
+    mockupTitle: "🗑️ Donate Bin",
+    features: ["Move items you're ready to donate","AI Smart Donation Advisor","Bulk donate with one tap","Declutter with purpose"],
+    featureIcons: ["🗑️","🤖","✅","♻️"],
   },
   {
     id: "shopping",
@@ -133,15 +188,26 @@ const SLIDES = [
     featureIcons: ["🐕","📏","🧥","📅","♻️","📤"],
   },
   {
-    id: "receipts-weather",
-    label: "Receipts & Weather",
-    dur: 18,
+    id: "receipts",
+    label: "Receipts",
+    dur: 17,
     icon: "🧾",
-    title: "Receipts & Weather",
+    title: "Receipts",
     type: "feature",
-    mockupTitle: "🧾 Receipts · 🌤️ Weather",
-    features: ["Receipts: Photo, PDF, Email","Filter by store / category","Attach receipts to clothing items","Weather — current + 7-day forecast","Plan outfits by tomorrow's weather","Available right from the header"],
-    featureIcons: ["📷","🔍","🔗","🌤️","👗","📍"],
+    mockupTitle: "🧾 Receipts",
+    features: ["Add a photo, PDF, or forward by email","Filter by store or category","Attach receipts to clothing items","Keep every purchase organized"],
+    featureIcons: ["📷","🔍","🔗","🧾"],
+  },
+  {
+    id: "weather",
+    label: "Weather",
+    dur: 13,
+    icon: "🌤️",
+    title: "Weather",
+    type: "feature",
+    mockupTitle: "🌤️ Weather",
+    features: ["Current conditions + 7-day forecast","Available right from the header","Plan outfits around tomorrow's weather","Quick access anytime"],
+    featureIcons: ["🌤️","📍","👗","⚡"],
   },
   {
     id: "settings",
@@ -162,20 +228,20 @@ const TAG_TO_SLIDE = {
   "👗👔 Smart Closet":  "closet",
   "✨ 5 AI Features": "ai",
   "🎬 Try-On Studio": "tryon",
-  "🎞️ Carousel":     "tryon",
+  "🎞️ Carousel":     "carousel",
   "👶 Kids' Closet":  "kids",
   "🐾 Pet Closet":    "pets",
   "🛒 Shopping List": "shopping",
-  "📋 Wish List":     "donate-wishlist",
-  "🗑️ Donate Bin":    "donate-wishlist",
-  "🌤️ Weather":       "receipts-weather",
+  "📋 Wish List":     "wishlist",
+  "🗑️ Donate Bin":    "donate-bin",
+  "🌤️ Weather":       "weather",
   "⚙️ Settings":      "settings",
   "🔍 Closet Search": "search",
-  "👗👔 Outfit Preview":"planning",
-  "📅 Outfit Planner":"planning",
-  "✈️ Travel Pack":   "planning",
-  "🧾 Receipts":      "receipts-weather",
-  "📹 Video Bin":     "tryon",
+  "👗👔 Outfit Preview":"outfit-preview",
+  "📅 Outfit Planner":"outfit-planner",
+  "✈️ Travel Pack":   "travel-pack",
+  "🧾 Receipts":      "receipts",
+  "📹 Video Bin":     "video-bin",
 };
 
 const SPEED_OPTIONS = [
@@ -192,14 +258,20 @@ const SCRIPTS = [
   "WIMC starts with secure authentication powered by Firebase. Sign up or log in, verify your email, and reset your password anytime. Upload a profile photo and update your account from Settings.",
   "Your closet is organized into eight smart categories. The Bags and Accessories card even splits into Bags, Accessories, and Fragrance. Upload photos and videos to the cloud, and customize each section's background with photo presets or a color palette.",
   "Use Closet Search to find any item instantly with AI Natural Language Search. Search across all categories, filter by color, type, or season, and open any item directly from results.",
-  "The Outfit Preview Panel lets you build looks by tapping items to select them. Save favorites, share outfits, and plan your entire week with the Outfit Planner. The Travel Pack Panel helps you pack smarter with AI assistance.",
+  "The Outfit Preview Panel lets you build looks by tapping items to select them. Save favorites, share your outfit, and print any look you create.",
+  "Plan your whole week ahead with the 7-day Outfit Planner. Assign outfits to each day, and export or import your plans anytime.",
+  "The Travel Pack Panel helps you pack smarter for any trip, with an AI Packing Assistant that suggests exactly what you'll need.",
   "WIMC has five AI features built in — an AI Stylist that can build a full outfit from your own closet, Natural Language Search, a Smart Donation Advisor, AI Style Feedback after try-ons, and a full AI Shopping Assistant. Your plan sets how many AI requests you get each day.",
-  "The Try-On Studio lets you record outfit videos using your front or rear camera. After recording, get personalized AI Style Feedback covering what works, style tips, and how to complete the look. And the Carousel turns your whole closet into a full-screen ambient slideshow — great as a background display, or cast to a TV.",
-  "The Donate Bin lets you collect items for donation with an AI advisor to help you decide what to let go. The Wish List stores items you want with URL previews and priority notes — shareable via link.",
+  "The Try-On Studio lets you record outfit videos using your front or rear camera. After recording, get personalized AI Style Feedback covering what works, style tips, and how to complete the look.",
+  "The Carousel turns your whole closet into a full-screen ambient slideshow — great as a background display, or cast to a TV. Adjust the speed, and even add your own background music.",
+  "Every video you record lives in your Video Bin, browsable in a grid or list view with custom titles and timestamps. Download or share your favorites anytime.",
+  "The Wish List stores items you want with URL previews and priority notes — shareable via link.",
+  "The Donate Bin lets you collect items for donation, with an AI advisor to help you decide what to let go.",
   "The Shopping List has three built-in categories plus unlimited custom ones with over 300 emoji to choose from. Use four AI modes to suggest items, analyze your budget, or prioritize your list.",
   "Kids' Closet lets you manage clothing profiles for each child, with US and EU sizing shown side by side. Deleted profiles stay recoverable for 14 days.",
   "The Pet Closet gives each pet its own profile and closet — track species, breed, apparel size, and key measurements like back, neck, and chest, with pet-specific sections like Sweaters, Bandanas, and Collars. Share sizing with sitters and family.",
-  "The Receipts page stores all your shopping receipts by photo, PDF, or email, filterable by store and category. The Weather panel in the header gives you a current forecast plus 7-day outlook to plan your outfits.",
+  "The Receipts page stores all your shopping receipts by photo, PDF, or email, filterable by store and category.",
+  "The Weather panel in the header gives you a current forecast plus a 7-day outlook, so you can plan your outfits around tomorrow's weather.",
   "Settings gives you full control over your profile, password, and app appearance, and lets you manage your subscription. And the WIMC Assistant — the little chat bubble on every page — answers your how-to questions anytime. That's WIMC, your complete closet companion!",
 ];
  
@@ -351,10 +423,10 @@ function MockupContent({ id }) {
           </div>
         </div>
       );
-    case "planning":
+    case "outfit-preview":
       return (
         <div>
-          <div className="mc-panel" style={{marginBottom:7}}>
+          <div className="mc-panel">
             <div className="mc-panel-title" style={{color:"#7c3aed"}}>Current Selection</div>
             <div className="mc-chips">
               {["Blue Wrap Dress","Nude Heels","Gold Clutch"].map(c=>(
@@ -362,7 +434,12 @@ function MockupContent({ id }) {
               ))}
             </div>
           </div>
-          <div className="mc-panel" style={{marginBottom:7}}>
+        </div>
+      );
+    case "outfit-planner":
+      return (
+        <div>
+          <div className="mc-panel">
             <div className="mc-panel-title" style={{color:"#0369a1"}}>📅 Weekly Planner</div>
             <div className="mc-week">
               {["M","T","W","T","F","S","S"].map((d,i)=>(
@@ -373,6 +450,11 @@ function MockupContent({ id }) {
               ))}
             </div>
           </div>
+        </div>
+      );
+    case "travel-pack":
+      return (
+        <div>
           <div className="mc-panel">
             <div className="mc-panel-title" style={{color:"#d97706"}}>✈️ Travel Pack</div>
             <div className="mc-chips"><span className="mc-chip">Paris — 5 days</span><span className="mc-chip">12 items packed</span></div>
@@ -416,6 +498,69 @@ function MockupContent({ id }) {
               {["Work","Casual","Date Night","Weekend"].map(o=>(
                 <span key={o} className="mc-chip">{o}</span>
               ))}
+            </div>
+          </div>
+        </div>
+      );
+    case "carousel":
+      return (
+        <div>
+          <div className="mc-card-grid mc-card-grid--eight">
+            {[["👗","#2d1b4e"],["👔","#1a2440"],["👟","#1a2e4a"],["👖","#1a3a2a"],["👚","#2d2010"],["👜","#2a1a2e"],["🧥","#1a1a2e"],["🧳","#2a2010"]].map(([e,bg],i)=>(
+              <div className="mc-card" key={i}>
+                <div className="mc-card-img" style={{background:bg}}>{e}</div>
+              </div>
+            ))}
+          </div>
+          <div className="mc-panel" style={{marginTop:7}}>
+            <div className="mc-chips">
+              <span className="mc-chip">⏸ Pause</span>
+              <span className="mc-chip">1.5×</span>
+              <span className="mc-chip">🎵 Music</span>
+            </div>
+          </div>
+        </div>
+      );
+    case "video-bin":
+      return (
+        <div>
+          <div className="mc-kids-grid">
+            <div className="mc-kid-card">
+              <div style={{fontSize:16}}>🎬</div>
+              <div className="mc-kid-name">Work Look</div>
+              <div className="mc-kid-info">0:23 · Today</div>
+            </div>
+            <div className="mc-kid-card">
+              <div style={{fontSize:16}}>🎬</div>
+              <div className="mc-kid-name">Date Night</div>
+              <div className="mc-kid-info">0:31 · Yesterday</div>
+            </div>
+          </div>
+        </div>
+      );
+    case "wishlist":
+      return (
+        <div>
+          <div className="mc-sl-items">
+            <div className="mc-sl-item">
+              <div className="mc-sl-check"/>
+              <span>Suede ankle boots — link saved</span>
+            </div>
+            <div className="mc-sl-item">
+              <div className="mc-sl-check"/>
+              <span>Wool trench coat — high priority</span>
+            </div>
+          </div>
+        </div>
+      );
+    case "donate-bin":
+      return (
+        <div>
+          <div className="mc-ai-feedback">
+            <div style={{fontSize:8,color:"#a78bfa",fontWeight:700,marginBottom:4}}>🤖 Smart Donation Advisor</div>
+            <div className="mc-chips">
+              <span className="mc-chip">Worn in last year?</span>
+              <span className="mc-chip">Still fits?</span>
             </div>
           </div>
         </div>
@@ -470,6 +615,34 @@ function MockupContent({ id }) {
             <div className="mc-chips">
               {["💡 Suggest","💬 Chat","💰 Budget","🎯 Prioritize"].map(m=>(
                 <span key={m} className="mc-chip">{m}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    case "receipts":
+      return (
+        <div>
+          <div className="mc-sl-items">
+            <div className="mc-sl-item">
+              <div className="mc-sl-check mc-sl-check--done">✓</div>
+              <span>Nordstrom — $128.00</span>
+            </div>
+            <div className="mc-sl-item">
+              <div className="mc-sl-check mc-sl-check--done">✓</div>
+              <span>Zara — $64.50</span>
+            </div>
+          </div>
+        </div>
+      );
+    case "weather":
+      return (
+        <div>
+          <div className="mc-panel">
+            <div className="mc-panel-title" style={{color:"#0369a1"}}>🌤️ 72°F — Sunny</div>
+            <div className="mc-chips">
+              {["Mon 68°","Tue 71°","Wed 74°","Thu 70°"].map(d=>(
+                <span key={d} className="mc-chip">{d}</span>
               ))}
             </div>
           </div>
