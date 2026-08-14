@@ -47,6 +47,13 @@ function AddClothingModal({
   // NEW: media state (image or video)
   const [media, setMedia] = useState(null); // { type, url, thumb?, poster?, __raw? }
   const [error, setError] = useState("");
+  // Tracks MediaUploader's in-flight upload — the preview image appears
+  // instantly on file pick, well before the actual Cloudinary upload
+  // resolves, so Submit needs to know "still uploading" separately from
+  // "media is set" to avoid a false "please add an image" error on a fast
+  // click (most noticeable right after login, when the first upload of the
+  // session is slower — cold cloud function + fresh auth token).
+  const [mediaUploading, setMediaUploading] = useState(false);
 
   const modalRef = useRef(null);
 
@@ -88,6 +95,11 @@ function AddClothingModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (mediaUploading) {
+      setError("Your photo is still uploading — one moment, then tap Add Item again.");
+      return;
+    }
 
     if (
       !formData.name ||
@@ -295,7 +307,11 @@ function AddClothingModal({
           {/* From Device — always visible */}
           <>
             <p className="modal__source-label">📁 From Device</p>
-            <MediaUploader tag={tag} onUploaded={handleMediaUploaded} />
+            <MediaUploader
+              tag={tag}
+              onUploaded={handleMediaUploaded}
+              onStatusChange={(s) => setMediaUploading(s === "uploading")}
+            />
             <p className="modal__device-note">
               📱 <strong>On a phone?</strong> Tap <em>Choose File</em> /
               <em> My Files</em> and you'll get <strong>Take Photo or Video</strong>{" "}
@@ -379,8 +395,8 @@ function AddClothingModal({
           )}
           {error && <p className="modal__error">{error}</p>}
 
-          <button type="submit" className="modal__submit" disabled={webBusy}>
-            {webBusy ? "Adding…" : "Add Item"}
+          <button type="submit" className="modal__submit" disabled={webBusy || mediaUploading}>
+            {webBusy ? "Adding…" : mediaUploading ? "Uploading photo…" : "Add Item"}
           </button>
         </form>
       </div>

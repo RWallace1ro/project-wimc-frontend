@@ -9,14 +9,25 @@ import {
 
 export default function MediaUploader({
   onUploaded,
+  onStatusChange,
   acceptVideo = true,
   tag,
   folder,
   className = "media-uploader",
 }) {
-  const [status, setStatus] = useState("idle"); // idle | uploading | done | error
+  const [status, setStatusState] = useState("idle"); // idle | uploading | done | error
   const [preview, setPreview] = useState(null);
   const inputRef = useRef(null);
+
+  // Wraps setStatus so the parent always learns about "uploading" the moment
+  // it starts — the preview image renders instantly (see below), but the
+  // parent's "do we actually have media yet?" check needs this signal too,
+  // or a fast click on Submit right after picking a photo can slip through
+  // while the real Cloudinary upload is still in flight.
+  const setStatus = (s) => {
+    setStatusState(s);
+    onStatusChange?.(s);
+  };
 
   const sectionTag = tag || folder || "default";
 
