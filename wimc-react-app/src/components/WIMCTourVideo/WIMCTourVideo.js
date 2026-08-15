@@ -697,6 +697,14 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
   const [voiceReady, setVoiceReady] = useState(false); // eslint-disable-line no-unused-vars
   const [muted, setMuted]           = useState(false);
   const mutedRef = useRef(false);
+  const activeDotRef = useRef(null);
+
+  // Keep the current slide's dot scrolled into view in the (now scrollable)
+  // dots row as the tour auto-advances, so users aren't left staring at an
+  // active dot that's scrolled off-screen.
+  useEffect(() => {
+    activeDotRef.current?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [curSlide]);
  
   const fmt = (s) => {
     const m = Math.floor(s / 60);
@@ -1134,6 +1142,7 @@ export default function WIMCTourVideo({ isOpen, onClose }) {
                 {SLIDES.map((s, i) => (
                   <button
                     key={s.id}
+                    ref={i === curSlide ? activeDotRef : null}
                     className={`tour-dot ${i === curSlide ? "tour-dot--active" : i < curSlide ? "tour-dot--done" : ""}`}
                     onClick={() => jumpTo(i)}
                     title={s.label}

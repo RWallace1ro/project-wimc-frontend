@@ -418,6 +418,17 @@
 .tour-dots {
   display: flex;
   gap: 5px;
+  /* More slides than fit in a narrow control bar would otherwise clip
+     off the right edge with no way to reach them — let this row scroll
+     independently instead, while play/mute/time/speed stay put. */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+}
+.tour-dots::-webkit-scrollbar {
+  display: none;
 }
 .tour-dot {
   width: 7px;
@@ -428,6 +439,7 @@
   cursor: pointer;
   transition: all 0.15s;
   padding: 0;
+  flex-shrink: 0;
 }
 .tour-dot:hover {
   border-color: #7c3aed;

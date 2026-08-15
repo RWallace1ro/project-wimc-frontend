@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import { fetchImagesByTag } from "../../utils/CloudinaryAPI";
 import { aiProxyFetch } from "../../utils/aiProxy";
 import { syncSetItem } from "../../utils/syncStore";
+import { auth } from "../../firebase";
 import { sectionTagsWithSubs } from "../../utils/closetSubsections";
 import ApiErrorMessage from "../common/ApiErrorMessage";
 import FormattedText from "../common/FormattedText";
@@ -248,8 +249,14 @@ export default function ClosetSearch({
   const inputRef = useRef(null);
 
   // ── Saved searches (persist results so they can be reopened later) ──
-  // Scope per closet so kids/pet/main closets keep their own saved searches.
-  const savedKey = `wimc_saved_searches:${tagPrefix || "main"}`;
+  // Scope per closet (kids/pet/main) AND per account — without the uid, this
+  // key was a single shared bucket on the device: if a browser ever switched
+  // accounts without an explicit logout (clearLocalAppData only runs on
+  // Logout, and hydrateFromFirestore only overwrites keys the NEW account
+  // actually has data for), the previous account's saved searches would sit
+  // in localStorage untouched and silently bleed into whoever's signed in
+  // next on that device.
+  const savedKey = `wimc_saved_searches:${auth.currentUser?.uid || "anon"}:${tagPrefix || "main"}`;
   const [savedSearches, setSavedSearches] = useState([]);
   const [showSaved, setShowSaved] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");

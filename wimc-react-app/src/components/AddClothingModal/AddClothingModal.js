@@ -54,6 +54,11 @@ function AddClothingModal({
   // click (most noticeable right after login, when the first upload of the
   // session is slower — cold cloud function + fresh auth token).
   const [mediaUploading, setMediaUploading] = useState(false);
+  // Distinguishes "upload actually failed" (e.g. a network hiccup) from
+  // "nothing was ever selected" — without this, a failed upload fell through
+  // to the same generic "please add an image" message as never picking a
+  // file at all, which reads as wrong/confusing when the user did pick one.
+  const [mediaUploadFailed, setMediaUploadFailed] = useState(false);
 
   const modalRef = useRef(null);
 
@@ -80,6 +85,7 @@ function AddClothingModal({
   const handleMediaUploaded = (payload) => {
     // payload: { type: "image"|"video", url, thumb?, poster?, __raw? }
     setMedia(payload);
+    setMediaUploadFailed(false);
     // Preserve legacy imageUrl for any existing code that might still read it:
     if (payload.type === "image") {
       setFormData((prev) => ({
@@ -145,7 +151,11 @@ function AddClothingModal({
 
     const hasMedia = resolvedMedia?.url || resolvedImageUrl;
     if (!hasMedia) {
-      setError("Please add an image or video before submitting.");
+      setError(
+        mediaUploadFailed
+          ? "Your upload didn't go through — this can happen with a spotty connection. Please try selecting the photo or video again."
+          : "Please add an image or video before submitting."
+      );
       return;
     }
 
@@ -167,6 +177,7 @@ function AddClothingModal({
     // reset
     setFormData({ name: "", designer: "", size: "", category: "", imageUrl: "" });
     setMedia(null);
+    setMediaUploadFailed(false);
     setWebUrl("");
     setError("");
     onClose();
@@ -182,6 +193,7 @@ function AddClothingModal({
         imageUrl: "",
       });
       setMedia(null);
+      setMediaUploadFailed(false);
       setError("");
       setWebUrl("");
       setWebBusy(false);
@@ -310,7 +322,10 @@ function AddClothingModal({
             <MediaUploader
               tag={tag}
               onUploaded={handleMediaUploaded}
-              onStatusChange={(s) => setMediaUploading(s === "uploading")}
+              onStatusChange={(s) => {
+                setMediaUploading(s === "uploading");
+                if (s === "error") setMediaUploadFailed(true);
+              }}
             />
             <p className="modal__device-note">
               📱 <strong>On a phone?</strong> Tap <em>Choose File</em> /
