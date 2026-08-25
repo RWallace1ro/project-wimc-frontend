@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import {
   reauthenticateWithCredential,
   EmailAuthProvider,
@@ -16,6 +17,12 @@ import { useTier } from "../../context/TierContext";
 import { openBillingPortal } from "../../utils/billing";
 import Avatar from "../Avatar/Avatar";
 import "./UserSettingsModal.css";
+
+// Apple/Google both require that a native app not surface a path to manage
+// billing through an external processor (Stripe) — even just "manage/cancel",
+// not only new purchases. Hiding the live portal button/link on native builds
+// closes that gap; Pricing.js already handles the new-purchase side.
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 const TIER_LABELS = { free: "Free", pro: "Pro", pro_ai: "Pro + AI" };
 
@@ -870,6 +877,11 @@ export default function UserSettingsModal({
                     ✨ See Plans
                   </button>
                 </>
+              ) : NATIVE_PLATFORM ? (
+                <p className="usm-subscription__hint">
+                  To update your payment method, switch plans, view invoices, or cancel,
+                  please visit your account on the web.
+                </p>
               ) : (
                 <>
                   <p className="usm-subscription__hint">

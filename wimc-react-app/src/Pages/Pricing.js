@@ -208,6 +208,13 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
     btnLabel = "Currently Unavailable";
     btnStyle = "outline";
     btnDisabled = true;
+  } else if (NATIVE_PLATFORM && isDowngrade) {
+    // Same reasoning as new purchases — the billing portal is external
+    // (Stripe-hosted) billing management, which a native app can't link to
+    // even for a downgrade/cancel, not just a new purchase.
+    btnLabel = "Manage on Web";
+    btnStyle = "outline";
+    btnDisabled = true;
   } else if (isDowngrade) {
     btnLabel = plan.id === "free" ? "Switch to Free" : `Switch to ${plan.name}`;
     btnStyle = "current";
@@ -216,7 +223,7 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
 
   async function handleClick() {
     if (!PAYMENTS_ENABLED || busy) return;
-    if (NATIVE_PLATFORM && isNewPurchase) return;
+    if (NATIVE_PLATFORM && (isNewPurchase || isDowngrade)) return;
     if (!isLoggedIn) { onRequireLogin?.(); return; }
 
     // Downgrades (including to Free) go through the billing portal, which
