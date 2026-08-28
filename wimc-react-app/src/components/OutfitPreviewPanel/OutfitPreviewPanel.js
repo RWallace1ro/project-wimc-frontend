@@ -53,15 +53,6 @@ function ensureHttps(u) {
 function isVideoUrl(u = "") {
   return /\.(mp4|mov|webm|mkv|m4v)(\?.*)?$/i.test(u || "");
 }
-function filenameToName(url = "") {
-  try {
-    const last = url.split("/").pop() || "";
-    const base = last.split(".")[0];
-    return decodeURIComponent(base).replace(/[_-]+/g, " ").trim();
-  } catch {
-    return "";
-  }
-}
 function safeVideoPoster(url) {
   try {
     const u = new URL(url);
@@ -85,7 +76,12 @@ function normalizeMedia(x, sectionHint) {
       mediaUrl: url,
       mediaPoster: isV ? videoPoster(url) || safeVideoPoster(url) : "",
       mediaThumb: !isV ? to(url) : "",
-      name: filenameToName(url),
+      // Cloudinary auto-generates an opaque, random public ID for most
+      // uploads (camera roll, Try-On Studio, etc.) — falling back to it as
+      // a "name" surfaced meaningless text like "extra artc5" in the
+      // Show Name badge below. There's no real per-item naming feature, so
+      // leave this blank rather than guessing from the filename.
+      name: "",
       section: sectionHint || DEFAULT_SECTION_FALLBACK,
     };
   }
@@ -99,7 +95,8 @@ function normalizeMedia(x, sectionHint) {
       x.poster ||
       (isV ? videoPoster(url) || safeVideoPoster(url) : ""),
     mediaThumb: x.mediaThumb || x.thumb || (!isV ? to(url) : ""),
-    name: x.name || filenameToName(url),
+    // Same reasoning as above — only use a real, explicitly-set name.
+    name: x.name || "",
     section: x.section || sectionHint || DEFAULT_SECTION_FALLBACK,
   };
 }

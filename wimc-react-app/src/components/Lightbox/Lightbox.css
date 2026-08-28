@@ -71,8 +71,11 @@
   right: 20px;
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  /* A translucent white circle disappears against a light-colored photo
+     near the edge of the frame (confirmed on a real device) — a solid
+     dark circle keeps it visible no matter what's behind it. */
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 50%;
   color: #fff;
   font-size: 20px;
@@ -84,7 +87,7 @@
   line-height: 1;
 }
 .lb__close:hover {
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.8);
 }
 
 /* ── Counter ── */
