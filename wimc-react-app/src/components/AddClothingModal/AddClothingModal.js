@@ -1,9 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
 import MediaUploader from "../MediaUploader/MediaUploader";
 import ImageUpload from "../ImageUpload/ImageUpload";
 import { uploadImage } from "../../utils/CloudinaryAPI";
 import { hapticSuccess } from "../../utils/haptics";
 import "./AddClothingModal.css";
+
+// Cloudinary's own third-party Upload Widget (opened by the "Web search"
+// button below) puts its close/confirm buttons under the notch/status bar
+// on a real device, with no way for us to control that widget's internal
+// layout — confirmed as an actually-unclosable modal on a native build,
+// forcing a force-quit to escape. This used to be hidden with a
+// screen-width CSS media query as a proxy for "phone-sized," but the
+// native app's WebView doesn't reliably report the same width mobile
+// Safari does, so the query silently stopped matching and the trap
+// resurfaced. Checking the real platform directly instead of guessing
+// from screen size.
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 // function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
 // Default (female) section options — used when no `sections` prop is provided
@@ -342,19 +355,19 @@ function AddClothingModal({
               flow reads as "fill in details, then pick how to add a photo"
               instead of a switcher separated from the input it controls. */}
           <div className="modal__segmented">
-            {/* Hidden on phone screens (see .segmented__btn--websearch's media
-                query) — it opens Cloudinary's own third-party Upload Widget,
-                whose internal close/confirm buttons we don't control the
-                layout of and land under the notch/status bar on real
-                devices. Paste URL already covers "get an image from the
-                web" with our own fully-controlled UI. */}
-            <button
-              type="button"
-              className={`segmented__btn segmented__btn--websearch ${source === "web" ? "is-active" : ""}`}
-              onClick={() => setSource(source === "web" ? "device" : "web")}
-            >
-              Web search (image)
-            </button>
+            {/* Hidden on native builds and phone-sized screens — see the
+                NATIVE_PLATFORM comment above for why. Paste URL already
+                covers "get an image from the web" with our own
+                fully-controlled UI. */}
+            {!NATIVE_PLATFORM && (
+              <button
+                type="button"
+                className={`segmented__btn segmented__btn--websearch ${source === "web" ? "is-active" : ""}`}
+                onClick={() => setSource(source === "web" ? "device" : "web")}
+              >
+                Web search (image)
+              </button>
+            )}
             <button
               type="button"
               className={`segmented__btn ${source === "url" ? "is-active" : ""}`}
