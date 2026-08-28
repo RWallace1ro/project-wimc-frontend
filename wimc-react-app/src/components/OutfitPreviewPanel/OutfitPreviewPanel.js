@@ -95,8 +95,12 @@ function normalizeMedia(x, sectionHint) {
       x.poster ||
       (isV ? videoPoster(url) || safeVideoPoster(url) : ""),
     mediaThumb: x.mediaThumb || x.thumb || (!isV ? to(url) : ""),
-    // Same reasoning as above — only use a real, explicitly-set name.
-    name: x.name || "",
+    // Force-clear even if x.name is already set — an existing value here
+    // can only be old data saved before this fix (favorites, saved
+    // outfits/looks persisted in localStorage/Firestore), which is
+    // guaranteed to be the same filename-derived garbage since there has
+    // never been a real per-item naming feature to set a legitimate one.
+    name: "",
     section: x.section || sectionHint || DEFAULT_SECTION_FALLBACK,
   };
 }
