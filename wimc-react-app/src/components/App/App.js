@@ -22,6 +22,7 @@ import {
   getDoc,
   updateDoc,
 } from "firebase/firestore";
+import { Capacitor } from "@capacitor/core";
 import { auth, db } from "../../firebase";
 import { logAppEvent } from "../../utils/analytics";
 import { clearLocalAppData } from "../../utils/syncStore";
@@ -123,6 +124,17 @@ function ProRoute({ children }) {
   if (!isPro) return <Navigate to="/pricing" replace />;
   return children;
 }
+
+// The GDPR cookie-consent banner exists for the public website (real EU
+// visitor obligations around actual browser cookies). Inside the native
+// app there's no third-party ad tracking or data-broker sharing to consent
+// to — every category here is first-party (Sentry error monitoring, UI
+// preferences) — so showing an "Accept all / Reject all cookies" prompt
+// only reads as if the app tracks users when it doesn't. Hidden on native
+// per Apple App Review guidance (Guideline 5.1.2(i)): if you don't track,
+// remove the cookie prompt rather than implementing App Tracking
+// Transparency for something that was never really there.
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 function AppInner() {
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
@@ -712,8 +724,8 @@ function AppInner() {
               <WIMCAssistant />
             </React.Suspense>
           )}
-          <CookieConsent />
-          <CookiePreferences />
+          {!NATIVE_PLATFORM && <CookieConsent />}
+          {!NATIVE_PLATFORM && <CookiePreferences />}
           <UpdateBanner />
           <ModalWithForm
             isOpen={isSignUpModalOpen}
