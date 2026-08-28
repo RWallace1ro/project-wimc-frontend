@@ -63,7 +63,11 @@
 /* ── Close button ── */
 .lb__close {
   position: fixed;
-  top: 16px;
+  /* Clears the notch/Dynamic Island/status bar on a real device — without
+     this, a fixed 16px offset lands directly under the status bar and the
+     button becomes untappable (confirmed on a real device, forcing a
+     force-quit to escape). */
+  top: calc(16px + env(safe-area-inset-top));
   right: 20px;
   width: 40px;
   height: 40px;
@@ -86,7 +90,7 @@
 /* ── Counter ── */
 .lb__counter {
   position: fixed;
-  top: 20px;
+  top: calc(20px + env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.7);
