@@ -51,6 +51,10 @@
 	<string>WIMC uses your microphone to record audio when you save a Try-On Studio video.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>WIMC uses your location to show local weather-based outfit suggestions.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>WIMC uses your photo library so you can choose existing photos of your clothing items to add to your closet.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>WIMC saves photos and videos to your photo library when you choose to download them.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>
