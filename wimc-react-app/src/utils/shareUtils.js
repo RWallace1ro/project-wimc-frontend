@@ -1,6 +1,11 @@
 import { db, auth } from '../firebase';
 import { collection, addDoc, getDoc, doc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import { syncSetItem } from './syncStore';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { hapticSuccess } from './haptics';
+
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 /** Stable app base URL (origin + PUBLIC_URL), independent of the current route.
  *  Produces e.g. https://rwallace1ro.github.io/project-wimc-frontend
@@ -120,10 +125,23 @@ export function countUnreadShares(shares) {
   }, 0);
 }
 
-// ── Web Share API — share a clothing image as a real file ─────────────────────
+// ── Share a clothing image ──────────────────────────────────────────────────
+// Native builds use Capacitor's Share plugin (a real native iOS/Android
+// share sheet, not the browser's Web Share API running inside a WebView) —
+// see shareAppLink below for why this distinction matters for App Review.
 export async function shareItemImage(imageUrl, opts = {}) {
   const { title = 'My Closet Item', text = 'From my WIMC closet 👗' } = opts;
   if (!imageUrl) return 'no-url';
+  if (NATIVE_PLATFORM) {
+    try {
+      await Share.share({ title, text, url: imageUrl, dialogTitle: 'Share item' });
+      hapticSuccess();
+      return 'shared-native';
+    } catch (e) {
+      if (e?.message?.toLowerCase().includes('cancel')) return 'aborted';
+      // fall through to the web-style handling below as a backup
+    }
+  }
   if (typeof navigator.canShare === 'function') {
     try {
       const resp = await fetch(imageUrl, { mode: 'cors' });
@@ -144,8 +162,23 @@ export async function shareItemImage(imageUrl, opts = {}) {
   return 'unsupported';
 }
 
-// ── Web Share API — share an app link ─────────────────────────────────────────
+// ── Share an app link (Wish List, Shopping List, outfits, sizing links) ────────
+// Capacitor's Share plugin invokes the real native OS share sheet via a
+// native code bridge — distinct from the Web Share API, which (even though
+// it can also open a share sheet from a WebView) reads to App Review as
+// "still just a website" rather than a native capability. Falls back to the
+// same Web Share / clipboard behavior on the public website.
 export async function shareAppLink({ title, text, url }) {
+  if (NATIVE_PLATFORM) {
+    try {
+      await Share.share({ title, text, url, dialogTitle: title || 'Share' });
+      hapticSuccess();
+      return 'shared-native';
+    } catch (e) {
+      if (e?.message?.toLowerCase().includes('cancel')) return 'aborted';
+      // fall through to the web-style handling below as a backup
+    }
+  }
   if (navigator.share) {
     try { await navigator.share({ title, text, url }); return 'shared'; }
     catch (e) { if (e?.name === 'AbortError') return 'aborted'; }

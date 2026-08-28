@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import MediaUploader from "../MediaUploader/MediaUploader";
 import ImageUpload from "../ImageUpload/ImageUpload";
 import { uploadImage } from "../../utils/CloudinaryAPI";
+import { hapticSuccess } from "../../utils/haptics";
 import "./AddClothingModal.css";
 
 // function AddClothingModal({ isOpen, onClose, onClothingAdded }) {
@@ -173,6 +174,7 @@ function AddClothingModal({
     };
 
     onClothingAdded(newItem);
+    hapticSuccess();
 
     // reset
     setFormData({ name: "", designer: "", size: "", category: "", imageUrl: "" });

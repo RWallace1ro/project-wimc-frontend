@@ -1,4 +1,6 @@
 import React, { useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import {
   uploadImage,
   uploadVideo,
@@ -6,6 +8,10 @@ import {
   videoPoster,
   videoStream,
 } from "../../utils/CloudinaryAPI";
+import { hapticTap, hapticSuccess, hapticError } from "../../utils/haptics";
+import "./media-uploader.css";
+
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 export default function MediaUploader({
   onUploaded,
@@ -17,6 +23,7 @@ export default function MediaUploader({
 }) {
   const [status, setStatusState] = useState("idle"); // idle | uploading | done | error
   const [preview, setPreview] = useState(null);
+  const [previewIsVideo, setPreviewIsVideo] = useState(false);
   const inputRef = useRef(null);
 
   // Wraps setStatus so the parent always learns about "uploading" the moment
@@ -31,13 +38,13 @@ export default function MediaUploader({
 
   const sectionTag = tag || folder || "default";
 
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // Shared upload path for both the plain file input and the native camera
+  // capture below — same Cloudinary call, same success/error handling.
+  const handleFile = async (file) => {
     const isVideo = acceptVideo && file.type.startsWith("video/");
     const isImage = file.type.startsWith("image/");
 
+    setPreviewIsVideo(isVideo);
     setStatus("uploading");
     setPreview(URL.createObjectURL(file));
 
@@ -69,14 +76,57 @@ export default function MediaUploader({
         throw new Error("Unsupported file type");
       }
       setStatus("done");
+      hapticSuccess();
     } catch (err) {
       console.error(err);
       setStatus("error");
+      hapticError();
+    }
+  };
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    handleFile(file);
+  };
+
+  // Native camera capture — a real native camera UI via Capacitor's plugin
+  // (the device's actual camera app/view), not a browser file picker with a
+  // "capture" hint. Distinct native capability App Review can recognize.
+  const takeNativePhoto = async () => {
+    hapticTap();
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        quality: 85,
+      });
+      if (!photo?.webPath) return;
+      const resp = await fetch(photo.webPath);
+      const blob = await resp.blob();
+      const ext = photo.format || "jpeg";
+      const file = new File([blob], `wimc-camera.${ext}`, { type: blob.type || `image/${ext}` });
+      handleFile(file);
+    } catch (err) {
+      // User cancelled the native camera sheet — not an error worth surfacing.
+      if (err?.message && !/cancel/i.test(err.message)) {
+        console.error("Native camera capture failed:", err);
+      }
     }
   };
 
   return (
     <div className={className}>
+      {NATIVE_PLATFORM && (
+        <button
+          type="button"
+          className={`${className}__camera-btn`}
+          onClick={takeNativePhoto}
+        >
+          📷 Take Photo
+        </button>
+      )}
+
       <label className={`${className}__label`} htmlFor="media-input">
         Upload image {acceptVideo ? "or video" : ""}
       </label>
@@ -91,7 +141,7 @@ export default function MediaUploader({
 
       <div className={`${className}__preview`}>
         {preview &&
-          (inputRef.current?.files?.[0]?.type?.startsWith("video/") ? (
+          (previewIsVideo ? (
             <video
               className={`${className}__video`}
               width="260"

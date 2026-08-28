@@ -9,6 +9,7 @@ import {
 } from "../../utils/CloudinaryAPI";
 import { useBackground } from "../../context/BackgroundContext";
 import { syncSetItem } from "../../utils/syncStore";
+import { hapticTap } from "../../utils/haptics";
 import { getSubSections, donatePrefixForTag } from "../../utils/closetSubsections";
 import { resolveBackgroundValue } from "../../utils/backgroundPresets";
 import ScrollHintArrows from "../common/ScrollHintArrows";
@@ -311,6 +312,7 @@ function ClosetSectionModal({
   // viewed sub-section — otherwise a pin made from e.g. "Skirts" would be
   // invisible to the card, which only ever reads the base-tag key.
   const handlePinImage = (url) => {
+    hapticTap();
     syncSetItem(getPinnedKey(sectionTag), url);
     setPinnedUrl(url);
     setPinFlash(url);
