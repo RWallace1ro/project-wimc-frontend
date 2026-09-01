@@ -20,9 +20,14 @@ import Avatar from "../Avatar/Avatar";
 import "./UserSettingsModal.css";
 
 const APP_WEB_URL = "rwallace1ro.github.io/project-wimc-frontend";
+// The real GitHub Pages URL contains the developer's personal GitHub
+// username — shown here only as a generic label so it isn't displayed to
+// users, while the Copy button below still copies the real, correct URL.
+// (A full custom-domain migration is deferred to post-launch; see memory.)
+const APP_WEB_LABEL = "WIMC website";
 
-// Same reasoning as Pricing.js's CopyableWebLink — plain, non-tappable URL
-// text plus a Copy button, safe under Apple/Google's native in-app-purchase
+// Same reasoning as Pricing.js's CopyableWebLink — plain, non-tappable label
+// plus a Copy button, safe under Apple/Google's native in-app-purchase
 // policy since nothing navigates or opens from inside the app.
 function CopyableWebLink() {
   const [copied, setCopied] = useState(false);
@@ -35,9 +40,9 @@ function CopyableWebLink() {
   };
   return (
     <span className="usm-web-link-row">
-      <code className="usm-web-link-url">{APP_WEB_URL}</code>
+      <code className="usm-web-link-url">{APP_WEB_LABEL}</code>
       <button type="button" className="usm-web-link-copy-btn" onClick={handleCopy}>
-        {copied ? "Copied!" : "Copy"}
+        {copied ? "Copied!" : "Copy link"}
       </button>
     </span>
   );
@@ -905,7 +910,7 @@ export default function UserSettingsModal({
               ) : NATIVE_PLATFORM ? (
                 <p className="usm-subscription__hint">
                   To update your payment method, switch plans, view invoices, or cancel,
-                  please visit this address on a web browser: <CopyableWebLink />
+                  please open a web browser and go to the <CopyableWebLink />
                 </p>
               ) : (
                 <>

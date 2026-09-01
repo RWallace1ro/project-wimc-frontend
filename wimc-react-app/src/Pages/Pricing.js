@@ -8,8 +8,13 @@ import { copyText } from "../utils/copyText";
 import "./Pricing.css";
 
 const APP_WEB_URL = "rwallace1ro.github.io/project-wimc-frontend";
+// The real GitHub Pages URL contains the developer's personal GitHub
+// username — shown here only as a generic label so it isn't displayed to
+// users, while the Copy button below still copies the real, correct URL.
+// (A full custom-domain migration is deferred to post-launch; see memory.)
+const APP_WEB_LABEL = "WIMC website";
 
-// Plain, non-tappable URL text plus a Copy button — safe under Apple/Google's
+// Plain, non-tappable label plus a Copy button — safe under Apple/Google's
 // native in-app-purchase policy (no live external link/navigation), while
 // still making the address easy to grab instead of memorizing or hand-typing.
 function CopyableWebLink() {
@@ -23,9 +28,9 @@ function CopyableWebLink() {
   };
   return (
     <span className="pricing-banner__link-row">
-      <code className="pricing-banner__url">{APP_WEB_URL}</code>
+      <code className="pricing-banner__url">{APP_WEB_LABEL}</code>
       <button type="button" className="pricing-banner__copy-btn" onClick={handleCopy}>
-        {copied ? "Copied!" : "Copy"}
+        {copied ? "Copied!" : "Copy link"}
       </button>
     </span>
   );
@@ -384,7 +389,7 @@ export default function Pricing({ isLoggedIn }) {
           native subscription-management hint in Settings. */}
       {NATIVE_PLATFORM && (
         <div className="pricing-banner">
-          To subscribe to Pro or Pro+AI, please visit this address on a web browser: <CopyableWebLink />
+          To subscribe to Pro or Pro+AI, please open a web browser and go to the <CopyableWebLink />
         </div>
       )}
 
