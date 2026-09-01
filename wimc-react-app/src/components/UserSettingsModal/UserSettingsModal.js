@@ -880,7 +880,7 @@ export default function UserSettingsModal({
               ) : NATIVE_PLATFORM ? (
                 <p className="usm-subscription__hint">
                   To update your payment method, switch plans, view invoices, or cancel,
-                  please visit your account on the web.
+                  please visit rwallace1ro.github.io/project-wimc-frontend on a web browser.
                 </p>
               ) : (
                 <>
