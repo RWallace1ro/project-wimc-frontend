@@ -351,6 +351,18 @@ export default function Pricing({ isLoggedIn }) {
         </div>
       )}
 
+      {/* New purchases are disabled in the native app per Apple/Google policy
+          (see Pricing/PlanCard's NATIVE_PLATFORM check) — without this, a
+          Free-tier native user tapping "See Plans" would just see every paid
+          button say "Currently Unavailable" with no explanation of what to
+          do instead. Plain text only, no tappable link, matching the same
+          native subscription-management hint in Settings. */}
+      {NATIVE_PLATFORM && (
+        <div className="pricing-banner">
+          To subscribe to Pro or Pro+AI, please visit rwallace1ro.github.io/project-wimc-frontend on a web browser.
+        </div>
+      )}
+
       <div className="pricing-body">
         {/* Monthly plans */}
         <div className="pricing-group">
