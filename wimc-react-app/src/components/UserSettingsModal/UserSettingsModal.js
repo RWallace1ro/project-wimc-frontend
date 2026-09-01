@@ -15,8 +15,33 @@ import { useBackground } from "../../context/BackgroundContext";
 import { BACKGROUND_PRESETS, resolveBackgroundValue } from "../../utils/backgroundPresets";
 import { useTier } from "../../context/TierContext";
 import { openBillingPortal } from "../../utils/billing";
+import { copyText } from "../../utils/copyText";
 import Avatar from "../Avatar/Avatar";
 import "./UserSettingsModal.css";
+
+const APP_WEB_URL = "rwallace1ro.github.io/project-wimc-frontend";
+
+// Same reasoning as Pricing.js's CopyableWebLink — plain, non-tappable URL
+// text plus a Copy button, safe under Apple/Google's native in-app-purchase
+// policy since nothing navigates or opens from inside the app.
+function CopyableWebLink() {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    const ok = await copyText(APP_WEB_URL);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  return (
+    <span className="usm-web-link-row">
+      <code className="usm-web-link-url">{APP_WEB_URL}</code>
+      <button type="button" className="usm-web-link-copy-btn" onClick={handleCopy}>
+        {copied ? "Copied!" : "Copy"}
+      </button>
+    </span>
+  );
+}
 
 // Apple/Google both require that a native app not surface a path to manage
 // billing through an external processor (Stripe) — even just "manage/cancel",
@@ -880,7 +905,7 @@ export default function UserSettingsModal({
               ) : NATIVE_PLATFORM ? (
                 <p className="usm-subscription__hint">
                   To update your payment method, switch plans, view invoices, or cancel,
-                  please visit rwallace1ro.github.io/project-wimc-frontend on a web browser.
+                  please visit this address on a web browser: <CopyableWebLink />
                 </p>
               ) : (
                 <>

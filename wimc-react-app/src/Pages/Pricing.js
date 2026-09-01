@@ -4,7 +4,32 @@ import { Capacitor } from "@capacitor/core";
 import { startCheckout, openBillingPortal } from "../utils/billing";
 import { useTier } from "../context/TierContext";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
+import { copyText } from "../utils/copyText";
 import "./Pricing.css";
+
+const APP_WEB_URL = "rwallace1ro.github.io/project-wimc-frontend";
+
+// Plain, non-tappable URL text plus a Copy button — safe under Apple/Google's
+// native in-app-purchase policy (no live external link/navigation), while
+// still making the address easy to grab instead of memorizing or hand-typing.
+function CopyableWebLink() {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = async () => {
+    const ok = await copyText(APP_WEB_URL);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+  return (
+    <span className="pricing-banner__link-row">
+      <code className="pricing-banner__url">{APP_WEB_URL}</code>
+      <button type="button" className="pricing-banner__copy-btn" onClick={handleCopy}>
+        {copied ? "Copied!" : "Copy"}
+      </button>
+    </span>
+  );
+}
 
 const PAYMENTS_ENABLED = process.env.REACT_APP_PAYMENTS_ENABLED === "true";
 
@@ -359,7 +384,7 @@ export default function Pricing({ isLoggedIn }) {
           native subscription-management hint in Settings. */}
       {NATIVE_PLATFORM && (
         <div className="pricing-banner">
-          To subscribe to Pro or Pro+AI, please visit rwallace1ro.github.io/project-wimc-frontend on a web browser.
+          To subscribe to Pro or Pro+AI, please visit this address on a web browser: <CopyableWebLink />
         </div>
       )}
 
