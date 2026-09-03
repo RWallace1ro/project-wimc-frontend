@@ -1,7 +1,14 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import "./FAQ.css";
+
+// Same reasoning as Pricing.js/UpgradeModal.js/WIMCAssistant.js — Apple
+// treats naming a specific paid tier or price in the native app's UI as an
+// implicit offer to sell it, requiring a registered Apple In-App Purchase
+// product. Every tier name/price mention below is genericized on native.
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 const SECTIONS = [
   {
@@ -112,7 +119,9 @@ const SECTIONS = [
       },
       {
         q: "How many AI requests do I get?",
-        a: "AI usage is set by your plan and resets daily: Free includes 3 AI requests per day, Pro includes 10 per day, and Pro + AI includes 50 per day. This pool covers the AI Stylist, Packing Assistant, Donation Advisor, Closet Search, and Style Feedback. If you reach your limit, you can upgrade for more or wait until the next day.",
+        a: NATIVE_PLATFORM
+          ? "AI usage is set by your plan and resets daily. This pool covers the AI Stylist, Packing Assistant, Donation Advisor, Closet Search, and Style Feedback. If you reach your limit, you can upgrade for more (managed through our website) or wait until the next day."
+          : "AI usage is set by your plan and resets daily: Free includes 3 AI requests per day, Pro includes 10 per day, and Pro + AI includes 50 per day. This pool covers the AI Stylist, Packing Assistant, Donation Advisor, Closet Search, and Style Feedback. If you reach your limit, you can upgrade for more or wait until the next day.",
       },
       {
         q: "Is my data used to train the AI?",
@@ -146,15 +155,15 @@ const SECTIONS = [
     items: [
       {
         q: "What is the Try-On Studio?",
-        a: "The Try-On Studio (🎬 Try On) lets you record an outfit video using your front or rear camera, or upload one. Each video can be saved to your Video Bin, and you can request AI Style Feedback on it. The Try-On Studio is a Pro feature.",
+        a: `The Try-On Studio (🎬 Try On) lets you record an outfit video using your front or rear camera, or upload one. Each video can be saved to your Video Bin, and you can request AI Style Feedback on it. ${NATIVE_PLATFORM ? "This requires a paid plan, managed through our website." : "The Try-On Studio is a Pro feature."}`,
       },
       {
         q: "What is the Carousel?",
-        a: "The Carousel (🎞️ Carousel) is a full-screen, ambient slideshow of every photo across your closet — great as a background display, or cast to a TV via AirPlay/Chromecast. You can play/pause, adjust the speed, and turn on optional background music (with volume control, or use your own audio file for that session). The Carousel is a Pro feature.",
+        a: `The Carousel (🎞️ Carousel) is a full-screen, ambient slideshow of every photo across your closet — great as a background display, or cast to a TV via AirPlay/Chromecast. You can play/pause, adjust the speed, and turn on optional background music (with volume control, or use your own audio file for that session). ${NATIVE_PLATFORM ? "This requires a paid plan, managed through our website." : "The Carousel is a Pro feature."}`,
       },
       {
         q: "What is the Receipts tracker?",
-        a: "The Receipts tracker (🧾 Receipts) lets you store purchase receipts as photos, PDFs, or notes, filter them by category or return status, mark items as returned, and back up or restore your receipts across devices. Receipts is a Pro feature.",
+        a: `The Receipts tracker (🧾 Receipts) lets you store purchase receipts as photos, PDFs, or notes, filter them by category or return status, mark items as returned, and back up or restore your receipts across devices. ${NATIVE_PLATFORM ? "This requires a paid plan, managed through our website." : "Receipts is a Pro feature."}`,
       },
       {
         q: "What is the Weather feature?",
@@ -162,7 +171,7 @@ const SECTIONS = [
       },
       {
         q: "What is the Video Bin?",
-        a: "The Video Bin is a dedicated space for styling videos, haul videos, or try-on recordings you want to keep alongside your closet. Videos are stored securely and can be played directly in the app. The Video Bin is a Pro feature.",
+        a: `The Video Bin is a dedicated space for styling videos, haul videos, or try-on recordings you want to keep alongside your closet. Videos are stored securely and can be played directly in the app. ${NATIVE_PLATFORM ? "This requires a paid plan, managed through our website." : "The Video Bin is a Pro feature."}`,
       },
     ],
   },
@@ -188,19 +197,27 @@ const SECTIONS = [
     items: [
       {
         q: "Is WIMC free to use?",
-        a: "Yes — the Free plan includes all eight closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist (3 requests per day). Upgrading unlocks unlimited uploads and the Pro features below.",
+        a: NATIVE_PLATFORM
+          ? "Yes — the free plan includes all eight closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist. Additional features are available with a paid plan, managed through our website."
+          : "Yes — the Free plan includes all eight closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist (3 requests per day). Upgrading unlocks unlimited uploads and the Pro features below.",
       },
       {
         q: "What are the plans and what's included?",
-        a: "There are three plans. Free ($0): core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro ($4.99/mo or $39.99/yr): everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and 10 AI requests/day. Pro + AI ($7.99/mo or $79.99/yr): everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features.",
+        a: NATIVE_PLATFORM
+          ? "There's a free plan with core closet organization, Shopping List, Wish List, and limited daily AI requests. Paid plans unlock unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and more AI requests per day. Full plan details and subscribing are handled through our website, not in this app."
+          : "There are three plans. Free ($0): core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro ($4.99/mo or $39.99/yr): everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and 10 AI requests/day. Pro + AI ($7.99/mo or $79.99/yr): everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features.",
       },
       {
         q: "How much does the Pro plan cost?",
-        a: "Pro is $4.99 per month (or $39.99 per year), and Pro + AI is $7.99 per month (or $79.99 per year). You can manage or change your plan anytime from the Billing portal in your account settings.",
+        a: NATIVE_PLATFORM
+          ? "Pricing is managed through our website — please visit it on a web browser to see current plan pricing and subscribe."
+          : "Pro is $4.99 per month (or $39.99 per year), and Pro + AI is $7.99 per month (or $79.99 per year). You can manage or change your plan anytime from the Billing portal in your account settings.",
       },
       {
         q: "How do I cancel my subscription?",
-        a: "You can cancel anytime from your account's Billing portal — no cancellation fees, no questions asked. Your Pro access continues until the end of the current billing period.",
+        a: NATIVE_PLATFORM
+          ? "You can cancel anytime from your account's Billing portal on our website — no cancellation fees, no questions asked. Your paid access continues until the end of the current billing period."
+          : "You can cancel anytime from your account's Billing portal — no cancellation fees, no questions asked. Your Pro access continues until the end of the current billing period.",
       },
       {
         q: "Do you offer refunds?",

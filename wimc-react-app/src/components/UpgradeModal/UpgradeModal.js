@@ -1,6 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import "./UpgradeModal.css";
+
+// Same reasoning as Pricing.js's NATIVE_PLATFORM check — Apple treats naming
+// a specific paid tier in the native app's UI as an implicit offer to sell
+// it, which requires a registered Apple In-App Purchase product. Genericize
+// the wording on native so no tier name/price is ever shown there.
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 /**
  * UpgradeModal — shown when a Free (or Pro) user taps a higher-tier feature.
@@ -11,6 +18,7 @@ export default function UpgradeModal({ open, feature, requiredTier, onClose }) {
   if (!open) return null;
 
   const tierName = requiredTier === "pro_ai" ? "Pro + AI" : "Pro";
+  const displayName = NATIVE_PLATFORM ? "a paid plan" : `WIMC ${tierName}`;
 
   return (
     <div
@@ -21,10 +29,12 @@ export default function UpgradeModal({ open, feature, requiredTier, onClose }) {
         <button className="upgrade-modal__close" onClick={onClose} aria-label="Close">×</button>
         <div className="upgrade-modal__icon">✨</div>
         <h2 className="upgrade-modal__title">
-          {feature ? `${feature} is a ${tierName} feature` : `Unlock with ${tierName}`}
+          {NATIVE_PLATFORM
+            ? (feature ? `${feature} requires a paid plan` : "Unlock with a paid plan")
+            : (feature ? `${feature} is a ${tierName} feature` : `Unlock with ${tierName}`)}
         </h2>
         <p className="upgrade-modal__text">
-          Upgrade to <strong>WIMC {tierName}</strong> to unlock this and more.
+          Upgrade to <strong>{displayName}</strong> to unlock this and more.
           Cancel anytime.
         </p>
         <div className="upgrade-modal__actions">

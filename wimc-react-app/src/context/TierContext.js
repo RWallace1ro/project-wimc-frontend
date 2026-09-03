@@ -6,8 +6,14 @@ import React, {
   useCallback,
 } from "react";
 import { doc, onSnapshot, getDocFromServer } from "firebase/firestore";
+import { Capacitor } from "@capacitor/core";
 import { db } from "../firebase";
 import UpgradeModal from "../components/UpgradeModal/UpgradeModal";
+
+// Same reasoning as Pricing.js/UpgradeModal.js/FAQ.js — naming a specific
+// paid tier in the native app's UI (even just a lock badge) is treated by
+// Apple as an implicit offer to sell it.
+const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 /**
  * TierContext — the single source of truth for the signed-in user's plan.
@@ -45,7 +51,9 @@ export function ProGate({ feature, requiredTier = "pro", children }) {
   if (allowed) return children;
 
   const gate = requiredTier === "pro_ai" ? requireProAI : requirePro;
-  const badge = requiredTier === "pro_ai" ? "🔒 Pro + AI" : "🔒 Pro";
+  const badge = NATIVE_PLATFORM
+    ? "🔒 Upgrade"
+    : requiredTier === "pro_ai" ? "🔒 Pro + AI" : "🔒 Pro";
   return (
     <div
       className="pro-gate"

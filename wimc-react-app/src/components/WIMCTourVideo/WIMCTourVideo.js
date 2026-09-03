@@ -217,7 +217,7 @@ const SLIDES = [
     title: "Settings & More",
     type: "feature",
     mockupTitle: "⚙️ Settings · 💬 Assistant",
-    features: ["Edit profile & upload avatar","Password + strength meter","Page & card backgrounds","Manage subscription (Pro / Pro + AI)","WIMC Assistant help bot on every page","Secure account deletion flow"],
+    features: ["Edit profile & upload avatar","Password + strength meter","Page & card backgrounds","Manage your subscription","WIMC Assistant help bot on every page","Secure account deletion flow"],
     featureIcons: ["🖼️","🔒","🎨","💳","💬","🔐"],
   },
 ];

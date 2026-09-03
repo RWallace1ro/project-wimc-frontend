@@ -381,53 +381,59 @@ export default function Pricing({ isLoggedIn }) {
         </div>
       )}
 
-      {/* New purchases are disabled in the native app per Apple/Google policy
-          (see Pricing/PlanCard's NATIVE_PLATFORM check) — without this, a
-          Free-tier native user tapping "See Plans" would just see every paid
-          button say "Currently Unavailable" with no explanation of what to
-          do instead. Plain text only, no tappable link, matching the same
-          native subscription-management hint in Settings. */}
-      {NATIVE_PLATFORM && (
-        <div className="pricing-banner">
-          To subscribe to Pro or Pro+AI, please open a web browser and go to the <CopyableWebLink />
+      {/* Apple Guideline 2.1(b): even with the purchase button disabled,
+          showing named/priced plan cards in the native app was treated by
+          App Review as an implicit offer to sell — which requires those to
+          exist as registered Apple In-App Purchase products (which this app
+          deliberately doesn't have; subscriptions are Stripe/web-only). The
+          fix is to not display plan names, prices, or a comparison table in
+          the native app at all — just a generic notice pointing to the
+          website, with zero mention of specific tier names or prices. */}
+      {NATIVE_PLATFORM ? (
+        <div className="pricing-body">
+          <div className="pricing-banner">
+            Additional features are available with a paid subscription, managed
+            entirely through our website. Please open a web browser and go to
+            the <CopyableWebLink /> to view plans and subscribe.
+          </div>
+        </div>
+      ) : (
+        <div className="pricing-body">
+          {/* Monthly plans */}
+          <div className="pricing-group">
+            <p className="pricing-group__label">Monthly Plans</p>
+            <div className="pricing-grid">
+              {MONTHLY_PLANS.map((plan) => (
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  currentPlanId={currentPlanId}
+                  currentTier={isLoggedIn ? tier : null}
+                  isLoggedIn={isLoggedIn}
+                  onRequireLogin={() => navigate("/")}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Annual plans */}
+          <div className="pricing-group">
+            <p className="pricing-group__label">Annual Plans — Best Value</p>
+            <div className="pricing-grid">
+              {ANNUAL_PLANS.map((plan) => (
+                <PlanCard
+                  key={plan.id}
+                  plan={plan}
+                  currentPlanId={currentPlanId}
+                  currentTier={isLoggedIn ? tier : null}
+                  isLoggedIn={isLoggedIn}
+                  onRequireLogin={() => navigate("/")}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       )}
-
-      <div className="pricing-body">
-        {/* Monthly plans */}
-        <div className="pricing-group">
-          <p className="pricing-group__label">Monthly Plans</p>
-          <div className="pricing-grid">
-            {MONTHLY_PLANS.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                currentPlanId={currentPlanId}
-                currentTier={isLoggedIn ? tier : null}
-                isLoggedIn={isLoggedIn}
-                onRequireLogin={() => navigate("/")}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Annual plans */}
-        <div className="pricing-group">
-          <p className="pricing-group__label">Annual Plans — Best Value</p>
-          <div className="pricing-grid">
-            {ANNUAL_PLANS.map((plan) => (
-              <PlanCard
-                key={plan.id}
-                plan={plan}
-                currentPlanId={currentPlanId}
-                currentTier={isLoggedIn ? tier : null}
-                isLoggedIn={isLoggedIn}
-                onRequireLogin={() => navigate("/")}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
     </main>
   );
 }
