@@ -6,17 +6,20 @@
  * deleteCloudinaryAsset     — Signed delete of a Cloudinary asset.
  * createCheckoutSession     — Starts a Stripe Checkout for a subscription.
  * createPortalSession       — Opens the Stripe customer billing portal.
- * stripeWebhook             — Signature-verified Stripe webhook → sets user tier.
+ * stripeWebhook             — Signature-verified Stripe webhook → sets stripeTier.
+ * revenuecatWebhook         — Bearer-secret RevenueCat webhook (Apple IAP) → sets appleTier.
+ * syncEffectiveTier         — Firestore trigger: tier = higher of stripeTier/appleTier.
  * finalizeScheduledDeletions — Daily job: completes 14-day-grace account deletions.
  * cleanupExpiredShares      — Daily job: deletes sharedContent links older than 30 days.
  * submitContactForm         — Public contact form → emails support via Resend.
  *
  * Secrets:
- *   ANTHROPIC_API_KEY     — firebase functions:secrets:set ANTHROPIC_API_KEY
- *   CLOUDINARY_API_SECRET — firebase functions:secrets:set CLOUDINARY_API_SECRET
- *   STRIPE_SECRET_KEY     — firebase functions:secrets:set STRIPE_SECRET_KEY
- *   STRIPE_WEBHOOK_SECRET — firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
- *   RESEND_API_KEY        — firebase functions:secrets:set RESEND_API_KEY
+ *   ANTHROPIC_API_KEY        — firebase functions:secrets:set ANTHROPIC_API_KEY
+ *   CLOUDINARY_API_SECRET    — firebase functions:secrets:set CLOUDINARY_API_SECRET
+ *   STRIPE_SECRET_KEY        — firebase functions:secrets:set STRIPE_SECRET_KEY
+ *   STRIPE_WEBHOOK_SECRET    — firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+ *   REVENUECAT_WEBHOOK_SECRET — firebase functions:secrets:set REVENUECAT_WEBHOOK_SECRET
+ *   RESEND_API_KEY           — firebase functions:secrets:set RESEND_API_KEY
  */
 
 // v1 API import (firebase-functions v5+ defaults the top-level export to v2;
@@ -509,6 +512,13 @@ exports.stripeWebhook = functions
     const adminDb = getAdminDb();
 
     // Resolve the firebase uid + tier from a subscription object.
+    //
+    // Writes to `stripeTier` (NOT the effective `tier` field directly) — since
+    // real Apple IAP shipped, a user's *effective* tier can come from either
+    // Stripe (web) or Apple (iOS RevenueCat), whichever grants more. The
+    // syncEffectiveTier Firestore trigger below recomputes `tier` from
+    // `stripeTier` + `appleTier` any time either changes, so nothing here (or
+    // in the RevenueCat webhook) ever needs to know about the other source.
     const applySubscription = async (sub) => {
       const uid = sub.metadata?.firebaseUID;
       if (!uid) return;
@@ -516,7 +526,7 @@ exports.stripeWebhook = functions
       const active = sub.status === "active" || sub.status === "trialing";
       const tier = active ? (TIER_BY_PRICE[priceId] || "free") : "free";
       await adminDb.collection("users").doc(uid).set({
-        tier,
+        stripeTier: tier,
         subscriptionStatus: sub.status,
         stripeSubscriptionId: sub.id,
         stripePriceId: priceId || null,
@@ -575,6 +585,116 @@ exports.stripeWebhook = functions
       res.json({ received: true });
     } catch (err) {
       console.error("stripeWebhook handler error:", err);
+      res.status(500).send("Webhook handler error");
+    }
+  });
+
+// ── Effective tier merge (Stripe web + Apple IAP on the same account) ─────────
+//
+// Real Apple In-App Purchase (RevenueCat) shipped alongside the existing
+// Stripe checkout — the SAME Firebase account can now hold either a Stripe
+// subscription (web), an Apple subscription (iOS), or both (e.g. a user
+// subscribed on the web, then also has an active trial on their phone).
+// `tier` remains the single field every client reads (TierContext.js) and
+// stays untouched by that file — this trigger is the only thing that writes
+// it, computed as whichever source currently grants more.
+const TIER_RANK = { free: 0, pro: 1, pro_ai: 2 };
+function higherTier(a, b) {
+  return (TIER_RANK[a] || 0) >= (TIER_RANK[b] || 0) ? (a || "free") : (b || "free");
+}
+
+exports.syncEffectiveTier = functions.firestore
+  .document("users/{uid}")
+  .onWrite(async (change, context) => {
+    if (!change.after.exists) return null;
+    const data = change.after.data();
+
+    // Legacy compat: accounts that subscribed via Stripe before Apple IAP
+    // existed have `tier` set but no `stripeTier` yet (the old webhook wrote
+    // `tier` directly). Treat that old `tier` as the Stripe value once, so an
+    // existing paying subscriber is never momentarily read as "free" before
+    // their next Stripe webhook event happens to fire.
+    const stripeTier = data.stripeTier !== undefined
+      ? data.stripeTier
+      : (data.tier || "free");
+    const appleTier = data.appleTier || "free";
+
+    const effective = higherTier(stripeTier, appleTier);
+
+    // Guard against re-triggering itself: only write if something actually
+    // changed (either the effective tier, or backfilling a missing stripeTier).
+    const needsStripeTierBackfill = data.stripeTier === undefined;
+    if (data.tier === effective && !needsStripeTierBackfill) return null;
+
+    const patch = { tier: effective };
+    if (needsStripeTierBackfill) patch.stripeTier = stripeTier;
+
+    await change.after.ref.set(patch, { merge: true });
+    return null;
+  });
+
+// ── RevenueCat Webhook (Apple IAP → effective tier via syncEffectiveTier) ─────
+//
+// RevenueCat's dashboard is configured to POST here (Project Settings →
+// Integrations → Webhooks) on every entitlement change. Auth is a shared
+// secret in the "Authorization header value" field (set in RevenueCat's
+// webhook config to match REVENUECAT_WEBHOOK_SECRET verbatim — RevenueCat
+// sends that field's value as-is, with no "Bearer " prefix added) —
+// RevenueCat doesn't sign payloads the way Stripe does, so this shared-secret
+// check is what stands in for that.
+//
+// RevenueCat's `app_user_id` is set client-side (src/utils/iap.js) to the
+// signed-in Firebase uid, so events map straight back to users/{uid} with no
+// separate customer-id lookup step (unlike Stripe's getOrCreateCustomer).
+const ENTITLEMENT_TO_TIER = {
+  pro: "pro",
+  pro_ai: "pro_ai",
+};
+
+exports.revenuecatWebhook = functions
+  .runWith({ secrets: ["REVENUECAT_WEBHOOK_SECRET"] })
+  .https.onRequest(async (req, res) => {
+    if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
+
+    const auth = req.get("Authorization") || "";
+    if (auth !== process.env.REVENUECAT_WEBHOOK_SECRET) {
+      console.error("revenuecatWebhook: bad Authorization header");
+      res.status(401).send("Unauthorized");
+      return;
+    }
+
+    try {
+      const event = req.body?.event || {};
+      const uid = event.app_user_id;
+      if (!uid) { res.json({ received: true }); return; } // anonymous/test event
+
+      // entitlements active as of this event → highest tier among them.
+      // RevenueCat sends the full current entitlement map on every event type
+      // (INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION, BILLING_ISSUE,
+      // etc.) so re-deriving from scratch each time is simpler and safer than
+      // trying to special-case each event type.
+      const activeEntitlements = Object.keys(event.entitlement_ids
+        ? Object.fromEntries((event.entitlement_ids || []).map((id) => [id, true]))
+        : {});
+      let appleTier = "free";
+      for (const id of activeEntitlements) {
+        appleTier = higherTier(appleTier, ENTITLEMENT_TO_TIER[id] || "free");
+      }
+
+      const adminDb = getAdminDb();
+      await adminDb.collection("users").doc(uid).set({
+        appleTier,
+        appleSubscriptionStatus: event.type || null,
+        appleProductId: event.product_id || null,
+        appleExpiresAt: event.expiration_at_ms
+          ? new Date(event.expiration_at_ms).toISOString()
+          : null,
+        appleSubscriptionUpdatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      res.json({ received: true });
+    } catch (err) {
+      console.error("revenuecatWebhook handler error:", err);
       res.status(500).send("Webhook handler error");
     }
   });

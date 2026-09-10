@@ -9,6 +9,7 @@ import { doc, onSnapshot, getDocFromServer } from "firebase/firestore";
 import { Capacitor } from "@capacitor/core";
 import { db } from "../firebase";
 import UpgradeModal from "../components/UpgradeModal/UpgradeModal";
+import { configureIAP, logOutIAP } from "../utils/iap";
 
 // Same reasoning as Pricing.js/UpgradeModal.js/FAQ.js — naming a specific
 // paid tier in the native app's UI (even just a lock badge) is treated by
@@ -80,6 +81,14 @@ export function TierProvider({ uid, children }) {
   const [priceId, setPriceId] = useState(null);
   const [ready, setReady] = useState(false);
   const [modal, setModal] = useState({ open: false, feature: "", requiredTier: "pro" });
+
+  // RevenueCat must know which Firebase account is purchasing so its webhook
+  // (functions/index.js revenuecatWebhook) can write to the right users/{uid}
+  // doc. No-ops on web — NATIVE_PLATFORM-gated inside configureIAP itself.
+  useEffect(() => {
+    if (uid) configureIAP(uid);
+    else logOutIAP();
+  }, [uid]);
 
   useEffect(() => {
     if (!uid) { setTier("free"); setPriceId(null); setReady(true); return; }

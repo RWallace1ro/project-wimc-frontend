@@ -1,40 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { startCheckout, openBillingPortal } from "../utils/billing";
+import { getOfferingPackages, purchasePackage, restorePurchases } from "../utils/iap";
 import { useTier } from "../context/TierContext";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
-import { copyText } from "../utils/copyText";
 import "./Pricing.css";
 
-const APP_WEB_URL = "rwallace1ro.github.io/project-wimc-frontend";
-// The real GitHub Pages URL contains the developer's personal GitHub
-// username — shown here only as a generic label so it isn't displayed to
-// users, while the Copy button below still copies the real, correct URL.
-// (A full custom-domain migration is deferred to post-launch; see memory.)
-const APP_WEB_LABEL = "WIMC website";
-
-// Plain, non-tappable label plus a Copy button — safe under Apple/Google's
-// native in-app-purchase policy (no live external link/navigation), while
-// still making the address easy to grab instead of memorizing or hand-typing.
-function CopyableWebLink() {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = async () => {
-    const ok = await copyText(APP_WEB_URL);
-    if (ok) {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-  return (
-    <span className="pricing-banner__link-row">
-      <code className="pricing-banner__url">{APP_WEB_LABEL}</code>
-      <button type="button" className="pricing-banner__copy-btn" onClick={handleCopy}>
-        {copied ? "Copied!" : "Copy link"}
-      </button>
-    </span>
-  );
-}
+// NOTE: the generic "WIMC website" CopyableWebLink pattern used here pre-IAP
+// (masking the rwallace1ro.github.io URL while linking users to Stripe
+// checkout on the web) still lives on in UserSettingsModal.js, for the
+// "Manage Subscription" case (Stripe web subscribers on native still need to
+// reach the Stripe portal, which stays web-only). copyText import removed
+// here since NativePricing's purchase flow no longer needs it.
 
 const PAYMENTS_ENABLED = process.env.REACT_APP_PAYMENTS_ENABLED === "true";
 
@@ -330,6 +308,120 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
   );
 }
 
+/* ── Native (iOS) purchase cards — real Apple In-App Purchase via RevenueCat ──
+ * Apple Guideline 2.1(b) previously forced hiding all plan names/prices on
+ * native because the purchase button was disabled (an unregistered implicit
+ * offer). Now that these ARE registered Apple IAP products, showing them by
+ * name/price is not just allowed but expected — this mirrors the web cards,
+ * fetching live localized pricing from the App Store via RevenueCat rather
+ * than hardcoding it, so it's always correct for whatever storefront/country
+ * the user is in. */
+const PRODUCT_META = {
+  "com.gingerfaith.wimc.pro.monthly":   { tier: "pro",    name: "Pro",             period: "/ month" },
+  "com.gingerfaith.wimc.pro.annual":    { tier: "pro",    name: "Pro (Annual)",    period: "/ year" },
+  "com.gingerfaith.wimc.proai.monthly": { tier: "pro_ai", name: "Pro + AI",        period: "/ month" },
+  "com.gingerfaith.wimc.proai.annual":  { tier: "pro_ai", name: "Pro + AI (Annual)", period: "/ year" },
+};
+
+function NativePricing({ tier }) {
+  const [packages, setPackages] = useState(null); // null = loading, [] = none found
+  const [loadErr, setLoadErr] = useState("");
+  const [busyId, setBusyId] = useState(null);
+  const [actionErr, setActionErr] = useState("");
+  const [restoreMsg, setRestoreMsg] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    getOfferingPackages().then((pkgs) => {
+      if (cancelled) return;
+      if (!pkgs || pkgs.length === 0) {
+        setLoadErr("Plans aren't available right now. Please try again shortly.");
+        setPackages([]);
+      } else {
+        setPackages(pkgs);
+      }
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function handleBuy(pkg) {
+    setActionErr("");
+    setBusyId(pkg.identifier);
+    try {
+      await purchasePackage(pkg);
+      // The revenuecatWebhook → syncEffectiveTier round trip updates
+      // TierContext's live Firestore listener within a few seconds; no local
+      // state write needed here.
+    } catch (e) {
+      if (!e?.userCancelled) {
+        setActionErr(e?.message || "Purchase could not be completed. Please try again.");
+      }
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleRestore() {
+    setActionErr("");
+    setRestoreMsg("Restoring…");
+    try {
+      const restoredTier = await restorePurchases();
+      setRestoreMsg(
+        restoredTier === "free"
+          ? "No previous purchases found on this Apple ID."
+          : "Purchases restored!"
+      );
+    } catch (e) {
+      setRestoreMsg("");
+      setActionErr(e?.message || "Could not restore purchases.");
+    }
+  }
+
+  return (
+    <div className="pricing-body">
+      {loadErr && <div className="pricing-banner">{loadErr}</div>}
+      {actionErr && <p className="pricing-card__error">{actionErr}</p>}
+
+      {packages === null ? (
+        <div className="pricing-banner">Loading plans…</div>
+      ) : (
+        <div className="pricing-grid">
+          {packages.map((pkg) => {
+            const meta = PRODUCT_META[pkg.product.identifier] || {};
+            const isCurrent = tier === meta.tier;
+            const isBusy = busyId === pkg.identifier;
+            return (
+              <div className="pricing-card" key={pkg.identifier}>
+                <h3 className="pricing-card__name">{meta.name || pkg.product.title}</h3>
+                <div className="pricing-card__price">
+                  <span className="pricing-card__amount">{pkg.product.priceString}</span>
+                  <span className="pricing-card__period">{meta.period || ""}</span>
+                </div>
+                <p className="pricing-card__note">&nbsp;</p>
+                <hr className="pricing-card__divider" />
+                <button
+                  className={`pricing-card__btn pricing-card__btn--${isCurrent ? "current" : "primary"}`}
+                  disabled={isCurrent || isBusy}
+                  onClick={() => handleBuy(pkg)}
+                >
+                  {isCurrent ? "Current Plan" : isBusy ? "Processing…" : "Subscribe"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="pricing-banner">
+        <button type="button" className="pricing-banner__copy-btn" onClick={handleRestore}>
+          Restore Purchases
+        </button>
+        {restoreMsg && <span> {restoreMsg}</span>}
+      </div>
+    </div>
+  );
+}
+
 /* ── Page ── */
 export default function Pricing({ isLoggedIn }) {
   const navigate = useNavigate();
@@ -381,22 +473,12 @@ export default function Pricing({ isLoggedIn }) {
         </div>
       )}
 
-      {/* Apple Guideline 2.1(b): even with the purchase button disabled,
-          showing named/priced plan cards in the native app was treated by
-          App Review as an implicit offer to sell — which requires those to
-          exist as registered Apple In-App Purchase products (which this app
-          deliberately doesn't have; subscriptions are Stripe/web-only). The
-          fix is to not display plan names, prices, or a comparison table in
-          the native app at all — just a generic notice pointing to the
-          website, with zero mention of specific tier names or prices. */}
+      {/* Native (iOS): real Apple In-App Purchase via RevenueCat — see
+          NativePricing above. Superseded the earlier Guideline 2.1(b)
+          workaround (hiding all plan names/prices behind a generic
+          web-redirect banner) once these became registered IAP products. */}
       {NATIVE_PLATFORM ? (
-        <div className="pricing-body">
-          <div className="pricing-banner">
-            Additional features are available with a paid subscription, managed
-            entirely through our website. Please open a web browser and go to
-            the <CopyableWebLink /> to view plans and subscribe.
-          </div>
-        </div>
+        <NativePricing tier={isLoggedIn ? tier : "free"} />
       ) : (
         <div className="pricing-body">
           {/* Monthly plans */}
