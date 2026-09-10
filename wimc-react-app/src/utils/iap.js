@@ -89,12 +89,31 @@ export async function getOfferingPackages() {
 /**
  * Buys a package. Resolves with the resulting tier ("pro" | "pro_ai") on
  * success so the caller can optimistically reflect it before Firestore's
- * webhook-driven update lands (usually seconds later); throws on failure or
- * user cancellation (check err.userCancelled).
+ * webhook-driven update lands (usually seconds later). On failure throws an
+ * Error with a `.cancelled` boolean — true when the user simply dismissed
+ * Apple's purchase sheet (not a real error; callers should stay silent).
  */
 export async function purchasePackage(pkg) {
-  const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
-  return tierFromEntitlements(customerInfo);
+  try {
+    const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
+    return tierFromEntitlements(customerInfo);
+  } catch (e) {
+    throw normalizePurchaseError(e);
+  }
+}
+
+// RevenueCat's cancellation signal arrives inconsistently across the
+// Capacitor bridge — sometimes `userCancelled: true`, sometimes only
+// `code: "1"` (PURCHASE_CANCELLED_ERROR), sometimes just a message string.
+// Collapse all of them to one `.cancelled` flag.
+function normalizePurchaseError(e) {
+  const cancelled =
+    e?.userCancelled === true ||
+    String(e?.code) === "1" ||
+    /cancel/i.test(e?.message || "");
+  const err = new Error(e?.message || "Purchase could not be completed.");
+  err.cancelled = cancelled;
+  return err;
 }
 
 /** Restore Purchases — required by Apple on any IAP purchase screen. */

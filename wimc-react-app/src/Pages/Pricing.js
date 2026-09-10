@@ -316,12 +316,40 @@ function PlanCard({ plan, currentPlanId, currentTier, isLoggedIn, onRequireLogin
  * fetching live localized pricing from the App Store via RevenueCat rather
  * than hardcoding it, so it's always correct for whatever storefront/country
  * the user is in. */
+const PRO_FEATURES = [
+  "Unlimited photo uploads",
+  "Kids' Closet & Pet Closet",
+  "Travel Pack Planner",
+  "Video Bin & Donate Bin",
+  "Try-On Studio + AI Style Feedback",
+  "Outfit of the Day planner",
+  "Receipts tracker, backup & restore",
+  "AI features — 10 requests / day",
+];
+const PRO_AI_FEATURES = [
+  "Everything in Pro",
+  "AI features — 50 requests / day",
+  "AI Stylist with outfit builds & closet picks",
+  "AI Packing Assistant & Donation Advisor",
+  "AI Closet Search",
+  "Unlimited kids' profiles",
+];
+
 const PRODUCT_META = {
-  "com.gingerfaith.wimc.pro.monthly":   { tier: "pro",    name: "Pro",             period: "/ month" },
-  "com.gingerfaith.wimc.pro.annual":    { tier: "pro",    name: "Pro (Annual)",    period: "/ year" },
-  "com.gingerfaith.wimc.proai.monthly": { tier: "pro_ai", name: "Pro + AI",        period: "/ month" },
-  "com.gingerfaith.wimc.proai.annual":  { tier: "pro_ai", name: "Pro + AI (Annual)", period: "/ year" },
+  "com.gingerfaith.wimc.pro.monthly":   { tier: "pro",    name: "Pro",              period: "/ month", features: PRO_FEATURES },
+  "com.gingerfaith.wimc.pro.annual":    { tier: "pro",    name: "Pro (Annual)",     period: "/ year",  features: PRO_FEATURES },
+  "com.gingerfaith.wimc.proai.monthly": { tier: "pro_ai", name: "Pro + AI",         period: "/ month", features: PRO_AI_FEATURES },
+  "com.gingerfaith.wimc.proai.annual":  { tier: "pro_ai", name: "Pro + AI (Annual)", period: "/ year",  features: PRO_AI_FEATURES },
 };
+
+// Card display order — highest value first, matching the App Store Connect
+// subscription ranking (Pro+AI above Pro), annual above monthly within a tier.
+const NATIVE_CARD_ORDER = [
+  "com.gingerfaith.wimc.proai.annual",
+  "com.gingerfaith.wimc.proai.monthly",
+  "com.gingerfaith.wimc.pro.annual",
+  "com.gingerfaith.wimc.pro.monthly",
+];
 
 function NativePricing({ tier }) {
   const [packages, setPackages] = useState(null); // null = loading, [] = none found
@@ -338,7 +366,14 @@ function NativePricing({ tier }) {
         setLoadErr("Plans aren't available right now. Please try again shortly.");
         setPackages([]);
       } else {
-        setPackages(pkgs);
+        // Show highest-value plans first, in a stable order (RevenueCat
+        // doesn't guarantee package order in the offering).
+        const ordered = [...pkgs].sort(
+          (a, b) =>
+            NATIVE_CARD_ORDER.indexOf(a.product.identifier) -
+            NATIVE_CARD_ORDER.indexOf(b.product.identifier)
+        );
+        setPackages(ordered);
       }
     });
     return () => { cancelled = true; };
@@ -353,7 +388,8 @@ function NativePricing({ tier }) {
       // TierContext's live Firestore listener within a few seconds; no local
       // state write needed here.
     } catch (e) {
-      if (!e?.userCancelled) {
+      // A dismissed Apple purchase sheet is not an error — stay silent.
+      if (!e?.cancelled) {
         setActionErr(e?.message || "Purchase could not be completed. Please try again.");
       }
     } finally {
@@ -377,8 +413,15 @@ function NativePricing({ tier }) {
     }
   }
 
+  const planLabel =
+    tier === "pro_ai" ? "Pro + AI" : tier === "pro" ? "Pro" : "Free";
+
   return (
     <div className="pricing-body">
+      <p className="pricing-group__label">
+        You're currently on the <strong>{planLabel}</strong> plan.
+      </p>
+
       {loadErr && <div className="pricing-banner">{loadErr}</div>}
       {actionErr && <p className="pricing-card__error">{actionErr}</p>}
 
@@ -397,8 +440,12 @@ function NativePricing({ tier }) {
                   <span className="pricing-card__amount">{pkg.product.priceString}</span>
                   <span className="pricing-card__period">{meta.period || ""}</span>
                 </div>
-                <p className="pricing-card__note">&nbsp;</p>
                 <hr className="pricing-card__divider" />
+                <ul className="pricing-card__features">
+                  {(meta.features || []).map((text) => (
+                    <Feature key={text} text={text} check={true} />
+                  ))}
+                </ul>
                 <button
                   className={`pricing-card__btn pricing-card__btn--${isCurrent ? "current" : "primary"}`}
                   disabled={isCurrent || isBusy}
@@ -412,11 +459,15 @@ function NativePricing({ tier }) {
         </div>
       )}
 
-      <div className="pricing-banner">
-        <button type="button" className="pricing-banner__copy-btn" onClick={handleRestore}>
+      <div className="pricing-native-restore">
+        <button type="button" className="pricing-native-restore__btn" onClick={handleRestore}>
           Restore Purchases
         </button>
-        {restoreMsg && <span> {restoreMsg}</span>}
+        {restoreMsg && <p className="pricing-native-restore__msg">{restoreMsg}</p>}
+        <p className="pricing-native-restore__hint">
+          Subscriptions renew automatically until cancelled. Manage or cancel
+          anytime in your device's Settings → Apple Account → Subscriptions.
+        </p>
       </div>
     </div>
   );

@@ -91,6 +91,37 @@
   background: #fef3c7;
 }
 
+/* ── Native (iOS) Restore Purchases + subscription disclosure ── */
+.pricing-native-restore {
+  max-width: 480px;
+  margin: 28px auto 0;
+  text-align: center;
+}
+.pricing-native-restore__btn {
+  border: 1px solid #94a3b8;
+  background: #fff;
+  color: #334155;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pricing-native-restore__btn:hover {
+  background: #f1f5f9;
+}
+.pricing-native-restore__msg {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
+  color: #475569;
+}
+.pricing-native-restore__hint {
+  margin: 14px 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #94a3b8;
+}
+
 /* ── Body ── */
 .pricing-body {
   max-width: 1060px;
