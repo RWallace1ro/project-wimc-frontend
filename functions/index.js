@@ -388,12 +388,23 @@ const TIER_BY_PRICE = {
   price_1Tb646FHY9B8ibv9eU0jyW6N: "pro_ai",  // Pro+AI monthly $7.99 (legacy)
   price_1Tb64sFHY9B8ibv9VIKt86tq: "pro_ai",  // Pro+AI annual  $79.99 (legacy)
 
-  // Current prices — separate "WIMC Pro" / "WIMC Pro+AI" products so the
-  // Stripe Customer Portal can offer a "switch plan" option.
-  price_1U19OrFHY9B8ibv9KlJbydxd: "pro",     // Pro monthly
-  price_1U19RCFHY9B8ibv9LvXxDSnQ: "pro",     // Pro annual
-  price_1U19TtFHY9B8ibv9a7FOiD3y: "pro_ai",  // Pro+AI monthly
-  price_1U19UnFHY9B8ibv9pQbLRuUe: "pro_ai",  // Pro+AI annual
+  // Prices in effect 2026-06 through 2026-09 — kept (not archived) so
+  // subscribers who joined during that window at $4.99/$39.99/$7.99/$79.99
+  // are grandfathered on their original price for life; only NEW checkout
+  // sessions use the current prices below.
+  price_1U19OrFHY9B8ibv9KlJbydxd: "pro",     // Pro monthly $4.99 (grandfathered)
+  price_1U19RCFHY9B8ibv9LvXxDSnQ: "pro",     // Pro annual $39.99 (grandfathered)
+  price_1U19TtFHY9B8ibv9a7FOiD3y: "pro_ai",  // Pro+AI monthly $7.99 (grandfathered)
+  price_1U19UnFHY9B8ibv9pQbLRuUe: "pro_ai",  // Pro+AI annual $79.99 (grandfathered)
+
+  // Current prices (2026-09+) — raised to net the same amount after Apple's
+  // 15% Small Business Program IAP commission, since prices are now uniform
+  // across web (Stripe) and iOS (Apple IAP/RevenueCat). See pricing-tiers
+  // memory for the full rationale.
+  price_1UEbVXFHY9B8ibv9DCtM856L: "pro",     // Pro monthly $5.99
+  price_1UEbYqFHY9B8ibv9lpgPpw0s: "pro",     // Pro annual $47.99
+  price_1UEbZqFHY9B8ibv9w5Pc56cd: "pro_ai",  // Pro+AI monthly $9.99
+  price_1UEbaYFHY9B8ibv9Xy9O2G9I: "pro_ai",  // Pro+AI annual $94.99
 };
 
 // Lazy Stripe client (secret is only bound at runtime via runWith).

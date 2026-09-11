@@ -211,7 +211,7 @@ const SECTIONS = [
         q: "How much does the Pro plan cost?",
         a: NATIVE_PLATFORM
           ? "Pricing is managed through our website — please visit it on a web browser to see current plan pricing and subscribe."
-          : "Pro is $4.99 per month (or $39.99 per year), and Pro + AI is $7.99 per month (or $79.99 per year). You can manage or change your plan anytime from the Billing portal in your account settings.",
+          : "Pro is $5.99 per month (or $47.99 per year), and Pro + AI is $9.99 per month (or $94.99 per year). You can manage or change your plan anytime from the Billing portal in your account settings.",
       },
       {
         q: "How do I cancel my subscription?",

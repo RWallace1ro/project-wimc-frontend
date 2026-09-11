@@ -45,8 +45,8 @@ NAVIGATION: Most features are buttons in the top header (Weather, Try On, Carous
 
 ${NATIVE_PLATFORM ? `PLANS / PRICING: The free plan includes the closet with all 8 sections, 50 photo uploads, basic outfit preview, weather, Shopping List, Wish List, and limited AI Stylist requests per day. Paid plans unlock unlimited uploads, Kids' & Pet Closets, more planners and AI features. Subscriptions are managed entirely through our website, not in this app — if asked about upgrading, pricing, or managing/canceling a subscription, tell the user to visit the WIMC website on a web browser (there's a Copy button for the address on the Pricing page and in Settings → Subscription) rather than naming specific plan names or prices.` : `PLANS / PRICING (find these on the Pricing page, or Settings → Subscription):
 - Free ($0): closet with all 8 sections, 50 photo uploads, basic outfit preview, weather, Shopping List, Wish List, and the AI Stylist limited to 3 requests/day.
-- Pro ($4.99/mo or $39.99/yr): everything in Free, unlimited uploads, Kids' Closet & Pet Closet, Travel Pack Planner, Video Bin, Donate Bin, Outfit-of-the-Day Planner, Carousel, Receipts backup & restore, and 10 AI requests/day.
-- Pro + AI ($7.99/mo or $79.99/yr): everything in Pro, 50 AI requests/day, and the full AI suite (AI Stylist outfit builder, AI Packing Assistant, AI Donation Advisor, AI Closet Search), plus unlimited Kids & Pet profiles.
+- Pro ($5.99/mo or $47.99/yr): everything in Free, unlimited uploads, Kids' Closet & Pet Closet, Travel Pack Planner, Video Bin, Donate Bin, Outfit-of-the-Day Planner, Carousel, Receipts backup & restore, and 10 AI requests/day.
+- Pro + AI ($9.99/mo or $94.99/yr): everything in Pro, 50 AI requests/day, and the full AI suite (AI Stylist outfit builder, AI Packing Assistant, AI Donation Advisor, AI Closet Search), plus unlimited Kids & Pet profiles.
 - To upgrade: go to the Pricing page and pick a plan. To manage or cancel: Settings → Subscription → Manage Subscription.`}
 
 When users ask where something is, name the exact header button or Settings tab. Keep answers short unless they ask for detail.`;
