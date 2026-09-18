@@ -6,10 +6,44 @@ service cloud.firestore {
     // ── User data ────────────────────────────────────────────────────────────
     // Each user's profile doc and EVERYTHING under it (incl. the syncdata
     // subcollection) is private to that authenticated user only.
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    //
+    // Fields the SERVER owns: the user's paid tier and subscription state, and
+    // the AI-cap bypass flag. These live on the same doc the user can otherwise
+    // edit, so without this guard any signed-in user could open the browser
+    // console and write `tier: "pro_ai"` (free paid features) or
+    // `aiUnlimited: true` (uncapped Anthropic spend) onto their own account.
+    // Only the Admin SDK (Stripe/RevenueCat webhooks, syncEffectiveTier) may
+    // touch these — the Admin SDK bypasses rules, so nothing server-side needs
+    // an exception.
+    function serverOwnedKeys() {
+      return ['tier', 'stripeTier', 'appleTier', 'aiUnlimited',
+              'subscriptionStatus', 'subscriptionUpdatedAt', 'currentPeriodEnd',
+              'stripeCustomerId', 'stripeSubscriptionId', 'stripePriceId',
+              'appleSubscriptionStatus', 'appleProductId', 'appleExpiresAt',
+              'appleSubscriptionUpdatedAt'];
+    }
 
-      match /{document=**} {
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Signup writes the profile (userName/email/avatarUrl/createdAt) — it may
+      // not seed any server-owned field.
+      allow create: if request.auth != null && request.auth.uid == userId
+                    && !request.resource.data.keys().hasAny(serverOwnedKeys());
+
+      // Profile edits / scheduled-deletion flags are fine; changing (or
+      // removing) any server-owned field is not.
+      allow update: if request.auth != null && request.auth.uid == userId
+                    && !request.resource.data.diff(resource.data)
+                         .affectedKeys().hasAny(serverOwnedKeys());
+
+      allow delete: if request.auth != null && request.auth.uid == userId;
+
+      // Subcollections (syncdata, etc.). Deliberately requires at least one
+      // path segment ({sub}) — under rules_version 2 a bare `/{document=**}`
+      // ALSO matches the user doc itself and would silently re-grant full
+      // write there, defeating the guard above.
+      match /{sub}/{document=**} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
