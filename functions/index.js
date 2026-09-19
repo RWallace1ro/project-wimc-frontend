@@ -500,11 +500,107 @@ exports.createPortalSession = functions
     }
   });
 
+// ── Transactional email (Resend) ──────────────────────────────────────────────
+// Same Resend account + verified gingerfaith.com domain as the contact form.
+// Best-effort by design: a failed email must never fail (and so make Stripe
+// retry) the subscription webhook that triggered it.
+const EMAIL_FROM = "WIMC <no-reply@gingerfaith.com>";
+const PLAN_NAME = { pro: "Pro", pro_ai: "Pro + AI" };
+
+async function sendEmail({ to, subject, text, html }) {
+  if (!process.env.RESEND_API_KEY) throw new Error("RESEND_API_KEY is not bound");
+  const upstream = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+    },
+    // Replies go to a real, monitored inbox rather than the no-reply sender.
+    body: JSON.stringify({ from: EMAIL_FROM, to: [to], reply_to: CONTACT_SUPPORT_EMAIL, subject, text, html }),
+  });
+  if (!upstream.ok) throw new Error(`Resend ${upstream.status}: ${await upstream.text()}`);
+}
+
+const escapeHtml = (s) =>
+  String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const formatDateUTC = (iso) =>
+  new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
+
+// Newer Stripe API versions moved current_period_end off the subscription and
+// onto its items — read both so the renewal date is populated either way.
+function periodEndIso(sub) {
+  const ts = sub.items?.data?.[0]?.current_period_end || sub.current_period_end;
+  return ts ? new Date(ts * 1000).toISOString() : null;
+}
+
+function buildCancellationEmail({ name, plan, endDateIso, immediate }) {
+  const hi = `Hi ${name || "there"},`;
+  const closing = "Questions? Just reply to this email or write to wimcsupport@gingerfaith.com.";
+  const paras = immediate
+    ? [
+        `Your WIMC ${plan} subscription has been canceled and your paid access has ended, so your account is now on the Free plan. You won't be charged again.`,
+        "Your closet, photos, and outfits are all still there — some features are limited on the Free plan.",
+        "You can subscribe again anytime from the Pricing page.",
+      ]
+    : [
+        `Your WIMC ${plan} subscription has been canceled. You'll keep all your ${plan} features until ${formatDateUTC(endDateIso)}. After that, your account moves to the Free plan, and you won't be charged again.`,
+        "Your closet, photos, and outfits stay with your account either way.",
+        "Changed your mind? Sign in and open Settings → Subscription → Manage Subscription.",
+      ];
+  return {
+    subject: "Your WIMC subscription has been canceled",
+    text: [hi, ...paras, closing, "— The WIMC team"].join("\n\n"),
+    html:
+      `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;font-size:15px;line-height:1.6;color:#1e293b;max-width:560px">` +
+      [hi, ...paras, closing].map((p) => `<p>${escapeHtml(p)}</p>`).join("") +
+      `<p>— The WIMC team</p></div>`,
+  };
+}
+
+// Which cancellation email (if any) does this event warrant?
+//   "scheduled" — the customer just scheduled a cancel-at-period-end (portal)
+//   "immediate" — the subscription was canceled outright (dashboard)
+//   null        — anything else: no email. Deliberately NOT sent when a
+//                 scheduled cancellation later actually ends (they were already
+//                 told), on un-cancel/renew, on plan switches, or for
+//                 payment-failure cancellations (Stripe's own failed-payment
+//                 emails cover those).
+function cancellationKind(event, sub) {
+  const scheduledNow = sub.cancel_at_period_end === true || sub.cancel_at != null;
+
+  if (event.type === "customer.subscription.updated") {
+    const prev = event.data?.previous_attributes || {};
+    const changed = "cancel_at_period_end" in prev || "cancel_at" in prev;
+    const wasScheduled =
+      ("cancel_at_period_end" in prev ? prev.cancel_at_period_end : sub.cancel_at_period_end) === true ||
+      ("cancel_at" in prev ? prev.cancel_at : sub.cancel_at) != null;
+    return changed && scheduledNow && !wasScheduled && sub.status !== "canceled" ? "scheduled" : null;
+  }
+  if (event.type === "customer.subscription.deleted") {
+    return sub.cancellation_details?.reason !== "payment_failed" && !scheduledNow ? "immediate" : null;
+  }
+  return null;
+}
+
+// Stripe can deliver the same event more than once. Claim the event id
+// atomically first so a retry never sends a second email (emailLog is
+// admin-only; clients are denied by the default-deny rule).
+async function claimEmail(adminDb, key) {
+  try {
+    await adminDb.collection("emailLog").doc(key).create({ at: new Date().toISOString() });
+    return true;
+  } catch (e) {
+    if (e.code === 6 || /already exists/i.test(e.message || "")) return false;
+    throw e;
+  }
+}
+
 // ── Stripe Webhook (signature-verified) ───────────────────────────────────────
 // Updates users/{uid} subscription state. Stripe (not a browser) calls this, so
 // no CORS. Signature verification requires the RAW body (req.rawBody).
 exports.stripeWebhook = functions
-  .runWith({ secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] })
+  .runWith({ secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "RESEND_API_KEY"] })
   .https.onRequest(async (req, res) => {
     const stripe = getStripe();
     let event;
@@ -530,22 +626,84 @@ exports.stripeWebhook = functions
     // syncEffectiveTier Firestore trigger below recomputes `tier` from
     // `stripeTier` + `appleTier` any time either changes, so nothing here (or
     // in the RevenueCat webhook) ever needs to know about the other source.
-    const applySubscription = async (sub) => {
+    //
+    // ORDER-INDEPENDENT by construction. Stripe delivers events concurrently
+    // and not necessarily in order, and an early event's payload is a snapshot
+    // from that moment (e.g. status "incomplete" at the instant of checkout).
+    // Trusting it let a slow early event overwrite the final "active" state —
+    // a customer was charged while their account stayed on Free (found live
+    // 2026-09-18). So:
+    //   1. always re-read the LIVE subscription from Stripe, and
+    //   2. inside a transaction, refuse to write if a read that started later
+    //      already landed (subscriptionUpdatedAt = when we read Stripe), or if
+    //      this is a late event about an OLD subscription while a newer paid
+    //      one is on the account.
+    const isPaidTier = (t) => t === "pro" || t === "pro_ai";
+
+    const applySubscription = async (subOrId) => {
+      const startedAtIso = new Date().toISOString();
+      const subId = typeof subOrId === "string" ? subOrId : subOrId?.id;
+      if (!subId) return null;
+
+      let sub;
+      try {
+        sub = await stripe.subscriptions.retrieve(subId);
+      } catch (e) {
+        if (typeof subOrId === "string") throw e;
+        sub = subOrId; // couldn't re-read — fall back to the event's snapshot
+      }
+
       const uid = sub.metadata?.firebaseUID;
-      if (!uid) return;
+      if (!uid) return null;
       const priceId = sub.items?.data?.[0]?.price?.id;
       const active = sub.status === "active" || sub.status === "trialing";
       const tier = active ? (TIER_BY_PRICE[priceId] || "free") : "free";
-      await adminDb.collection("users").doc(uid).set({
-        stripeTier: tier,
-        subscriptionStatus: sub.status,
-        stripeSubscriptionId: sub.id,
-        stripePriceId: priceId || null,
-        currentPeriodEnd: sub.current_period_end
-          ? new Date(sub.current_period_end * 1000).toISOString()
-          : null,
-        subscriptionUpdatedAt: new Date().toISOString(),
-      }, { merge: true });
+
+      const ref = adminDb.collection("users").doc(uid);
+      await adminDb.runTransaction(async (tx) => {
+        const cur = (await tx.get(ref)).data() || {};
+        if (cur.stripeSubscriptionId === sub.id
+            && cur.subscriptionUpdatedAt && cur.subscriptionUpdatedAt > startedAtIso) return;
+        if (cur.stripeSubscriptionId && cur.stripeSubscriptionId !== sub.id
+            && isPaidTier(cur.stripeTier) && !active) return;
+        tx.set(ref, {
+          stripeTier: tier,
+          subscriptionStatus: sub.status,
+          stripeSubscriptionId: sub.id,
+          stripePriceId: priceId || null,
+          currentPeriodEnd: periodEndIso(sub),
+          subscriptionUpdatedAt: startedAtIso,
+        }, { merge: true });
+      });
+      return { sub, uid };
+    };
+
+    // "Your subscription was canceled" email. Sent when a cancellation is
+    // SCHEDULED (portal cancel → keeps access until period end) or when a
+    // subscription is canceled IMMEDIATELY. Not sent when a scheduled
+    // cancellation later actually ends (they were already told), or for
+    // payment-failure cancellations (Stripe's own failed-payment emails cover
+    // those). Never throws — see sendEmail().
+    const notifyCancellation = async (event, sub, uid) => {
+      try {
+        const kind = cancellationKind(event, sub);
+        if (!kind) return;
+
+        if (!(await claimEmail(adminDb, `cancel-${event.id}`))) return; // already sent
+
+        const user = await admin.auth().getUser(uid).catch(() => null);
+        if (!user?.email) { console.warn("notifyCancellation: no email for", uid); return; }
+
+        const plan = PLAN_NAME[TIER_BY_PRICE[sub.items?.data?.[0]?.price?.id]] || "WIMC";
+        const endDateIso = sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : periodEndIso(sub);
+        const mail = buildCancellationEmail({
+          name: user.displayName, plan, endDateIso, immediate: kind === "immediate",
+        });
+        await sendEmail({ to: user.email, ...mail });
+        console.log(`notifyCancellation: sent ${kind} email for ${event.id}`);
+      } catch (err) {
+        console.error("notifyCancellation failed (non-fatal):", err);
+      }
     };
 
     try {
@@ -567,26 +725,32 @@ exports.stripeWebhook = functions
         case "customer.subscription.created":
         case "customer.subscription.updated":
         case "customer.subscription.deleted": {
-          await applySubscription(event.data.object);
+          const result = await applySubscription(event.data.object);
+          if (result && event.type !== "customer.subscription.created") {
+            await notifyCancellation(event, result.sub, result.uid);
+          }
           break;
         }
         // Belt-and-suspenders: checkout.session.completed can fire and read
         // the subscription's status a moment BEFORE Stripe has finished
-        // marking it active internally, writing a stale "incomplete" that
-        // nothing then corrects if the expected customer.subscription.updated
-        // follow-up event is delayed or never delivered (confirmed happening
-        // in practice — a real paid subscription got stuck showing "free"
-        // with no further webhook calls after the initial ones). invoice.paid
-        // fires reliably once the first invoice is actually paid, so treat it
-        // as another trigger to re-fetch and re-apply the current (accurate)
-        // subscription state. Must also be added to the endpoint's selected
-        // events in the Stripe Dashboard, not just handled here.
+        // marking it active internally. invoice.paid fires once the first
+        // invoice is actually paid, so it's another trigger to re-read and
+        // re-apply the current subscription state. Must also be in the
+        // endpoint's selected events in the Stripe Dashboard.
+        //
+        // The invoice's subscription id lives in different places depending on
+        // the Stripe API version: `invoice.subscription` on older versions, and
+        // `invoice.parent.subscription_details.subscription` on newer ones.
+        // This handler only read the old spot, so on this account it silently
+        // did nothing — the safety net below was dead until now.
         case "invoice.paid": {
           const invoice = event.data.object;
-          if (invoice.subscription) {
-            const sub = await stripe.subscriptions.retrieve(invoice.subscription);
-            await applySubscription(sub);
-          }
+          const subId =
+            invoice.subscription ||
+            invoice.parent?.subscription_details?.subscription ||
+            invoice.lines?.data?.[0]?.parent?.subscription_item_details?.subscription ||
+            invoice.lines?.data?.[0]?.subscription;
+          if (subId) await applySubscription(subId);
           break;
         }
         default:
