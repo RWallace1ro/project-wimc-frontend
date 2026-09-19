@@ -14,7 +14,7 @@ import { deleteAllUserData, scheduleDeletion } from "../../utils/accountDeletion
 import { useBackground } from "../../context/BackgroundContext";
 import { BACKGROUND_PRESETS, resolveBackgroundValue } from "../../utils/backgroundPresets";
 import { useTier } from "../../context/TierContext";
-import { openBillingPortal } from "../../utils/billing";
+import { openBillingPortal, cancelSubscriptionsForDeletion } from "../../utils/billing";
 import { copyText } from "../../utils/copyText";
 import Avatar from "../Avatar/Avatar";
 import "./UserSettingsModal.css";
@@ -565,6 +565,24 @@ export default function UserSettingsModal({
         onDeletionScheduled?.();
       } else {
         // ── Immediate delete: full erasure right now ─────────────────────────
+        // Deleting the account does NOT stop Stripe billing, so cancel it first
+        // — server-side, while the user doc that holds the subscription id
+        // still exists. If a website subscriber's cancel fails, STOP: deleting
+        // anyway would leave them charged with no account. (A user with no
+        // website subscription isn't blocked by a failure here.)
+        try {
+          await cancelSubscriptionsForDeletion();
+        } catch (cancelErr) {
+          if (viaStripe) {
+            setDeleteMsg({
+              text:
+                "We couldn't cancel your subscription automatically, so your account was NOT deleted. " +
+                "Please cancel it under Subscription → Manage Subscription, then try again.",
+              type: "error",
+            });
+            return;
+          }
+        }
         if (userData?.uid) {
           await deleteAllUserData(userData.uid);
         }
@@ -969,6 +987,27 @@ export default function UserSettingsModal({
                       proceeding with deletion.
                     </p>
                   </div>
+
+                  {/* Deleting the account doesn't stop billing on its own. We
+                      cancel website (Stripe) subscriptions automatically, but
+                      can't touch App Store ones — those need cancelling in
+                      iPhone Settings, so say so loudly BEFORE they delete. */}
+                  {viaApple && (
+                    <p className="usm-delete-notice usm-delete-notice--warn">
+                      <strong>Cancel your App Store subscription first.</strong>{" "}
+                      Your plan is billed through the App Store, and deleting your
+                      account will not cancel it — Apple would keep charging you.
+                      Open your iPhone's Settings, tap your name, then tap
+                      Subscriptions.
+                    </p>
+                  )}
+                  {viaStripe && (
+                    <p className="usm-delete-notice">
+                      Your website subscription will be cancelled automatically when
+                      your account is deleted, effective immediately. It isn't
+                      refunded for any unused time.
+                    </p>
+                  )}
 
                   {/* ── Timing choice ── */}
                   <div className="usm-field usm-delete-timing">

@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
           ✕
         </button>
         <h1 className="legal-hero__title">Privacy Policy</h1>
-        <p className="legal-hero__updated">Last updated: August 2026</p>
+        <p className="legal-hero__updated">Last updated: September 2026</p>
       </div>
 
       <div className="legal-page__body">
@@ -45,11 +45,33 @@ export default function PrivacyPolicy() {
           not use it to train its models.
         </p>
         <p>
-          If you subscribe to a paid plan, your payment is processed by
-          Stripe. We do not receive or store your full card number — Stripe
-          shares with us only what's needed to manage your subscription (such
-          as your plan, billing status, and a reference to your payment
-          method).
+          If you subscribe to a paid plan on our website, your payment is
+          processed by Stripe. If you subscribe in the iPhone app, your purchase
+          is processed by Apple through the App Store. We do not receive or
+          store your full card number or your Apple payment details — Stripe
+          and Apple share with us only what's needed to manage your
+          subscription (such as your plan, billing status, and renewal date).
+          To confirm App Store purchases and keep your plan the same on the
+          website and in the app, we use RevenueCat, which receives your WIMC
+          account ID and your App Store purchase and subscription information.
+        </p>
+        <p>
+          When you send us a message through the Contact page, or when we email
+          you about your account or subscription (for example, a cancellation
+          confirmation), the message is delivered using Resend, an
+          email-delivery service. Resend receives your email address and the
+          content of the message solely to deliver it. Account emails such as
+          email verification and password resets are sent by Google Firebase.
+        </p>
+        <p>
+          If you choose to allow optional analytics in the website's cookie
+          settings, we use Sentry to monitor errors and Google Analytics for
+          Firebase to understand how features are used. These may collect
+          technical information such as your device and browser type, crash and
+          performance data, and which features you use, and may be associated
+          with your account ID. They are off unless you allow them, you can
+          change your choice at any time using "Cookie Settings" in the website
+          footer, and we do not use them for advertising.
         </p>
       </section>
 
@@ -69,8 +91,11 @@ export default function PrivacyPolicy() {
         <p>
           Your account and profile data are stored securely using Google
           Firebase, and your media files (photos and videos) are stored using
-          Cloudinary. Payment processing is handled by Stripe, and AI-powered
-          features are processed by Anthropic. All of these are service
+          Cloudinary. Payments are processed by Stripe on the website and by
+          Apple in the iPhone app (with RevenueCat used to verify App Store
+          purchases), email is delivered by Resend, and AI-powered features
+          are processed by Anthropic. Apart from Apple, which handles App Store
+          purchases under its own terms and privacy policy, these are service
           providers that process and host this data on our behalf, under
           their own security and privacy standards — they don't use it for
           their own purposes. The Weather feature similarly sends only the
@@ -85,7 +110,8 @@ export default function PrivacyPolicy() {
           We use your browser's local storage — a technology similar to cookies
           that stores data on your device rather than on our servers — to
           preserve your in-app data between sessions. No advertising or
-          behavioural-tracking cookies are used.
+          behavioural-tracking cookies are used. Optional analytics (see
+          Section 1) run only if you allow them in the cookie settings.
         </p>
         <p>The following data is saved locally on your device:</p>
         <ul className="legal-page__list">
@@ -119,10 +145,13 @@ export default function PrivacyPolicy() {
           </li>
         </ul>
         <p>
-          This data remains on your device and is not transmitted to our
-          servers. You can clear it at any time by using your browser's "Clear
-          Site Data" option, or by deleting your account through the app (which
-          removes all locally stored data automatically).
+          This data is saved on your device so the app works quickly. When
+          you're signed in, it is also synced to your account (stored with
+          Google Firebase) so it's available on all your devices and isn't lost
+          if you clear your browser data or change phones. You can clear the
+          copy on your device at any time using your browser's "Clear Site
+          Data" option. Deleting your account through the app removes both the
+          copy on your device and the synced copy.
         </p>
       </section>
 
@@ -131,10 +160,19 @@ export default function PrivacyPolicy() {
         <p>
           You may request deletion of your account and all associated data at
           any time through the <strong>Settings → Delete Account</strong> option
-          inside the app. Deleting your account permanently removes your profile
-          from Firebase, erases all locally stored data listed above, and cannot
-          be undone. You may also export your closet data using the JSON export
-          feature within the app before deletion.
+          inside the app. Deleting your account permanently removes your
+          profile, your synced data, and your uploaded photos and videos, erases
+          all locally stored data listed above, and cannot be undone. You may
+          also export your closet data using the JSON export feature within the
+          app before deletion.
+        </p>
+        <p>
+          If you have a website subscription, deleting your account cancels it
+          automatically when the deletion takes effect. We cannot cancel App
+          Store subscriptions for you, so please cancel those in your iPhone's
+          Settings before deleting your account — the{" "}
+          <Link to="/terms-of-service" className="legal-page__link">Terms of Service</Link>
+          {" "}explain how.
         </p>
       </section>
 

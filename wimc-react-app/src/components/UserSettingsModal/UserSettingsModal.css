@@ -246,6 +246,23 @@
   line-height: 1.6;
 }
 
+/* Subscription heads-up shown on the Delete Account screen */
+.usm-delete-notice {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.usm-delete-notice--warn {
+  color: #7c2d12;
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
 .usm-input--danger {
   border-color: #fca5a5;
   background: #fff5f5;

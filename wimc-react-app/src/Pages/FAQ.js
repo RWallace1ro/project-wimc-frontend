@@ -184,7 +184,7 @@ const SECTIONS = [
       },
       {
         q: "Can I delete my account?",
-        a: "Yes. Tap your profile icon in the header, open User Settings, and go to the Delete Account tab. After you confirm (by typing DELETE and re-entering your password), your account and all associated data — closet photos and videos, saved plans, and profile — are permanently removed. If you'd prefer we handle it, email wimcsupport@gingerfaith.com.",
+        a: "Yes. Tap your profile icon in the header, open User Settings, and go to the Delete Account tab. After you confirm (by typing DELETE and re-entering your password), your account and all associated data — closet photos and videos, saved plans, and profile — are permanently removed. Have a paid plan? A website subscription is cancelled automatically when your account is deleted, but an App Store subscription is not — please cancel that first in your iPhone's Settings (tap your name, then Subscriptions). If you'd prefer we handle it, email wimcsupport@gingerfaith.com.",
       },
       {
         q: "How do I update my profile information?",
@@ -227,7 +227,9 @@ const SECTIONS = [
       },
       {
         q: "Do you offer refunds?",
-        a: "If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly.",
+        a: NATIVE_PLATFORM
+          ? "If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly. Refunds for purchases made in the app are handled by Apple — you can request one at reportaproblem.apple.com."
+          : "If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly. If you live in the EU or UK, you may also have a legal right to cancel a website purchase within 14 days and receive a refund — email wimcsupport@gingerfaith.com within 14 days of the charge. Refunds for purchases made in the iPhone app are handled by Apple at reportaproblem.apple.com.",
       },
     ],
   },

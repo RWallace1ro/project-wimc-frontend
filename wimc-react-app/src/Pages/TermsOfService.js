@@ -16,14 +16,15 @@ export default function TermsOfService() {
           ✕
         </button>
         <h1 className="legal-hero__title">Terms of Service</h1>
-        <p className="legal-hero__updated">Last updated: August 2026</p>
+        <p className="legal-hero__updated">Last updated: September 2026</p>
       </div>
 
       <div className="legal-page__body">
       <section className="legal-page__section">
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By creating an account or using What's In My Closet ("the App"), you
+          What's In My Closet ("WIMC" or "the App") is operated by GingerFaith
+          LLC ("we" or "us"). By creating an account or using the App, you
           agree to these Terms of Service. If you do not agree, please do not
           use the App.
         </p>
@@ -75,7 +76,70 @@ export default function TermsOfService() {
       </section>
 
       <section className="legal-page__section">
-        <h2>6. Disclaimer of Warranties</h2>
+        <h2>6. Subscriptions, Billing and Refunds</h2>
+        <p>
+          <strong>Plans.</strong> WIMC has a Free plan and two paid plans, Pro
+          and Pro + AI, each available monthly or annually. What each plan
+          includes, and its current price, is shown on the Pricing page on our
+          website and on the Pricing screen in the iPhone app.
+        </p>
+        <p>
+          <strong>Billing.</strong> Paid plans renew automatically at the end of
+          each billing period (monthly or annual), at the price then in effect,
+          until you cancel. If you subscribe on our website, you are billed by
+          Stripe. If you subscribe in the iPhone app, you are billed by Apple
+          through your Apple Account, and Apple's terms apply to that purchase.
+          Prices may include or exclude applicable taxes, as shown at checkout.
+        </p>
+        <p>
+          <strong>One plan, one place.</strong> Your plan is tied to your WIMC
+          account and works on both the website and the iPhone app. Please
+          subscribe in only one place — subscribing in both results in two
+          separate charges.
+        </p>
+        <p>
+          <strong>Cancelling.</strong> You can cancel at any time. You keep your
+          paid features until the end of the period you have already paid for,
+          and you will not be charged again. To cancel a website subscription,
+          go to Settings → Subscription → Manage Subscription. To cancel an App
+          Store subscription, open your iPhone's Settings, tap your name, then
+          tap Subscriptions; Apple requires you to cancel at least 24 hours
+          before your renewal date to avoid the next charge. If you delete your
+          WIMC account, we automatically cancel a website subscription when the
+          deletion takes effect (with no refund for the unused part of the
+          period). We cannot cancel App Store subscriptions for you, so please
+          cancel those in iPhone Settings before you delete your account.
+        </p>
+        <p>
+          <strong>Refunds.</strong> Payments are generally non-refundable, and
+          we do not provide refunds for the unused part of a billing period,
+          except where the law requires it. If a technical issue prevents you
+          from using WIMC, please{" "}
+          <Link to="/contact" className="legal-page__link">contact us</Link>
+          {" "}within 7 days of the charge and we will review your case.
+          Refunds for App Store purchases are handled by Apple; you can request
+          one at reportaproblem.apple.com.
+        </p>
+        <p>
+          <strong>Your rights where you live.</strong> If you live in the
+          European Union or the United Kingdom, you may have a legal right to
+          cancel a website purchase within 14 days of buying it and receive a
+          refund (where the law allows, less a proportionate amount for any use
+          of the paid features during that time). To use this right, email
+          wimcsupport@gingerfaith.com within 14 days of the charge. Nothing in
+          these Terms limits any rights you have under mandatory
+          consumer-protection laws where you live.
+        </p>
+        <p>
+          <strong>Price changes.</strong> We may change plan prices. A change
+          applies from your next renewal after we have given you notice (for
+          example, by email or in the app), and you can cancel before then if
+          you do not agree to it.
+        </p>
+      </section>
+
+      <section className="legal-page__section">
+        <h2>7. Disclaimer of Warranties</h2>
         <p>
           The App is provided "as is" without warranties of any kind. We do not
           guarantee that the App will be available at all times or free from
@@ -84,7 +148,7 @@ export default function TermsOfService() {
       </section>
 
       <section className="legal-page__section">
-        <h2>7. Limitation of Liability</h2>
+        <h2>8. Limitation of Liability</h2>
         <p>
           To the maximum extent permitted by law, we are not liable for any
           indirect, incidental, or consequential damages arising from your use
@@ -93,7 +157,7 @@ export default function TermsOfService() {
       </section>
 
       <section className="legal-page__section">
-        <h2>8. Termination</h2>
+        <h2>9. Termination</h2>
         <p>
           We reserve the right to suspend or terminate accounts that violate
           these Terms. You may delete your account at any time.
@@ -101,7 +165,7 @@ export default function TermsOfService() {
       </section>
 
       <section className="legal-page__section">
-        <h2>9. Changes to Terms</h2>
+        <h2>10. Changes to Terms</h2>
         <p>
           We may update these Terms from time to time. Continued use of the App
           after changes constitutes acceptance of the updated Terms.
@@ -109,7 +173,7 @@ export default function TermsOfService() {
       </section>
 
       <section className="legal-page__section">
-        <h2>10. Contact</h2>
+        <h2>11. Contact</h2>
         <p>
           For questions about these Terms, please{" "}
           <Link to="/contact" className="legal-page__link">contact us</Link>

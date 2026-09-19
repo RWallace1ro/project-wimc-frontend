@@ -9,6 +9,7 @@ import { auth } from "../firebase";
 
 const CHECKOUT_URL = process.env.REACT_APP_STRIPE_CHECKOUT_URL;
 const PORTAL_URL   = process.env.REACT_APP_STRIPE_PORTAL_URL;
+const CANCEL_ON_DELETE_URL = process.env.REACT_APP_CANCEL_SUB_URL;
 
 async function authHeaders() {
   const headers = { "Content-Type": "application/json" };
@@ -37,6 +38,31 @@ export async function startCheckout(priceId) {
     throw new Error(data.error || "Could not start checkout. Please try again.");
   }
   window.location.assign(data.url);
+}
+
+/**
+ * Cancel the signed-in user's Stripe subscription(s) — called right before an
+ * IMMEDIATE account deletion. Deleting a WIMC account does not stop Stripe
+ * billing by itself, so without this the user keeps being charged. Resolves
+ * with how many subscriptions were cancelled (0 is fine — e.g. a Free user);
+ * throws if the server couldn't do it, in which case the caller must NOT
+ * proceed with the deletion.
+ *
+ * (Scheduled deletions don't call this — the daily cleanup job cancels
+ * server-side when the 14-day grace period ends.)
+ */
+export async function cancelSubscriptionsForDeletion() {
+  if (!CANCEL_ON_DELETE_URL) throw new Error("Subscription cancellation is not configured.");
+  if (!auth.currentUser) throw new Error("Please sign in.");
+
+  const res = await fetch(CANCEL_ON_DELETE_URL, {
+    method: "POST",
+    headers: await authHeaders(),
+    body: JSON.stringify({}),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Could not cancel your subscription.");
+  return data.cancelled || 0;
 }
 
 /**

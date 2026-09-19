@@ -7,6 +7,7 @@
  * createCheckoutSession     — Starts a Stripe Checkout for a subscription.
  * createPortalSession       — Opens the Stripe customer billing portal.
  * stripeWebhook             — Signature-verified Stripe webhook → sets stripeTier.
+ * cancelSubscriptionForDeletion — Cancels the caller's Stripe subscription(s) before an immediate account deletion.
  * revenuecatWebhook         — Bearer-secret RevenueCat webhook (Apple IAP) → sets appleTier.
  * syncEffectiveTier         — Firestore trigger: tier = higher of stripeTier/appleTier.
  * finalizeScheduledDeletions — Daily job: completes 14-day-grace account deletions.
@@ -558,6 +559,48 @@ function buildCancellationEmail({ name, plan, endDateIso, immediate }) {
   };
 }
 
+// Cancel every still-live Stripe subscription belonging to a user. Called when
+// an account is being deleted — deleting the WIMC account does not, by itself,
+// stop Stripe billing, so without this a departed user keeps being charged.
+//
+// Looks at both the stored subscription id and every subscription on the
+// user's Stripe customer (in case there is more than one). Cancelled with
+// comment "account_deleted" so the webhook can tell this apart from a
+// customer-initiated cancel and not email someone whose account is gone.
+// Idempotent. THROWS on any Stripe failure — callers must treat that as
+// "do not delete yet", or the user is left billed with no account.
+//
+// (Apple subscriptions can't be cancelled from our side at all — the app
+// warns those users to cancel in iPhone Settings first.)
+const LIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due", "unpaid", "incomplete", "paused"]);
+
+async function cancelStripeSubscriptionsForUser(stripe, adminDb, uid) {
+  const snap = await adminDb.collection("users").doc(uid).get();
+  const data = snap.exists ? snap.data() : {};
+
+  const ids = new Set();
+  if (data.stripeSubscriptionId) ids.add(data.stripeSubscriptionId);
+  if (data.stripeCustomerId) {
+    const list = await stripe.subscriptions.list({ customer: data.stripeCustomerId, status: "all", limit: 100 });
+    for (const s of list.data) ids.add(s.id);
+  }
+
+  let cancelled = 0;
+  for (const id of ids) {
+    let sub;
+    try {
+      sub = await stripe.subscriptions.retrieve(id);
+    } catch (e) {
+      if (e.code === "resource_missing") continue; // already gone
+      throw e;
+    }
+    if (!LIVE_SUB_STATUSES.has(sub.status)) continue; // already canceled/expired
+    await stripe.subscriptions.cancel(id, { cancellation_details: { comment: "account_deleted" } });
+    cancelled++;
+  }
+  return cancelled;
+}
+
 // Which cancellation email (if any) does this event warrant?
 //   "scheduled" — the customer just scheduled a cancel-at-period-end (portal)
 //   "immediate" — the subscription was canceled outright (dashboard)
@@ -578,7 +621,11 @@ function cancellationKind(event, sub) {
     return changed && scheduledNow && !wasScheduled && sub.status !== "canceled" ? "scheduled" : null;
   }
   if (event.type === "customer.subscription.deleted") {
-    return sub.cancellation_details?.reason !== "payment_failed" && !scheduledNow ? "immediate" : null;
+    // Not for payment failures (Stripe emails those) and not for the automatic
+    // cancel we do when an account is deleted (there's no account to email).
+    const reason = sub.cancellation_details?.reason;
+    const comment = sub.cancellation_details?.comment;
+    return reason !== "payment_failed" && comment !== "account_deleted" && !scheduledNow ? "immediate" : null;
   }
   return null;
 }
@@ -655,6 +702,15 @@ exports.stripeWebhook = functions
 
       const uid = sub.metadata?.firebaseUID;
       if (!uid) return null;
+
+      // Cancelling a subscription during account deletion fires this webhook
+      // for an account that no longer exists. Writing would re-create a ghost
+      // users/{uid} document, so leave deleted accounts alone. (Any lookup
+      // error other than "no such user" is treated as "exists" — never skip a
+      // real customer's update over a transient failure.)
+      const authUserExists = await admin.auth().getUser(uid).then(() => true, (e) => e?.code !== "auth/user-not-found");
+      if (!authUserExists) return { sub, uid };
+
       const priceId = sub.items?.data?.[0]?.price?.id;
       const active = sub.status === "active" || sub.status === "trialing";
       const tier = active ? (TIER_BY_PRICE[priceId] || "free") : "free";
@@ -761,6 +817,32 @@ exports.stripeWebhook = functions
     } catch (err) {
       console.error("stripeWebhook handler error:", err);
       res.status(500).send("Webhook handler error");
+    }
+  });
+
+// ── Cancel Stripe billing before an immediate account deletion ────────────────
+// The client calls this (signed in, with the user's ID token) BEFORE it erases
+// their data, because it needs the users/{uid} doc to find the subscription.
+// The scheduled-deletion path does the same thing inside
+// finalizeScheduledDeletions. A failure returns 500 and the client aborts the
+// deletion — better to make the user retry than leave them billed with no
+// account.
+exports.cancelSubscriptionForDeletion = functions
+  .runWith({ secrets: ["STRIPE_SECRET_KEY"] })
+  .https.onRequest(async (req, res) => {
+    setCORS(res);
+    if (req.method === "OPTIONS") { res.status(204).send(""); return; }
+    if (req.method !== "POST")    { res.status(405).send("Method Not Allowed"); return; }
+
+    const uid = await verifyUser(req);
+    if (!uid) { res.status(401).json({ error: "Please sign in." }); return; }
+
+    try {
+      const cancelled = await cancelStripeSubscriptionsForUser(getStripe(), getAdminDb(), uid);
+      res.json({ cancelled });
+    } catch (err) {
+      console.error("cancelSubscriptionForDeletion failed for", uid, err);
+      res.status(500).json({ error: "Could not cancel your subscription." });
     }
   });
 
@@ -1099,7 +1181,7 @@ async function finalizeOneAccountData(uid) {
 // Firestore index required — then filters the (small) result set by date in
 // memory.
 exports.finalizeScheduledDeletions = functions
-  .runWith({ secrets: ["CLOUDINARY_API_SECRET"] })
+  .runWith({ secrets: ["CLOUDINARY_API_SECRET", "STRIPE_SECRET_KEY"] })
   .pubsub.schedule("every 24 hours")
   .onRun(async () => {
     const adminDb = getAdminDb();
@@ -1131,6 +1213,13 @@ exports.finalizeScheduledDeletions = functions
           console.log(`finalizeScheduledDeletions: ${uid} was cancelled — skipping`);
           continue;
         }
+
+        // Stop Stripe billing FIRST, while the user doc (which holds the
+        // subscription id) still exists. If this throws, the account is NOT
+        // erased — it stays pending and retries tomorrow — so nobody is left
+        // being charged with no account to show for it.
+        const cancelledSubs = await cancelStripeSubscriptionsForUser(getStripe(), adminDb, uid);
+        if (cancelledSubs) console.log(`finalizeScheduledDeletions: cancelled ${cancelledSubs} Stripe subscription(s) for ${uid}`);
 
         await finalizeOneAccountData(uid);
         await admin.auth().deleteUser(uid);
