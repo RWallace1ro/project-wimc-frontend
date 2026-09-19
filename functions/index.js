@@ -84,6 +84,15 @@ async function verifyUser(req) {
   }
 }
 
+// Does this Firebase Auth user still exist? Server writes triggered by billing
+// events (Stripe, RevenueCat) must not touch an account that has been deleted —
+// a merge-write would quietly re-create a stub users/{uid} document. Only an
+// explicit "no such user" counts as gone; any other lookup error is treated as
+// "exists" so a transient failure never skips a real customer's update.
+async function authUserExists(uid) {
+  return admin.auth().getUser(uid).then(() => true, (e) => e?.code !== "auth/user-not-found");
+}
+
 // Split into a read-only PEEK (checked before calling Anthropic — never
 // charges) and an INCREMENT (called only after Anthropic responds
 // successfully). This means a failed/errored AI call — a 5xx from Anthropic,
@@ -705,11 +714,8 @@ exports.stripeWebhook = functions
 
       // Cancelling a subscription during account deletion fires this webhook
       // for an account that no longer exists. Writing would re-create a ghost
-      // users/{uid} document, so leave deleted accounts alone. (Any lookup
-      // error other than "no such user" is treated as "exists" — never skip a
-      // real customer's update over a transient failure.)
-      const authUserExists = await admin.auth().getUser(uid).then(() => true, (e) => e?.code !== "auth/user-not-found");
-      if (!authUserExists) return { sub, uid };
+      // users/{uid} document, so leave deleted accounts alone.
+      if (!(await authUserExists(uid))) return { sub, uid };
 
       const priceId = sub.items?.data?.[0]?.price?.id;
       const active = sub.status === "active" || sub.status === "trialing";
@@ -717,7 +723,13 @@ exports.stripeWebhook = functions
 
       const ref = adminDb.collection("users").doc(uid);
       await adminDb.runTransaction(async (tx) => {
-        const cur = (await tx.get(ref)).data() || {};
+        const snap = await tx.get(ref);
+        // Deletion in flight: the app cancels billing FIRST and erases the
+        // user doc a moment later, while the Auth user still exists — so the
+        // check above can pass just as the doc is being removed. A cancel we
+        // tagged account_deleted must never re-create it.
+        if (!snap.exists && sub.cancellation_details?.comment === "account_deleted") return;
+        const cur = snap.data() || {};
         if (cur.stripeSubscriptionId === sub.id
             && cur.subscriptionUpdatedAt && cur.subscriptionUpdatedAt > startedAtIso) return;
         if (cur.stripeSubscriptionId && cur.stripeSubscriptionId !== sub.id
@@ -886,7 +898,18 @@ exports.syncEffectiveTier = functions.firestore
     const patch = { tier: effective };
     if (needsStripeTierBackfill) patch.stripeTier = stripeTier;
 
-    await change.after.ref.set(patch, { merge: true });
+    // update(), NOT set({merge:true}): this trigger runs a moment AFTER the
+    // write that fired it, and by then the user may have deleted their account.
+    // A merge-set would quietly re-create a stub users/{uid} doc holding just
+    // { tier, stripeTier } (seen live 2026-09-19 after a test account
+    // deletion). update() fails with NOT_FOUND on a missing doc — which is
+    // exactly the right outcome, so swallow it.
+    try {
+      await change.after.ref.update(patch);
+    } catch (e) {
+      if (e.code === 5 || /NOT_FOUND/.test(e.message || "")) return null;
+      throw e;
+    }
     return null;
   });
 
@@ -936,6 +959,15 @@ exports.revenuecatWebhook = functions
       let appleTier = "free";
       for (const id of activeEntitlements) {
         appleTier = higherTier(appleTier, ENTITLEMENT_TO_TIER[id] || "free");
+      }
+
+      // Apple keeps renewing a subscription the user never cancelled, even
+      // after they delete their WIMC account. Those events must not re-create
+      // a deleted user's document.
+      if (!(await authUserExists(uid))) {
+        console.log("revenuecatWebhook: ignoring event for a deleted account");
+        res.json({ received: true });
+        return;
       }
 
       const adminDb = getAdminDb();
