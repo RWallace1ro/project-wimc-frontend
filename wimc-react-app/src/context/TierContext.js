@@ -32,6 +32,12 @@ const TierContext = createContext({
   ready: false,
   isPro: false,
   isProAI: false,
+  // Where a paid plan was bought — an account can hold an App Store plan, a
+  // Stripe (website) plan, or both. Drives which cancel/manage instructions
+  // Settings shows (Apple subscriptions can't be managed from the Stripe
+  // portal, and vice versa).
+  viaApple: false,
+  viaStripe: false,
   requirePro: () => true,
   requireProAI: () => true,
 });
@@ -80,6 +86,7 @@ export function TierProvider({ uid, children }) {
   const [tier, setTier] = useState("free");
   const [priceId, setPriceId] = useState(null);
   const [ready, setReady] = useState(false);
+  const [sources, setSources] = useState({ viaApple: false, viaStripe: false });
   const [modal, setModal] = useState({ open: false, feature: "", requiredTier: "pro" });
 
   // RevenueCat must know which Firebase account is purchasing so its webhook
@@ -91,7 +98,11 @@ export function TierProvider({ uid, children }) {
   }, [uid]);
 
   useEffect(() => {
-    if (!uid) { setTier("free"); setPriceId(null); setReady(true); return; }
+    if (!uid) {
+      setTier("free"); setPriceId(null);
+      setSources({ viaApple: false, viaStripe: false });
+      setReady(true); return;
+    }
     setReady(false);
     const ref = doc(db, "users", uid);
     // Two confirmed real-device bugs traced to Firestore's local persistence
@@ -110,6 +121,16 @@ export function TierProvider({ uid, children }) {
       const t = d?.tier;
       setTier(t === "pro" || t === "pro_ai" ? t : "free");
       setPriceId(d?.stripePriceId || null);
+      // Accounts that subscribed on the website before Apple IAP existed have
+      // `tier` but no `stripeTier` until their doc is next written (see
+      // syncEffectiveTier's backfill) — so a paid tier with no Apple plan
+      // behind it is treated as a Stripe plan.
+      const isPaid = (v) => v === "pro" || v === "pro_ai";
+      const apple = isPaid(d?.appleTier);
+      setSources({
+        viaApple: apple,
+        viaStripe: isPaid(d?.stripeTier) || (isPaid(t) && !apple),
+      });
       setReady(true);
     };
     const unsub = onSnapshot(
@@ -148,7 +169,7 @@ export function TierProvider({ uid, children }) {
   const requireProAI = useCallback((feature) => gate("pro_ai", feature), [gate]);
 
   return (
-    <TierContext.Provider value={{ tier, priceId, ready, isPro, isProAI, requirePro, requireProAI }}>
+    <TierContext.Provider value={{ tier, priceId, ready, isPro, isProAI, viaApple: sources.viaApple, viaStripe: sources.viaStripe, requirePro, requireProAI }}>
       {children}
       <UpgradeModal
         open={modal.open}

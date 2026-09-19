@@ -422,6 +422,13 @@ function NativePricing({ tier }) {
         You're currently on the <strong>{planLabel}</strong> plan.
       </p>
 
+      {/* Deliberately neutral — no mention of the website or other prices, so
+          it stays clear of App Review's rules on steering users off IAP. */}
+      <p className="pricing-dup-note">
+        Already have an active paid plan on this account? It applies
+        automatically — there's no need to subscribe again.
+      </p>
+
       {loadErr && <div className="pricing-banner">{loadErr}</div>}
       {actionErr && <p className="pricing-card__error">{actionErr}</p>}
 
@@ -565,6 +572,17 @@ export default function Pricing({ isLoggedIn }) {
               ))}
             </div>
           </div>
+
+          {/* The same WIMC account works on the website and in the iPhone app,
+              and each bills separately (Stripe vs. Apple) — warn before someone
+              pays twice. */}
+          <p className="pricing-dup-note">
+            <strong>Already subscribed through the WIMC iPhone app?</strong> Your
+            plan carries over to this account automatically — please don't
+            subscribe here as well, or you'll be billed twice. You can manage an
+            app subscription in your iPhone's Settings: tap your name, then
+            Subscriptions.
+          </p>
         </div>
       )}
     </main>

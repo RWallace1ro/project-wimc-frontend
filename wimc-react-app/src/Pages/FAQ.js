@@ -198,26 +198,32 @@ const SECTIONS = [
       {
         q: "Is WIMC free to use?",
         a: NATIVE_PLATFORM
-          ? "Yes — the free plan includes all eight closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist. Additional features are available with a paid plan, managed through our website."
+          ? "Yes — the free plan includes all eight closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist. Additional features are available with a paid plan — see the Pricing screen."
           : "Yes — the Free plan includes all eight closet sections (with sub-sections), up to 50 photo uploads, basic outfit preview, weather-based suggestions, the Shopping List and Wish List, and a daily taste of the AI Stylist (3 requests per day). Upgrading unlocks unlimited uploads and the Pro features below.",
       },
       {
         q: "What are the plans and what's included?",
         a: NATIVE_PLATFORM
-          ? "There's a free plan with core closet organization, Shopping List, Wish List, and limited daily AI requests. Paid plans unlock unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and more AI requests per day. Full plan details and subscribing are handled through our website, not in this app."
-          : "There are three plans. Free ($0): core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro ($4.99/mo or $39.99/yr): everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and 10 AI requests/day. Pro + AI ($7.99/mo or $79.99/yr): everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features.",
+          ? "There are three plans. Free: core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro: everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and 10 AI requests/day. Pro + AI: everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features. Current prices are on the Pricing screen."
+          : "There are three plans. Free ($0): core closet organization, Shopping List, Wish List, and 3 AI requests/day. Pro ($5.99/mo or $47.99/yr): everything in Free plus unlimited uploads, the Kids' Closet and Pet Closet, Travel Pack Planner, Outfit of the Day, Donate Bin history, Video Bin, Try-On Studio, the Carousel slideshow, the Receipts tracker, and 10 AI requests/day. Pro + AI ($9.99/mo or $94.99/yr): everything in Pro plus 50 AI requests/day, the full AI suite, unlimited kids' profiles, and priority access to new features.",
       },
       {
         q: "How much does the Pro plan cost?",
         a: NATIVE_PLATFORM
-          ? "Pricing is managed through our website — please visit it on a web browser to see current plan pricing and subscribe."
+          ? "Current prices are shown on the Pricing screen, and you can subscribe there. Prices are set by the App Store for your region."
           : "Pro is $5.99 per month (or $47.99 per year), and Pro + AI is $9.99 per month (or $94.99 per year). You can manage or change your plan anytime from the Billing portal in your account settings.",
+      },
+      {
+        q: "Can I subscribe on both the website and the app?",
+        a: NATIVE_PLATFORM
+          ? "Your plan is tied to your WIMC account, so a paid plan applies automatically wherever you're signed in. Subscribe in only one place — if you already have an active paid plan on this account, there's no need to subscribe again, and subscribing twice means two separate charges. To change or cancel an App Store subscription, open your iPhone's Settings, tap your name, then tap Subscriptions."
+          : "Your plan is tied to your WIMC account, so it works on both the website and the iPhone app — but please subscribe in only one place, or you'll be billed twice (the website and the App Store bill separately). Subscribed on the website? Manage or cancel it from Settings → Subscription → Manage Subscription. Subscribed in the iPhone app? Manage or cancel it in your iPhone's Settings: tap your name, then Subscriptions. Not sure which you used? Apple receipts come from Apple; website receipts come from Stripe. If you did end up subscribed in both places, cancel one and email wimcsupport@gingerfaith.com and we'll review it with you.",
       },
       {
         q: "How do I cancel my subscription?",
         a: NATIVE_PLATFORM
-          ? "You can cancel anytime from your account's Billing portal on our website — no cancellation fees, no questions asked. Your paid access continues until the end of the current billing period."
-          : "You can cancel anytime from your account's Billing portal — no cancellation fees, no questions asked. Your Pro access continues until the end of the current billing period.",
+          ? "If you subscribed in the app, cancel anytime in your iPhone's Settings: tap your name, then Subscriptions, then WIMC. There are no cancellation fees, and your paid access continues until the end of the current billing period."
+          : "You can cancel anytime — no cancellation fees, no questions asked, and your paid access continues until the end of the current billing period. If you subscribed on the website, use Settings → Subscription → Manage Subscription. If you subscribed in the iPhone app, cancel in your iPhone's Settings: tap your name, then Subscriptions, then WIMC.",
       },
       {
         q: "Do you offer refunds?",

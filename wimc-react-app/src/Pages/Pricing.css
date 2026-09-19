@@ -91,6 +91,23 @@
   background: #fef3c7;
 }
 
+/* ── "Don't subscribe twice" note (web + iOS Pricing pages) ── */
+.pricing-dup-note {
+  max-width: 640px;
+  margin: 0 auto 24px;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.pricing-body > .pricing-dup-note:last-child {
+  margin: 28px auto 0;
+}
+
 /* ── Native (iOS) Restore Purchases + subscription disclosure ── */
 .pricing-native-restore {
   max-width: 480px;

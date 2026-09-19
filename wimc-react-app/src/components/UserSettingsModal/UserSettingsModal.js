@@ -291,7 +291,7 @@ export default function UserSettingsModal({
 }) {
   const [tab, setTab] = useState("profile");
   const navigate = useNavigate();
-  const { tier } = useTier();
+  const { tier, viaApple, viaStripe } = useTier();
   const [portalBusy, setPortalBusy] = useState(false);
   const [portalErr, setPortalErr] = useState("");
 
@@ -907,26 +907,50 @@ export default function UserSettingsModal({
                     ✨ See Plans
                   </button>
                 </>
-              ) : NATIVE_PLATFORM ? (
-                <p className="usm-subscription__hint">
-                  To update your payment method, switch plans, view invoices, or cancel,
-                  please open a web browser and go to the <CopyableWebLink />
-                </p>
               ) : (
                 <>
-                  <p className="usm-subscription__hint">
-                    Update your payment method, switch plans, view invoices, or cancel —
-                    all in Stripe's secure billing portal.
-                  </p>
-                  <button
-                    type="button"
-                    className="usm-btn usm-btn--save"
-                    onClick={handleManageSubscription}
-                    disabled={portalBusy}
-                  >
-                    {portalBusy ? "Opening…" : "💳 Manage Subscription"}
-                  </button>
-                  {portalErr && <p className="usm-msg usm-msg--error">{portalErr}</p>}
+                  {/* A plan bought through the App Store can ONLY be changed or
+                      cancelled by Apple — the Stripe portal has no record of it
+                      ("no subscription found"), so never point those users there. */}
+                  {viaApple && (
+                    <p className="usm-subscription__hint">
+                      <strong>Your plan is billed through the App Store.</strong> To
+                      change or cancel it, open your iPhone's Settings, tap your name,
+                      then tap Subscriptions. Apple manages App Store subscriptions,
+                      including receipts and renewal dates.
+                    </p>
+                  )}
+
+                  {viaStripe && (NATIVE_PLATFORM ? (
+                    <p className="usm-subscription__hint">
+                      To update your payment method, switch plans, view invoices, or cancel,
+                      please open a web browser and go to the <CopyableWebLink />
+                    </p>
+                  ) : (
+                    <>
+                      <p className="usm-subscription__hint">
+                        Update your payment method, switch plans, view invoices, or cancel —
+                        all in Stripe's secure billing portal.
+                      </p>
+                      <button
+                        type="button"
+                        className="usm-btn usm-btn--save"
+                        onClick={handleManageSubscription}
+                        disabled={portalBusy}
+                      >
+                        {portalBusy ? "Opening…" : "💳 Manage Subscription"}
+                      </button>
+                      {portalErr && <p className="usm-msg usm-msg--error">{portalErr}</p>}
+                    </>
+                  ))}
+
+                  {viaApple && viaStripe && (
+                    <p className="usm-subscription__hint">
+                      <strong>Heads up:</strong> this account has a plan through both the
+                      App Store and our website, so you're being billed twice. Cancel one
+                      of them using the steps above.
+                    </p>
+                  )}
                 </>
               )}
             </div>
