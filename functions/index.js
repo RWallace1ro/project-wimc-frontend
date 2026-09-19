@@ -10,7 +10,7 @@
  * cancelSubscriptionForDeletion — Cancels the caller's Stripe subscription(s) before an immediate account deletion.
  * revenuecatWebhook         — Bearer-secret RevenueCat webhook (Apple IAP) → sets appleTier.
  * syncEffectiveTier         — Firestore trigger: tier = higher of stripeTier/appleTier.
- * clearCountersOnUserDelete — On Auth-user deletion: clears the user's server-only AI usage counters.
+ * clearCountersOnUserDelete — On Auth-user deletion: clears AI usage counters AND sweeps the whole users/{uid} tree (stray sync docs).
  * finalizeScheduledDeletions — Daily job: completes 14-day-grace account deletions.
  * cleanupExpiredShares      — Daily job: deletes sharedContent links older than 30 days.
  * submitContactForm         — Public contact form → emails support via Resend.
@@ -1003,8 +1003,36 @@ async function clearUserCounters(adminDb, uid) {
   await Promise.all(USER_COUNTER_COLLECTIONS.map((c) => adminDb.collection(c).doc(uid).delete()));
 }
 
+// Everything that can outlive the account, swept once the Auth user is gone.
+//
+// Besides the counters, this removes the WHOLE users/{uid} tree (the profile
+// doc and every subcollection, e.g. syncdata). Why: in the instant between the
+// client deleting a user's synced data and their login being deleted, the
+// still-mounted panels notice their data vanished, reset to defaults, and the
+// app's sync layer immediately writes those defaults back — leaving a handful
+// of stray syncdata docs behind (seen live 2026-09-19 on a heavy account:
+// donateItems, wimc_travel_pack_v2, wimc_video_meta, wimc_week_plan_v1). This
+// runs AFTER the login is deleted, so it catches them. Each step is
+// independent and best-effort: one failing never skips the other.
+async function sweepDeletedUserData(adminDb, uid) {
+  const result = { counters: false, tree: false };
+  try {
+    await clearUserCounters(adminDb, uid);
+    result.counters = true;
+  } catch (e) {
+    console.error(`sweepDeletedUserData(${uid}) counters failed:`, e);
+  }
+  try {
+    await adminDb.recursiveDelete(adminDb.collection("users").doc(uid));
+    result.tree = true;
+  } catch (e) {
+    console.error(`sweepDeletedUserData(${uid}) user tree failed:`, e);
+  }
+  return result;
+}
+
 exports.clearCountersOnUserDelete = functions.auth.user().onDelete(async (user) => {
-  await clearUserCounters(getAdminDb(), user.uid);
+  await sweepDeletedUserData(getAdminDb(), user.uid);
   return null;
 });
 
