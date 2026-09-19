@@ -10,6 +10,7 @@
  * cancelSubscriptionForDeletion — Cancels the caller's Stripe subscription(s) before an immediate account deletion.
  * revenuecatWebhook         — Bearer-secret RevenueCat webhook (Apple IAP) → sets appleTier.
  * syncEffectiveTier         — Firestore trigger: tier = higher of stripeTier/appleTier.
+ * clearCountersOnUserDelete — On Auth-user deletion: clears the user's server-only AI usage counters.
  * finalizeScheduledDeletions — Daily job: completes 14-day-grace account deletions.
  * cleanupExpiredShares      — Daily job: deletes sharedContent links older than 30 days.
  * submitContactForm         — Public contact form → emails support via Resend.
@@ -987,6 +988,25 @@ exports.revenuecatWebhook = functions
       res.status(500).send("Webhook handler error");
     }
   });
+
+// ── Clear server-only per-user counters when an account is deleted ────────────
+// aiUsage/{uid} and aiHelpUsage/{uid} hold a user's daily AI request counts.
+// They live outside users/{uid} and the Firestore rules deny clients, so the
+// in-app "delete now" path could never remove them — only the scheduled
+// finalizer did. Hooking the deletion of the Auth user itself covers EVERY
+// path (immediate delete, scheduled delete, or a manual delete in the console).
+// Deleting a document that doesn't exist is a no-op, so this is idempotent and
+// safe to overlap with the finalizer's own cleanup.
+const USER_COUNTER_COLLECTIONS = ["aiUsage", "aiHelpUsage"];
+
+async function clearUserCounters(adminDb, uid) {
+  await Promise.all(USER_COUNTER_COLLECTIONS.map((c) => adminDb.collection(c).doc(uid).delete()));
+}
+
+exports.clearCountersOnUserDelete = functions.auth.user().onDelete(async (user) => {
+  await clearUserCounters(getAdminDb(), user.uid);
+  return null;
+});
 
 // ── Scheduled account deletion finalizer ──────────────────────────────────────
 //
