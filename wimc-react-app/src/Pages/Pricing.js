@@ -5,6 +5,7 @@ import { startCheckout, openBillingPortal } from "../utils/billing";
 import { getOfferingPackages, purchasePackage, restorePurchases } from "../utils/iap";
 import { useTier } from "../context/TierContext";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
+import { currentProductIdentifier, currentPlanCardId } from "../utils/planMatch";
 import "./Pricing.css";
 
 // NOTE: the generic "WIMC website" CopyableWebLink pattern used here pre-IAP
@@ -352,6 +353,10 @@ const NATIVE_CARD_ORDER = [
 ];
 
 function NativePricing({ tier }) {
+  const { appleProductId, priceId: stripePriceId } = useTier();
+  // The exact plan (monthly vs annual), not just the tier — comparing tiers
+  // alone marked BOTH a plan's monthly and annual cards "Current Plan".
+  const currentProductId = currentProductIdentifier({ tier, appleProductId, stripePriceId });
   const [packages, setPackages] = useState(null); // null = loading, [] = none found
   const [loadErr, setLoadErr] = useState("");
   const [busyId, setBusyId] = useState(null);
@@ -438,7 +443,7 @@ function NativePricing({ tier }) {
         <div className="pricing-grid">
           {packages.map((pkg) => {
             const meta = PRODUCT_META[pkg.product.identifier] || {};
-            const isCurrent = tier === meta.tier;
+            const isCurrent = pkg.product.identifier === currentProductId;
             const isBusy = busyId === pkg.identifier;
             return (
               <div className="pricing-card" key={pkg.identifier}>
@@ -484,11 +489,13 @@ function NativePricing({ tier }) {
 export default function Pricing({ isLoggedIn }) {
   const navigate = useNavigate();
   const closePage = useCloseStandalonePage();
-  const { tier, priceId } = useTier();
+  const { tier, priceId, appleProductId } = useTier();
 
   // Determine the user's current plan card from their live subscription.
-  // Prefer an exact price→plan match (knows monthly vs annual); fall back to
-  // the tier's monthly card if the price isn't recognized.
+  // Tier alone can't pick between a plan's monthly and annual cards, so use the
+  // exact plan: the App Store product if Apple bills it, else the Stripe price
+  // (including grandfathered ones). Falls back to the tier's monthly card only
+  // as a last resort, so at least one card is marked.
   const planIdByPrice = Object.fromEntries(
     Object.entries(PRICE_IDS).map(([planId, pid]) => [pid, planId])
   );
@@ -498,6 +505,8 @@ export default function Pricing({ isLoggedIn }) {
     // downgrade/cancel, so only consult it to refine WHICH paid card is current.
     if (tier === "free") {
       currentPlanId = "free";
+    } else if (currentPlanCardId({ tier, appleProductId, stripePriceId: priceId })) {
+      currentPlanId = currentPlanCardId({ tier, appleProductId, stripePriceId: priceId });
     } else if (priceId && planIdByPrice[priceId]) {
       currentPlanId = planIdByPrice[priceId];
     } else if (tier === "pro") {

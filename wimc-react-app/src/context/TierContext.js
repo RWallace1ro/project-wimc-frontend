@@ -38,6 +38,9 @@ const TierContext = createContext({
   // portal, and vice versa).
   viaApple: false,
   viaStripe: false,
+  // The exact App Store product the user is subscribed to (only while an Apple
+  // plan is active) — a tier alone can't tell the monthly card from the annual.
+  appleProductId: null,
   requirePro: () => true,
   requireProAI: () => true,
 });
@@ -86,7 +89,7 @@ export function TierProvider({ uid, children }) {
   const [tier, setTier] = useState("free");
   const [priceId, setPriceId] = useState(null);
   const [ready, setReady] = useState(false);
-  const [sources, setSources] = useState({ viaApple: false, viaStripe: false });
+  const [sources, setSources] = useState({ viaApple: false, viaStripe: false, appleProductId: null });
   const [modal, setModal] = useState({ open: false, feature: "", requiredTier: "pro" });
 
   // RevenueCat must know which Firebase account is purchasing so its webhook
@@ -100,7 +103,7 @@ export function TierProvider({ uid, children }) {
   useEffect(() => {
     if (!uid) {
       setTier("free"); setPriceId(null);
-      setSources({ viaApple: false, viaStripe: false });
+      setSources({ viaApple: false, viaStripe: false, appleProductId: null });
       setReady(true); return;
     }
     setReady(false);
@@ -130,6 +133,9 @@ export function TierProvider({ uid, children }) {
       setSources({
         viaApple: apple,
         viaStripe: isPaid(d?.stripeTier) || (isPaid(t) && !apple),
+        // Only meaningful while an Apple plan is active — the field keeps the
+        // LAST product after a lapse, which must not mark a card as current.
+        appleProductId: apple ? (d?.appleProductId || null) : null,
       });
       setReady(true);
     };
@@ -169,7 +175,7 @@ export function TierProvider({ uid, children }) {
   const requireProAI = useCallback((feature) => gate("pro_ai", feature), [gate]);
 
   return (
-    <TierContext.Provider value={{ tier, priceId, ready, isPro, isProAI, viaApple: sources.viaApple, viaStripe: sources.viaStripe, requirePro, requireProAI }}>
+    <TierContext.Provider value={{ tier, priceId, ready, isPro, isProAI, viaApple: sources.viaApple, viaStripe: sources.viaStripe, appleProductId: sources.appleProductId, requirePro, requireProAI }}>
       {children}
       <UpgradeModal
         open={modal.open}
