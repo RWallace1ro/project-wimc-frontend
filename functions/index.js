@@ -932,6 +932,69 @@ const ENTITLEMENT_TO_TIER = {
   pro_ai: "pro_ai",
 };
 
+// Which RevenueCat events describe the state of a subscription. Anything else
+// (TEST, TRANSFER, INVOICE_ISSUANCE, …) is ignored rather than guessed at.
+const APPLE_LIFECYCLE_EVENTS = new Set([
+  "INITIAL_PURCHASE", "RENEWAL", "CANCELLATION", "UNCANCELLATION", "EXPIRATION",
+  "BILLING_ISSUE", "PRODUCT_CHANGE", "NON_RENEWING_PURCHASE",
+  "SUBSCRIPTION_EXTENDED", "REFUND_REVERSED", "TEMPORARY_ENTITLEMENT_GRANT",
+]);
+
+// Decide what an Apple/RevenueCat event means for the user's paid tier.
+//
+// Two facts from RevenueCat's docs drive this:
+//  1. `entitlement_ids` lists the entitlements tied to the event's PRODUCT —
+//     NOT what the customer can currently access. An EXPIRATION event names
+//     the very entitlement that just expired, so trusting it would keep a
+//     lapsed subscriber on a paid tier forever.
+//  2. Access is decided by TIME: a voluntary cancel (CANCELLATION) keeps
+//     access until `expiration_at_ms`; a refund or EXPIRATION ends it; a
+//     BILLING_ISSUE keeps it through any grace period.
+// So: paid iff the effective expiry (later of expiration / grace period) is in
+// the future and the event isn't an EXPIRATION; the tier comes from the
+// product's entitlements only when that holds.
+//
+// Events can also arrive out of order (a slow old EXPIRATION landing after a
+// newer RENEWAL would wrongly downgrade), so an event older than the last one
+// applied is skipped. `appleSubscriptionUpdatedAt` stores the EVENT's own
+// timestamp for exactly that comparison.
+function decideAppleState(event, nowMs, current) {
+  if (!APPLE_LIFECYCLE_EVENTS.has(event.type)) {
+    return { skip: true, reason: `ignoring ${event.type || "unknown"} event` };
+  }
+
+  const eventAtIso = new Date(Number(event.event_timestamp_ms) || nowMs).toISOString();
+  if (current?.appleSubscriptionUpdatedAt && current.appleSubscriptionUpdatedAt > eventAtIso) {
+    return { skip: true, reason: `stale ${event.type} (older than the last applied event)` };
+  }
+
+  const ids = Array.isArray(event.entitlement_ids)
+    ? event.entitlement_ids
+    : (event.entitlement_id ? [event.entitlement_id] : []);
+  const expiresMs = Math.max(
+    Number(event.expiration_at_ms) || 0,
+    Number(event.grace_period_expiration_at_ms) || 0,
+  );
+  const stillEntitled = event.type !== "EXPIRATION" && expiresMs > nowMs;
+
+  let appleTier = "free";
+  if (stillEntitled) {
+    for (const id of ids) appleTier = higherTier(appleTier, ENTITLEMENT_TO_TIER[id] || "free");
+  }
+
+  return {
+    skip: false,
+    appleTier,
+    fields: {
+      appleTier,
+      appleSubscriptionStatus: event.type,
+      appleProductId: event.product_id || null,
+      appleExpiresAt: event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null,
+      appleSubscriptionUpdatedAt: eventAtIso,
+    },
+  };
+}
+
 exports.revenuecatWebhook = functions
   .runWith({ secrets: ["REVENUECAT_WEBHOOK_SECRET"] })
   .https.onRequest(async (req, res) => {
@@ -949,19 +1012,6 @@ exports.revenuecatWebhook = functions
       const uid = event.app_user_id;
       if (!uid) { res.json({ received: true }); return; } // anonymous/test event
 
-      // entitlements active as of this event → highest tier among them.
-      // RevenueCat sends the full current entitlement map on every event type
-      // (INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION, BILLING_ISSUE,
-      // etc.) so re-deriving from scratch each time is simpler and safer than
-      // trying to special-case each event type.
-      const activeEntitlements = Object.keys(event.entitlement_ids
-        ? Object.fromEntries((event.entitlement_ids || []).map((id) => [id, true]))
-        : {});
-      let appleTier = "free";
-      for (const id of activeEntitlements) {
-        appleTier = higherTier(appleTier, ENTITLEMENT_TO_TIER[id] || "free");
-      }
-
       // Apple keeps renewing a subscription the user never cancelled, even
       // after they delete their WIMC account. Those events must not re-create
       // a deleted user's document.
@@ -971,16 +1021,23 @@ exports.revenuecatWebhook = functions
         return;
       }
 
-      const adminDb = getAdminDb();
-      await adminDb.collection("users").doc(uid).set({
-        appleTier,
-        appleSubscriptionStatus: event.type || null,
-        appleProductId: event.product_id || null,
-        appleExpiresAt: event.expiration_at_ms
-          ? new Date(event.expiration_at_ms).toISOString()
-          : null,
-        appleSubscriptionUpdatedAt: new Date().toISOString(),
-      }, { merge: true });
+      // Read-decide-write in one transaction so the stale-event check can't
+      // race a concurrent delivery for the same user.
+      const ref = getAdminDb().collection("users").doc(uid);
+      let outcome = null;
+      await getAdminDb().runTransaction(async (tx) => {
+        const cur = (await tx.get(ref)).data() || {};
+        outcome = decideAppleState(event, Date.now(), cur);
+        if (!outcome.skip) tx.set(ref, outcome.fields, { merge: true });
+      });
+
+      // One line per event (no personal data) so a production purchase can be
+      // confirmed from the logs: environment is SANDBOX or PRODUCTION.
+      console.log(
+        `revenuecatWebhook: ${event.type} env=${event.environment || "?"} ` +
+        `product=${event.product_id || "-"} -> ` +
+        (outcome.skip ? `skipped (${outcome.reason})` : `appleTier=${outcome.appleTier}`)
+      );
 
       res.json({ received: true });
     } catch (err) {
