@@ -1,17 +1,31 @@
 import React, { useEffect, useState } from "react";
+import { reloadFresh } from "../../utils/versionCheck";
 import "./UpdateBanner.css";
 
-// Listens for the "wimc-sw-update" event dispatched from src/index.js when
-// the service worker detects a new deployed version. Gives the user an
-// explicit way to pick up the update — critical on iOS, which has no native
-// "reload to update" prompt for installed/standalone PWAs at all.
+// Shows the "new version" bar. Two independent detectors can raise it:
+//  • "wimc-sw-update"        — the service worker found a new deploy (browsers
+//                             and installed web apps; src/index.js).
+//  • "wimc-update-available" — the version watcher noticed a newer deploy
+//                             (src/utils/versionCheck.js). This is the one that
+//                             works inside the iPhone/Android app wrapper, which
+//                             has no service worker — so without it a fix only
+//                             appeared after the user force-quit the app.
+// Either one is enough; both raising it is harmless.
+//
+// This is only a page refresh of the same website the app always loads — it
+// never downloads or installs anything, and has nothing to do with App Store
+// updates of the app itself.
 export default function UpdateBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const handler = () => setVisible(true);
     window.addEventListener("wimc-sw-update", handler);
-    return () => window.removeEventListener("wimc-sw-update", handler);
+    window.addEventListener("wimc-update-available", handler);
+    return () => {
+      window.removeEventListener("wimc-sw-update", handler);
+      window.removeEventListener("wimc-update-available", handler);
+    };
   }, []);
 
   if (!visible) return null;
@@ -22,7 +36,7 @@ export default function UpdateBanner() {
       <button
         type="button"
         className="update-banner__btn"
-        onClick={() => window.location.reload()}
+        onClick={() => reloadFresh(window)}
       >
         Refresh
       </button>

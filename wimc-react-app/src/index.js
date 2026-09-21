@@ -7,7 +7,12 @@ import { register as registerSW } from "./serviceWorkerRegistration";
 import { initSentry, logAppEvent } from "./utils/analytics";
 import { hasAnalyticsConsent } from "./utils/consent";
 import { initFirebaseAnalytics, auth } from "./firebase";
+import { startVersionWatch, stripRefreshParam } from "./utils/versionCheck";
 import "./index.css";
+
+// A "Refresh" from the update bar reloads with a cache-busting ?_r=… parameter
+// (see utils/versionCheck.js). Remove it before the router reads the URL.
+stripRefreshParam(window);
 
 // QA helper — lets a signed-in tester grab their own Firebase ID token from
 // the browser console (e.g. to manually probe Firestore security rules via
@@ -43,12 +48,28 @@ root.render(
         </div>
       }
     >
-      <Router basename="/project-wimc-frontend">
+      {/* basename follows where the site is hosted (PUBLIC_URL): the GitHub
+          Pages copy lives under /project-wimc-frontend, the Firebase Hosting
+          copy at the domain root. It was hardcoded, which blocked running the
+          same build on a second host. */}
+      <Router basename={process.env.PUBLIC_URL}>
         <App />
       </Router>
     </Sentry.ErrorBoundary>
   </React.StrictMode>
 );
+
+// ── "New version available" detection that works WITHOUT a service worker ────
+// iPhone's app wrapper (WKWebView) doesn't support service workers, so the
+// service-worker update check below never runs inside the App Store app. This
+// compares the running bundle's content hash with the newest deployed one and
+// raises the same UpdateBanner. No-op in dev (no hashed bundle to compare).
+startVersionWatch({
+  win: window,
+  fetchImpl: window.fetch.bind(window),
+  base: process.env.PUBLIC_URL || "",
+  onOutdated: () => window.dispatchEvent(new CustomEvent("wimc-update-available")),
+});
 
 // ── Service Worker (PWA / offline support) ───────────────────────────────────
 // Registers a service worker that caches static assets for offline use.

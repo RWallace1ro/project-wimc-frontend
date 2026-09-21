@@ -33,7 +33,10 @@ export function initSentry() {
       /^Failed to fetch/,
     ],
     // Only send events from your own domain, not injected scripts
-    allowUrls: [/https?:\/\/(.*\.)?rwallace1ro\.github\.io/],
+    // Every host the app is served from: the original GitHub Pages site, the
+    // Firebase Hosting copy, and the gingerfaith.com custom domain. (Only the
+    // first was listed, so errors from any other host would have been dropped.)
+    allowUrls: [/https?:\/\/(.*\.)?(rwallace1ro\.github\.io|wimc-app\.web\.app|wimc-app\.firebaseapp\.com|gingerfaith\.com)/],
     beforeSend(event) {
       // Never send events in development
       if (process.env.NODE_ENV !== "production") return null;

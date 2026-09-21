@@ -19,11 +19,8 @@ import { copyText } from "../../utils/copyText";
 import Avatar from "../Avatar/Avatar";
 import "./UserSettingsModal.css";
 
-const APP_WEB_URL = "rwallace1ro.github.io/project-wimc-frontend";
-// The real GitHub Pages URL contains the developer's personal GitHub
-// username — shown here only as a generic label so it isn't displayed to
-// users, while the Copy button below still copies the real, correct URL.
-// (A full custom-domain migration is deferred to post-launch; see memory.)
+const APP_WEB_URL = "wimc.gingerfaith.com";
+// Canonical app address (the copy button below copies this too).
 const APP_WEB_LABEL = "WIMC website";
 
 // Same reasoning as Pricing.js's CopyableWebLink — plain, non-tappable label
@@ -32,7 +29,7 @@ const APP_WEB_LABEL = "WIMC website";
 function CopyableWebLink() {
   const [copied, setCopied] = useState(false);
   const handleCopy = async () => {
-    const ok = await copyText(APP_WEB_URL);
+    const ok = await copyText(`https://${APP_WEB_URL}`);
     if (ok) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

@@ -390,6 +390,25 @@ exports.cloudinarySign = functions
 // Public app base for post-checkout redirects (GitHub Pages project path).
 const APP_URL = "https://rwallace1ro.github.io/project-wimc-frontend";
 
+// The app is served from more than one host (GitHub Pages under a path, and
+// Firebase Hosting / the custom domain at the root). Stripe must send people
+// back to the host they started from, or a payment made on the new site would
+// land them on the old one. Only these exact origins are honoured — anything
+// else (or no Origin header) falls back to APP_URL — so a crafted request can't
+// point Stripe's redirect at an arbitrary site.
+// APP_URL_BY_ORIGIN_START
+const APP_URL_BY_ORIGIN = {
+  "https://rwallace1ro.github.io": "https://rwallace1ro.github.io/project-wimc-frontend",
+  "https://wimc.gingerfaith.com": "https://wimc.gingerfaith.com",
+  "https://wimc-app.web.app": "https://wimc-app.web.app",
+};
+function appUrlFor(req) {
+  const origin = req && req.headers ? req.headers.origin : null;
+  return (origin && Object.prototype.hasOwnProperty.call(APP_URL_BY_ORIGIN, origin))
+    ? APP_URL_BY_ORIGIN[origin] : APP_URL;
+}
+// APP_URL_BY_ORIGIN_END
+
 // Maps each Stripe Price ID → the tier it grants. LIVE-mode price IDs.
 const TIER_BY_PRICE = {
   // Legacy prices (single shared product) — kept so existing subscriptions
@@ -473,8 +492,8 @@ exports.createCheckoutSession = functions
         // cancellations) can resolve the user even without the checkout session.
         subscription_data: { metadata: { firebaseUID: uid } },
         allow_promotion_codes: true,
-        success_url: `${APP_URL}/home?checkout=success`,
-        cancel_url: `${APP_URL}/pricing?checkout=cancel`,
+        success_url: `${appUrlFor(req)}/home?checkout=success`,
+        cancel_url: `${appUrlFor(req)}/pricing?checkout=cancel`,
       });
       res.json({ url: session.url });
     } catch (err) {
@@ -502,7 +521,7 @@ exports.createPortalSession = functions
 
       const portal = await getStripe().billingPortal.sessions.create({
         customer: customerId,
-        return_url: `${APP_URL}/home`,
+        return_url: `${appUrlFor(req)}/home`,
       });
       res.json({ url: portal.url });
     } catch (err) {

@@ -3,7 +3,7 @@
   "appName": "What's In My Closet",
   "webDir": "build",
   "server": {
-    "url": "https://rwallace1ro.github.io/project-wimc-frontend/",
+    "url": "https://wimc.gingerfaith.com/",
     "androidScheme": "https",
     "iosScheme": "https"
   }

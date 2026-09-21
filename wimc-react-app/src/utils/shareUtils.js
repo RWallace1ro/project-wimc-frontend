@@ -8,7 +8,7 @@ import { hapticSuccess } from './haptics';
 const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
 /** Stable app base URL (origin + PUBLIC_URL), independent of the current route.
- *  Produces e.g. https://rwallace1ro.github.io/project-wimc-frontend
+ *  Produces e.g. https://wimc.gingerfaith.com (or the GitHub Pages address with its path)
  *  We use a real path (/shared), NOT a #hash, so BrowserRouter matches it and
  *  the GitHub Pages 404 SPA-redirect can restore the deep link for non-app users. */
 function appBase() {
