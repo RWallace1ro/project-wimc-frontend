@@ -491,7 +491,7 @@ export default function ClosetSearch({
             <span className="cs-header__icon">🔍</span>
             <div>
               <h2 className="cs-header__title">Search My Closet</h2>
-              <p className="cs-header__sub">Describe what you're looking for in plain English</p>
+              <p className="cs-header__sub">Describe what you're looking for</p>
             </div>
           </div>
           <div className="cs-header__actions">

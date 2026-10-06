@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["Y8QVCAYQQY.com.gingerfaith.wimc"],
+        "components": [
+          { "/": "/shared*", "comment": "Shared closet/outfit links open in the app" },
+          { "/": "/pricing*", "comment": "Pricing links open in the app" }
+        ]
+      }
+    ]
+  }
+}
