@@ -424,17 +424,24 @@ export default function ClosetSearch({
     setTimeout(() => setApplyFeedback(""), 2500);
   }, [resultImages, selected, onApplyItems]);
 
-  // Save the current results (query + matched images) so they can be reopened.
+  // Save the SELECTED results (query + the checked images) so they can be
+  // reopened. It used to save every result and ignore the checkmarks, so an
+  // item the user had un-checked still came back in the saved search.
   const saveCurrentSearch = () => {
-    if (!resultImages.length) return;
+    const chosen = resultImages.filter((x) => selected.has(x.url));
+    if (!chosen.length) {
+      setSaveMsg("Select at least one item to save.");
+      setTimeout(() => setSaveMsg(""), 2500);
+      return;
+    }
     const entry = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       query: (query || resultText || "Search").trim().slice(0, 80),
       ts: Date.now(),
-      items: resultImages.map(({ url, sectionTag }) => ({ url, sectionTag })),
+      items: chosen.map(({ url, sectionTag }) => ({ url, sectionTag })),
     };
     persistSaved([entry, ...savedSearches].slice(0, 50));
-    setSaveMsg("✅ Search saved");
+    setSaveMsg(`✅ Search saved (${chosen.length} item${chosen.length !== 1 ? "s" : ""})`);
     setTimeout(() => setSaveMsg(""), 2000);
   };
 
@@ -644,7 +651,10 @@ export default function ClosetSearch({
                       <button
                         className="cs-mini-btn cs-mini-btn--save"
                         onClick={saveCurrentSearch}
-                        title="Save these results to reopen later"
+                        disabled={selectedCount === 0}
+                        title={selectedCount === 0
+                          ? "Select at least one item to save"
+                          : "Save the selected items to reopen later"}
                       >
                         💾 Save
                       </button>
