@@ -37,6 +37,9 @@ const TierContext = createContext({
   // Settings shows (Apple subscriptions can't be managed from the Stripe
   // portal, and vice versa).
   viaApple: false,
+  // A plan bought through Google Play (Android). The users/{uid}.apple* fields
+  // hold ANY in-app-store plan — `iapStore` says which store it was.
+  viaPlay: false,
   viaStripe: false,
   // The exact App Store product the user is subscribed to (only while an Apple
   // plan is active) — a tier alone can't tell the monthly card from the annual.
@@ -89,7 +92,7 @@ export function TierProvider({ uid, children }) {
   const [tier, setTier] = useState("free");
   const [priceId, setPriceId] = useState(null);
   const [ready, setReady] = useState(false);
-  const [sources, setSources] = useState({ viaApple: false, viaStripe: false, appleProductId: null });
+  const [sources, setSources] = useState({ viaApple: false, viaPlay: false, viaStripe: false, appleProductId: null });
   const [modal, setModal] = useState({ open: false, feature: "", requiredTier: "pro" });
 
   // RevenueCat must know which Firebase account is purchasing so its webhook
@@ -103,7 +106,7 @@ export function TierProvider({ uid, children }) {
   useEffect(() => {
     if (!uid) {
       setTier("free"); setPriceId(null);
-      setSources({ viaApple: false, viaStripe: false, appleProductId: null });
+      setSources({ viaApple: false, viaPlay: false, viaStripe: false, appleProductId: null });
       setReady(true); return;
     }
     setReady(false);
@@ -131,7 +134,10 @@ export function TierProvider({ uid, children }) {
       const isPaid = (v) => v === "pro" || v === "pro_ai";
       const apple = isPaid(d?.appleTier);
       setSources({
-        viaApple: apple,
+        // Purchases made before Android existed have no `iapStore` — those are
+        // all App Store purchases.
+        viaApple: apple && d?.iapStore !== "PLAY_STORE",
+        viaPlay: apple && d?.iapStore === "PLAY_STORE",
         viaStripe: isPaid(d?.stripeTier) || (isPaid(t) && !apple),
         // Only meaningful while an Apple plan is active — the field keeps the
         // LAST product after a lapse, which must not mark a card as current.
@@ -175,7 +181,7 @@ export function TierProvider({ uid, children }) {
   const requireProAI = useCallback((feature) => gate("pro_ai", feature), [gate]);
 
   return (
-    <TierContext.Provider value={{ tier, priceId, ready, isPro, isProAI, viaApple: sources.viaApple, viaStripe: sources.viaStripe, appleProductId: sources.appleProductId, requirePro, requireProAI }}>
+    <TierContext.Provider value={{ tier, priceId, ready, isPro, isProAI, viaApple: sources.viaApple, viaPlay: sources.viaPlay, viaStripe: sources.viaStripe, appleProductId: sources.appleProductId, requirePro, requireProAI }}>
       {children}
       <UpgradeModal
         open={modal.open}

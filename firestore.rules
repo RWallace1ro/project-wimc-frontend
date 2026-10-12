@@ -20,7 +20,7 @@ service cloud.firestore {
               'subscriptionStatus', 'subscriptionUpdatedAt', 'currentPeriodEnd',
               'stripeCustomerId', 'stripeSubscriptionId', 'stripePriceId',
               'appleSubscriptionStatus', 'appleProductId', 'appleExpiresAt',
-              'appleSubscriptionUpdatedAt'];
+              'appleSubscriptionUpdatedAt', 'iapStore'];
     }
 
     match /users/{userId} {

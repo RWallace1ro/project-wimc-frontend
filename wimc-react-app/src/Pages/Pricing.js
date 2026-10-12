@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { startCheckout, openBillingPortal } from "../utils/billing";
-import { getOfferingPackages, purchasePackage, restorePurchases } from "../utils/iap";
+import { getOfferingPackages, purchasePackage, restorePurchases, canonicalProductId, IAP_STORE } from "../utils/iap";
 import { useTier } from "../context/TierContext";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import { currentProductIdentifier, currentPlanCardId } from "../utils/planMatch";
@@ -375,8 +375,8 @@ function NativePricing({ tier }) {
         // doesn't guarantee package order in the offering).
         const ordered = [...pkgs].sort(
           (a, b) =>
-            NATIVE_CARD_ORDER.indexOf(a.product.identifier) -
-            NATIVE_CARD_ORDER.indexOf(b.product.identifier)
+            NATIVE_CARD_ORDER.indexOf(canonicalProductId(a.product.identifier)) -
+            NATIVE_CARD_ORDER.indexOf(canonicalProductId(b.product.identifier))
         );
         setPackages(ordered);
       }
@@ -393,7 +393,7 @@ function NativePricing({ tier }) {
       // TierContext's live Firestore listener within a few seconds; no local
       // state write needed here.
     } catch (e) {
-      // A dismissed Apple purchase sheet is not an error — stay silent.
+      // A dismissed purchase sheet (Apple or Google) is not an error — stay silent.
       if (!e?.cancelled) {
         setActionErr(e?.message || "Purchase could not be completed. Please try again.");
       }
@@ -409,7 +409,9 @@ function NativePricing({ tier }) {
       const restoredTier = await restorePurchases();
       setRestoreMsg(
         restoredTier === "free"
-          ? "No previous purchases found on this Apple ID."
+          ? (IAP_STORE === "PLAY_STORE"
+            ? "No previous purchases found on this Google account."
+            : "No previous purchases found on this Apple ID.")
           : "Purchases restored!"
       );
     } catch (e) {
@@ -442,8 +444,9 @@ function NativePricing({ tier }) {
       ) : (
         <div className="pricing-grid">
           {packages.map((pkg) => {
-            const meta = PRODUCT_META[pkg.product.identifier] || {};
-            const isCurrent = pkg.product.identifier === currentProductId;
+            const productId = canonicalProductId(pkg.product.identifier);
+            const meta = PRODUCT_META[productId] || {};
+            const isCurrent = productId === currentProductId;
             const isBusy = busyId === pkg.identifier;
             return (
               <div className="pricing-card" key={pkg.identifier}>
@@ -477,8 +480,9 @@ function NativePricing({ tier }) {
         </button>
         {restoreMsg && <p className="pricing-native-restore__msg">{restoreMsg}</p>}
         <p className="pricing-native-restore__hint">
-          Subscriptions renew automatically until cancelled. Manage or cancel
-          anytime in your device's Settings → Apple Account → Subscriptions.
+          {IAP_STORE === "PLAY_STORE"
+            ? "Subscriptions renew automatically until cancelled. Manage or cancel anytime in the Google Play Store app → your profile icon → Payments & subscriptions → Subscriptions."
+            : "Subscriptions renew automatically until cancelled. Manage or cancel anytime in your device's Settings → Apple Account → Subscriptions."}
         </p>
       </div>
     </div>
@@ -586,11 +590,12 @@ export default function Pricing({ isLoggedIn }) {
               and each bills separately (Stripe vs. Apple) — warn before someone
               pays twice. */}
           <p className="pricing-dup-note">
-            <strong>Already subscribed through the WIMC iPhone app?</strong> Your
+            <strong>Already subscribed through the WIMC iPhone or Android app?</strong> Your
             plan carries over to this account automatically — please don't
             subscribe here as well, or you'll be billed twice. You can manage an
-            app subscription in your iPhone's Settings: tap your name, then
-            Subscriptions.
+            app subscription on iPhone in Settings (tap your name, then
+            Subscriptions) or on Android in the Google Play Store app (profile
+            icon → Payments &amp; subscriptions → Subscriptions).
           </p>
         </div>
       )}

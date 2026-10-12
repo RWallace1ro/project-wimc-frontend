@@ -81,7 +81,7 @@ export default function TermsOfService() {
           <strong>Plans.</strong> WIMC has a Free plan and two paid plans, Pro
           and Pro + AI, each available monthly or annually. What each plan
           includes, and its current price, is shown on the Pricing page on our
-          website and on the Pricing screen in the iPhone app.
+          website and on the Pricing screen in the iPhone and Android apps.
         </p>
         <p>
           <strong>Billing.</strong> Paid plans renew automatically at the end of
@@ -89,11 +89,14 @@ export default function TermsOfService() {
           until you cancel. If you subscribe on our website, you are billed by
           Stripe. If you subscribe in the iPhone app, you are billed by Apple
           through your Apple Account, and Apple's terms apply to that purchase.
+          If you subscribe in the Android app, you are billed by Google
+          through your Google Play account, and Google's terms apply to that
+          purchase.
           Prices may include or exclude applicable taxes, as shown at checkout.
         </p>
         <p>
           <strong>One plan, one place.</strong> Your plan is tied to your WIMC
-          account and works on both the website and the iPhone app. Please
+          account and works on the website and in the iPhone and Android apps. Please
           subscribe in only one place — subscribing in both results in two
           separate charges.
         </p>
@@ -104,11 +107,14 @@ export default function TermsOfService() {
           go to Settings → Subscription → Manage Subscription. To cancel an App
           Store subscription, open your iPhone's Settings, tap your name, then
           tap Subscriptions; Apple requires you to cancel at least 24 hours
-          before your renewal date to avoid the next charge. If you delete your
+          before your renewal date to avoid the next charge. To cancel a Google Play
+          subscription, open the Google Play Store app, tap your profile icon,
+          then tap Payments &amp; subscriptions, then Subscriptions. If you delete your
           WIMC account, we automatically cancel a website subscription when the
           deletion takes effect (with no refund for the unused part of the
-          period). We cannot cancel App Store subscriptions for you, so please
-          cancel those in iPhone Settings before you delete your account.
+          period). We cannot cancel App Store or Google Play subscriptions for you,
+          so please cancel those in iPhone Settings or in the Google Play Store
+          app before you delete your account.
         </p>
         <p>
           <strong>Refunds.</strong> Payments are generally non-refundable, and
@@ -118,7 +124,8 @@ export default function TermsOfService() {
           <Link to="/contact" className="legal-page__link">contact us</Link>
           {" "}within 7 days of the charge and we will review your case.
           Refunds for App Store purchases are handled by Apple; you can request
-          one at reportaproblem.apple.com.
+          one at reportaproblem.apple.com. Refunds for Google Play purchases
+          are handled by Google Play.
         </p>
         <p>
           <strong>Your rights where you live.</strong> If you live in the

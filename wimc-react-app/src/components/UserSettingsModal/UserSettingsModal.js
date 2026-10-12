@@ -288,7 +288,7 @@ export default function UserSettingsModal({
 }) {
   const [tab, setTab] = useState("profile");
   const navigate = useNavigate();
-  const { tier, viaApple, viaStripe } = useTier();
+  const { tier, viaApple, viaPlay, viaStripe } = useTier();
   const [portalBusy, setPortalBusy] = useState(false);
   const [portalErr, setPortalErr] = useState("");
 
@@ -936,6 +936,17 @@ export default function UserSettingsModal({
                     </p>
                   )}
 
+                  {/* Same idea for Google Play: only Google can change or cancel it. */}
+                  {viaPlay && (
+                    <p className="usm-subscription__hint">
+                      <strong>Your plan is billed through Google Play.</strong> To
+                      change or cancel it, open the Google Play Store app, tap your
+                      profile icon, then tap Payments &amp; subscriptions, then
+                      Subscriptions. Google manages Google Play subscriptions,
+                      including receipts and renewal dates.
+                    </p>
+                  )}
+
                   {viaStripe && (NATIVE_PLATFORM ? (
                     <p className="usm-subscription__hint">
                       To update your payment method, switch plans, view invoices, or cancel,
@@ -959,10 +970,10 @@ export default function UserSettingsModal({
                     </>
                   ))}
 
-                  {viaApple && viaStripe && (
+                  {(viaApple || viaPlay) && viaStripe && (
                     <p className="usm-subscription__hint">
                       <strong>Heads up:</strong> this account has a plan through both the
-                      App Store and our website, so you're being billed twice. Cancel one
+                      {viaPlay ? " Google Play Store" : " App Store"} and our website, so you're being billed twice. Cancel one
                       of them using the steps above.
                     </p>
                   )}
@@ -996,6 +1007,15 @@ export default function UserSettingsModal({
                       account will not cancel it — Apple would keep charging you.
                       Open your iPhone's Settings, tap your name, then tap
                       Subscriptions.
+                    </p>
+                  )}
+                  {viaPlay && (
+                    <p className="usm-delete-notice usm-delete-notice--warn">
+                      <strong>Cancel your Google Play subscription first.</strong>{" "}
+                      Your plan is billed through Google Play, and deleting your
+                      account will not cancel it — Google would keep charging you.
+                      Open the Google Play Store app, tap your profile icon, then
+                      tap Payments &amp; subscriptions, then Subscriptions.
                     </p>
                   )}
                   {viaStripe && (
