@@ -1,8 +1,6 @@
 workflows:
   android-capacitor:
     name: WIMC Android (Capacitor)
-    # Android builds do not need macOS; a Linux machine is cheaper and easier to get.
-    instance_type: linux_x2
     max_build_duration: 60
     environment:
       java: 21
