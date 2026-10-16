@@ -178,7 +178,10 @@ export default function AIStylist({
 The user's closet has these sections: ${sectionLabels.join(", ")}.
 ${closetContext}
 
+You can NOT see the user's photos or the individual items in their closet — only the section names above and, at most, how many items there are.
+
 Rules:
+- If the user asks you to find, show, list, count or look up specific items in their closet (for example by color, brand or type: "show me my black dresses"), do NOT answer with outfit ideas. Say plainly that you can't see their items, and tell them to use the "Search My Closet" button (the magnifying-glass search on the closet home screen), which looks through their photos and finds items from a description. Offer to help style the pieces once they've found them. Keep this reply to two or three short sentences.
 - Suggest outfit combinations using the exact section names above
 - Format EVERY outfit suggestion exactly like this (use exact section names in brackets):
   ✨ Outfit 1: [Tops] + [Pants/Jeans] + [Shoes/Sneakers]
