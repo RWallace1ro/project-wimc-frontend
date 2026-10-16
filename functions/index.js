@@ -959,6 +959,24 @@ const APPLE_LIFECYCLE_EVENTS = new Set([
   "SUBSCRIPTION_EXTENDED", "REFUND_REVERSED", "TEMPORARY_ENTITLEMENT_GRANT",
 ]);
 
+// One app, two stores. A RevenueCat event says which store the purchase came
+// from (`event.store`: "APP_STORE" | "PLAY_STORE" | …) and carries that store's
+// own product id. The client (src/utils/planMatch.js) identifies a plan by the
+// App Store product id, so Google Play ids are mapped onto them here — then
+// "which card is the current plan" works the same on both stores. Google Play
+// subscriptions arrive as "<subscriptionId>:<basePlanId>".
+const PLAY_TO_CANONICAL_PRODUCT = {
+  "wimc_pro:monthly": "com.gingerfaith.wimc.pro.monthly",
+  "wimc_pro:annual": "com.gingerfaith.wimc.pro.annual",
+  "wimc_pro_ai:monthly": "com.gingerfaith.wimc.proai.monthly",
+  "wimc_pro_ai:annual": "com.gingerfaith.wimc.proai.annual",
+};
+const IAP_STORES = new Set(["APP_STORE", "PLAY_STORE"]);
+function canonicalProductId(productId) {
+  if (!productId) return null;
+  return PLAY_TO_CANONICAL_PRODUCT[productId] || productId;
+}
+
 // Decide what an Apple/RevenueCat event means for the user's paid tier.
 //
 // Two facts from RevenueCat's docs drive this:
@@ -1007,7 +1025,10 @@ function decideAppleState(event, nowMs, current) {
     fields: {
       appleTier,
       appleSubscriptionStatus: event.type,
-      appleProductId: event.product_id || null,
+      appleProductId: canonicalProductId(event.product_id),
+      // Which store billed it. Named "apple*" for historical reasons: these
+      // fields hold ANY in-app-store plan (App Store or Google Play).
+      iapStore: IAP_STORES.has(event.store) ? event.store : (event.store ? "OTHER" : null),
       appleExpiresAt: event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null,
       appleSubscriptionUpdatedAt: eventAtIso,
     },

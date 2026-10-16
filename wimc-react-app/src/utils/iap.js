@@ -24,10 +24,42 @@ import { Purchases, LOG_LEVEL } from "@revenuecat/purchases-capacitor";
 
 export const NATIVE_PLATFORM = Capacitor.isNativePlatform();
 
+// One codebase, two stores. The same RevenueCat project (and the same
+// "pro" / "pro_ai" entitlements) serves the App Store on iPhone and Google Play
+// on Android; only the public SDK key and the store's own product ids differ.
+const PLATFORM = Capacitor.getPlatform(); // "ios" | "android" | "web"
+export const IAP_STORE =
+  PLATFORM === "android" ? "PLAY_STORE" : PLATFORM === "ios" ? "APP_STORE" : null;
+
+/** Customer-facing store name for copy — "Google Play" vs "the App Store". */
+export function storeName(store = IAP_STORE) {
+  return store === "PLAY_STORE" ? "Google Play" : "the App Store";
+}
+
+// Google Play subscriptions are "<subscriptionId>:<basePlanId>". The rest of the
+// app identifies a plan by its App Store product id (planMatch.js, Pricing.js),
+// so Play ids are mapped onto those. Kept in sync with
+// functions/index.js PLAY_TO_CANONICAL_PRODUCT.
+const PLAY_TO_CANONICAL_PRODUCT = {
+  "wimc_pro:monthly": "com.gingerfaith.wimc.pro.monthly",
+  "wimc_pro:annual": "com.gingerfaith.wimc.pro.annual",
+  "wimc_pro_ai:monthly": "com.gingerfaith.wimc.proai.monthly",
+  "wimc_pro_ai:annual": "com.gingerfaith.wimc.proai.annual",
+};
+export function canonicalProductId(productId) {
+  if (!productId) return null;
+  return PLAY_TO_CANONICAL_PRODUCT[productId] || productId;
+}
+
 // Set from RevenueCat dashboard → Project Settings → API Keys → Apple App
 // Store key (public, safe to ship in the client — it only allows purchases
 // tied to whichever appUserID is configured, not account-wide access).
 const REVENUECAT_IOS_API_KEY = process.env.REACT_APP_REVENUECAT_IOS_API_KEY;
+// RevenueCat dashboard → Project Settings → API Keys → Google Play key (also a
+// public SDK key; starts with "goog_").
+const REVENUECAT_ANDROID_API_KEY = process.env.REACT_APP_REVENUECAT_ANDROID_API_KEY;
+const REVENUECAT_API_KEY =
+  PLATFORM === "android" ? REVENUECAT_ANDROID_API_KEY : REVENUECAT_IOS_API_KEY;
 
 let configured = false;
 let configuredForUid = null;
@@ -40,14 +72,14 @@ let configuredForUid = null;
  */
 export async function configureIAP(uid) {
   if (!NATIVE_PLATFORM || !uid) return;
-  if (!REVENUECAT_IOS_API_KEY) {
-    console.error("configureIAP: REACT_APP_REVENUECAT_IOS_API_KEY is not set");
+  if (!REVENUECAT_API_KEY) {
+    console.error(`configureIAP: no RevenueCat API key for ${PLATFORM} (REACT_APP_REVENUECAT_${PLATFORM === "android" ? "ANDROID" : "IOS"}_API_KEY is not set)`);
     return;
   }
 
   if (!configured) {
     await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
-    await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY, appUserID: uid });
+    await Purchases.configure({ apiKey: REVENUECAT_API_KEY, appUserID: uid });
     configured = true;
     configuredForUid = uid;
     return;

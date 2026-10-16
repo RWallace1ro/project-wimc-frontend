@@ -9,6 +9,12 @@ import "./FAQ.css";
 // implicit offer to sell it, requiring a registered Apple In-App Purchase
 // product. Every tier name/price mention below is genericized on native.
 const NATIVE_PLATFORM = Capacitor.isNativePlatform();
+// The Android app bills through Google Play, the iPhone app through the App Store.
+const ANDROID = Capacitor.getPlatform() === "android";
+const STORE = ANDROID ? "Google Play" : "the App Store";
+const MANAGE_IN_APP = ANDROID
+  ? "open the Google Play Store app, tap your profile icon, then tap Payments & subscriptions, then Subscriptions"
+  : "open your iPhone's Settings, tap your name, then tap Subscriptions";
 
 const SECTIONS = [
   {
@@ -210,26 +216,28 @@ const SECTIONS = [
       {
         q: "How much does the Pro plan cost?",
         a: NATIVE_PLATFORM
-          ? "Current prices are shown on the Pricing screen, and you can subscribe there. Prices are set by the App Store for your region."
+          ? `Current prices are shown on the Pricing screen, and you can subscribe there. Prices are set by ${STORE} for your region.`
           : "Pro is $5.99 per month (or $47.99 per year), and Pro + AI is $9.99 per month (or $94.99 per year). You can manage or change your plan anytime from the Billing portal in your account settings.",
       },
       {
         q: "Can I subscribe on both the website and the app?",
         a: NATIVE_PLATFORM
-          ? "Your plan is tied to your WIMC account, so a paid plan applies automatically wherever you're signed in. Subscribe in only one place — if you already have an active paid plan on this account, there's no need to subscribe again, and subscribing twice means two separate charges. To change or cancel an App Store subscription, open your iPhone's Settings, tap your name, then tap Subscriptions."
-          : "Your plan is tied to your WIMC account, so it works on both the website and the iPhone app — but please subscribe in only one place, or you'll be billed twice (the website and the App Store bill separately). Subscribed on the website? Manage or cancel it from Settings → Subscription → Manage Subscription. Subscribed in the iPhone app? Manage or cancel it in your iPhone's Settings: tap your name, then Subscriptions. Not sure which you used? Apple receipts come from Apple; website receipts come from Stripe. If you did end up subscribed in both places, cancel one and email wimcsupport@gingerfaith.com and we'll review it with you.",
+          ? `Your plan is tied to your WIMC account, so a paid plan applies automatically wherever you're signed in. Subscribe in only one place — if you already have an active paid plan on this account, there's no need to subscribe again, and subscribing twice means two separate charges. To change or cancel ${ANDROID ? "a Google Play" : "an App Store"} subscription, ${MANAGE_IN_APP}.`
+          : "Your plan is tied to your WIMC account, so it works on the website and in the iPhone and Android apps — but please subscribe in only one place, or you'll be billed twice (the website and each app store bill separately). Subscribed on the website? Manage or cancel it from Settings → Subscription → Manage Subscription. Subscribed in the iPhone app? Manage or cancel it in your iPhone's Settings: tap your name, then Subscriptions. Subscribed in the Android app? Open the Google Play Store app, tap your profile icon, then Payments & subscriptions, then Subscriptions. Not sure which you used? Apple and Google receipts come from Apple and Google; website receipts come from Stripe. If you did end up subscribed in both places, cancel one and email wimcsupport@gingerfaith.com and we'll review it with you.",
       },
       {
         q: "How do I cancel my subscription?",
         a: NATIVE_PLATFORM
-          ? "If you subscribed in the app, cancel anytime in your iPhone's Settings: tap your name, then Subscriptions, then WIMC. There are no cancellation fees, and your paid access continues until the end of the current billing period."
-          : "You can cancel anytime — no cancellation fees, no questions asked, and your paid access continues until the end of the current billing period. If you subscribed on the website, use Settings → Subscription → Manage Subscription. If you subscribed in the iPhone app, cancel in your iPhone's Settings: tap your name, then Subscriptions, then WIMC.",
+          ? (ANDROID
+            ? "If you subscribed in the app, cancel anytime in Google Play: open the Google Play Store app, tap your profile icon, then Payments & subscriptions, then Subscriptions, then WIMC. There are no cancellation fees, and your paid access continues until the end of the current billing period."
+            : "If you subscribed in the app, cancel anytime in your iPhone's Settings: tap your name, then Subscriptions, then WIMC. There are no cancellation fees, and your paid access continues until the end of the current billing period.")
+          : "You can cancel anytime — no cancellation fees, no questions asked, and your paid access continues until the end of the current billing period. If you subscribed on the website, use Settings → Subscription → Manage Subscription. If you subscribed in the iPhone app, cancel in your iPhone's Settings: tap your name, then Subscriptions, then WIMC. If you subscribed in the Android app, cancel in the Google Play Store app: profile icon, Payments & subscriptions, Subscriptions, then WIMC.",
       },
       {
         q: "Do you offer refunds?",
         a: NATIVE_PLATFORM
-          ? "If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly. Refunds for purchases made in the app are handled by Apple — you can request one at reportaproblem.apple.com."
-          : "If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly. If you live in the EU or UK, you may also have a legal right to cancel a website purchase within 14 days and receive a refund — email wimcsupport@gingerfaith.com within 14 days of the charge. Refunds for purchases made in the iPhone app are handled by Apple at reportaproblem.apple.com.",
+          ? `If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly. ${ANDROID ? "Refunds for purchases made in the app are handled by Google Play — you can request one from your Google Play order history." : "Refunds for purchases made in the app are handled by Apple — you can request one at reportaproblem.apple.com."}`
+          : "If you experience a technical issue that prevents you from using the app, contact wimcsupport@gingerfaith.com within 7 days of your charge and we will review your case promptly. If you live in the EU or UK, you may also have a legal right to cancel a website purchase within 14 days and receive a refund — email wimcsupport@gingerfaith.com within 14 days of the charge. Refunds for purchases made in the iPhone app are handled by Apple at reportaproblem.apple.com, and refunds for purchases made in the Android app are handled by Google Play.",
       },
     ],
   },

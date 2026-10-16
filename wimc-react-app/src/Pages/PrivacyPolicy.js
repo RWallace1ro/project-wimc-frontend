@@ -47,13 +47,15 @@ export default function PrivacyPolicy() {
         <p>
           If you subscribe to a paid plan on our website, your payment is
           processed by Stripe. If you subscribe in the iPhone app, your purchase
-          is processed by Apple through the App Store. We do not receive or
-          store your full card number or your Apple payment details — Stripe
-          and Apple share with us only what's needed to manage your
-          subscription (such as your plan, billing status, and renewal date).
-          To confirm App Store purchases and keep your plan the same on the
-          website and in the app, we use RevenueCat, which receives your WIMC
-          account ID and your App Store purchase and subscription information.
+          is processed by Apple through the App Store; if you subscribe in the
+          Android app, it is processed by Google through Google Play. We do not
+          receive or store your full card number or your Apple or Google payment
+          details — Stripe, Apple, and Google share with us only what's needed
+          to manage your subscription (such as your plan, billing status, and
+          renewal date). To confirm App Store and Google Play purchases and keep
+          your plan the same on the website and in the apps, we use RevenueCat,
+          which receives your WIMC account ID and your App Store or Google Play
+          purchase and subscription information.
         </p>
         <p>
           When you send us a message through the Contact page, or when we email
@@ -92,10 +94,12 @@ export default function PrivacyPolicy() {
           Your account and profile data are stored securely using Google
           Firebase, and your media files (photos and videos) are stored using
           Cloudinary. Payments are processed by Stripe on the website and by
-          Apple in the iPhone app (with RevenueCat used to verify App Store
-          purchases), email is delivered by Resend, and AI-powered features
-          are processed by Anthropic. Apart from Apple, which handles App Store
-          purchases under its own terms and privacy policy, these are service
+          Apple in the iPhone app and Google in the Android app (with RevenueCat
+          used to verify App Store and Google Play purchases), email is
+          delivered by Resend, and AI-powered features
+          are processed by Anthropic. Apart from Apple and Google, which handle App
+          Store and Google Play purchases under their own terms and privacy
+          policies, these are service
           providers that process and host this data on our behalf, under
           their own security and privacy standards — they don't use it for
           their own purposes. The Weather feature similarly sends only the
@@ -169,8 +173,9 @@ export default function PrivacyPolicy() {
         <p>
           If you have a website subscription, deleting your account cancels it
           automatically when the deletion takes effect. We cannot cancel App
-          Store subscriptions for you, so please cancel those in your iPhone's
-          Settings before deleting your account — the{" "}
+          Store or Google Play subscriptions for you, so please cancel those in
+          your iPhone's Settings or in the Google Play Store app before deleting
+          your account — the{" "}
           <Link to="/terms-of-service" className="legal-page__link">Terms of Service</Link>
           {" "}explain how.
         </p>
