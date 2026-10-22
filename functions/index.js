@@ -387,8 +387,11 @@ exports.cloudinarySign = functions
 // on success Stripe calls stripeWebhook → we set the user's tier in Firestore.
 // createPortalSession lets a subscriber manage/cancel (used in Step 27).
 
-// Public app base for post-checkout redirects (GitHub Pages project path).
-const APP_URL = "https://rwallace1ro.github.io/project-wimc-frontend";
+// Default app base for post-checkout redirects, used when the request's Origin is
+// missing or not one of the known hosts below. It is the custom domain (no
+// personal name in it); the old GitHub Pages address is still honoured, but only
+// for requests that actually come from it (see APP_URL_BY_ORIGIN).
+const APP_URL = "https://wimc.gingerfaith.com";
 
 // The app is served from more than one host (GitHub Pages under a path, and
 // Firebase Hosting / the custom domain at the root). Stripe must send people
