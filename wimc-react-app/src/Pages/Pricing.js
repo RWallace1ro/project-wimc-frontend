@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { startCheckout, openBillingPortal } from "../utils/billing";
-import { getOfferingPackages, purchasePackage, restorePurchases, canonicalProductId, IAP_STORE } from "../utils/iap";
+import { getOfferingPackages, purchasePackage, restorePurchases, canonicalProductId, IAP_STORE, iapDiagnostic } from "../utils/iap";
 import { useTier } from "../context/TierContext";
 import useCloseStandalonePage from "../utils/useCloseStandalonePage";
 import { currentProductIdentifier, currentPlanCardId } from "../utils/planMatch";
@@ -437,6 +437,12 @@ function NativePricing({ tier }) {
       </p>
 
       {loadErr && <div className="pricing-banner">{loadErr}</div>}
+      {/* Android bring-up: say why the store returned no plans. */}
+      {loadErr && IAP_STORE === "PLAY_STORE" && (
+        <p className="pricing-dup-note" style={{ fontSize: 12, wordBreak: "break-word" }}>
+          Details for support: {iapDiagnostic()}
+        </p>
+      )}
       {actionErr && <p className="pricing-card__error">{actionErr}</p>}
 
       {packages === null ? (

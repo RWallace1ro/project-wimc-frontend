@@ -64,6 +64,21 @@ const REVENUECAT_API_KEY =
 let configured = false;
 let configuredForUid = null;
 
+// What the store/RevenueCat last told us — shown (small) under the "Plans aren't
+// available" message on Android, so a tester's screenshot says WHY. (Added
+// 2026-10-22 while bringing up Google Play billing; harmless to keep.)
+const diag = { configured: false, configureError: null, offerings: null, error: null };
+export function iapDiagnostic() {
+  const parts = [];
+  parts.push(`store=${IAP_STORE || "none"}`);
+  parts.push(`key=${REVENUECAT_API_KEY ? REVENUECAT_API_KEY.slice(0, 5) + "…(" + REVENUECAT_API_KEY.length + ")" : "MISSING"}`);
+  parts.push(`configured=${diag.configured}`);
+  if (diag.configureError) parts.push(`configureError=${diag.configureError}`);
+  if (diag.offerings) parts.push(`offerings=${diag.offerings}`);
+  if (diag.error) parts.push(`error=${diag.error}`);
+  return parts.join(" | ");
+}
+
 /**
  * Call once a Firebase uid is known (mirrors TierContext's uid effect).
  * Safe to call again if the uid changes (e.g. sign-out/sign-in as a
@@ -78,10 +93,16 @@ export async function configureIAP(uid) {
   }
 
   if (!configured) {
-    await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
-    await Purchases.configure({ apiKey: REVENUECAT_API_KEY, appUserID: uid });
-    configured = true;
-    configuredForUid = uid;
+    try {
+      await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
+      await Purchases.configure({ apiKey: REVENUECAT_API_KEY, appUserID: uid });
+      configured = true;
+      diag.configured = true;
+      configuredForUid = uid;
+    } catch (e) {
+      diag.configureError = String(e?.message || e).slice(0, 160);
+      console.error("configureIAP failed:", e);
+    }
     return;
   }
 
@@ -111,8 +132,12 @@ export async function getOfferingPackages() {
   if (!NATIVE_PLATFORM) return null;
   try {
     const offerings = await Purchases.getOfferings();
+    const all = Object.keys(offerings?.all || {});
+    diag.offerings = `all=[${all.join(",")}] current=${offerings?.current?.identifier || "none"} packages=${offerings?.current?.availablePackages?.length ?? 0}`;
+    diag.error = null;
     return offerings.current?.availablePackages || null;
   } catch (err) {
+    diag.error = [err?.code, err?.message, err?.underlyingErrorMessage].filter(Boolean).join(" ").slice(0, 220);
     console.error("getOfferingPackages error:", err);
     return null;
   }
