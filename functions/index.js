@@ -1030,7 +1030,70 @@ function decideAppleState(event, nowMs, current) {
       // fields hold ANY in-app-store plan (App Store or Google Play).
       iapStore: IAP_STORES.has(event.store) ? event.store : (event.store ? "OTHER" : null),
       appleExpiresAt: event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null,
+      // Later of expiry and grace-period end: what the expiry backstop checks.
+      appleAccessUntil: stillEntitled && expiresMs ? new Date(expiresMs).toISOString() : null,
       appleSubscriptionUpdatedAt: eventAtIso,
+    },
+  };
+}
+
+// ── Safety nets for lost or misrouted RevenueCat notices ──────────────────────
+// Both are pure so they can be tested without Firestore.
+
+const PAID_TIERS = new Set(["pro", "pro_ai"]);
+
+// An Apple ID can hold only ONE copy of a subscription, but several WIMC
+// accounts can sit on the same Apple ID. RevenueCat then MOVES the
+// subscription to whichever account restored/signed in last and announces it
+// with a TRANSFER event (transferred_from / transferred_to = lists of app user
+// ids, i.e. Firebase uids, or "$RCAnonymousID:..."). We used to ignore
+// TRANSFER, so the account that LOST the subscription kept its paid tier for
+// good (no EXPIRATION is ever sent for it). Found 2026-10-22 on a real account.
+// The account that GAINED it is updated by the events that follow (RENEWAL...).
+function realUserIds(list) {
+  return (Array.isArray(list) ? list : []).filter(
+    (id) => typeof id === "string" && id.length > 0 && id.length <= 128 && !id.startsWith("$RCAnonymousID"),
+  );
+}
+function decideTransferAway(event, uid, nowMs, current) {
+  if (realUserIds(event.transferred_to).includes(uid)) return { skip: true, reason: "account is also a recipient" };
+  if (!PAID_TIERS.has(current?.appleTier)) return { skip: true, reason: "no in-app-store plan to remove" };
+  const eventAtIso = new Date(Number(event.event_timestamp_ms) || nowMs).toISOString();
+  if (current?.appleSubscriptionUpdatedAt && current.appleSubscriptionUpdatedAt > eventAtIso) {
+    return { skip: true, reason: "stale TRANSFER (a newer event was already applied)" };
+  }
+  return {
+    skip: false,
+    fields: {
+      appleTier: "free",
+      appleSubscriptionStatus: "TRANSFER",
+      appleSubscriptionUpdatedAt: eventAtIso,
+    },
+  };
+}
+
+// Expiry backstop. RevenueCat normally sends EXPIRATION; if that notice is ever
+// lost or never sent, an account would stay paid indefinitely. A plan is treated
+// as lapsed once its recorded access end (expiry, or the end of a grace period)
+// is more than STALE_GRACE_MS in the past. The margin is generous because real
+// renewals can arrive hours late (one took 3h22m). If a renewal DOES arrive
+// later it is applied normally: this deliberately leaves
+// appleSubscriptionUpdatedAt alone, so that event is not mistaken for stale.
+const STALE_GRACE_MS = 24 * 60 * 60 * 1000;
+function decideStaleExpiry(data, nowMs, marginMs = STALE_GRACE_MS) {
+  if (!PAID_TIERS.has(data?.appleTier)) return { expire: false, reason: "not on an in-app-store plan" };
+  const ends = [data.appleAccessUntil, data.appleExpiresAt]
+    .map((v) => (v ? Date.parse(v) : NaN))
+    .filter((n) => Number.isFinite(n));
+  if (!ends.length) return { expire: false, reason: "no end date recorded" };
+  const until = Math.max(...ends);
+  if (nowMs <= until + marginMs) return { expire: false, reason: "still within access period" };
+  return {
+    expire: true,
+    fields: {
+      appleTier: "free",
+      appleSubscriptionStatus: "EXPIRED_BACKSTOP",
+      appleBackstopAt: new Date(nowMs).toISOString(),
     },
   };
 }
@@ -1049,6 +1112,33 @@ exports.revenuecatWebhook = functions
 
     try {
       const event = req.body?.event || {};
+
+      // The subscription moved to a different WIMC account: remove it from the
+      // account(s) that lost it (see decideTransferAway).
+      if (event.type === "TRANSFER") {
+        for (const from of realUserIds(event.transferred_from)) {
+          try {
+            if (!(await authUserExists(from))) continue;
+            const fromRef = getAdminDb().collection("users").doc(from);
+            let result = null;
+            await getAdminDb().runTransaction(async (tx) => {
+              const snap = await tx.get(fromRef);
+              if (!snap.exists) { result = { skip: true, reason: "no user document" }; return; }
+              result = decideTransferAway(event, from, Date.now(), snap.data() || {});
+              if (!result.skip) tx.update(fromRef, result.fields);
+            });
+            console.log(
+              "revenuecatWebhook: TRANSFER away -> " +
+              (result.skip ? "skipped (" + result.reason + ")" : "appleTier=free")
+            );
+          } catch (e) {
+            console.error("revenuecatWebhook: TRANSFER handling failed for one account:", e);
+          }
+        }
+        res.json({ received: true });
+        return;
+      }
+
       const uid = event.app_user_id;
       if (!uid) { res.json({ received: true }); return; } // anonymous/test event
 
@@ -1084,6 +1174,43 @@ exports.revenuecatWebhook = functions
       console.error("revenuecatWebhook handler error:", err);
       res.status(500).send("Webhook handler error");
     }
+  });
+
+// ── Scheduled backstop for missed EXPIRATION notices ─────────────────────────
+// Every 6 hours. Looks only at accounts currently marked as paid through an
+// in-app store (a small set) and downgrades any whose recorded access ended
+// more than 24h ago (see decideStaleExpiry). Uses update(), never a merge-set,
+// so a deleted account is never re-created.
+exports.expireStaleAppleSubscriptions = functions
+  .pubsub.schedule("every 6 hours")
+  .onRun(async () => {
+    const adminDb = getAdminDb();
+    let snap;
+    try {
+      snap = await adminDb.collection("users").where("appleTier", "in", ["pro", "pro_ai"]).get();
+    } catch (e) {
+      console.error("expireStaleAppleSubscriptions: query failed:", e);
+      return null;
+    }
+    const now = Date.now();
+    let expired = 0, kept = 0, noDate = 0;
+    for (const docSnap of snap.docs) {
+      const d = decideStaleExpiry(docSnap.data() || {}, now);
+      if (!d.expire) {
+        if (d.reason === "no end date recorded") noDate += 1; else kept += 1;
+        continue;
+      }
+      try {
+        await docSnap.ref.update(d.fields);
+        expired += 1;
+      } catch (e) {
+        if (!(e.code === 5 || /NOT_FOUND/.test(e.message || ""))) {
+          console.error("expireStaleAppleSubscriptions: update failed:", e);
+        }
+      }
+    }
+    console.log("expireStaleAppleSubscriptions: checked " + snap.size + ", expired " + expired + ", still active " + kept + ", no end date " + noDate);
+    return null;
   });
 
 // ── Clear server-only per-user counters when an account is deleted ────────────
